@@ -1,2 +1,2 @@
 # SynthZ-Style
-SynthZ AI Page made by me
+SynthZ AI Page made by Sammuel
