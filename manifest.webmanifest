@@ -1,0 +1,11 @@
+{
+  "name": "SynthZ",
+  "short_name": "SynthZ",
+  "description": "Chatea gratis con cientos de IA de Puter y OpenRouter.",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#0b0c10",
+  "theme_color": "#0b0c10",
+  "lang": "es",
+  "icons": [ { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" } ]
+}
