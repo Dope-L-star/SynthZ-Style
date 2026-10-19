@@ -7,7 +7,7 @@
    POST { action:'drive', clientId }           → (opcional) otro ID solo para Drive (Prime/ZFlow)
    POST { action:'start' } / { action:'chat', token, messages } → prueba de la guía (5 mensajes), ahora con la IA de SynthZ
    Reglas: cero cobros (solo modelos gratis y topes propios), las llaves nunca salen del servidor. */
-import { route, body, json, fail, auth, redis, pipe, getJ, setJ, rid, limit, today, str, roleOf, sha, sbOn, sbAccount, sbProfile, sbPrefs, sbChats } from './_lib.js';
+import { route, body, json, fail, auth, redis, pipe, getJ, setJ, rid, limit, today, str, roleOf, sha, sbOn, sbAccount, sbProfile, sbPrefs, sbChats, ipOf } from './_lib.js';
 import { CID_RX } from './config.js';
 import { loadKeys, saveOwnerKeys, status, checkKey, settings, saveSettings, chat, models, ownersRaw, mask, ORDER, PROV } from './_pool.js';
 
@@ -16,7 +16,6 @@ const RANK = { owner:'Prime', admin:'ZFlow', staff:'Symmetrix' };
 const GLOBAL_DAY = +process.env.TRIAL_DAY_CAP || 300;
 const SYSTEM = 'Eres el asistente de la prueba guiada de SynthFlow (SynthZ). Responde en español, claro y amable, en menos de 120 palabras. Si te preguntan por SynthZ: es un espacio para hablar gratis con muchas IA, compararlas y ver cuánto consumen.';
 const err = (s, m, code) => Object.assign(new Error(m), { status:s, code });
-const ipOf = req => (req.headers.get('x-forwarded-for') || 'x').split(',')[0].trim();
 const team = me => roleOf(me) !== 'user', boss = me => ['owner', 'admin'].includes(roleOf(me));
 
 /* para SynthonIA (ayudante): una respuesta corta con la IA de SynthZ (cuenta en su propio tope) */

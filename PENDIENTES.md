@@ -1,5 +1,9 @@
 # Pendientes
 
+**Hechos en v1.9B:** archivos tipo Claude con vista previa, ejemplos en la caja, texto claro, guía que felicita y cierra lo abierto, saludo y boca de SynthonIA, revisión de seguridad.
+
+**Para Sammuel (opcional, en Supabase):** Authentication → Providers → apagar «Email» si solo se va a entrar con Google (SynthZ ya rechaza esas cuentas, pero así ni se crean).
+
 **Hechos en v1.8B (19-oct-2026):** los 6 puntos de abajo.
 
 ## Anotados el 19-oct-2026

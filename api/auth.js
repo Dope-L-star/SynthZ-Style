@@ -9,10 +9,9 @@
    DELETE /api/auth                         → cierra esta sesión · DELETE /api/auth?all=1 → en todos tus dispositivos */
 import { route, body, json, fail, verifyGoogle, getJ, setJ, redis, rid, newSession, endSession, endAllSessions, auth, limit, cleanEmail, str,
          hasGoogle, hashPass, checkPass, passNeedsUpgrade, cleanUser, okUser, recoveryCode, codeHash, sameHash, SEED_ROLES, setupOk,
-         sbAccount, sbUser, sbGoogleOn, sbFindByUid } from './_lib.js';
+         sbAccount, sbUser, sbGoogleOn, sbFindByUid, ipOf } from './_lib.js';
 
 const err = (s, m) => Object.assign(new Error(m), { status:s });
-const ipOf = req => (req.headers.get('x-forwarded-for') || 'x').split(',')[0].trim();
 const okPass = p => typeof p === 'string' && p.length >= 8 && p.length <= 200;
 const PASS_MSG = 'La contraseña debe tener al menos 8 caracteres.';
 const RESERVED = new Set(['admin', 'synthz', 'synthflow', 'soporte', 'support', 'root', 'puter', 'openrouter', 'sistema', 'system', 'staff', 'owner', 'null', 'undefined']);
@@ -111,9 +110,11 @@ export default route({
       const g = await verifyGoogle(b.credential);
       const sub = 'g' + g.sub, email = cleanEmail(g.email);
       const prev = await getJ('u:' + sub);
-      const user = { sub, email, emailOk:!!g.email_verified, name:str(g.name || email.split('@')[0], 60), picture:str(g.picture, 400), kind:'google', created:(prev && prev.created) || Date.now(), seen:Date.now() };
+      if (prev && prev.blocked) throw err(403, 'Esta cuenta está suspendida. Escríbele al equipo de SynthZ.');
+      /* se conserva lo que ya tenía la cuenta (rango, suspensión, fecha); solo se actualiza lo que viene de Google */
+      const user = Object.assign({}, prev || { sub, kind:'google', created:Date.now() }, { email, emailOk:!!g.email_verified, name:(prev && prev.name) || str(g.name || email.split('@')[0], 60), picture:str(g.picture, 400), seen:Date.now() });
       await setJ('u:' + sub, user);
-      if (email) await redis('SET', 'e:' + email, sub);
+      if (email && g.email_verified === true) await redis('SET', 'e:' + email, sub, 'NX');
       return signedIn(sub, !prev);
     }
     /* entrar con Google a través de Supabase: Supabase confirma quién eres y aquí se crea (o se encuentra) tu cuenta de SynthZ */
@@ -122,14 +123,18 @@ export default route({
       if (!(await sbGoogleOn())) return fail(400, 'Entrar con Google todavía no está activado.');
       const g = await sbUser(b.token);
       const email = cleanEmail(g.email), uid = String(g.id), meta = g.user_metadata || {};
-      let sub = await redis('GET', 'sbu:' + uid) || await sbFindByUid(uid) || (email ? await redis('GET', 'e:' + email) : null);
+      const viaGoogle = (g.app_metadata && (g.app_metadata.provider === 'google' || (Array.isArray(g.app_metadata.providers) && g.app_metadata.providers.includes('google')))) || (Array.isArray(g.identities) && g.identities.some(i => i && i.provider === 'google'));
+      if (!viaGoogle) throw err(403, 'Por aquí solo se puede entrar con Google.');
+      const verified = !!g.email_confirmed_at && meta.email_verified !== false;
+      /* el correo solo junta tu cuenta con una que ya existía si Google confirmó que es tuyo (así nadie entra a una cuenta ajena) */
+      let sub = await redis('GET', 'sbu:' + uid) || await sbFindByUid(uid) || (email && verified ? await redis('GET', 'e:' + email) : null);
       const prev = sub ? await getJ('u:' + sub) : null;
       if (prev && prev.blocked) throw err(403, 'Esta cuenta está suspendida. Escríbele al equipo de SynthZ.');
       if (!sub) sub = 's' + uid.replace(/-/g, '').slice(0, 20);
       const user = Object.assign({}, prev || { sub, kind:'google', created:Date.now() }, { email:email || (prev && prev.email) || '', emailOk:!!g.email_confirmed_at, name:(prev && prev.name) || str(meta.full_name || meta.name || (email ? email.split('@')[0] : 'Synther'), 60), picture:str(meta.avatar_url || meta.picture || (prev && prev.picture) || '', 400), sbUid:uid, seen:Date.now() });
       await setJ('u:' + sub, user);
       await redis('SET', 'sbu:' + uid, sub);
-      if (email && !(await redis('GET', 'e:' + email))) await redis('SET', 'e:' + email, sub);
+      if (email && verified) await redis('SET', 'e:' + email, sub, 'NX');
       return signedIn(sub, !prev);
     }
     return fail(400, 'Acción desconocida.');

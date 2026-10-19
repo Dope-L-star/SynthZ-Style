@@ -2504,11 +2504,27 @@ function face(mood, size, cls){
     + (f.ck ? '<circle cx="31" cy="64" r="4.5" fill="#c9566c" fill-opacity=".55"/><circle cx="69" cy="64" r="4.5" fill="#c9566c" fill-opacity=".55"/>' : '')
     + P(f.b, 'stroke="' + G + '" stroke-width="2.6" stroke-linecap="round" fill="none"')
     + '<g class="fe">' + eyes + '</g>'
-    + P(f.m, 'stroke="' + G + '" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" fill="' + (f.mf ? G : 'none') + '"')
+    + P(f.m, 'class="fm" stroke="' + G + '" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" fill="' + (f.mf ? G : 'none') + '"')
     + P(f.x, 'stroke="#e6b65f" stroke-width="' + (f.xw || 2.4) + '" stroke-linecap="round" stroke-linejoin="round" fill="none"')
     + (f.drop ? '<path class="fdrop" d="M83 28q-6 9-1 12.5q6 2.5 7-3.5q0-3-6-9z" fill="#8fd3e8" fill-opacity=".9"/>' : '')
     + '</svg>';
 }
+/* v1.9 · SynthonIA mueve la boca con cada letra que dice: a (abierta), e/i (ancha), o/u (redonda), m/b/p (cerrada) */
+const VIS = { a:['M42 61.5q8-2 16 0q-1 9-8 9q-7 0-8-9z', 1], e:['M40.5 62.5q9.5-1.5 19 0q-2 5.5-9.5 5.5q-7.5 0-9.5-5.5z', 1], o:['M45.5 60.5q4.5-2 9 0q2.5 4.5 0 9q-4.5 2-9 0q-2.5-4.5 0-9z', 1], m:['M43 65h14', 0], c:['M42.5 63q7.5 4.5 15 0', 0] };
+function visOf(ch){ const c = String(ch || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); return c === 'a' ? 'a' : (c === 'e' || c === 'i' || c === 'y') ? 'e' : (c === 'o' || c === 'u') ? 'o' : 'mbpfv'.includes(c) && c ? 'm' : /[a-zñ0-9]/.test(c) ? 'c' : 'm'; }
+function mouthSet(svgs, v){
+  svgs.forEach(s => { const m = s && s.querySelector && s.querySelector('.fm'); if (!m) return;
+    if (m._d0 == null){ m._d0 = m.getAttribute('d'); m._f0 = m.getAttribute('fill'); }
+    if (v === null){ m.setAttribute('d', m._d0); m.setAttribute('fill', m._f0); return; }
+    m.setAttribute('d', VIS[v][0]); m.setAttribute('fill', VIS[v][1] ? FACE_G : 'none'); });
+}
+/* devuelve el «onFrame» para typeIn: según cuánto texto va escrito, la boca toma la forma de esa letra */
+function lipSync(svgs, text){
+  svgs = (svgs || []).filter(Boolean); if (!svgs.length || reduce) return undefined;
+  const t = String(text || '').replace(/\s+/g, ' '); let last = '';
+  return k => { if (k >= 1){ mouthSet(svgs, null); last = ''; return; } const v = visOf(t[Math.min(t.length - 1, Math.floor(k * t.length))]); if (v !== last){ last = v; mouthSet(svgs, v); } };
+}
+const ballFace = () => { const b = document.getElementById('szBot'); return b ? (b.querySelector('.bf > :last-child .szface') || b.querySelector('.bf .szface')) : null; };
 const randomGoodFace = (not) => { const L = FACE_GOOD.filter(m => !(not && not.has && not.has(m))); return L[Math.floor(Math.random() * L.length)] || 'feliz'; };
 
 /* ---------- sonidos SynthZ: sintetizados en vivo (Web Audio), sin archivos; se apagan en Ajustes ---------- */
@@ -2673,7 +2689,7 @@ const HAND = (() => {
     say.style.left = lx + 'px'; say.style.top = ly + 'px';
     requestAnimationFrame(() => say && say.classList.add('on'));
     SND.blip(mood);
-    if (!fast()) typeIn(p, { cps:62, max:1.4 }).catch(() => { p.textContent = text; });
+    if (!fast()) typeIn(p, { cps:48, max:4, onFrame:lipSync([$('.sf .szface', say), ballFace()], text) }).catch(() => { p.textContent = text; });
     return new Promise(res => {
       if (!btns.length){ res(-1); return; }
       $$('[data-sb]', say).forEach(b => b.addEventListener('click', () => { if (tok === sayTok) res(+b.dataset.sb); }));
@@ -2850,7 +2866,8 @@ function botBubble(text, ms){
   const r = BOT.el.getBoundingClientRect(), W = Math.min(BOT.el.classList.contains('g2') ? 380 : 330, innerWidth - 24);
   bb.style.width = W + 'px'; bb.style.left = clamp(r.left + r.width / 2 - W / 2, 12, innerWidth - W - 12) + 'px';
   const up = r.top > 140; bb.style.top = up ? 'auto' : (r.bottom + 12) + 'px'; bb.style.bottom = up ? (innerHeight - r.top + 12) + 'px' : 'auto'; bb.classList.toggle('dn', !up);
-  bb.classList.remove('on'); void bb.offsetWidth; bb.classList.add('on'); clearTimeout(bb._t); bb._t = setTimeout(() => bb.classList.remove('on'), ms || 5200);
+  bb.classList.remove('on'); void bb.offsetWidth; bb.classList.add('on'); clearTimeout(bb._t); bb._t = setTimeout(() => bb.classList.remove('on'), (ms || 5200) + Math.min(3000, D.text.length * 18));
+  typeIn($('p', bb), { cps:45, max:4, onFrame:lipSync([$('.bbf .szface', bb), ballFace()], D.text) }).catch(() => {});
 }
 function botPlace(){
   const P = BOT.panel, b = BOT.el; if (!P || !b) return;
@@ -2877,7 +2894,7 @@ function botOpen(){
   $('.bin', P).addEventListener('submit', e => { e.preventDefault(); const i = $('.bin input', P), v = i.value.trim(); if (!v) return; i.value = ''; BOT.mode === 'team' || BOT.mode === 'reply' ? botTeamSay(v) : botAsk(v); });
   addEventListener('resize', botPlace);
   botRender();
-  if (!BOT.hist.length) botSay('¡Hola! Soy SynthonIA. Pregúntame cómo hacer algo y te lo muestro. Si es algo que no sé, lo pienso con una IA gratis; y si necesitas a una persona, te conecto con el equipo.', 'feliz');
+  if (!BOT.hist.length) botSay('¡Hola! Soy SynthonIA. Estoy aquí para que nunca te pierdas: pregúntame cómo se hace algo o dónde está, y te lo explico fácil o te lo señalo con mi manita.', 'feliz');
 }
 function botClose(){ BOT.open = false; if (BOT.think) BOT.zen = true; if (BOT.panel) BOT.panel.classList.remove('on'); }
 function botMsgHtml(m){
@@ -2922,6 +2939,8 @@ const agoS = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1
 function botSay(text, mood, btn){
   const D = demoji(text); mood = mood || D.mood || 'feliz';
   BOT.hist.push({ role:'assistant', content:D.text, mood, btn }); BOT.hist = BOT.hist.slice(-30); botFace(mood); SND.blip(mood); botRender();
+  /* en la ventanita, su último mensaje se escribe mientras mueve la boca */
+  if (BOT.open && BOT.panel){ const L = $$('.bl .bm.a', BOT.panel), last = L[L.length - 1], p = last && $('p', last); if (p) setTimeout(() => typeIn(p, { cps:45, max:4.5, onFrame:lipSync([$('.mf .szface', last), ballFace()], D.text) }).catch(() => {}), 80); }
   /* si cerraste la ventanita mientras pensaba: «Ten paciencia… modo zen…» y luego la respuesta */
   if (!BOT.open && BOT.zen){ BOT.zen = false; botFace('dormida', true); botBubble('Ten paciencia… modo zen…', 1900); setTimeout(() => { botFace(mood, true); botBubble(D.text.length > 240 ? D.text.slice(0, 236) + '…' : D.text, 8000); }, 2000); }
 }
@@ -3488,5 +3507,5 @@ const EV = (() => {
 window.SZ = { root, $, $$, clamp, fmt, reduce, today, sleepRaw, esc, est, Z_PATH, ICONS, ico, zWord, API, MANUAL, ALL, byId,
   get state(){ return state; }, set state(v){ state = v; normalize(); },
   normalize, cleanUsage, cleanChats, cleanStrMap, save, total, addUsage, resetUsage, estAll, todayEst, todayReq, providerBalance, balanceHtml, splitHtml, syncNote, helpGuide, smoothDetails, szPrompt, swapDir, swapDir, face, FACE_GOOD, randomGoodFace, welcomeBack, wasAway, accSignOutAll, accClaim, ROLE_NAME, trialGet, trialSet, trialStart, legacyRow, cleanLedger, mergeLedger, DEV, hooks, toast, hydrateIcons, md, countTo,
-  BRAND, isFlow, flowWord, zMark, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, BRANDS, brandOf, glassIcon, PIXART, pixelRun, pixelGrid, workView, workSaved, mdLoad, MDLIB, SZ_P, SZQ, SZ_AUTO, szqSet, msgsLeft, msgsTotal, limTxt, limShort, limLvl, limPct, limRing, limBar, szCatalog, szHeaders, guestGate, guestFull, isGuestQ, setTurn, puterOut, puterOutNote, TEL, telEv, telBeat, DEVH, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, feedbackModal, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI, EV };
+  BRAND, isFlow, flowWord, zMark, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, BRANDS, brandOf, glassIcon, PIXART, pixelRun, pixelGrid, workView, workSaved, mdLoad, MDLIB, SZ_P, SZQ, SZ_AUTO, szqSet, msgsLeft, msgsTotal, limTxt, limShort, limLvl, limPct, limRing, limBar, szCatalog, szHeaders, guestGate, guestFull, isGuestQ, setTurn, puterOut, puterOutNote, TEL, telEv, telBeat, DEVH, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, feedbackModal, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI, EV, lipSync, ballFace };
 })();

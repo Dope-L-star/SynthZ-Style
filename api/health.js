@@ -5,13 +5,12 @@
    POST { action:'beat', … }    → «sigo aquí» cada 3 min (para saber quién está en línea y si algo le pasa)
    POST { action:'ev', kind, detail } → un tropiezo: error, recarga, confusión, sin IA, tope del día
    Nunca se guardan mensajes ni chats: solo la página, el estado y un texto corto del error. */
-import { route, body, json, fail, redis, pipe, getJ, limit, auth, roleOf, sha, today, str, sbOn, sbGoogleOn } from './_lib.js';
+import { route, body, json, fail, redis, pipe, getJ, limit, auth, roleOf, sha, today, str, sbOn, sbGoogleOn, ipOf } from './_lib.js';
 import { status, settings, ORDER, PROV } from './_pool.js';
 
 const TTL = 12 * 3600, ID_RX = /^(or|pu|gq|sz):[\w.:/@+-]{2,160}$/;
 const ONLINE_MS = 7 * 60e3, KINDS = ['error', 'jserror', 'reload', 'confused', 'noai', 'limit', 'puter_out', 'slow'];
 const RANK = { owner:'Prime', admin:'ZFlow', staff:'Symmetrix', user:'Synther' };
-const ipOf = req => (req.headers.get('x-forwarded-for') || 'x').split(',')[0].trim();
 async function whoOf(req){
   const me = await auth(req, true).catch(() => null);
   if (me) return { id:'u:' + me.sub, name:'@' + (me.username || me.name || 'synther'), rank:RANK[roleOf(me)], sub:me.sub, me };
@@ -81,7 +80,7 @@ export default route({
     const me = await auth(req, true).catch(() => null), team = roleOf(me) !== 'user';
     const who = sha('ip:' + ip).slice(0, 16), k = 'mh:r:' + id;
     const [, , n] = await pipe([['SADD', k, who], ['EXPIRE', k, String(TTL)], ['SCARD', k]]);
-    if (team || +n >= 2) await redis('HSET', 'mh:bad', id, String(Date.now()));
-    return json({ ok:true, hidden:team || +n >= 2 });
+    if (team || +n >= 3) await redis('HSET', 'mh:bad', id, String(Date.now()));
+    return json({ ok:true, hidden:team || +n >= 3 });
   }
 });

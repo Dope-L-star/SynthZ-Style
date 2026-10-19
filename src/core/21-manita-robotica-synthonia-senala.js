@@ -100,7 +100,7 @@ const HAND = (() => {
     say.style.left = lx + 'px'; say.style.top = ly + 'px';
     requestAnimationFrame(() => say && say.classList.add('on'));
     SND.blip(mood);
-    if (!fast()) typeIn(p, { cps:62, max:1.4 }).catch(() => { p.textContent = text; });
+    if (!fast()) typeIn(p, { cps:48, max:4, onFrame:lipSync([$('.sf .szface', say), ballFace()], text) }).catch(() => { p.textContent = text; });
     return new Promise(res => {
       if (!btns.length){ res(-1); return; }
       $$('[data-sb]', say).forEach(b => b.addEventListener('click', () => { if (tok === sayTok) res(+b.dataset.sb); }));

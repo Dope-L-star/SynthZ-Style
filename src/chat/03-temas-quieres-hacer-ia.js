@@ -118,7 +118,7 @@ function emptyEl(){
   }
   let h = '<h1 class="greet">' + greetHtml(GREET[greetI] || GREET[0]) + '</h1>'
     + (ex ? '<div class="hexs hexr" id="hexR" aria-label="Ideas para empezar">' + exRowHtml() + '</div>' : '')
-    + '<p class="hsub2">Escribe como le hablarías a una persona. SynthFlow elige una IA para eso, y la puedes cambiar cuando quieras.</p>';
+    + '<p class="hsub2">Escribe lo que necesitas y da detalles: qué quieres, para qué es y cómo te sirve la respuesta. Ya hay una IA lista para empezar; si prefieres otra, la cambias abajo.</p>';
   h += '<div class="hcomp"></div>' + topicsHtml() + '<div class="tpanel" id="tPanel">' + (curTopic ? topicPanelHtml(curTopic) : '') + '</div>'
     + (ex ? '<p class="hfoot">Tocar una idea solo la escribe; tú decides cuándo enviarla.</p>' : '');
   e.innerHTML = h;

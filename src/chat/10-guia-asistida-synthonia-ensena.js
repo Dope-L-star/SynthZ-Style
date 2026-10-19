@@ -59,7 +59,7 @@ function gPanel(html, cls, say, mood, dir){
   const p = document.createElement('div'); p.id = 'szgPanel'; p.className = 'szgp' + (cls ? ' ' + cls : '') + (dir < 0 ? ' rev' : '');
   p.innerHTML = '<div class="gp-in">' + (say ? '<div class="gp-say"><span class="sf">' + SZ.face(mood || 'feliz', 58) + '</span><p>' + esc(say) + '</p></div>' : '') + html + '</div>';
   document.body.appendChild(p); requestAnimationFrame(() => p.classList.add('on'));
-  if (say){ SZ.SND.blip(mood); if (!SZ.reduce) SZ.typeIn($('.gp-say p', p), { cps:70, max:1.6, delay:250 }).catch(() => {}); }
+  if (say){ SZ.SND.blip(mood); if (!SZ.reduce) SZ.typeIn($('.gp-say p', p), { cps:50, max:4, delay:250, onFrame:SZ.lipSync([$('.gp-say .sf .szface', p), SZ.ballFace()], say) }).catch(() => {}); }
   return p;
 }
 /* la barra de la guía se aparta si tapa lo que SynthonIA está señalando */
@@ -74,8 +74,36 @@ async function gPoint(target, text, o = {}){
   try{ target.scrollIntoView({ block:'nearest', behavior:SZ.reduce ? 'auto' : 'smooth' }); }catch(e){}
   gDodge(target); H.spot(target, o.pad);
   await H.moveTo(target, { shape:o.shape || 'point', fx:o.fx, fy:o.fy }); gNeed();
-  const r = await H.talk(text, Object.assign({ near:target, mood:o.mood || 'senalando', buttons:[{ label:o.next || 'Siguiente' }], auto:o.auto || Math.min(9000, 2600 + text.length * 48) }, o));
-  gNeed(); return r;
+  /* v1.9: si tocas lo que te señalo, ¡aprendiste! Te felicito, cierro lo que se abrió y seguimos.
+     Y si das «Siguiente» con algo abierto (p. ej. la ventana de comparar), también se cierra para que no tape lo demás */
+  const snap = gSnap(); let hit = null;
+  const tapped = new Promise(res => { hit = e => { if (e.target && target.contains(e.target)) res('tap'); }; document.addEventListener('click', hit, true); });
+  const said = H.talk(text, Object.assign({ near:target, mood:o.mood || 'senalando', buttons:[{ label:o.next || 'Siguiente' }], auto:o.auto || Math.min(9000, 2600 + text.length * 48) }, o));
+  let r = await Promise.race([said, tapped]);
+  document.removeEventListener('click', hit, true);
+  gNeed();
+  if (r === 'tap'){
+    await gWait(650);
+    H.unspot && H.unspot();
+    await H.talk(gPraise(), { mood:'celebrando', buttons:[{ label:'Seguir' }], auto:2600 }); gNeed();
+    r = 0;
+  }
+  gRestore(snap);
+  return r;
+}
+const PRAISE = ['¡Muy bien, ya aprendiste! Sigamos.', '¡Eso es! Ya sabes usarlo.', '¡Perfecto! Lo hiciste tú solo.', '¡Así se hace! Vamos con lo siguiente.'];
+let praiseI = 0;
+const gPraise = () => PRAISE[praiseI++ % PRAISE.length];
+/* qué estaba abierto antes de un paso, para cerrar solo lo que se abrió durante ese paso */
+function gSnap(){ return { side:side.classList.contains('open') && !sideClosing, cv:!!cvEl, conn:!!$('#conn'), acc:!!$('#acc'), modals:new Set($$('.szm')) }; }
+function gRestore(s){
+  try{
+    if (!s.side && side.classList.contains('open')) closeSide();
+    if (!s.cv && cvEl) closeCanvas();
+    if (!s.conn && $('#conn')){ const x = $('#conn #cClose'); if (x) x.click(); }
+    if (!s.acc && $('#acc')){ const x = $('#acc #aClose'); if (x) x.click(); }
+    $$('.szm').forEach(m => { if (s.modals.has(m) || m.classList.contains('bye')) return; const x = m.querySelector('[data-close], [data-cx]'); if (x) x.click(); else m.remove(); });
+  }catch(e){}
 }
 async function waitCatalog(ms){ const t0 = Date.now(); while (!cat.list.length && Date.now() - t0 < ms){ await gWait(250); } }
 

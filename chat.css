@@ -345,6 +345,44 @@ button.now-chip{cursor:pointer}
 .tobottom.show{opacity:1;transform:none;pointer-events:auto}
 .tobottom svg{width:18px;height:18px}
 
+
+/* v1.9 · archivos de la IA: tarjeta + lienzo con código y vista previa */
+.fcard{display:flex;align-items:center;gap:8px;margin:.7em 0 1em;padding:8px 8px 8px 8px;border:1px solid rgba(255,255,255,.12);border-radius:16px;background:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,.015));max-width:560px;transition:border-color .25s,background .25s}
+.fcard:hover{border-color:rgba(230,182,95,.4);background:linear-gradient(160deg,rgba(230,182,95,.07),rgba(255,255,255,.02))}
+.fc-main{flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:2px 4px;border:0;background:none;color:inherit;font:inherit;text-align:left}
+.fc-ic{flex:none;display:grid;place-items:center;width:42px;height:42px;border-radius:11px;font:700 10.5px var(--mono);letter-spacing:.04em;color:#1a1408;background:linear-gradient(150deg,#ffd9a0,#e6b65f 55%,#c9566c)}
+.fcard[data-ext="css"] .fc-ic,.cvp-h .fc-ic.css{background:linear-gradient(150deg,#b8d4ff,#6f9cff)}
+.fcard[data-ext="js"] .fc-ic,.fcard[data-ext="ts"] .fc-ic{background:linear-gradient(150deg,#fff3a6,#f0c94a)}
+.fcard[data-ext="py"] .fc-ic{background:linear-gradient(150deg,#a6e3ff,#4fa3d9)}
+.fcard[data-ext="md"] .fc-ic,.fcard[data-ext="txt"] .fc-ic{background:linear-gradient(150deg,#e9e7e2,#a9a6a0)}
+.fc-t{min-width:0;display:flex;flex-direction:column;gap:2px}
+.fc-t b{font:500 13.5px var(--mono);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fc-t small{font:11.5px var(--sans,inherit);color:var(--mute)}
+.fcard .cnv-b{flex:none}
+@media (max-width:600px){.fcard{flex-wrap:wrap}.fc-main{flex-basis:100%}.fcard .cnv-b{flex:1;justify-content:center}.fcard .cnv-b span{display:inline}}
+.cnv.mini{position:relative}
+.cnv.mini .cnv-cp{position:absolute;top:8px;right:8px;z-index:2;opacity:.75}
+.cnv.mini:hover .cnv-cp{opacity:1}
+.cnv.mini>pre{border-radius:16px !important;padding-right:96px !important}
+.cvp{position:fixed;inset:0;z-index:420;display:flex;justify-content:flex-end;background:rgba(5,6,10,0);transition:background .35s ease}
+.cvp.on{background:rgba(5,6,10,.45)}
+.cvp-in{width:min(820px,52vw);height:100%;display:flex;flex-direction:column;background:#110f15;border-left:1px solid rgba(255,255,255,.12);box-shadow:-30px 0 80px rgba(0,0,0,.5);transform:translateX(102%);transition:transform .45s cubic-bezier(.22,1,.36,1)}
+.cvp.on .cvp-in{transform:none}
+.cvp-h{display:flex;align-items:center;gap:8px;padding:14px 14px 12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.cvp-h .fc-ic{width:36px;height:36px;border-radius:10px}
+.cvp-tabs{display:flex;gap:4px;margin:10px 14px 0;padding:4px;border-radius:999px;border:1px solid var(--line,rgba(255,255,255,.1));align-self:flex-start}
+.cvp-tabs button{padding:6px 14px;border-radius:999px;border:0;background:none;color:var(--mute);font:inherit;font-size:13px}
+.cvp-tabs button[aria-selected="true"]{background:rgba(255,255,255,.1);color:var(--text)}
+.cvp-b{flex:1;min-height:0;display:flex;padding:12px 14px 14px}
+.cvp-code{flex:1;margin:0;overflow:auto;padding:16px 18px;border-radius:14px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.06);font:13px/1.65 var(--mono);white-space:pre;color:#e8e6e1;counter-reset:ln}
+.cvp-prev{flex:1;display:flex;border-radius:14px;overflow:hidden;background:#fff}
+.cvp-prev iframe{flex:1;width:100%;border:0;background:#fff}
+.cvp-prev .cvp-md{flex:1;overflow:auto;padding:22px 26px;background:#141318;color:var(--text)}
+@media (max-width:899px){.cvp-in{width:100%;border-left:0;background:#100f14}.cvp-h{padding-top:calc(12px + env(safe-area-inset-top))}.cvp-h .cnv-b span{display:none}}
+html.noanim .cvp,html.noanim .cvp-in{transition-duration:.01s}
+.cvp-prev[hidden],.cvp-code[hidden]{display:none !important}
+body.canvasing #szBot,body.canvasing #szBotB,body.canvasing .bbeta,body.canvasing .bb{visibility:hidden}
+.fname-h{display:none}
 /* ---------- caja de escribir ---------- */
 .composer{padding:10px clamp(16px,4vw,48px) 28px}
 .comp-in{width:min(100%,840px);margin:0 auto;display:flex;align-items:flex-end;gap:10px}

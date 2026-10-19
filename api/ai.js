@@ -2,7 +2,7 @@
    GET                       → { models, provs, limit, used } modelos gratis disponibles y lo que llevas hoy
    POST { messages, model?, maxTokens? } → respuesta en vivo (streaming), con el gasto al final
    Sin cuenta también funciona: se cuenta por dispositivo y por conexión. */
-import { route, body, json, auth, sha, redis, pipe, today } from './_lib.js';
+import { route, body, json, auth, sha, redis, pipe, today, ipOf } from './_lib.js';
 import { models, chat, settings, usedToday, PROV } from './_pool.js';
 
 /* sin cuenta: solo unos pocos mensajes al día (por dispositivo y, para que no se salte, también por conexión) */
@@ -13,7 +13,6 @@ const gKey = w => 'gm:' + w + ':' + today();
 const PER_TURN = 4;
 async function guestUsed(who, ipKey){ const [a, b] = (await pipe([['SCARD', gKey(who)], ['SCARD', gKey(ipKey)]])).map(x => +x || 0); return { used:a, usedIp:b }; }
 const guestErr = () => Object.assign(new Error('Para seguir FlowIAndo, entra o crea tu cuenta. Es gratis y tienes mucho más límite cada día.'), { status:429, code:'sz_guest' });
-const ipOf = req => (req.headers.get('x-forwarded-for') || 'x').split(',')[0].trim();
 async function whoOf(req){
   const me = await auth(req, true).catch(() => null);
   const dev = String(req.headers.get('x-sz-device') || ''), ipKey = 'ip:' + sha('ip:' + ipOf(req)).slice(0, 16);

@@ -6,12 +6,11 @@
    GET                                   → tu conversación de ayuda; el equipo además ve la bandeja
    GET ?id=…                             → (equipo) una conversación completa
    Nunca se leen ni se envían tus chats: solo lo que escribes aquí. */
-import { route, body, json, fail, redis, pipe, getJ, setJ, limit, auth, roleOf, rid, str, today, sha, sbFeedback } from './_lib.js';
+import { route, body, json, fail, redis, pipe, getJ, setJ, limit, auth, roleOf, rid, str, today, sha, sbFeedback, ipOf } from './_lib.js';
 import { trialComplete } from './trial.js';
 
 const ASK_DAY = 15, KEEP = 30 * 86400, URGENT_MS = 15 * 60e3;
 const RANK = { owner:'Prime', admin:'ZFlow', staff:'Symmetrix', user:'Synther' };
-const ipOf = req => (req.headers.get('x-forwarded-for') || 'x').split(',')[0].trim();
 const err = (s, m, code) => Object.assign(new Error(m), { status:s, code });
 const SYSTEM = 'Eres SynthonIA, la ayudante de SynthZ y SynthFlow. Eres amable, alegre, breve y hablas sencillo, como a alguien que no sabe nada de tecnología. Responde en el idioma de la pregunta (normalmente español de Colombia) en menos de 70 palabras. '
   + 'SOLO ayudas con: cómo usar SynthZ y SynthFlow, charla sencilla (saludos, cómo estás), chistes cortos y datos curiosos breves. '

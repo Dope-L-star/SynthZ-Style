@@ -1,3 +1,22 @@
+# SynthZ v1.9B — Archivos tipo Claude, más seguridad y SynthonIA que habla
+
+- **Archivos como en Claude:** cada archivo que te da la IA sale como una tarjeta (nombre, tipo y líneas) con «Ver» y «Descargar».
+  - Si se puede ver (HTML, SVG, Markdown) sale «Vista previa»: se abre un lienzo a la derecha (pantalla completa en el celular) con pestañas «Código» y «Vista previa». Un HTML usa su style.css y su script.js del mismo mensaje.
+  - Si no tiene vista previa (C++, Python, CSS solo…), el lienzo muestra el código con «Copiar» y «Descargar».
+  - Los trozos cortos se quedan en el mensaje solo con «Copiar». Ya no está el «Descargar» de cada respuesta.
+  - La vista previa corre aislada: no puede leer tu cuenta, tus chats ni nada de la página (probado).
+- **Caja de escribir:** va mostrando ejemplos distintos («Ej.: Dame 3 ideas de regalo…»), sin repetirse.
+- **Texto más claro:** «Escribe lo que necesitas y da detalles: qué quieres, para qué es y cómo te sirve la respuesta…».
+- **Guía de SynthonIA:** si tocas lo que te señala: «¡Muy bien, ya aprendiste!» y sigue. Lo que se abrió (p. ej. comparar) se cierra solo al seguir, para que no tape la pantalla.
+- **SynthonIA:** saludo nuevo y la boca se mueve con cada letra que dice (a, e, o, m…), en la bolita, la burbuja, la ventanita y la guía.
+- **Seguridad (revisión completa):**
+  - Entrar con Google: ya no se puede juntar tu cuenta con otra por tener el mismo correo si el correo no está verificado por Google; por Supabase solo se aceptan cuentas de Google.
+  - Entrar con Google ya no borra el rango del equipo ni salta una suspensión.
+  - Los límites de velocidad usan la IP real que da Vercel (no se puede inventar).
+  - Cabeceras nuevas: HTTPS obligatorio (HSTS), aislamiento de ventanas (COOP), ninguna página puede meter SynthZ dentro de otra, ni subir formularios a otros sitios, ni cargar plugins.
+  - Esconder una IA para todos ahora necesita 3 conexiones distintas.
+  - Revisado: contraseñas (scrypt), sesiones, llaves cifradas, equipos, ayuda, Pulsem (todo se muestra escapado), Supabase (tablas cerradas, solo el servidor entra).
+
 # SynthZ v1.8B — Página por piezas, modo agente nuevo y ajustes que funcionan solos
 
 - **La página ahora está por piezas** (carpeta `src/`): el código grande quedó en 48 archivos pequeños y ordenados. Para la gente se ve y funciona **exactamente igual** (comprobado byte por byte). `node build.mjs` las vuelve a unir. Así cada cambio es más rápido y con menos riesgo.

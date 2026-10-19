@@ -93,3 +93,24 @@ function updateHint(){
 inp.addEventListener('input', () => { autoGrow(); updateHint(); });
 inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); send(); } });
 sendBtn.addEventListener('click', () => { if (Object.keys(busy).length) stopNow(); else send(); });
+
+/* v1.9 · la caja de escribir va mostrando ejemplos (todos distintos) para que se note que ahí se escribe */
+const PH_EX = ['Escribe un correo para pedir un día libre', 'Dame 3 ideas de regalo por menos de 50.000 pesos', 'Explícame la fotosíntesis como a un niño', 'Resume este texto en 5 puntos', 'Hazme una rutina de ejercicio en casa', 'Corrige la ortografía de mi párrafo', 'Dame 5 nombres para una panadería', 'Traduce «buenos días, equipo» al inglés', 'Planea un viaje de 3 días a Cartagena', 'Escribe un post de Instagram para mi tienda', '¿Cómo saco el 20 % de 85.000?', 'Haz una lista de compras para la semana', 'Escribe un poema corto para mi mamá', 'Explícame qué es una tasa de interés', 'Hazme 10 preguntas para estudiar historia', 'Dame una receta con arroz, huevo y tomate', 'Escribe un mensaje para cobrarle a un cliente', 'Crea una página web sencilla de un portafolio', 'Explícame este error de Python', 'Dame ideas para un cumpleaños en casa', 'Escribe la descripción de un producto', 'Ayúdame a preparar una entrevista de trabajo', '¿Qué estudiar si me gustan los números?', 'Haz un horario para estudiar en la tarde', 'Escribe un cuento corto de miedo', 'Ordena estas tareas de la más urgente a la menos', 'Dame un plan para ahorrar 500.000 pesos', 'Explícame cómo funciona internet', 'Escribe un saludo para un grupo de WhatsApp', 'Hazme un guion para un video de 30 segundos', 'Compara dos celulares para comprar', 'Escribe una carta de renuncia amable', 'Dame frases para motivar a mi equipo', 'Diseña el logo de mi marca con palabras', 'Ayúdame a entender una factura', 'Haz un resumen de la Segunda Guerra Mundial'];
+let phOrder = [], phT = 0, phIdx = 0;
+function phNext(){
+  if (!phOrder.length){ phOrder = PH_EX.map((_, i) => i).sort(() => Math.random() - .5); try{ const last = +localStorage.getItem('synthz:phlast'); if (phOrder[0] === last) phOrder.push(phOrder.shift()); }catch(e){} }
+  const i = phOrder.shift(); try{ localStorage.setItem('synthz:phlast', String(i)); }catch(e){} return PH_EX[i];
+}
+function phFree(){ return mode === 'solo' && !isLocked() && !trialOn && !inp.value && !inp.readOnly; }
+function phTick(){
+  clearTimeout(phT);
+  if (document.hidden || !phFree()){ phT = setTimeout(phTick, 1500); return; }
+  const full = 'Ej.: ' + phNext(); let k = 0;
+  const type = () => {
+    if (!phFree()){ phT = setTimeout(phTick, 1500); return; }
+    k++; inp.placeholder = full.slice(0, k) + (k < full.length ? '▍' : '');
+    if (k < full.length) phT = setTimeout(type, SZ.reduce ? 0 : 34); else phT = setTimeout(phTick, 4200);
+  };
+  if (SZ.reduce){ inp.placeholder = full; phT = setTimeout(phTick, 5000); } else type();
+}
+setTimeout(phTick, 2500);

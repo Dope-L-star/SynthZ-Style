@@ -83,6 +83,8 @@ export const rid = (n = 12) => crypto.randomBytes(n).toString('base64url');
 export const today = () => new Date(Date.now() - 5 * 3600e3).toISOString().slice(0, 10);   /* día en Colombia (UTC-5) */
 export const cleanEmail = e => String(e || '').trim().toLowerCase();
 export const okEmail = e => /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/.test(e);
+/* IP de quien llama: Vercel la pone en x-real-ip (y reescribe x-forwarded-for), así nadie la puede inventar para saltarse los límites */
+export const ipOf = req => String(req.headers.get('x-real-ip') || (req.headers.get('x-forwarded-for') || 'x').split(',')[0]).trim().slice(0, 64) || 'x';
 export const str = (v, max) => String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max);
 
 /* límite de peticiones: n por ventana de s segundos */
