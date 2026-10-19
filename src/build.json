@@ -1,0 +1,10 @@
+{
+  "core.js": "src/core",
+  "core.css": "src/core-css",
+  "chat.js": "src/chat",
+  "chat.css": "src/chat-css",
+  "index.js": "src/index",
+  "index.css": "src/index-css",
+  "pulsem.js": "src/pulsem",
+  "pulsem.css": "src/pulsem-css"
+}

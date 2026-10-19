@@ -1,0 +1,2922 @@
+(() => {
+'use strict';
+const { root, $, $$, clamp, fmt, esc, est, zWord, API, byId, save, total, addUsage, toast, md, typeIn, ask, history, metaOf, countTo, burst, vendorLabel, vendorColor, today, SXC, coins } = SZ;
+const st = () => SZ.state;
+const OR = byId('openrouter');
+const params = new URLSearchParams(location.search);
+
+$('#sideWord').innerHTML = SZ.flowWord(); $('#sideZ').innerHTML = SZ.zMark('Synth');
+$('#railWord').innerHTML = '<span class="word">' + SZ.flowWord() + '</span>'; $('#mLogo').innerHTML = '<span class="word">' + SZ.flowWord() + '</span>';
+$('#corner').innerHTML = '<svg viewBox="0 0 24 24">' + SZ.ICONS.claude('#d9805f', '#d9805f') + '</svg>';
+
+/* ---------- preferencias de la lista (se recuerdan) ---------- */
+const UI_KEY = 'synthz:ui';
+const ui = { free:true, fav:false, reason:false, vision:false, long:false, sort:'new', prov:'all' };
+try{ const u = JSON.parse(localStorage.getItem(UI_KEY)) || {}; ['free', 'fav', 'reason', 'vision', 'long', 'forme', 'code', 'write', 'fast', 'math', 'newm'].forEach(k => { if (typeof u[k] === 'boolean') ui[k] = u[k]; }); if (['new', 'ctx', 'az'].includes(u.sort)) ui.sort = u.sort; if (['all', 'sz', 'pu', 'or', 'gq'].includes(u.prov)) ui.prov = u.prov; }catch(e){}
+const saveUI = () => { try{ localStorage.setItem(UI_KEY, JSON.stringify(ui)); }catch(e){} };
+
+let mode = params.get('mode') === 'cmp' ? 'cmp' : 'solo';
+let pickMode = 'set';            /* 'set' = cambiar la IA · 'add' = sumar otra IA para comparar */
+let cmpLast = null;              /* la última pregunta de Comparar: sus tarjetas siguen ahí aunque se repinte */
+const jobOwn = {};               /* qué trabajo es dueño de cada «pensando…» */
+const isMobile = () => matchMedia('(max-width:760px)').matches;
+const isTablet = () => matchMedia('(max-width:1100px) and (min-width:761px)').matches;
+let query = '';
+const busy = {};                 /* id del modelo -> 'think' | 'write' */
+let gen = 0, cmpRun = 0, stick = true, loading = false;
+
+/* ---------- catálogo en vivo ---------- */
+let cat = { t:0, list:[], status:'loading' };
+const idx = new Map(), newIds = new Set();
+function setCatalog(list, t, status){ list = (list || []).filter(m => !SZ.isBad(m.id)); cat = { t, list, status }; idx.clear(); list.forEach(m => idx.set(m.id, m)); }
+function stub(id){
+  if (id === 'agente') return { id, name:'Modo agente', vendor:'synthz', vlabel:'Elige la IA por ti', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'', stub:true };
+  if (id === 'sz:auto') return Object.assign({}, SZ.SZ_AUTO, { stub:true });
+  if (/^sz:/.test(id)){ const mid = id.split(':').slice(2).join(':'); return { id, name:mid.replace(/^[^/]+\//, ''), vendor:'synthz', vlabel:'Gratis', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'', stub:true }; }
+  const v = id.split('/')[0] || 'otro', nm = (id.split('/').slice(1).join('/') || id).replace(/:free$/, '');
+  return { id, name:nm, vendor:v, vlabel:vendorLabel(v), ctx:0, free:/:free$/.test(id), created:0, vision:false, reasoning:false, tools:false, desc:'', stub:true };
+}
+/* prueba guiada (modalidad C): un «modelo» propio que pasa por el servidor de SynthZ */
+const TRIAL_ID = 'tr:prueba';
+const TRIAL_INFO = { id:TRIAL_ID, name:'Prueba de SynthZ', vendor:'synthz', vlabel:'Prueba guiada', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'' };
+let trialOn = false;
+const info = id => id === TRIAL_ID ? TRIAL_INFO : idx.get(id) || stub(id);
+function fallbackList(){ return [...new Set(['sz:auto', ...(st().models.openrouter || []).filter(x => !orOn() ? /^(sz|pu):/.test(x) : true)])].map(stub); }
+const cached = SZ.loadCatalog();
+if (cached) setCatalog(cached.list, cached.t, 'cached'); else setCatalog([], 0, 'loading');
+
+const APODEX = 'sz:auto';   /* «SynthZ Auto»: las IAs conectadas elige sola el mejor modelo gratis que esté libre (beta 2) */
+const selId = () => trialOn ? TRIAL_ID : (st().model.openrouter || APODEX);
+const kfmt = n => !n ? '' : n >= 1e6 ? (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : n >= 1000 ? Math.round(n / 1000) + 'k' : String(n);
+const isNew = m => newIds.has(m.id) || (m.created && Date.now() / 1000 - m.created < 14 * 86400);
+const ago = t => { if (!t) return ''; const s = Math.max(0, Math.round((Date.now() - t) / 1000)); return s < 5 ? 'ahora' : s < 60 ? 'hace ' + s + ' s' : s < 3600 ? 'hace ' + Math.round(s / 60) + ' min' : 'hace ' + Math.round(s / 3600) + ' h'; };
+/* cada IA con su icono real en vidrio líquido (si no hay, su inicial) */
+const av = (m, cls) => '<span class="av gav' + (cls ? ' ' + cls : '') + '" style="--vc:' + vendorColor(m.vendor) + '">' + SZ.glassIcon(m) + '<i class="n"></i></span>';
+const brandVars = m => { const b = SZ.brandOf(m); return b ? '--b1:' + b[2] + ';--b2:' + b[3] + ';--c:' + b[2] : '--b1:' + vendorColor(m.vendor) + ';--b2:#ffffff;--c:' + vendorColor(m.vendor); };
+const works = {};          /* lo que está haciendo cada IA mientras responde */
+const hl = (text, q) => { if (!q) return esc(text); const i = text.toLowerCase().indexOf(q); return i < 0 ? esc(text) : esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + q.length)) + '</mark>' + esc(text.slice(i + q.length)); };
+function tags(m, full){
+  let h = m.free ? '<i class="tg free">gratis</i>' : (m.stub ? '' : '<i class="tg paid">de pago</i>');
+  if (isNew(m)) h += '<i class="tg new">nuevo</i>';
+  if (full){ if (m.reasoning) h += '<i class="tg">piensa con calma</i>'; if (m.vision) h += '<i class="tg">ve fotos</i>'; }
+  return h;
+}
+const exC = new Map();
+const expert = m => { let e = exC.get(m.id); if (!e){ e = SZ.expertOf(m); exC.set(m.id, e); } return e; };
+const STAR = '<svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9 6.8 19.7l1-5.9L3.5 9.7l5.9-.8z"/></svg>';
+
+/* familia de cada IA, con el nombre que la gente conoce */
+const FAMN = { openai:'ChatGPT', 'claude-color':'Claude', 'gemini-color':'Gemini', 'gemma-color':'Gemma', 'meta-color':'Llama', 'mistral-color':'Mistral', 'deepseek-color':'DeepSeek', 'qwen-color':'Qwen', grok:'Grok', 'kimi-color':'Kimi', 'nvidia-color':'NVIDIA', 'microsoft-color':'Microsoft Phi', 'zhipu-color':'GLM', 'cohere-color':'Cohere', 'minimax-color':'MiniMax', 'perplexity-color':'Perplexity' };
+const famOf = m => { const b = SZ.brandOf(m); return b ? (FAMN[b[0]] || b[1].replace(/\s*\(.*\)$/, '')) : 'Otras'; };
+/* ---------- lista de modelos ---------- */
+const listEl = $('#mlist');
+/* selector: pestaña (Para ti · Todas · Mis favoritas), tema elegido y las que marcaste para comparar */
+let ptab = 'forme', ptopic = null;
+const pickSel = new Set();
+const fold = t => String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+function topicFor(q){ const f = fold(q).trim(); if (f.length < 3) return null; const t = TOPICS.find(([k, e, l]) => fold(l).includes(f) || fold(k).startsWith(f)); return t ? t[0] : null; }
+function visible(q){
+  const fav = new Set(st().fav), qt = !ptopic && q ? topicFor(q) : null;
+  const nameHit = m => (m.name + ' ' + m.id + ' ' + m.vlabel).toLowerCase().includes(q);
+  let l = cat.list.filter(m => (ui.prov === 'all' || m.id.startsWith(ui.prov + ':')) && (!ui.free || m.free) && ((!ui.fav && ptab !== 'fav') || fav.has(m.id)) && (!ui.reason || m.reasoning) && (!ui.vision || m.vision) && (!ui.long || m.ctx >= 100000) && (!ui.code || expert(m).tags.includes('code')) && (!ui.write || expert(m).tags.includes('write')) && (!ui.fast || expert(m).tags.includes('fast')) && (!ui.math || expert(m).tags.includes('math')) && (!ui.newm || isNew(m)) && true
+    && (!q || nameHit(m) || (qt && recommendTop(qt, 8).some(x => x.id === m.id))));
+  const cmp = ui.sort === 'ctx' ? (a, b) => b.ctx - a.ctx || a.name.localeCompare(b.name) : ui.sort === 'az' ? (a, b) => a.name.localeCompare(b.name) : (a, b) => b.created - a.created || a.name.localeCompare(b.name);
+  l.sort(cmp);
+  if (!ui.fav) l = [...l.filter(m => fav.has(m.id)), ...l.filter(m => !fav.has(m.id))];
+  /* «Para ti»: tus recomendadas suben arriba y se marcan, sin esconder las demás */
+  const pk = forMe(); if (ptab === 'forme' && pk.size){ const order = [...pk]; l = [...order.map(id => l.find(m => m.id === id)).filter(Boolean), ...l.filter(m => !pk.has(m.id))]; }
+  /* con un tema (elegido o escrito en el buscador), sus expertas van primero */
+  const tk = ptopic || qt; if (tk){ const rec = recommendTop(tk, 6).map(m => m.id), rs = new Set(rec); l = [...rec.map(id => l.find(m => m.id === id)).filter(Boolean), ...l.filter(m => !rs.has(m.id))]; }
+  return l;
+}
+/* cuánto gasta de tu Puter cada IA: rayitas como la señal del celular */
+const SPEND = ['', 'Gasta poco de tu Puter', 'Gasta normal de tu Puter', 'Gasta mucho de tu Puter'];
+const spendTag = m => /^pu:/.test(m.id) && m.spend ? '<i class="spend s' + m.spend + '" title="' + SPEND[m.spend] + '"><b></b><b></b><b></b><em>' + ['', 'gasta poco', 'gasta normal', 'gasta mucho'][m.spend] + '</em></i>' : '';
+function itemHtml(m, i, q, anim){
+  const fav = st().fav.includes(m.id), sel = mode === 'solo' && m.id === selId(), on = mode === 'cmp' && st().cmp.includes(m.id);
+  const n = on ? st().cmp.indexOf(m.id) + 1 : '', add = pickMode === 'add', inCmp = add && (st().cmp.includes(m.id) || (mode === 'solo' && m.id === selId()));
+  const tk = ptopic || (!ptopic && q ? topicFor(q) : null), rec = tk && recommendTop(tk, 6).some(x => x.id === m.id);
+  const pay = payOf(m.id), ok = connected(m.id), ck = pickSel.has(m.id);
+  const badge = '<i class="mpay ' + pay[0] + (ok ? '' : ' lock') + '">' + esc(ok ? pay[2] : (/^pu:/.test(m.id) ? 'Conecta tu Puter' : /^sz:/.test(m.id) ? 'Descansando' : 'No disponible')) + '</i>';
+  const why = (rec ? '<b class="pti">Para ' + esc(TOPIC[tk].l) + '</b> · ' : forMe().has(m.id) && ptab === 'forme' ? '<b class="pti">Para ti</b> · ' : '') + esc(expert(m).line);
+  const act = inCmp ? '<span class="mya">ya está</span>' : '<button type="button" class="btn sm' + (ok ? '' : ' ghost') + ' muse" data-use>' + (add ? (ok ? 'Sumar' : 'Conectar') : sel ? 'En uso' : ok ? 'Usar' : 'Conectar') + '</button>';
+  return '<div class="mi' + (sel ? ' sel' : '') + (on ? ' on' : '') + (fav ? ' fav' : '') + (ck ? ' ck' : '') + (inCmp ? ' cmpd' : '') + (busy[m.id] ? ' busy' : '') + (anim ? ' in' : '') + '" role="option" tabindex="' + (sel || (mode === 'cmp' && i === 0) ? 0 : -1) + '" data-hover data-id="' + esc(m.id) + '" aria-selected="' + (sel || on) + '" style="--vc:' + vendorColor(m.vendor) + ';--i:' + i + '">' +
+    av(m).replace('<i class="n"></i>', '<i class="n">' + n + '</i>') +
+    '<div class="mi-t"><div class="mi-name"><span>' + hl(m.name, q) + '</span>' + badge + spendTag(m) + '</div><div class="mi-ex">' + why + '</div></div>' +
+    '<div class="mi-a"><button class="star" type="button" aria-label="' + (fav ? 'Quitar de favoritos' : 'Añadir a favoritos') + '" aria-pressed="' + fav + '">' + STAR + '</button>' +
+    (add ? '' : '<label class="ckb"><input type="checkbox" data-ck' + (ck ? ' checked' : '') + '><span>Comparar</span></label>') + act + '</div></div>';
+}
+function paintProv(){
+  $$('.pdot[data-pd]').forEach(d => d.classList.toggle('on', d.dataset.pd === 'sz' ? szOn() : d.dataset.pd === 'pu' ? puterOn() : d.dataset.pd === 'gq' ? gqOn() : orOn()));
+  /* beta 2: OpenRouter y Groq solo se ven si ya tenías tu llave de antes; nadie más las necesita */
+  const gb = $('#provSeg [data-p="gq"]'), ob = $('#provSeg [data-p="or"]'), was = [gb && gb.hidden, ob && ob.hidden].join();
+  if (gb) gb.hidden = !gqOn(); if (ob) ob.hidden = !orOn();
+  if ((ui.prov === 'gq' && !gqOn()) || (ui.prov === 'or' && !orOn())){ ui.prov = 'all'; saveUI(); $$('#provSeg button').forEach(x => x.setAttribute('aria-selected', String(x.dataset.p === 'all'))); }
+  if (was !== [gb && gb.hidden, ob && ob.hidden].join()) requestAnimationFrame(() => placePill($('#provSeg')));
+}
+function renderList(o = {}){
+  try{ paintProv(); }catch(e){}
+  const q = query.trim().toLowerCase(), keep = listEl.scrollTop;
+  $('#q').placeholder = cat.list.length ? 'Busca entre ' + cat.list.length + ' IA… o escribe lo que quieres hacer' : 'Busca una IA… o escribe lo que quieres hacer';
+  if (!cat.list.length && cat.status === 'loading'){
+    listEl.innerHTML = Array.from({ length:9 }, () => '<div class="msk"><i></i><div><b style="width:' + (60 + Math.random() * 30 | 0) + '%"></b><b></b></div></div>').join('');
+    countTo($('#liveN'), 0); return;
+  }
+  const l = visible(q);
+  countTo($('#liveN'), l.length); const prn = $('#prN'); if (prn) prn.textContent = l.length + (l.length === 1 ? ' IA' : ' IA');
+  if (!l.length){
+    const noCat = !cat.list.length;
+    listEl.innerHTML = '<div class="mnone"><h4>' + (noCat ? 'No pude traer la lista' : 'Nada por aquí') + '</h4><p>' + (noCat ? 'Revisa tu internet y vuelve a intentarlo.' : 'Ninguna IA coincide con lo que buscaste o filtraste.') + '</p><button class="btn sm ghost" id="mReset">' + (noCat ? 'Reintentar' : 'Quitar filtros') + '</button></div>';
+    return;
+  }
+  const warn = cat.status === 'offline' || cat.status === 'cached' ? '<div class="mwarn">' + (cat.status === 'offline' ? 'Sin internet: te muestro las IA que ya conocías.' : 'Sin conexión: muestro la última lista guardada (' + ago(cat.t) + ').') + '</div>' : '';
+  const szq = SZ.SZQ, left = Math.max(0, (szq.limit || 20000) - (szq.used || 0));
+  const grp = p => p === 'sz' ? '<div class="mgrp"><b><span class="sz-logo" aria-hidden="true"></span>IAs conectadas</b>' + (szOn() ? '<span class="on">gratis</span>' : '<span>descansando</span>') + '<small>' + esc(SZ.limTxt()) + '</small></div>' : p === 'gq' ? '<div class="mgrp"><b>Groq</b><span class="on">tu llave</span><small>Muy rápida · usa tu propia llave de Groq (gratis con límites)</small></div>' : '<div class="mgrp"><b>' + (p === 'pu' ? SZ.puterLogo() + 'Puter' : 'OpenRouter') + '</b>' + (p === 'pu' ? (puterOn() ? '<span class="on">conectada</span>' : '<span>opcional</span>') : (orOn() ? '<span class="on">' + (st().keys.openrouter ? 'conectada' : 'del equipo') + '</span>' : '<span>sin llave</span>')) + '<small>' + (p === 'pu' ? 'Opcional. Conecta tu versión pro de las IAs más usadas.' : '') + '</small></div>';
+  const szl = l.filter(m => /^sz:/.test(m.id)), gql = l.filter(m => /^gq:/.test(m.id)), pu = l.filter(m => /^pu:/.test(m.id)), orl = l.filter(m => /^or:/.test(m.id)), rows = [];
+  if (warn) rows.push({ t:'w', h:warn });
+  if (!st().survey && !q) rows.push({ t:'w', h:'<div class="mwarn pask">✦ <button type="button" class="lnk" data-svy>Cuéntame qué usas</button> y te destaco tus IA</div>' });
+  /* v1.3: dentro de cada grupo, las IA van juntas por familia (ChatGPT con sus versiones, Claude, Gemini…) */
+  const byFam = !q && !ptopic;
+  const add = (arr, p) => {
+    if (!arr.length) return; rows.push({ t:'g', h:grp(p) });
+    if (!byFam){ arr.forEach(m => rows.push({ t:'m', m })); return; }
+    const top = arr.filter(m => m.id === APODEX), rest = arr.filter(m => m.id !== APODEX), fams = new Map();
+    top.forEach(m => rows.push({ t:'m', m }));
+    rest.forEach(m => { const f = famOf(m); if (!fams.has(f)) fams.set(f, []); fams.get(f).push(m); });
+    for (const [f, ms] of fams){ rows.push({ t:'f', h:'<div class="mfam">' + SZ.glassIcon(ms[0], 'xs') + '<b>' + esc(f) + '</b><small>' + ms.length + (ms.length === 1 ? ' versión' : ' versiones') + '</small></div>' }); ms.forEach(m => rows.push({ t:'m', m })); }
+  };
+  if (ui.prov === 'all'){ add(szl, 'sz'); add(pu, 'pu'); add(gql, 'gq'); if (orOn()) add(orl, 'or'); } else add(l, ui.prov);
+  vMeasure(itemHtml(l[0], 0, q, false), grp('pu'), warn);
+  let y = 0; V.tops = rows.map(r => { const t0 = y; y += rowH(r) + 5; return t0; });
+  V.rows = rows; V.q = q; V.anim = !!o.animate; V.from = V.to = -1;
+  listEl.innerHTML = '<div class="vwin" style="height:' + y + 'px"></div>';
+  listEl.scrollTop = o.keep ? keep : 0;
+  vPaint(true);
+}
+/* lista virtual: con 1.000 modelos solo se dibujan los que caben en pantalla */
+const V = { rows:[], tops:[], hM:0, hG:0, hW:0, from:-1, to:-1, q:'', anim:false };
+let vQ = 0;
+function vMeasure(item, grpHtml, warn){
+  if (V.hM > 0) return;
+  const pr = document.createElement('div'); pr.style.cssText = 'position:absolute;left:0;right:0;top:0;visibility:hidden;pointer-events:none';
+  pr.innerHTML = item + grpHtml + '<div class="mwarn">x</div><div class="olock"><b>x</b><span>x</span><p>Cientos de IA gratis más, con una llave personal que sacas en 2 minutos.</p><button class="btn sm">x</button></div>'; listEl.appendChild(pr);
+  const [a, b, c, d] = pr.children; V.hM = a.offsetHeight; V.hG = b.offsetHeight; V.hW = c.offsetHeight; V.hL = d.offsetHeight + 16; pr.remove();
+  if (!V.hM){ V.hM = 0; return vFallback(); }
+}
+function vFallback(){ if (!V.hM){ V._fb = true; } }
+function rowH(r){ return r.t === 'f' ? 34 : r.t === 'm' ? (V.hM || 80) : r.t === 'g' ? (V.hG || 62) : r.t === 'l' ? (V.hL || 150) : (V.hW || 40); }
+function vPaint(force){
+  const win = listEl.firstElementChild; if (!win || !win.classList.contains('vwin')) return;
+  const n = V.rows.length; if (!n){ win.innerHTML = ''; return; }
+  const top = listEl.scrollTop, vh = listEl.clientHeight || 700, pad = 500;
+  let lo = 0, hi = n - 1;
+  while (lo < hi){ const mid = (lo + hi) >> 1; if (V.tops[mid] + rowH(V.rows[mid]) < top - pad) lo = mid + 1; else hi = mid; }
+  let b = lo; while (b < n - 1 && V.tops[b + 1] < top + vh + pad) b++;
+  if (!force && lo === V.from && b === V.to) return;
+  V.from = lo; V.to = b;
+  let html = '', k = 0;
+  for (let i = lo; i <= b; i++){ const r = V.rows[i]; html += '<div class="vrow" style="top:' + V.tops[i] + 'px">' + (r.t === 'm' ? itemHtml(r.m, k, V.q, V.anim && k++ < 14) : r.h) + '</div>'; }
+  win.innerHTML = html; V.anim = false;
+}
+listEl.addEventListener('scroll', () => { if (!vQ) vQ = requestAnimationFrame(() => { vQ = 0; vPaint(false); }); }, { passive:true });
+addEventListener('resize', () => { const h = V.hM; V.hM = 0; renderList({ keep:true }); if (!V.hM) V.hM = h; });
+function paintSel(){
+  const cmpIds = st().cmp, id = selId();
+  $$('.mi', listEl).forEach(el => {
+    const sel = mode === 'solo' && el.dataset.id === id, i = cmpIds.indexOf(el.dataset.id), on = mode === 'cmp' && i > -1;
+    el.classList.toggle('sel', sel); el.classList.toggle('on', on); el.setAttribute('aria-selected', String(sel || on));
+    const n = $('.n', el); if (n) n.textContent = on ? i + 1 : '';
+  });
+}
+function paintBusy(){ $$('.mi', listEl).forEach(el => el.classList.toggle('busy', !!busy[el.dataset.id])); }
+
+/* barra "en vivo" */
+function renderLive(){
+  const box = $('#live'), s = cat.status;
+  box.dataset.s = s === 'live' ? 'live' : s === 'loading' ? 'loading' : 'off';
+  $('#liveLbl').textContent = s === 'live' ? 'Lista al día' : s === 'loading' ? 'Conectando…' : s === 'cached' ? 'Lista guardada' : 'Sin conexión';
+  $('#liveAgo').textContent = s === 'loading' ? '' : ago(cat.t).replace('hace ', '');
+  box.title = $('#liveLbl').textContent + (cat.t ? ' · ' + ago(cat.t) : '');
+}
+setInterval(() => { if (cat.status !== 'loading') $('#liveAgo').textContent = ago(cat.t).replace('hace ', ''); }, 1000);
+
+async function refresh(silent){
+  if (loading) return; loading = true; cat.status = cat.list.length && cat.status !== 'offline' ? cat.status : 'loading';
+  $('#live').dataset.s = 'loading'; $('#liveLbl').textContent = 'Actualizando…';
+  try{
+    const r = await SZ.fetchCatalog(), before = new Set(cat.list.map(m => m.id));
+    const hadPu = [...before].some(x => /^pu:/.test(x)), fresh = before.size ? r.list.filter(m => !before.has(m.id) && (hadPu || !/^pu:/.test(m.id))) : [];
+    fresh.forEach(m => newIds.add(m.id));
+    const lost = before.size && idx.has(selId()) && !r.list.some(m => m.id === selId());
+    setCatalog(r.list, r.t, 'live');
+    renderList({ keep:before.size > 0, animate:before.size === 0 }); renderLive(); paintSel(); renderTop(); renderNow();
+    try{ applySurvey(false); }catch(e){}
+    if (fresh.length) toast(fresh.length + (fresh.length === 1 ? ' modelo nuevo' : ' IA nuevas') + ' en la lista.');
+    else if (!silent) toast('Lista al día: ' + r.list.length + ' modelos.');
+    fixModel(true);
+  }catch(e){
+    if (!cat.list.length) setCatalog(fallbackList(), 0, 'offline'); else cat.status = 'cached';
+    renderList({ keep:true, animate:true }); renderLive();
+    if (!silent) toast('No pude actualizar en vivo. Uso la última lista guardada.');
+  }finally{ loading = false; }
+}
+$('#refreshBtn').addEventListener('click', () => refresh(false));
+setInterval(() => { if (!document.hidden) refresh(true); }, 600000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - cat.t > 60000) refresh(true); });
+
+/* filtros y orden */
+const FILTERS = [
+  ['free', 'Gratis', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>'],
+  ['fav', 'Favoritos', STAR.replace('<svg', '<svg fill="none" stroke="currentColor" stroke-width="2"')],
+  ['forme', '✦ Para ti', ''], ['code', 'Código', ''], ['write', 'Escritura', ''], ['fast', 'Rápidas', ''], ['reason', 'Piensan con calma', ''], ['vision', 'Ven fotos', ''], ['math', 'Matemáticas', ''], ['long', 'Leen textos largos', ''], ['newm', 'Nuevas', '']
+];
+function renderFilters(){
+  ui.forme = true;
+  $('#filters').innerHTML = FILTERS.map(([k, lbl, svg]) => '<button class="fchip' + (k === 'forme' ? ' always' : '') + '" data-k="' + k + '" aria-pressed="' + ui[k] + '"' + (k === 'forme' ? ' title="Siempre activo: tus IA recomendadas van arriba. Tócalo para ajustar."' : '') + '>' + svg + lbl + '</button>').join('');
+}
+let forMeC = null, forMeK = '';
+function forMe(){ const k = (st().survey ? st().survey.t : 0) + ':' + cat.list.length + ':' + (puterOn() ? 1 : 0) + (orOn() ? 1 : 0) + (szOn() ? 1 : 0); if (forMeK !== k){ forMeK = k; forMeC = new Set(SZ.surveyPicks(cat.list.filter(m => connected(m.id)), st().survey, 6)); } return forMeC; }
+$('#filters').addEventListener('click', e => {
+  const b = e.target.closest('.fchip'); if (!b) return;
+  if (b.dataset.k === 'forme'){ askSurvey(); return; }   /* siempre activo: tocarlo ajusta tus recomendaciones */
+  ui[b.dataset.k] = !ui[b.dataset.k]; b.setAttribute('aria-pressed', String(ui[b.dataset.k])); saveUI(); renderList({ animate:true });
+});
+function askSurvey(){ SZ.surveyModal(ok => { if (ok){ forMeK = ''; applySurvey(true); renderList({ animate:true }); toast('Listo: tus IA recomendadas quedaron arriba con ✦ Para ti.'); } }); }
+function placePill(seg){
+  const a = $('[aria-selected="true"]', seg), pill = $('.pill', seg);
+  if (!a || !pill) return;
+  pill.style.width = a.offsetWidth + 'px'; pill.style.transform = 'translateX(' + a.offsetLeft + 'px)';
+}
+$$('#sortSeg button').forEach(b => {
+  b.setAttribute('aria-selected', String(b.dataset.s === ui.sort));
+  b.addEventListener('click', () => { ui.sort = b.dataset.s; saveUI(); $$('#sortSeg button').forEach(x => x.setAttribute('aria-selected', String(x === b))); placePill($('#sortSeg')); placePill($('#provSeg')); renderList({ animate:true }); });
+});
+$$('#provSeg button').forEach(b => {
+  b.setAttribute('aria-selected', String(b.dataset.p === ui.prov));
+  b.addEventListener('click', () => { ui.prov = b.dataset.p; saveUI(); $$('#provSeg button').forEach(x => x.setAttribute('aria-selected', String(x === b))); placePill($('#provSeg')); renderList({ animate:true }); });
+});
+
+/* filtros: arrastrar, ruedita y flechas para ver todos */
+(function(){
+  const f = $('#filters'); if (!f) return;
+  const w = document.createElement('div'); w.className = 'fwrap'; f.parentNode.insertBefore(w, f); w.appendChild(f);
+  const ar = d => '<button class="farr ' + (d < 0 ? 'lft' : 'rgt') + '" type="button" aria-label="' + (d < 0 ? 'Ver filtros anteriores' : 'Ver más filtros') + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="' + (d < 0 ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6') + '"/></svg></button>';
+  w.insertAdjacentHTML('beforeend', ar(-1) + ar(1));
+  $('.farr.lft', w).addEventListener('click', () => f.scrollBy({ left:-160 }));
+  $('.farr.rgt', w).addEventListener('click', () => f.scrollBy({ left:160 }));
+  const edges = () => { const m = f.scrollWidth - f.clientWidth; f.classList.toggle('l', f.scrollLeft > 3); f.classList.toggle('r', f.scrollLeft < m - 3); };
+  f.addEventListener('scroll', edges, { passive:true }); addEventListener('resize', edges); setTimeout(edges, 200); setTimeout(edges, 1500);
+  f.addEventListener('wheel', e => { if (f.scrollWidth > f.clientWidth && Math.abs(e.deltaY) > Math.abs(e.deltaX)){ e.preventDefault(); f.scrollLeft += e.deltaY; } }, { passive:false });
+  let down = null, moved = false;
+  f.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' || e.button) return; down = { x:e.clientX, s:f.scrollLeft }; moved = false; });
+  addEventListener('pointermove', e => { if (!down) return; const dx = e.clientX - down.x; if (!moved && Math.abs(dx) > 5){ moved = true; f.classList.add('dragging'); } if (moved) f.scrollLeft = down.s - dx; });
+  addEventListener('pointerup', () => { if (!down) return; down = null; setTimeout(() => f.classList.remove('dragging'), 0); });
+  f.addEventListener('click', e => { if (moved){ e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+})();
+let qT = 0;
+$('#q').addEventListener('input', e => {
+  $('#searchBox').classList.toggle('has', !!e.target.value);
+  clearTimeout(qT); qT = setTimeout(() => { query = e.target.value; paintPNote(); renderList({ animate:true }); }, 90);
+});
+function clearQuery(){ $('#q').value = ''; query = ''; $('#searchBox').classList.remove('has'); renderList({ animate:true }); }
+$('#qClear').addEventListener('click', () => { clearQuery(); $('#q').focus(); });
+
+/* clics sobre la lista */
+listEl.addEventListener('click', e => {
+  if (e.target.closest('[data-org]')){ openOrGuide(); return; }
+  if (e.target.closest('[data-svy]')){ askSurvey(); return; }
+  if (e.target.closest('#mReset')){ if (!cat.list.length) refresh(false); else { Object.assign(ui, { free:false, fav:false, reason:false, vision:false, long:false, forme:false, code:false, write:false, fast:false, math:false, newm:false }); saveUI(); renderFilters(); clearQuery(); } return; }
+  const star = e.target.closest('.star');
+  if (star){ toggleFav(star.closest('.mi'), star); return; }
+  if (e.target.closest('.ckb')) return;                  /* la casilla «Comparar» se maneja en «change» */
+  const mi = e.target.closest('.mi'); if (!mi || mi.classList.contains('cmpd')) return;
+  pickModel(mi.dataset.id, mi);
+});
+/* marcar varias para compararlas (hasta 4; de OpenRouter, máximo 2) */
+listEl.addEventListener('change', e => {
+  const c = e.target.closest('[data-ck]'); if (!c) return;
+  const mi = c.closest('.mi'), id = mi.dataset.id;
+  if (c.checked){
+    const why = cmpWhyNot(id, [...pickSel]);
+    if (why && why !== 'ya'){ c.checked = false; toast(why); return; }
+    pickSel.add(id);
+    if (!sessionStorage.getItem('synthz:cmpwarn')){ try{ sessionStorage.setItem('synthz:cmpwarn', '1'); }catch(x){} toast('Ojo: en Comparar cada IA responde por separado y cuenta como un mensaje. Por eso se llama Comparar, no Unir.'); }
+  } else pickSel.delete(id);
+  mi.classList.toggle('ck', c.checked); paintPGo();
+});
+function paintPGo(){
+  const b = $('#pGo'), n = pickSel.size;
+  b.hidden = pickMode === 'add' || n < 2;
+  if (!b.hidden){ b.textContent = 'Comparar estas ' + n + ' →'; b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }
+}
+$('#pGo').addEventListener('click', () => {
+  const ids = [...pickSel]; if (ids.length < 2) return;
+  const from = ids.map(id => { const el = $('.mi[data-id="' + CSS.escape(id) + '"] .av', listEl); return el ? el.getBoundingClientRect() : null; });
+  pickSel.clear(); closeSide();
+  startCompare(ids);
+  flyChips(ids, from);
+});
+/* pestañas y temas del selector */
+$('#pTabs').addEventListener('click', e => { const b = e.target.closest('[data-pt]'); if (!b) return; ptab = b.dataset.pt; $$('#pTabs button').forEach(x => x.setAttribute('aria-selected', String(x === b))); placePill($('#pTabs')); paintPNote(); renderList({ animate:true }); });
+let ptopAll = false;
+function renderPTopics(){
+  const L = ptopAll ? TOPICS : TOPICS.slice(0, 8);
+  $('#pTopics').innerHTML = L.map(([k, e, l], i) => '<button type="button" class="tchip sm" data-ptk="' + k + '" aria-pressed="' + (ptopic === k) + '" style="--i:' + i + '">' + esc(l) + '</button>').join('')
+    + '<button type="button" class="tchip sm more" data-ptmore>' + (ptopAll ? 'Menos temas' : '+ ' + (TOPICS.length - 8) + ' temas') + '</button>';
+}
+$('#pTopics').addEventListener('click', e => {
+  if (e.target.closest('[data-ptmore]')){ ptopAll = !ptopAll; smoothSwap($('#pTopics'), renderPTopics); return; }
+  const b = e.target.closest('[data-ptk]'); if (!b) return;
+  ptopic = ptopic === b.dataset.ptk ? null : b.dataset.ptk;
+  $$('#pTopics [data-ptk]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.ptk === ptopic)));
+  paintPNote(); renderList({ animate:true });
+});
+function paintPNote(){
+  const note = $('#pNote'), q = query.trim(), tq = ptopic || (q ? topicFor(q) : null);
+  note.hidden = false; note.classList.toggle('warn', pickMode === 'add');
+  if (pickMode === 'add') note.innerHTML = (cmpLast && cmpLast.text ? 'La que sumes responde a tu última pregunta y aparece al lado, sin volver a enviarla. ' : 'Responde la misma pregunta que las demás y aparece al lado. ') + '<b>Ojo:</b> cada IA cuenta como un mensaje de tu límite de hoy. Puedes poner hasta 4 a la vez.';
+  else if (tq) note.innerHTML = 'Para <b>' + esc(TOPIC[tq].l) + '</b> te recomiendo estas. Marca dos para compararlas lado a lado.';
+  else if (ptab === 'fav') note.innerHTML = st().fav.length ? 'Tus IA favoritas. Toca la estrella de cualquier IA para guardarla aquí.' : 'Aún no tienes favoritas: toca la ★ de una IA para guardarla aquí.';
+  else if (ptab === 'all') note.innerHTML = 'Todas las IA que puedes usar. Marca dos o más para compararlas.';
+  else note.innerHTML = 'Tus IA recomendadas van arriba ✦. Marca dos o más para compararlas lado a lado.';
+}
+/* cambia un bloque con una transición suave de altura (para «+ temas») */
+function smoothSwap(box, paint){
+  if (!box) return; const h0 = box.offsetHeight;
+  paint();
+  if (SZ.reduce) return;
+  const h1 = box.offsetHeight;
+  box.animate([{ height:h0 + 'px', overflow:'hidden' }, { height:h1 + 'px', overflow:'hidden' }], { duration:520, easing:'cubic-bezier(.22,1,.36,1)' });
+  $$('.tchip', box).forEach((b, i) => { b.style.animationDelay = Math.min(i, 24) * 22 + 'ms'; b.classList.remove('rise'); void b.offsetWidth; b.classList.add('rise'); });
+}
+listEl.addEventListener('keydown', e => {
+  if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && e.target.classList.contains('mi')){ e.preventDefault(); const L = $$('.mi', listEl), j = L.indexOf(e.target), n = L[j + (e.key === 'ArrowDown' ? 1 : -1)]; if (n){ L.forEach(x => x.tabIndex = -1); n.tabIndex = 0; n.focus(); n.scrollIntoView({ block:'nearest' }); } return; } if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('mi')){ e.preventDefault(); pickModel(e.target.dataset.id, e.target); } });
+listEl.addEventListener('scroll', () => requestAnimationFrame(SZ.S.retarget), { passive:true });
+
+function toggleFav(el, star){
+  const f = st().fav, id = el.dataset.id, i = f.indexOf(id);
+  if (i > -1) f.splice(i, 1); else f.unshift(id);
+  save(); el.classList.toggle('fav', i < 0); star.setAttribute('aria-pressed', String(i < 0));
+  star.classList.remove('pop'); void star.offsetWidth; star.classList.add('pop');
+  if (i < 0){ const r = star.getBoundingClientRect(); burst(r.left + 16, r.top + 16, ['#f2c46b', '#ffe3a1', '#ff8f7a'], 9); }
+  setTimeout(() => renderList({ keep:true }), 420);
+}
+/* comparar: hasta 4 IA; de OpenRouter máximo 2 (su plan gratis da 50 mensajes al día y cada IA gasta uno) */
+const CMP_MAX = 4, OR_CMP_MAX = 2;
+function cmpWhyNot(id, base){
+  const a = base || st().cmp;
+  if (a.includes(id)) return 'ya';
+  if (a.length >= CMP_MAX) return 'Puedes comparar hasta 4 IA a la vez.';
+
+  return '';
+}
+function pickModel(id, node){
+  { const mm = info(id); if (mm && mm.spend === 3 && node !== null){ try{ if (!sessionStorage.getItem('synthz:spendw')){ sessionStorage.setItem('synthz:spendw', '1'); setTimeout(() => toast('Ojo: ' + mm.name + ' gasta mucho de tu Puter. Para cosas sencillas usa una con rayitas verdes y tu saldo te dura más.'), 600); } }catch(e){} } }
+  if (mode === 'cmp' || pickMode === 'add'){
+    const base = mode === 'cmp' ? st().cmp : [selId()].filter(x => x !== TRIAL_ID), why = cmpWhyNot(id, base);
+    if (why === 'ya'){ toast('Esa IA ya está en la comparación.'); return; }
+    if (why){ toast(why); return; }
+    addToCompare(id, node); return;
+  }
+  if (trialOn && id !== TRIAL_ID) exitTrial(true);
+  const same = id === selId();
+  if (node) st().pinned = id;
+  st().model.openrouter = id; save(); paintSel(); renderTop(!same); paintAccent();
+  if (!same && node){ const r = node.getBoundingClientRect(); burst(r.left + 32, r.top + 24, [vendorColor(info(id).vendor), '#ffffff', vendorColor(info(id).vendor)], 8); }
+  renderMsgs();
+  closeSide();
+}
+
+/* ---------- cabecera ---------- */
+function retype(el, text, o){ el.textContent = text; el._chars = null; el.removeAttribute('aria-label'); el.removeAttribute('data-typed'); return typeIn(el, o); }
+/* la IA que usas va arriba (donde antes estaba la prueba); quién paga va abajo, junto a la caja */
+const PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+const CARET = '<svg class="cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+const XS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+function renderTop(animate){
+  const row = $('#pickRow');
+  try{ renderCPick(); }catch(e){}
+  if (mode === 'solo' && document.body.classList.contains('fresh')){
+    row.classList.remove('n3', 'n4');
+    const ok0 = connected(selId()), [k1, long1] = payOf(selId()), k = ok0 ? k1 : 'off', long = ok0 ? long1 : /^pu:/.test(selId()) ? 'Puter · sin conectar (toca para conectarlo)' : long1, left = trialOn ? trialLeft() : 0;
+    row.innerHTML = '<button type="button" class="paypill ' + k + '" id="payPill" title="Quién paga lo que escribes">' + '<i aria-hidden="true"></i>' + (trialOn ? 'Prueba guiada · te quedan <b>' + left + ' de ' + ((SZ.trialGet() || {}).max || 5) + '</b> · la paga SynthZ' : esc(long)) + CARET + '</button>';
+    return;
+  }
+  if (mode === 'solo'){
+    row.classList.remove('n3', 'n4');
+    const m = info(selId()), open = $('#side').classList.contains('open') && pickMode === 'set';
+    row.innerHTML = '<button type="button" class="mchip" id="curChip" aria-haspopup="dialog" aria-expanded="' + open + '" title="Cambiar de IA" style="--vc:' + vendorColor(m.vendor) + '">' + av(m) + '<b id="curName"></b>' + CARET + '</button>'
+      + (trialOn ? '' : '<button type="button" class="addb" data-add aria-label="Agregar otra IA para comparar">' + PLUS + '<span>Agregar otra IA</span></button>')
+      + '<span class="paym" id="payM"></span>';
+    const h1 = $('#curName'); h1.setAttribute('aria-label', m.name);
+    if (animate) retype(h1, m.name, { cps:70, max:.7 }); else h1.textContent = m.name;
+  } else {
+    const ids = st().cmp;
+    row.classList.remove('n3', 'n4'); if (ids.length >= 3) row.classList.add('n' + ids.length);
+    row.innerHTML = ids.map(id => { const m = info(id); return '<span class="mchip c" style="--vc:' + vendorColor(m.vendor) + '">' + av(m) + '<b>' + esc(m.name) + '</b><button type="button" class="rm" data-rm="' + esc(id) + '" aria-label="Quitar ' + esc(m.name) + '">' + XS + '</button></span>'; }).join('')
+      + (ids.length < CMP_MAX ? '<button type="button" class="addb ic" data-add aria-label="Agregar otra IA">' + PLUS + '<span>Agregar</span></button>' : '')
+      + '<button type="button" class="bt-mini" id="btTog" aria-pressed="' + !!st().battle + '" title="No verás qué IA es hasta que votes">⚔ A ciegas</button>'
+      + '<span class="paym" id="payM"></span>';
+  }
+  paintPay();
+}
+$('#cPick').addEventListener('click', e => { if (side.classList.contains('open')) closeSide(); else openSide('set', e.currentTarget); });
+$('#cCmp').addEventListener('click', e => openSide('add', e.currentTarget));
+$('#pickRow').addEventListener('click', e => {
+  if (e.target.closest('#payPill')){ if (needsConn()) openConnect(); else coinModal('panel'); return; }
+  const rm = e.target.closest('[data-rm]'); if (rm){ removeCmp(rm.dataset.rm, rm.closest('.mchip')); return; }
+  const ad = e.target.closest('[data-add]'); if (ad){ if ($('#side').classList.contains('open') && pickMode === 'add') closeSide(); else openSide('add', ad); return; }
+  const bt = e.target.closest('#btTog'); if (bt){ st().battle = !st().battle; save(); bt.setAttribute('aria-pressed', String(!!st().battle)); toast(st().battle ? 'A ciegas: no verás qué IA es hasta que votes (desde la próxima pregunta).' : 'Modo sorpresa apagado: ya ves el nombre de cada IA.'); return; }
+  const ch = e.target.closest('#curChip'); if (ch){ if ($('#side').classList.contains('open')) closeSide(); else openSide('set', ch); }
+});
+/* quién paga lo que escribes: siempre a la vista (regla 5) */
+function payOf(id){
+  if (id === TRIAL_ID) return ['tr', 'Prueba guiada · la paga SynthZ', 'Prueba · paga SynthZ'];
+  if (/^sz:/.test(id)) return ['sz', 'Gratis · ' + SZ.limTxt().toLowerCase(), 'Gratis · ' + SZ.limShort().toLowerCase()];
+  if (/^pu:/.test(id)) return ['pu', 'Con tu Puter · tu cuenta gratis', 'Con tu Puter'];
+  return ['or off', 'Esta IA ya no está disponible: elige otra', 'Elige otra IA'];
+}
+function paintPay(){
+  let c, l, s, ex = false;
+  if (mode === 'cmp'){ c = ''; l = 'Comparando · cada IA cuenta como un mensaje'; s = 'Cada IA cuenta como un mensaje'; }
+  else if (trialOn){ const left = trialLeft(), mx = (SZ.trialGet() || {}).max || 5; c = 'tr'; ex = true; l = left > 0 ? 'Prueba guiada · te quedan ' + left + ' de ' + mx + ' · la paga SynthZ' : 'Prueba guiada terminada'; s = left > 0 ? 'Prueba · ' + left + ' de ' + mx + ' · paga SynthZ' : 'Prueba terminada'; }
+  else { const id = selId(), p = payOf(id); c = p[0]; l = p[1]; s = p[2]; if (!connected(id)){ c = 'off'; l = /^pu:/.test(id) ? 'Puter · sin conectar' : l; s = /^pu:/.test(id) ? 'Puter sin conectar' : s; } }
+  const P = $('#payL'), M = $('#payM');
+  if (P){ P.className = 'payl ' + c; P.innerHTML = '<i aria-hidden="true"></i>' + esc(l) + (ex ? '<button type="button" class="lnk" data-tx="exit">Salir</button>' : ''); }
+  if (M){ M.className = 'paym ' + c; M.innerHTML = '<i aria-hidden="true"></i>' + esc(s); }
+}
+$('#payL').addEventListener('click', e => { if (e.target.closest('[data-tx="exit"]')) exitTrial(); });
+function paintAccent(){
+  const g = $('#glow'); g.classList.add('swap');
+  setTimeout(() => { root.style.setProperty('--c', mode === 'cmp' ? '#b8c4ff' : vendorColor(info(selId()).vendor)); g.classList.remove('swap'); }, 220);
+}
+
+/* quién está escribiendo */
+/* el estado de verdad: internet, conexión, catálogo y modelo elegido */
+let idleK = '';
+function readyState(){
+  if (!navigator.onLine) return ['off', 'sin internet', ''];
+  if (mode === 'cmp' && !st().cmp.length) return ['warn', 'elige las IA que quieres comparar', 'side'];
+  if (trialOn) return trialLeft() > 0 ? ['ok', 'prueba guiada · ' + trialLeft() + ' mensajes', ''] : ['warn', 'prueba terminada · conectar', 'conn'];
+  if (needsConn()) return ['off', 'sin conectar · conectar', 'conn'];
+  if (loading && !cat.list.length) return ['wait', 'cargando la lista de IA…', ''];
+  if (mode !== 'cmp' && cat.list.length && info(selId()).stub) return ['warn', 'esta IA no está disponible · cambiar', 'side'];
+  return ['ok', 'listo para escribir', ''];
+}
+function refreshIdle(){ if (Object.keys(busy).length) return; const [k, txt] = readyState(); if (k + txt !== idleK) renderNow(); }
+addEventListener('online', refreshIdle); addEventListener('offline', refreshIdle);
+setInterval(refreshIdle, 2500);
+$('#now').addEventListener('click', e => { const b = e.target.closest('[data-now]'); if (!b) return; if (b.dataset.now === 'conn') openConnect(); else openSide(); });
+function renderNow(){
+  const ids = Object.keys(busy), box = $('#now'); SZ.S.busy(ids.some(id => busy[id] === 'think')); document.title = ids.some(id => busy[id] === 'think') ? 'Pensando… · SynthFlow' : 'SynthFlow · SynthZ';
+  box.innerHTML = ''; box.classList.toggle('many', ids.length > 2);
+  /* el letrero «conectado / sin conectar» ya no existe: si falta una IA, la caja de texto se bloquea y lo explica */
+  if (!ids.length){ { const [k0, t0] = readyState(); idleK = k0 + t0; } box.classList.add('idle'); }
+  else box.classList.remove('idle');
+  ids.forEach(id => {
+    const m = info(id), c = document.createElement('span');
+    c.className = 'now-chip live'; c.style.setProperty('--vc', vendorColor(m.vendor));
+    c.innerHTML = av(m, 'xs') + '<b>' + esc(m.name) + '</b><em>' + (busy[id] === 'think' ? 'pensando' : 'escribiendo') + '</em><span class="dots"><i></i><i></i><i></i></span>';
+    box.appendChild(c);
+  });
+  $('#sendBtn').disabled = false; $('#sendBtn').classList.toggle('stop', ids.length > 0); $('#sendBtn').setAttribute('aria-label', ids.length ? 'Detener la respuesta' : 'Enviar');
+  paintBusy(); renderFoot(); paintPay();
+}
+function renderFoot(){
+  const left = SZ.msgsLeft(), lv = SZ.limLvl();
+  $('#sideFoot').innerHTML = '<button class="sxfoot lim ' + lv + '" id="sxBtn" type="button" title="Tu límite de hoy">' + SZ.limRing(20) + '<span>' + esc(SZ.limTxt()) + '</span></button>';
+  const rc = $('#railCoin'); if (rc) rc.innerHTML = SZ.limRing(22) + '<span class="rl">' + esc(SZ.limTxt()) + '</span>';
+  const tc = $('#tabCoin .tci'); if (tc) tc.innerHTML = SZ.limRing(22);
+}
+
+/* ---------- mensajes ---------- */
+const msgsEl = $('#msgs'), lane = $('#lane'), inp = $('#inp'), sendBtn = $('#sendBtn');
+/* v1.8: en modo agente la conversación es una sola aunque cada mensaje lo responda una IA distinta */
+const AGK = 'agente';
+const thModel = () => st().agent && !trialOn ? AGK : selId();
+const ckey = () => 'openrouter::' + thModel() + (curT() ? '::' + curT() : '');
+const chatArr = () => st().chats[ckey()] || (st().chats[ckey()] = []);
+const near = () => msgsEl.scrollHeight - msgsEl.scrollTop - msgsEl.clientHeight;
+msgsEl.addEventListener('scroll', () => { stick = near() < 90; $('#toBottom').classList.toggle('show', near() > 240); SZ.S.retarget(); }, { passive:true });
+const follow = () => { if (stick) msgsEl.scrollTop = msgsEl.scrollHeight; };
+const jump = () => { stick = true; msgsEl.scrollTop = msgsEl.scrollHeight; };
+$('#toBottom').addEventListener('click', () => { msgsEl.scrollTo({ top:msgsEl.scrollHeight, behavior:'smooth' }); });
+
+const COPY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>';
+const REGEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>';
+function chipsHtml(fs){ return '<div class="fcs">' + fs.map(f => '<span class="fc ro">' + (f.thumb ? '<img src="' + esc(f.thumb) + '" alt="">' : '<i class="ic">' + esc((f.name.split('.').pop() || 'file').slice(0, 4)) + '</i>') + '<b>' + esc(f.name) + '</b></span>').join('') + '</div>'; }
+function userEl(text, fs){ const u = document.createElement('div'); u.className = 'm user'; u.innerHTML = '<div class="who">tú ▸</div><div class="bub"></div>'; $('.bub', u).textContent = text; if (fs && fs.length) $('.bub', u).insertAdjacentHTML('beforeend', chipsHtml(fs)); return u; }
+function botEl(mid){
+  const m = info(mid), el = document.createElement('div'); el.className = 'm bot brand'; el.style.cssText = brandVars(m); el.dataset.brand = (SZ.brandOf(m) || [])[1] || '';
+  el.innerHTML = '<div class="who">' + av(m, 'xs') + '<b>' + esc(m.name) + '</b><span class="md">' + esc(m.vlabel) + '</span><span class="wr">escribiendo<span class="dots"><i></i><i></i><i></i></span><span class="tk">0</span> palabras</span></div><div class="body"></div>';
+  return el;
+}
+function thinkEl(mid){
+  const m = info(mid), el = document.createElement('div'); el.className = 'm bot brand think-wrap'; el.style.cssText = brandVars(m);
+  el.innerHTML = '<div class="who">' + av(m, 'xs') + '<b>' + esc(m.name) + '</b><span class="md">' + esc(m.vlabel || '') + '</span></div>';
+  if (!works[mid]) works[mid] = SZ.workView({ model:m.name });
+  el.appendChild(works[mid].el);
+  return el;
+}
+/* ---------- v1.3 · lienzos: cada código o archivo de texto que da la IA sale como un lienzo con «Copiar» y «Descargar» siempre a la vista ---------- */
+const CNV_LANG = { js:['JavaScript', 'js'], javascript:['JavaScript', 'js'], jsx:['React', 'jsx'], ts:['TypeScript', 'ts'], typescript:['TypeScript', 'ts'], tsx:['React', 'tsx'], py:['Python', 'py'], python:['Python', 'py'], html:['HTML', 'html'], xml:['XML', 'xml'], svg:['SVG', 'svg'], css:['CSS', 'css'], scss:['SCSS', 'scss'], json:['JSON', 'json'], sql:['SQL', 'sql'], java:['Java', 'java'], c:['C', 'c'], cpp:['C++', 'cpp'], 'c++':['C++', 'cpp'], cs:['C#', 'cs'], csharp:['C#', 'cs'], go:['Go', 'go'], rust:['Rust', 'rs'], rs:['Rust', 'rs'], php:['PHP', 'php'], rb:['Ruby', 'rb'], ruby:['Ruby', 'rb'], kotlin:['Kotlin', 'kt'], swift:['Swift', 'swift'], dart:['Dart', 'dart'], sh:['Terminal', 'sh'], bash:['Terminal', 'sh'], shell:['Terminal', 'sh'], zsh:['Terminal', 'sh'], powershell:['PowerShell', 'ps1'], ps1:['PowerShell', 'ps1'], yaml:['YAML', 'yml'], yml:['YAML', 'yml'], toml:['TOML', 'toml'], ini:['Configuración', 'ini'], md:['Texto (Markdown)', 'md'], markdown:['Texto (Markdown)', 'md'], txt:['Texto', 'txt'], text:['Texto', 'txt'], plaintext:['Texto', 'txt'], csv:['Tabla (CSV)', 'csv'], tsv:['Tabla', 'tsv'], latex:['LaTeX', 'tex'], tex:['LaTeX', 'tex'], r:['R', 'r'], lua:['Lua', 'lua'], vue:['Vue', 'vue'], dockerfile:['Dockerfile', 'Dockerfile'] };
+const CNV_ICO = { copy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg>', down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>', big:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg>' };
+function cnvMeta(pre){
+  const code = $('code', pre), cls = (code && code.className) || '', m = cls.match(/language-([\w+#-]+)/i), k = m ? m[1].toLowerCase() : '';
+  const txt = code ? code.textContent : pre.textContent, L = CNV_LANG[k] || (k ? [k.toUpperCase(), k.replace(/[^\w]/g, '') || 'txt'] : [/^\s*</.test(txt) ? 'HTML' : 'Texto', /^\s*</.test(txt) ? 'html' : 'txt']);
+  /* si la IA puso el nombre del archivo justo antes («index.html», `app.py`…), se usa ese */
+  let name = '', prev = pre.parentElement && pre.parentElement.classList.contains('cnv') ? pre.parentElement.previousElementSibling : pre.previousElementSibling;
+  if (prev){ const f = (prev.textContent || '').match(/([\w.-]+\.(?:[a-z0-9]{1,6}))\s*[:：]?\s*$/i); if (f && !/^\d+\.\d+$/.test(f[1])) name = f[1]; }
+  if (!name) name = (L[1] === 'Dockerfile' ? 'Dockerfile' : (k === 'md' || k === 'markdown' || k === 'txt' || k === 'text' || !k ? 'documento' : 'codigo') + '.' + L[1]);
+  return { label:L[0], name, text:txt.replace(/\n$/, ''), lines:txt.replace(/\n$/, '').split('\n').length };
+}
+function codeButtons(body){
+  if (!body) return;
+  $$('pre', body).forEach(pre => {
+    if (pre.closest('.cnv')) return;
+    const old = $('.cpc', pre); if (old) old.remove();
+    const M = cnvMeta(pre), w = document.createElement('div'); w.className = 'cnv';
+    w.innerHTML = '<div class="cnv-h"><span class="cnv-t"><b>' + esc(M.name) + '</b><small>' + esc(M.label) + ' · ' + M.lines + (M.lines === 1 ? ' línea' : ' líneas') + '</small></span>'
+      + '<button type="button" class="cnv-b" data-cv="copy" title="Copiar todo">' + CNV_ICO.copy + '<span>Copiar</span></button>'
+      + '<button type="button" class="cnv-b" data-cv="down" title="Descargar ' + esc(M.name) + '">' + CNV_ICO.down + '<span>Descargar</span></button>'
+      + '<button type="button" class="cnv-b ic" data-cv="big" title="Ver en grande" aria-label="Ver en grande">' + CNV_ICO.big + '</button></div>';
+    pre.before(w); w.appendChild(pre);
+  });
+}
+function cnvDownload(M){
+  try{ const blob = new Blob([M.text], { type:'text/plain;charset=utf-8' }), u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = M.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); toast('Descargué ' + M.name + '.'); }
+  catch(e){ toast('No pude descargarlo. Usa «Copiar».'); }
+}
+function cnvBig(M){
+  const o = document.createElement('div'); o.className = 'szm cnvfull'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', M.name);
+  o.innerHTML = '<div class="cnv big"><div class="cnv-h"><span class="cnv-t"><b>' + esc(M.name) + '</b><small>' + esc(M.label) + ' · ' + M.lines + ' líneas</small></span><button type="button" class="cnv-b" data-cv="copy">' + CNV_ICO.copy + '<span>Copiar</span></button><button type="button" class="cnv-b" data-cv="down">' + CNV_ICO.down + '<span>Descargar</span></button><button type="button" class="cnv-b ic" data-cx aria-label="Cerrar">×</button></div><pre><code></code></pre></div>';
+  $('code', o).textContent = M.text; document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('on'));
+  const close = () => { o.classList.remove('on'); setTimeout(() => o.remove(), 300); removeEventListener('keydown', key, true); };
+  const key = e => { if (e.key === 'Escape'){ e.stopPropagation(); close(); } };
+  addEventListener('keydown', key, true);
+  o.addEventListener('click', async e => { if (e.target === o || e.target.closest('[data-cx]')) return close(); const b = e.target.closest('[data-cv]'); if (!b) return; if (b.dataset.cv === 'copy'){ await copyText(M.text); flash(b, '¡Copiado!'); } else cnvDownload(M); });
+}
+document.addEventListener('click', async e => {
+  const b = e.target.closest && e.target.closest('.cnv:not(.big) [data-cv]'); if (!b) return;
+  const pre = $('pre', b.closest('.cnv')), M = cnvMeta(pre);
+  if (b.dataset.cv === 'copy'){ await copyText(M.text); flash(b, '¡Copiado!'); SZ.SND.tap && SZ.SND.tap(); }
+  else if (b.dataset.cv === 'down') cnvDownload(M);
+  else cnvBig(M);
+});
+const STAR_A = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9 6.8 19.7l1-5.9L3.5 9.7l5.9-.8z"/></svg>';
+function finishBot(el, meta, last, cont, starred){
+  codeButtons($('.body', el));
+  if (meta) el.insertAdjacentHTML('beforeend', '<div class="meta">' + esc(meta) + '</div>');
+  el.classList.toggle('starred', !!starred);
+  el.insertAdjacentHTML('beforeend', '<div class="acts"><button class="act" data-a="copy">' + COPY + 'Copiar</button><button class="act" data-a="down" title="Descargar la respuesta como archivo de texto">' + CNV_ICO.down + 'Descargar</button><button class="act" data-a="star" aria-pressed="' + !!starred + '" title="Guárdala en tus favoritos">' + STAR_A + '<span>' + (starred ? 'Favorita' : 'Guardar') + '</span></button>' + (last ? '<button class="act" data-a="regen" title="Pide otra respuesta: cuenta como un mensaje nuevo">' + REGEN + 'Otra vez</button>' : '') + (last && cont ? '<button class="act" data-a="cont" title="Pide que siga desde donde quedó: cuenta como un mensaje nuevo">↪ Continuar</button>' : '') + '</div>');
+  el.classList.toggle('last', !!last);
+}
+/* ---------- saludo: el principal la primera vez y tras 12 h; en cada chat nuevo, otro ---------- */
+const GREET = [
+  ['¿Qué quieres ', 'FlowIA’r', ' hoy?'],
+  ['Suelta la idea, la ', 'FlowIAmos', '.'],
+  ['¿A qué problema le ponemos ', 'Flow', ' hoy?'],
+  ['Una idea, mucho ', 'Flow', ', cero límites.'],
+  ['Tú pones la idea, ', 'yo el Flow', '.'],
+  ['¿Qué ', 'creamos', ' juntos hoy?'],
+  ['¿Escribimos, programamos ', 'o soñamos', '?'],
+  ['Modo Flow: ', 'activado', '. ¿Qué sigue?'],
+  ['¿En qué te ', 'ayudo', ' hoy?'],
+  ['Cuéntame, ¿qué tienes ', 'en mente', '?']
+];
+const GKEY = 'synthz:greet';
+let greetI = 0;
+try{ const g = JSON.parse(localStorage.getItem(GKEY) || 'null'); greetI = g && Date.now() - (g.seen || 0) < 12 * 3600e3 && GREET[g.i] ? g.i : 0; }catch(e){}
+function saveGreet(){ try{ localStorage.setItem(GKEY, JSON.stringify({ i:greetI, seen:Date.now() })); }catch(e){} }
+saveGreet();
+function nextGreet(){ let n = greetI; while (n === greetI) n = 1 + Math.floor(Math.random() * (GREET.length - 1)); greetI = n; saveGreet(); }
+function greetHtml(g){
+  let i = 0;
+  const w = s => s.split(/(\s+)/).filter(Boolean).map(x => /^\s+$/.test(x) ? ' ' : '<span class="w" style="--i:' + (i++) + '">' + esc(x) + '</span>').join('');
+  const tail = g[2].match(/^[.,!?;:]+/), rest = tail ? g[2].slice(tail[0].length) : g[2];
+  /* la palabra resaltada y su punto van juntos: nunca queda un «.» solo al empezar la línea */
+  return w(g[0]) + '<span class="wnb">' + '<em class="w" style="--i:' + (i++) + '">' + esc(g[1]) + '</em>' + (tail ? '<span class="w wp" style="--i:' + (i++) + '">' + esc(tail[0]) + '</span>' : '') + '</span>' + w(rest);
+}
+/* ---------- temas: «¿qué quieres hacer?» con IA recomendadas para cada uno ---------- */
+const TOPICS = [
+  ['escribir', '✍️', 'Escribir', { write:30, lang:10 }, [['Mejora un texto mío', 'Mejora este texto: hazlo más claro y natural, sin cambiar lo que quiero decir:\n\n'], ['Escribe un mensaje difícil', 'Ayúdame a escribir un mensaje amable pero firme para: ']]],
+  ['marketing', '📣', 'Marketing', { write:30, lang:8, fast:4 }, [['3 ideas de post para vender', 'Dame 3 ideas de publicaciones para vender mi producto en Instagram. Mi producto es: '], ['Un eslogan para mi marca', 'Propón 10 eslóganes cortos y memorables para mi marca, que se dedica a: ']]],
+  ['codigo', '💻', 'Código', { code:40, reason:8 }, [['Explícame este código', 'Explícame paso a paso qué hace este código y cómo podría mejorarlo:\n\n'], ['Arregla un error', 'Tengo este error. Dime por qué pasa y cómo arreglarlo:\n\n']]],
+  ['estudiar', '📚', 'Estudiar', { reason:18, lang:10, long:6, write:6 }, [['Explícame un tema difícil', 'Explícame este tema como a un principiante, con un ejemplo y 3 preguntas para repasar. El tema es: '], ['Resume este documento', 'Resume este documento en 5 puntos clave y dime qué es lo más importante.', 'file']]],
+  ['planos', '📐', 'Planos y arquitectura', { reason:22, math:16, vision:8 }, [['Distribuye un espacio', 'Ayúdame a distribuir un espacio. Mide ___ por ___ metros y necesito que tenga: '], ['Calcula materiales', 'Calcula cuánto material necesito (con un 10 % de margen) para: ']]],
+  ['negocios', '📈', 'Negocios', { reason:22, write:16, long:4 }, [['Un plan para mi idea', 'Hazme un plan de negocio sencillo en pasos para esta idea: '], ['Ponle precio a lo que vendo', 'Ayúdame a calcular un precio justo y rentable. Vendo ___, me cuesta ___ hacerlo y mi competencia cobra ___.']]],
+  ['ideas', '💡', 'Ideas', { write:20, fast:12, reason:6 }, [['Lluvia de ideas', 'Dame 15 ideas originales (de las más normales a las más locas) para: '], ['Aterriza mi idea', 'Hazme preguntas para aterrizar esta idea y luego propón un plan en pasos. Mi idea es: ']]],
+  ['imagenes', '🖼️', 'Imágenes y PDF', { vision:45, long:10 }, [['Describe una imagen', 'Describe esta imagen con detalle y dime qué te llama la atención.', 'file'], ['Saca los datos de un PDF', 'Saca de este PDF los datos importantes en una tabla.', 'file']]],
+  ['redes', '📱', 'Redes sociales', { write:25, fast:10, lang:6 }, [['Guion para un reel', 'Escribe un guion de 30 segundos para un reel sobre: '], ['Calendario de publicaciones', 'Hazme un calendario de publicaciones de 2 semanas para una cuenta de: ']]],
+  ['ventas', '💼', 'Ventas', { write:25, reason:6 }, [['Responde a un cliente', 'Ayúdame a responder a este cliente de forma amable para cerrar la venta:\n\n'], ['Descripción de producto', 'Escribe una descripción de producto que convenza, para: ']]],
+  ['correo', '✉️', 'Correos y trabajo', { write:28, fast:8 }, [['Escribe un correo formal', 'Escribe un correo formal y corto para: '], ['Resume una reunión', 'Convierte estas notas de reunión en un resumen con tareas y responsables:\n\n']]],
+  ['empleo', '🧾', 'Hoja de vida y empleo', { write:28, lang:6 }, [['Mejora mi hoja de vida', 'Mejora mi hoja de vida para el cargo de ___. Aquí está:\n\n'], ['Prepárame una entrevista', 'Hazme 8 preguntas de entrevista para el cargo de ___ y dime qué responder.']]],
+  ['web', '🌐', 'Páginas web', { code:36, vision:4 }, [['Crea una página sencilla', 'Crea una página web sencilla en un solo archivo HTML para: '], ['Revisa mi página', 'Revisa este código de mi página y dime qué mejorar en diseño y velocidad:\n\n']]],
+  ['datos', '📊', 'Datos y Excel', { code:20, math:16, reason:10 }, [['Una fórmula de Excel', 'Dame la fórmula de Excel para: '], ['Analiza estos datos', 'Analiza estos datos y dime qué conclusiones sacas:\n\n']]],
+  ['idiomas', '🌍', 'Idiomas', { lang:35, write:10 }, [['Traduce con naturalidad', 'Traduce esto al inglés de forma natural, no literal:\n\n'], ['Practica conmigo', 'Practica inglés conmigo: hazme preguntas sencillas y corrige mis errores con amabilidad.']]],
+  ['mate', '➗', 'Matemáticas', { math:40, reason:20 }, [['Resuelve paso a paso', 'Resuelve este ejercicio paso a paso y explica cada paso: '], ['Explícame una fórmula', 'Explícame para qué sirve y cómo se usa esta fórmula, con un ejemplo: ']]],
+  ['ciencia', '🔬', 'Ciencia', { reason:28, math:10, long:4 }, [['¿Por qué pasa esto?', 'Explícame de forma sencilla por qué pasa esto: '], ['Ayúdame con un experimento', 'Ayúdame a diseñar un experimento sencillo para comprobar: ']]],
+  ['diseno', '🎨', 'Diseño', { vision:22, write:12 }, [['Paleta de colores', 'Propón 3 paletas de colores (con códigos HEX) para una marca de: '], ['Opina sobre mi diseño', 'Dame tu opinión honesta sobre este diseño y cómo mejorarlo.', 'file']]],
+  ['finanzas', '💰', 'Finanzas personales', { math:20, reason:18 }, [['Organiza mi presupuesto', 'Ayúdame a organizar un presupuesto mensual. Gano ___ y mis gastos fijos son: '], ['Plan de ahorro', 'Hazme un plan para ahorrar ___ en ___ meses.']]],
+  ['legal', '⚖️', 'Legal (orientación)', { reason:24, long:12, write:8 }, [['Explícame un contrato', 'Explícame en palabras sencillas qué dice este contrato y qué debería revisar con un abogado:\n\n'], ['Redacta una carta', 'Ayúdame a redactar una carta formal de reclamo por: ']]],
+  ['salud', '🩺', 'Salud y bienestar', { reason:20, write:10 }, [['Rutina de ejercicio suave', 'Propón una rutina de ejercicio suave de 20 minutos para alguien que empieza.'], ['Hábitos para dormir mejor', 'Dame hábitos sencillos para dormir mejor.']]],
+  ['cocina', '🍳', 'Recetas', { write:18, fast:12 }, [['¿Qué cocino con esto?', 'Tengo estos ingredientes: ___. ¿Qué puedo cocinar? Dame 3 opciones fáciles.'], ['Menú de la semana', 'Hazme un menú de almuerzos para la semana, económico y sano.']]],
+  ['viajes', '✈️', 'Viajes', { write:16, fast:10, lang:8 }, [['Plan de viaje', 'Hazme un plan de viaje de ___ días a ___ con un presupuesto de ___.'], ['Qué empacar', 'Hazme una lista de qué empacar para un viaje de ___ días a ___.']]],
+  ['musica', '🎵', 'Música y letras', { write:28 }, [['Ayúdame con una canción', 'Ayúdame a escribir la letra de una canción sobre: '], ['Ideas de acordes', 'Sugiere una progresión de acordes con un ambiente ___ para una canción.']]],
+  ['historias', '📖', 'Historias y guiones', { write:36, long:6 }, [['Empieza una historia', 'Escribe el inicio de una historia corta sobre: '], ['Mejora mi guion', 'Mejora los diálogos de este guion:\n\n']]],
+  ['juegos', '🎮', 'Videojuegos', { write:14, code:14, fast:8 }, [['Idea para un juego', 'Propón una idea de videojuego sencillo con sus reglas sobre: '], ['Estrategia', 'Dame una estrategia para mejorar en: ']]],
+  ['productividad', '⏱️', 'Productividad', { fast:20, write:12 }, [['Organiza mi día', 'Organiza mi día en bloques de tiempo. Tengo que hacer: '], ['Divide una tarea grande', 'Divide esta tarea grande en pasos pequeños: ']]],
+  ['complejo', '🧠', 'Tareas complejas', { reason:40, code:6, math:6, long:8 }, [['Piénsalo a fondo', 'Piensa a fondo y paso a paso antes de responder: '], ['Compara opciones', 'Compara estas opciones con ventajas, desventajas y una recomendación final:\n\n']]]
+];
+const TOPIC = Object.fromEntries(TOPICS.map(([k, e, l, w, ex]) => [k, { k, e, l, w, ex }]));
+const TOPICS_SHOWN = 8;
+let curTopic = null, topicsAll = false;
+const recC = new Map();
+function recommendTop(k, n){
+  const T = TOPIC[k]; if (!T) return [];
+  const ck = k + '|' + n + '|' + cat.list.length + '|' + (puterOn() ? 1 : 0) + (orOn() ? 1 : 0) + '|' + (st().survey ? st().survey.t : 0);
+  if (recC.has(ck)) return recC.get(ck);
+  const r = recommendTop0(T, n); if (recC.size > 80) recC.clear(); recC.set(ck, r); return r;
+}
+function recommendTop0(T, n){
+  const usable = cat.list.filter(m => !m.stub && (m.free || /^pu:/.test(m.id)));
+  const pool = usable.filter(m => connected(m.id)).length ? usable.filter(m => connected(m.id)) : usable.filter(m => /^pu:/.test(m.id));
+  const sc = m => { const ex = expert(m).tags; let s = 0; Object.keys(T.w).forEach(t => { if (ex.includes(t)) s += T.w[t]; }); if (m.reasoning && T.w.reason) s += 4; if (T.w.long && m.ctx >= 120000) s += 6; if (T.w.vision && !m.vision) s -= 30; s += Math.min(6, SZ.surveyScore(m, st().survey) / 10); return s + mScore(m) / 40; };
+  const out = [], seen = new Set();
+  pool.map(m => [m, sc(m)]).sort((a, b) => b[1] - a[1]).forEach(([m]) => { const fam = m.name.split(/[\s:.-]/)[0].toLowerCase(); if (out.length < n && !seen.has(fam)){ seen.add(fam); out.push(m); } });
+  return out;
+}
+/* 3 ejemplos que solo se escriben en la caja (cambian en cada chat nuevo) */
+const EXK = ['marketing', 'estudiar', 'codigo', 'escribir', 'negocios', 'ideas', 'planos', 'redes', 'correo', 'idiomas', 'cocina', 'viajes'];
+let exSeed = Math.floor(Math.random() * EXK.length);
+function examplesHtml(){
+  const ks = [0, 1, 2].map(i => EXK[(exSeed + i * 4) % EXK.length]);
+  return '<div class="hexs">' + ks.map((k, i) => { const T = TOPIC[k], x = T.ex[0]; return '<button type="button" class="hex" data-hex="' + k + '" style="--i:' + i + '"><small>' + esc(T.l.toUpperCase()) + '</small><span>' + esc(x[0]) + '</span></button>'; }).join('') + '</div>';
+}
+/* v1.3: los ejemplos van debajo del saludo, cambian solos y desaparecen cuando ya usaste el chat más de 5 veces */
+const sentN = () => { let n = 0; try{ n = +localStorage.getItem('synthz:sent') || 0; }catch(e){} if (!n){ try{ n = Object.values(st().chats || {}).filter(a => Array.isArray(a) && a.some(m => m.role === 'user')).length; }catch(e){} } return n; };
+const showEx = () => sentN() <= 5;
+function exRowHtml(){
+  const ks = [0, 1, 2].map(i => EXK[(exSeed + i * 4) % EXK.length]);
+  return ks.map((k, i) => { const T = TOPIC[k], x = T.ex[0]; return '<button type="button" class="hex hxs" data-hex="' + k + '" style="--i:' + i + '"><small>' + esc(T.l.toUpperCase()) + '</small><span>' + esc(x[0]) + '</span></button>'; }).join('');
+}
+setInterval(() => {
+  const r = document.getElementById('hexR'); if (!r || document.hidden || root.classList.contains('idle-sleep') || r.matches(':hover') || r.contains(document.activeElement)) return;
+  exSeed = (exSeed + 1) % EXK.length;
+  if (SZ.reduce){ r.innerHTML = exRowHtml(); return; }
+  r.animate([{ opacity:1, transform:'none', filter:'blur(0)' }, { opacity:0, transform:'translateY(-6px)', filter:'blur(4px)' }], { duration:320, easing:'ease-in' }).onfinish = () => { r.innerHTML = exRowHtml(); r.animate([{ opacity:0, transform:'translateY(6px)', filter:'blur(4px)' }, { opacity:1, transform:'none', filter:'blur(0)' }], { duration:420, easing:'cubic-bezier(.22,1,.36,1)' }); };
+}, 7000);
+function topicsHtml(){
+  const L = topicsAll ? TOPICS : TOPICS.slice(0, TOPICS_SHOWN);
+  return '<div class="topics" role="group" aria-label="¿Qué quieres hacer?">' + L.map(([k, e, l], i) => '<button type="button" class="tchip" data-topic="' + k + '" aria-pressed="' + (curTopic === k) + '" style="--i:' + i + '">' + esc(l) + '</button>').join('')
+    + (topicsAll ? '<button type="button" class="tchip more" data-topics-less>Menos temas</button>' : '<button type="button" class="tchip more" data-topics-more>Más temas →</button>') + '</div>';
+}
+function rcardHtml(m, i){
+  const p = payOf(m.id), F = factsOf(m).filter(f => f[0] === 'ctx' || f[0] === 'lang').map(f => f[1]).join(' · ');
+  return '<div class="rcard" data-id="' + esc(m.id) + '" style="--vc:' + vendorColor(m.vendor) + ';--i:' + i + '"><div class="rh">' + av(m) + '<div><b>' + esc(m.name) + '</b><small>' + esc(m.vlabel) + '</small></div></div>'
+    + '<p>' + esc(expert(m).line + (F ? ' · ' + F : '')) + '</p><span class="rpay ' + esc(p[0].split(' ')[0]) + '">' + esc(p[2]) + '</span>'
+    + '<div class="ra"><button class="btn sm" type="button" data-use>' + (connected(m.id) ? 'Usar esta' : 'Conectar y usar') + '</button><label class="ckb"><input type="checkbox" data-rc>Comparar</label></div></div>';
+}
+function topicPanelHtml(k){
+  const T = TOPIC[k]; if (!T) return '';
+  const r = recommendTop(k, 3);
+  return '<div class="tphead"><h5>Para <em>' + esc(T.l) + '</em> te recomiendo</h5><small>Elegidas por lo que mejor saben hacer · marca 2 o más para compararlas</small></div>'
+    + (r.length ? '<div class="rcards">' + r.map(rcardHtml).join('') + '</div>' : '<p class="cnote" style="text-align:center">' + (cat.list.length ? 'Las IAs están descansando un momento. Vuelve a intentarlo en un ratito.' : 'Cargando la lista de IA…') + '</p>')
+    + '<div class="cmpgo" id="cmpGo" hidden></div>'
+    + '<div class="texs">' + T.ex.map((x, i) => '<button type="button" data-tex="' + i + '" style="--i:' + i + '">' + esc(x[0]) + '</button>').join('') + '</div>';
+}
+function paintTopic(){
+  const box = $('#tPanel'); if (!box) return;
+  const h0 = box.offsetHeight;
+  box.innerHTML = curTopic ? topicPanelHtml(curTopic) : '';
+  if (!SZ.reduce){ const h1 = box.offsetHeight; box.animate([{ height:h0 + 'px', opacity:.4 }, { height:h1 + 'px', opacity:1 }], { duration:480, easing:'cubic-bezier(.22,1,.36,1)' }); }
+  $$('.tchip[data-topic]', lane).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.topic === curTopic)));
+}
+function paintCmpGo(){
+  const go = $('#cmpGo'); if (!go) return;
+  const ids = $$('.rcard', lane).filter(c => $('[data-rc]', c).checked).map(c => c.dataset.id);
+  $$('.rcard', lane).forEach(c => c.classList.toggle('on', $('[data-rc]', c).checked));
+  if (ids.length < 2){ go.hidden = true; return; }
+  go.hidden = false;
+  go.innerHTML = '<span>Marcaste ' + ids.map(id => '<b>' + esc(info(id).name) + '</b>').join(' y ') + '</span><button type="button" class="btn sm flow" data-cmpgo>Comparar estas ' + ids.length + ' →</button>';
+}
+function emptyEl(){
+  const e = document.createElement('div'); e.className = 'hello';
+  if (mode === 'cmp'){
+    e.innerHTML = '<h1 class="greet">' + greetHtml(['Una pregunta, ', 'varias IA', '.']) + '</h1><p class="hsub">Escribe abajo: todas responden a la vez y aparecen en el orden en que van llegando.</p>'
+      + (st().cmp.length < 2 ? '<button type="button" class="btn sm flow" data-add-cmp>+ Agregar otra IA</button>' : '');
+    return e;
+  }
+  const ex = showEx();
+  if (agentOn()){
+    e.classList.add('aghello');
+    e.innerHTML = '<p class="agbadge">' + AG_ICO + 'Modo agente activado</p><h1 class="greet">' + greetHtml(['¿Qué quieres ', 'FlowIA’r', '?']) + '</h1>'
+      + (ex ? '<div class="hexs hexr" id="hexR" aria-label="Ideas para empezar">' + exRowHtml() + '</div>' : '')
+      + '<p class="hsub2">Cuéntame qué necesitas. El agente entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso.</p><div class="hcomp"></div>';
+    return e;
+  }
+  let h = '<h1 class="greet">' + greetHtml(GREET[greetI] || GREET[0]) + '</h1>'
+    + (ex ? '<div class="hexs hexr" id="hexR" aria-label="Ideas para empezar">' + exRowHtml() + '</div>' : '')
+    + '<p class="hsub2">Escribe como le hablarías a una persona. SynthFlow elige una IA para eso, y la puedes cambiar cuando quieras.</p>';
+  h += '<div class="hcomp"></div>' + topicsHtml() + '<div class="tpanel" id="tPanel">' + (curTopic ? topicPanelHtml(curTopic) : '') + '</div>'
+    + (ex ? '<p class="hfoot">Tocar una idea solo la escribe; tú decides cuándo enviarla.</p>' : '');
+  e.innerHTML = h;
+  return e;
+}
+/* inicio limpio (como «A · Inicio»): la caja de escribir sube al centro y la IA se elige dentro de ella */
+const composer = $('#composer');
+function parkComposer(){ if (composer.parentElement !== $('.main')) $('.main').insertBefore(composer, $('#tabbar')); }
+let wasFresh = null;
+function setFresh(on){
+  document.body.classList.toggle('fresh', on); composer.classList.toggle('big', on && !isMobile());
+  renderCPick();
+  if (on !== wasFresh){ wasFresh = on; renderTop(); }
+}
+function renderCPick(){
+  const b = $('#cPick'); if (!b) return;
+  const m = info(selId());
+  b.style.setProperty('--vc', vendorColor(m.vendor));
+  b.innerHTML = av(m) + '<b>' + esc(m.name) + '</b>' + (!st().pinned && m.id !== TRIAL_ID ? '<i class="sug">sugerida</i>' : '') + CARET;
+  $('#cCmp').hidden = trialOn;
+}
+function renderMsgs(){
+  parkComposer();
+  lane.innerHTML = '';
+  if (mode === 'cmp'){ setFresh(false); if (cmpLast) lane.appendChild(cmpLast.node); else lane.appendChild(emptyEl()); jump(); return; }
+  const chat = chatArr(), thinking = Object.keys(busy).find(k => busy[k] === 'think' && k === selId());
+  const fresh = !chat.length && !thinking;
+  if (fresh){ const e = emptyEl(); lane.appendChild(e); if (!isMobile()){ const hc = $('.hcomp', e); if (hc) hc.appendChild(composer); } }
+  setFresh(fresh);
+  const ck0 = ckey();
+  chat.forEach((m, i) => {
+    if (m.role === 'user'){ const u = userEl(m.content, m.files); u.style.animation = 'none'; lane.appendChild(u); if (m.agent) lane.appendChild(agentSumEl(m.agent)); }
+    else { const b = botEl(m.model || selId()); b.style.animation = 'none'; b._raw = m.content; b._ck = ck0; b._ci = i; b.dataset.ci = i; if (m.work) b.insertBefore(SZ.workSaved(m.work), $('.body', b)); $('.body', b).innerHTML = md(m.content); finishBot(b, m.meta, i === chat.length - 1, m.cont, m.star); lane.appendChild(b); }
+  });
+  if (thinking) lane.appendChild(thinkEl(thinking));
+  if (fresh){ msgsEl.scrollTop = 0; requestAnimationFrame(() => { msgsEl.scrollTop = 0; }); } else jump();
+}
+function showErr(err, o){ if (err && err.aborted) return; showErr2(err, o || {}); }
+function showErr2(err, o){
+  const t0 = $('.think-wrap', lane); if (t0) t0.remove();               /* nunca se queda «Pensando…» después de un error */
+  try{ SZ.telEv(err && err.limit ? 'limit' : 'error', String((err && (err.sz || err.status)) || '') + ' ' + String(err && err.message || '').slice(0, 90)); }catch(e2){}
+  /* a dónde puedes cambiar de verdad: a las IAs conectadas si está activa, o a tu Puter si está conectado (nunca a algo que no tienes) */
+  let sw = err && err.switchTo; if (sw === 'or') sw = 'sz';
+  if (sw === 'sz' && (!szOn() || /^sz:/.test(selId()))) sw = puterOn() && !/^pu:/.test(selId()) ? 'pu' : null;
+  if (sw === 'pu' && !puterOn()) sw = szOn() && !/^sz:/.test(selId()) ? 'sz' : null;
+  if (err && err.sz === 'sz_limit' && puterOn()) sw = 'pu';
+  if (err && err.needLogin) setTimeout(openConnect, 250);
+  const e = document.createElement('div'); e.className = 'm err'; e.textContent = err.message;
+  if (sw){ const b = document.createElement('button'); b.type = 'button'; b.className = 'btn sm swb'; b.textContent = sw === 'pu' ? 'Seguir con mi Puter' : 'Usar las IAs conectadas'; b.addEventListener('click', () => switchProv(sw)); e.appendChild(document.createElement('br')); e.appendChild(b); }
+  if (err && err.guest){ [['Crear mi cuenta · gratis', 'signup', 'btn sm swb flow'], ['Ya tengo cuenta', 'login', 'lnk swb']].forEach(([t, m, c]) => { const b = document.createElement('button'); b.type = 'button'; b.className = c; b.textContent = t; b.addEventListener('click', () => SZ.guestGate({ mode:m, done:() => { e.remove(); lockWas = null; paintLock(); try{ renderAccBtn(); }catch(x){} } })); e.appendChild(document.createElement('br')); e.appendChild(b); }); }
+  else if (err && err.sz === 'sz_limit' && !puterOn()){ const b = document.createElement('button'); b.type = 'button'; b.className = 'btn sm swb'; b.textContent = 'Conectar mi Puter (gratis)'; b.addEventListener('click', () => openConnect()); e.appendChild(document.createElement('br')); e.appendChild(b); }
+  err = Object.assign(err || {}, { switchTo:sw || null });
+  const note = document.createElement('small'); note.className = 'errnote';
+  note.textContent = 'Este intento no gastó de tu límite. ' + (o.regen ? 'La respuesta anterior sigue igual.' : 'Tu mensaje volvió a la caja de texto.') + (err && err.limit ? '' : ' Si lo intentas otra vez, cuenta como un mensaje nuevo.');
+  e.appendChild(note);
+  if (!(err && (err.limit || err.needLogin || err.switchTo))){ const r = document.createElement('button'); r.type = 'button'; r.className = 'btn sm swb'; r.textContent = 'Reintentar'; r.addEventListener('click', () => { e.remove(); if (o.regen) regen(); else if (inp.value.trim()) send(); }); e.appendChild(document.createElement('br')); e.appendChild(r); }
+  lane.appendChild(e); jump(); }
+
+/* copiar / otra vez / sugerencias */
+function copyText(txt){
+  const done = () => true;
+  if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(txt).then(done, () => fallbackCopy(txt));
+  return Promise.resolve(fallbackCopy(txt));
+}
+function fallbackCopy(txt){ const t = document.createElement('textarea'); t.value = txt; t.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(t); t.select(); try{ document.execCommand('copy'); }catch(e){} t.remove(); return true; }
+function flash(btn, label){ const old = btn.innerHTML; btn.classList.add('ok'); btn.textContent = label; setTimeout(() => { btn.classList.remove('ok'); btn.innerHTML = old; }, 1300); }
+lane.addEventListener('click', async e => {
+  const cp = e.target.closest('.cpc');
+  if (cp){ const code = $('code', cp.parentElement); await copyText(code ? code.textContent : ''); cp.classList.add('ok'); cp.textContent = '¡copiado!'; setTimeout(() => { cp.classList.remove('ok'); cp.textContent = 'copiar'; }, 1300); return; }
+  const act = e.target.closest('.act');
+  if (act){
+    const msg = act.closest('.m, .cmp-card');
+    if (act.dataset.a === 'copy'){ await copyText(msg._raw || ''); flash(act, 'Copiado'); }
+    else if (act.dataset.a === 'down'){ const t = (msg._raw || '').replace(/<think>[\s\S]*?<\/think>/g, '').trim(); const first = (t.match(/^#+\s*(.+)$/m) || [, 'respuesta'])[1]; cnvDownload({ text:t, name:(fold(first).trim().replace(/\s+/g, '-').slice(0, 40) || 'respuesta') + '.md' }); }
+    else if (act.dataset.a === 'star') toggleStar(msg, act);
+    else if (act.dataset.a === 'flow') pickWinner(msg);
+    else if (act.dataset.a === 'regen') regen();
+    else if (act.dataset.a === 'cont'){ if (!Object.keys(busy).length){ inp.value = 'Continúa exactamente donde te quedaste, sin repetir lo anterior.'; autoGrow(); updateHint(); send(); } }
+    return;
+  }
+  const fl = e.target.closest('.flowb'); if (fl){ pickWinner(fl.closest('.cmp-card')); return; }
+  const sg = e.target.closest('.sugg button[data-x]'); if (sg){ useExample(+sg.dataset.x); return; }
+  const tp = e.target.closest('[data-topic]'); if (tp){ curTopic = curTopic === tp.dataset.topic ? null : tp.dataset.topic; paintTopic(); if (curTopic){ const p = $('#tPanel'); setTimeout(() => { if (p && p.isConnected) p.scrollIntoView({ behavior:SZ.reduce ? 'auto' : 'smooth', block:'nearest' }); }, 120); } return; }
+  if (e.target.closest('[data-topics-more]') || e.target.closest('[data-topics-less]')){
+    topicsAll = !!e.target.closest('[data-topics-more]'); const t = $('.topics', lane); if (!t) return;
+    const old = new Set($$('[data-topic]', t).map(x => x.dataset.topic));
+    smoothSwap(t, () => { t.innerHTML = topicsHtml().replace(/^<div[^>]*>|<\/div>$/g, ''); });
+    $$('.tchip', t).forEach(x => { if (old.has(x.dataset.topic)) x.classList.remove('rise'); });
+    return;
+  }
+  const hx = e.target.closest('[data-hex]'); if (hx){ const x = TOPIC[hx.dataset.hex].ex[0]; useText(x[1], x[2]); return; }
+  const tx = e.target.closest('[data-tex]'); if (tx && curTopic){ const x = TOPIC[curTopic].ex[+tx.dataset.tex]; if (x) useText(x[1], x[2]); return; }
+  const use = e.target.closest('[data-use]'); if (use){ const id = use.closest('.rcard').dataset.id; pickMode = 'set'; pickModel(id, use.closest('.rcard')); if (!connected(id)) ensureConn(); return; }
+  if (e.target.closest('[data-cmpgo]')){ const ids = $$('.rcard', lane).filter(c => $('[data-rc]', c).checked).map(c => c.dataset.id); startCompare(ids); return; }
+  if (e.target.closest('[data-pick]')){ openSide('set', e.target.closest('[data-pick]')); return; }
+  if (e.target.closest('[data-add-cmp]')){ openSide('add', e.target.closest('[data-add-cmp]')); return; }
+});
+lane.addEventListener('change', e => {
+  const c = e.target.closest('[data-rc]'); if (!c) return;
+  if (c.checked){ const others = $$('.rcard', lane).filter(x => $('[data-rc]', x).checked && $('[data-rc]', x) !== c).map(x => x.dataset.id), why = cmpWhyNot(c.closest('.rcard').dataset.id, others); if (why && why !== 'ya'){ c.checked = false; toast(why); } }
+  paintCmpGo();
+});
+/* rellenar con un ejemplo (y si pide archivo, señalar el clip) */
+function useText(text, kind){
+  typeIntoComposer(text, () => {
+    if (kind === 'file' && !files.length){ const a = $('#attachBtn'); a.classList.remove('pulse'); void a.offsetWidth; a.classList.add('pulse'); toast('Adjunta el archivo con el clip 📎 y luego envía.'); }
+    else toast('Completa el mensaje y envíalo cuando quieras.');
+  });
+}
+/* rellena la caja de texto SIN enviar: tú decides cuándo mandarlo */
+let typeTok = 0;
+function typeIntoComposer(text, done){
+  if (Object.keys(busy).length) return;
+  const tok = ++typeTok;                                  /* un relleno nuevo cancela el anterior */
+  inp.focus(); inp.value = '';
+  const end = () => { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); autoGrow(); updateHint(); if (done) done(); };
+  if (SZ.reduce){ inp.value = text; end(); return; }
+  let i = 0;
+  (function step(){ if (tok !== typeTok) return; i = Math.min(text.length, i + 3); inp.value = text.slice(0, i); autoGrow(); if (i < text.length) setTimeout(step, 14); else end(); })();
+}
+/* ---------- ejemplos listos para usar ---------- */
+const EXAMPLES = [
+  ['Explícame una función de JavaScript', 'Explícame paso a paso qué hace esta función de JavaScript y cómo podría mejorarla:\n\n'],
+  ['Ayúdame a estudiar un tema difícil', 'Ayúdame a estudiar este tema. Explícamelo como a un principiante, con un ejemplo y 3 preguntas para repasar. El tema es: '],
+  ['Resume este documento', 'Resume este documento en 5 puntos clave y dime qué es lo más importante.', 'file'],
+  ['Compara dos soluciones para un problema', 'Compara estas dos soluciones para el mismo problema. Dime ventajas, desventajas y cuál conviene:\n\nSolución A:\n\nSolución B:\n']
+];
+const DRAFTS = { study:[1, 'study'], code:[0, 'code'], create:[null, 'fast', 'Ayúdame a desarrollar esta idea. Hazme preguntas para aterrizarla y propón un plan en pasos. Mi idea es: '] };
+function useExample(i){
+  const x = EXAMPLES[i]; if (!x) return;
+  typeIntoComposer(x[1], () => {
+    if (x[2] === 'file' && !files.length){
+      const a = $('#attachBtn'); a.classList.remove('pulse'); void a.offsetWidth; a.classList.add('pulse');
+      toast('Adjunta el documento con el clip 📎 y luego envía.');
+    } else toast('Completa el mensaje y envíalo cuando quieras.');
+  });
+}
+/* ---------- modo principiante: eliges qué quieres hacer y te sugiero un modelo con datos reales ---------- */
+const INTENTS = [['fast', '⚡', 'Rápido'], ['code', '💻', 'Programar'], ['study', '📚', 'Estudiar'], ['deep', '🧠', 'Tareas complejas']];
+const INTENT_NAME = Object.fromEntries(INTENTS.map(([k, , l]) => [k, l]));
+function factsOf(m){
+  const ex = SZ.expertOf(m).tags, F = [];
+  if (m.reasoning) F.push(['reason', 'Piensa antes de responder', 'catálogo']);
+  else if (ex.includes('reason')) F.push(['reason', 'Hecha para pensar con calma', 'su nombre o descripción']);
+  if (ex.includes('code')) F.push(['code', 'Pensado para programar', 'su nombre o descripción']);
+  if (ex.includes('fast')) F.push(['fast', 'Versión ligera', 'su nombre (no hay medición de velocidad)']);
+  if (ex.includes('math')) F.push(['math', 'Matemáticas', 'su nombre o descripción']);
+  if (ex.includes('lang')) F.push(['lang', 'Buen soporte de español', 'su familia de IA']);
+  if (m.ctx) F.push(['ctx', kfmt(m.ctx) + ' de contexto', 'catálogo']);
+  return F;
+}
+function recommend(k){
+  const avail = cat.list.filter(m => connected(m.id) && (m.free || /^pu:/.test(m.id)) && !m.stub);
+  if (!avail.length) return { none:'conn' };
+  const W = { fast:{ fast:30, reason:-8 }, code:{ code:40, reason:8 }, study:{ reason:18, lang:10, ctx:0, write:6 }, deep:{ reason:40, code:6, math:6 } }[k];
+  const sc = m => {
+    const F = factsOf(m), has = x => F.some(f => f[0] === x), ex = SZ.expertOf(m).tags;
+    let s = 0; Object.keys(W).forEach(x => { if (has(x) || (x === 'write' && ex.includes('write'))) s += W[x]; });
+    if ((k === 'deep' || k === 'study') && m.ctx >= 120000) s += k === 'deep' ? 12 : 8;
+    if (m.reasoning && W.reason > 0) s += 4;                       /* dato del catálogo: pesa un poco más que el nombre */
+    if (/apodex/i.test(m.id)) s += 3;
+    s += Math.min(6, SZ.surveyScore(m, st().survey) / 10);
+    return s;
+  };
+  const best = avail.map(m => [m, sc(m)]).sort((a, b) => b[1] - a[1] || (b[0].ctx || 0) - (a[0].ctx || 0))[0];
+  if (!best || best[1] < 20) return { none:'data' };
+  return { m:best[0] };
+}
+function limitsOf(m){
+  const L = [];
+  if (/^sz:/.test(m.id)) L.push('Gratis: usa tus mensajes de hoy');
+  else if (/^pu:/.test(m.id)) L.push('Con tu cuenta gratis de Puter');
+
+  L.push(m.vision ? 'Acepta imágenes y PDF' : /^pu:/.test(m.id) ? 'No sabemos si esta IA ve fotos; los PDF y textos sí los lee' : 'No ve imágenes; los PDF y textos se leen como texto');
+  return L;
+}
+function intentHtml(){
+  const cur = st().intent && st().intent.id === selId() ? st().intent : null;
+  let h = '<div class="intent"><p class="ilbl">¿Qué quieres hacer? Te sugiero una IA</p><div class="iseg" role="group" aria-label="Qué quieres hacer">'
+    + INTENTS.map(([k, e, l]) => '<button type="button" data-intent="' + k + '" aria-pressed="' + !!(cur && cur.k === k) + '"><span aria-hidden="true">' + e + '</span>' + l + '</button>').join('') + '</div>';
+  if (cur && cur.none) h += '<div class="ipick"><p>' + esc(cur.none) + '</p></div>';
+  else if (cur){
+    const m = info(cur.id);
+    h += '<div class="ipick"><p>Para <b>' + esc(INTENT_NAME[cur.k]) + '</b> elegí <b>' + esc(m.name) + '</b>.</p>'
+      + '<ul class="ifacts">' + factsOf(m).slice(0, 4).map(f => '<li><b>' + esc(f[1]) + '</b><small>según ' + esc(f[2]) + '</small></li>').join('') + '</ul>'
+      + '<p class="ilim">' + limitsOf(m).map(esc).join(' · ') + '</p>'
+      + '<button type="button" class="lnk" data-ichange>Cambiar de IA</button></div>';
+  }
+  return h + '</div>';
+}
+function chooseIntent(k){
+  const r = recommend(k);
+  if (r.none){
+    st().intent = { k, id:selId(), none: r.none === 'conn' ? 'Conecta Puter para que pueda recomendarte una.' : 'Todavía no sé qué IA recomendarte para «' + INTENT_NAME[k] + '». Sigues con ' + info(selId()).name + '; puedes cambiarlo en la lista.' };
+    save(); renderMsgs(); if (r.none === 'conn') openConnect(); return;
+  }
+  st().intent = { k, id:r.m.id };
+  if (r.m.id !== selId()) pickModel(r.m.id); else { save(); renderMsgs(); }
+  toast('Elegí ' + r.m.name + ' para ' + INTENT_NAME[k].toLowerCase() + '.');
+}
+
+function autoGrow(){ if (inp._sync) inp._sync(); inp.style.height = 'auto'; inp.style.height = Math.min(inp.scrollHeight, 170) + 'px'; }
+function updateHint(){
+  const h = $('#hintRight'); let rf = []; try{ rf = files.filter(f => f.state === 'ok'); }catch(e){}
+  const has = inp.value.trim() || rf.length;
+  let n = 0;
+  if (has && mode === 'cmp') n = est(inp.value) * Math.max(1, st().cmp.length);
+  else if (has){ try{ const draft = { role:'user', content:inp.value }; if (rf.length) draft.files = rf.map(f => ({ name:f.name, kind:f.kind, text:f.text })); n = msgCost(apiMsgs([...chatArr(), draft], info(selId()).vision)); }catch(e){ n = est(inp.value); } }
+  const c = st().sx.saver && n ? 'respuestas cortas' : '';
+  h.innerHTML = mode === 'cmp' ? (st().cmp.length ? 'Se envía a ' + st().cmp.length + (st().cmp.length === 1 ? ' modelo' : ' modelos') : 'Elige IA en la lista') + (c ? ' · ' + c : '')
+    : (!needsConn() ? c : '<a href="#" data-conn>Conecta una IA para empezar</a>');
+}
+inp.addEventListener('input', () => { autoGrow(); updateHint(); });
+inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); send(); } });
+sendBtn.addEventListener('click', () => { if (Object.keys(busy).length) stopNow(); else send(); });
+/* ---------- detener la respuesta (botón o Esc) ---------- */
+const ctls = new Set();
+function stopNow(){ let did = false; if (ctls.size){ ctls.forEach(c => c.abort()); ctls.clear(); did = true; } if (SZ.reveals.size){ SZ.reveals.forEach(r => r.skip()); did = true; } if (did) toast('Respuesta detenida.'); return did; }
+addEventListener('keydown', e => { if (e.key === 'Escape' && !document.querySelector('.szm,#blk,#acc,#sx,#conn,#tour') && stopNow()) e.preventDefault(); });
+
+/* borrar el chat actual (antes era el botón «Limpiar»; ahora vive en el menú «⋯») */
+async function clearChat(ask){
+  if (mode === 'cmp'){ stopNow(); cmpRun++; cmpLast = null; Object.keys(busy).forEach(k => delete busy[k]); renderMsgs(); renderNow(); return; }
+  if (!chatArr().length) return;
+  if (ask && !(await SZ.szConfirm('¿Borrar este chat?', 'Se borran sus mensajes de este dispositivo y de tu cuenta. No se puede deshacer.', 'Borrar', true))) return;
+  gen++; Object.keys(busy).forEach(k => delete busy[k]);
+  st().chats[ckey()] = []; save(); renderMsgs(); renderNow(); renderChats();
+}
+/* ---------- favoritos: la estrella vuela dorada hasta tu colección ---------- */
+function toggleStar(el, btn){
+  const chat = st().chats[el._ck], m = chat && chat[el._ci];
+  if (!m || m.role !== 'assistant' || m.content !== el._raw){ toast('Esta respuesta cambió; vuelve a intentarlo.'); return; }
+  m.star = !m.star || undefined; save();
+  btn.setAttribute('aria-pressed', String(!!m.star)); $('span', btn).textContent = m.star ? 'Favorita' : 'Guardar';
+  el.classList.toggle('starred', !!m.star);
+  if (m.star){ flyStar(btn); toast('Guardada en tus favoritos ★'); } else toast('Quitada de tus favoritos.');
+  if (cView === 'favs') renderChats();
+}
+function flyStar(from){
+  const t = isMobile() ? $('#tabbar [data-tab="chats"]') : $('#railFav');
+  const ping = () => { if (!t) return; t.classList.remove('got'); void t.offsetWidth; t.classList.add('got'); };
+  if (!t || root.classList.contains('noanim') || SZ.reduce){ ping(); return; }
+  const a = from.getBoundingClientRect(), b = t.getBoundingClientRect();
+  const x0 = a.left + 16, y0 = a.top + a.height / 2, x1 = b.left + b.width / 2, y1 = b.top + b.height / 2;
+  const cx = (x0 + x1) / 2 + (x1 < x0 ? 40 : -40), cy = Math.min(y0, y1) - Math.min(220, Math.abs(x1 - x0) * .4 + 80);
+  const s = document.createElement('div'); s.className = 'flystar'; s.innerHTML = STAR; document.body.appendChild(s);
+  const D = 950, t0 = performance.now(); let f = 0;
+  const step = now => {
+    const k = Math.min(1, (now - t0) / D), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2, u = 1 - e;
+    const x = u * u * x0 + 2 * u * e * cx + e * e * x1, y = u * u * y0 + 2 * u * e * cy + e * e * y1;
+    s.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + (1 + Math.sin(e * Math.PI) * .9) + ') rotate(' + (e * 400) + 'deg)';
+    if (++f % 2 === 0){ const d = document.createElement('i'); d.className = 'flytrail'; d.style.transform = 'translate(' + x + 'px,' + y + 'px)'; document.body.appendChild(d); d.animate([{ opacity:.9, transform:'translate(' + x + 'px,' + y + 'px) scale(1)' }, { opacity:0, transform:'translate(' + (x + (Math.random() * 10 - 5)) + 'px,' + (y + 8) + 'px) scale(.2)' }], { duration:620, easing:'ease-out' }).onfinish = () => d.remove(); }
+    if (k < 1) requestAnimationFrame(step); else { s.remove(); ping(); burst(x1, y1, ['#e6b65f', '#ffe2a8', '#c9566c'], 10); }
+  };
+  requestAnimationFrame(step);
+}
+
+/* ---------- archivos: imágenes, PDF y texto/código ---------- */
+const files = []; let fid = 0;
+const TEXTX = /\.(txt|md|markdown|csv|tsv|json|jsonl|xml|html?|css|scss|js|mjs|jsx|ts|tsx|py|java|c|h|cpp|hpp|cs|go|rs|rb|php|sh|bat|sql|yml|yaml|toml|ini|log|tex|swift|kt|r|lua|vue|svelte)$/i;
+const CAP = 40000, clip = t => t.length > CAP ? t.slice(0, CAP) + '\n…(archivo recortado)' : t;
+function readImg(file){
+  return new Promise((ok, no) => {
+    const url = URL.createObjectURL(file), im = new Image();
+    im.onload = () => {
+      const mk = max => { const s = Math.min(1, max / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.max(1, Math.round(im.width * s)); c.height = Math.max(1, Math.round(im.height * s)); const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height); return c; };
+      const r = { dataUrl: mk(1568).toDataURL('image/jpeg', .85), thumb: mk(96).toDataURL('image/jpeg', .7) };
+      URL.revokeObjectURL(url); ok(r);
+    };
+    im.onerror = () => { URL.revokeObjectURL(url); no(new Error('No pude leer la imagen ' + file.name + '.')); };
+    im.src = url;
+  });
+}
+let pdfP;
+function loadPdf(){
+  return pdfP || (pdfP = (async () => {
+    const B = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+    await new Promise((ok, no) => { const s = document.createElement('script'); s.src = B + 'pdf.min.js'; s.onload = ok; s.onerror = () => no(new Error('No pude cargar el lector de PDF. Revisa tu internet.')); document.head.appendChild(s); });
+    const w = await (await fetch(B + 'pdf.worker.min.js')).text();
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([w], { type:'text/javascript' }));
+    return window.pdfjsLib;
+  })().catch(e => { pdfP = null; throw e; }));
+}
+async function readPdf(file){
+  const lib = await loadPdf(), pdf = await lib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+  let t = '';
+  for (let i = 1; i <= Math.min(pdf.numPages, 60) && t.length < CAP; i++){
+    const tc = await (await pdf.getPage(i)).getTextContent();
+    t += '\n--- página ' + i + ' ---\n' + tc.items.map(x => x.str).join(' ');
+  }
+  if (t.replace(/--- página \d+ ---/g, '').trim().length < 20) throw new Error('Ese PDF parece escaneado (sin texto). Prueba subiéndolo como imagen.');
+  return clip(t.trim());
+}
+function renderTray(){
+  $('#tray').innerHTML = files.map(f => '<span class="fc ' + f.state + '" data-id="' + f.id + '">' + (f.thumb ? '<img src="' + esc(f.thumb) + '" alt="">' : '<i class="ic">' + esc((f.name.split('.').pop() || 'file').slice(0, 4)) + '</i>') + '<b>' + esc(f.name) + '</b><button class="x" type="button" aria-label="Quitar archivo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>').join('');
+}
+async function addFiles(list){
+  if (mode === 'cmp'){ toast('Los archivos funcionan en el modo Individual.'); return; }
+  for (const file of [...list]){
+    if (files.length >= 6){ toast('Máximo 6 archivos por mensaje.'); break; }
+    const f = { id:++fid, name:file.name || 'archivo', state:'load', kind:'text' }; files.push(f); renderTray();
+    try{
+      if (/^image\//.test(file.type)){ f.kind = 'img'; Object.assign(f, await readImg(file)); }
+      else if (/\.pdf$/i.test(file.name) || file.type === 'application/pdf'){ f.kind = 'pdf'; f.text = await readPdf(file); }
+      else if (TEXTX.test(file.name) || /^text\//.test(file.type) || file.type === 'application/json'){ f.text = clip(await file.text()); }
+      else throw new Error('Tipo de archivo no compatible: ' + f.name);
+      f.state = 'ok';
+    }catch(e){
+      f.state = 'err'; toast(f.kind === 'pdf' && !/compatible/.test(e.message || '') ? 'No pude leer el PDF «' + f.name + '». Puede estar dañado o protegido con contraseña.' : f.kind === 'img' && !/compatible/.test(e.message || '') ? 'No pude abrir la imagen «' + f.name + '».' : e.message);
+      setTimeout(() => { const i = files.indexOf(f); if (i > -1){ files.splice(i, 1); renderTray(); } }, 2200);
+    }
+    renderTray();
+  }
+}
+$('#tray').addEventListener('click', e => { const x = e.target.closest('.x'); if (!x) return; const i = files.findIndex(f => f.id === +x.closest('.fc').dataset.id); if (i > -1){ files.splice(i, 1); renderTray(); } });
+/* el clip ya no abre el buscador de golpe: muestra un menú con lo que puedes adjuntar */
+const attMenu = $('#attMenu'), attBtn = $('#attachBtn');
+function attOpen(){ attMenu.hidden = false; attMenu.classList.remove('bye'); attBtn.setAttribute('aria-expanded', 'true'); }
+function attClose(){ if (attMenu.hidden) return; attBtn.setAttribute('aria-expanded', 'false'); attMenu.classList.add('bye'); setTimeout(() => { if (attMenu.classList.contains('bye')){ attMenu.hidden = true; attMenu.classList.remove('bye'); } }, 260); }
+attBtn.addEventListener('click', () => { if (mode === 'cmp'){ toast('Los archivos funcionan con una sola IA. Quita las demás para adjuntar.'); return; } if (attMenu.hidden) attOpen(); else attClose(); });
+attMenu.addEventListener('click', e => { const b = e.target.closest('[data-att]'); if (!b) return; attClose(); $({ file:'#fileIn', img:'#imgIn', cam:'#camIn' }[b.dataset.att]).click(); });
+document.addEventListener('pointerdown', e => { if (!attMenu.hidden && !e.target.closest('.attw')) attClose(); });
+addEventListener('keydown', e => { if (e.key === 'Escape' && !attMenu.hidden){ e.preventDefault(); attClose(); attBtn.focus(); } });
+['#fileIn', '#imgIn', '#camIn'].forEach(s => $(s).addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; }));
+let dragN = 0; const hasF = e => e.dataTransfer && [...e.dataTransfer.types].includes('Files');
+addEventListener('dragenter', e => { if (hasF(e)){ dragN++; document.body.classList.add('drag'); } });
+addEventListener('dragleave', () => { dragN = Math.max(0, dragN - 1); if (!dragN) document.body.classList.remove('drag'); });
+addEventListener('dragover', e => { if (hasF(e)) e.preventDefault(); });
+addEventListener('drop', e => { dragN = 0; document.body.classList.remove('drag'); if (hasF(e)){ e.preventDefault(); addFiles(e.dataTransfer.files); } });
+inp.addEventListener('paste', e => { const fl = [...((e.clipboardData && e.clipboardData.files) || [])]; if (fl.length){ e.preventDefault(); addFiles(fl); } });
+SZ.mirrorType(inp);
+/* mensajes que viajan a la IA. Para ahorrar SynXCoin's: los archivos solo se reenvían
+   completos en el último mensaje que los trajo, y el modo ahorro manda menos historial */
+function apiMsgs(chat, vision, o = {}){
+  const saver = !o.naive && st().sx.saver, keepN = saver ? 6 : 20;
+  let lastF = -1;
+  if (!o.naive) for (let i = chat.length - 1; i >= 0; i--) if (chat[i].role === 'user' && chat[i].files && chat[i].files.length){ lastF = i; break; }
+  const start = Math.max(0, chat.length - keepN);
+  const h = chat.slice(start).map((m, j) => {
+    if (m.role !== 'user' || !m.files || !m.files.length) return { role:m.role, content:(m.role === 'user' && m.ask) || m.content };
+    const full = o.naive || start + j === lastF;
+    let t = m.ask || m.content || '';
+    m.files.forEach(f => {
+      if (f.text) t += full ? '\n\n[Archivo adjunto: ' + f.name + ']\n```\n' + (saver && f.text.length > 12000 ? f.text.slice(0, 12000) + '\n…(recortado por el modo ahorro)' : f.text) + '\n```' : '\n\n[Archivo adjunto antes: ' + f.name + ' (no se reenvía para ahorrar SynXCoin\'s)]';
+      else if (f.kind === 'img' && !(vision && m._imgs && full)) t += '\n\n[Imagen adjunta: ' + f.name + (full ? ' (ya no está disponible)' : ' (no se reenvía)') + ']';
+    });
+    const imgs = vision && m._imgs && full ? m._imgs : [];
+    t = t.trim() || 'Mira la imagen.';
+    return imgs.length ? { role:m.role, content:[{ type:'text', text:t }, ...imgs.map(u => ({ type:'image_url', image_url:{ url:u } }))] } : { role:m.role, content:t };
+  });
+  while (h.length && h[0].role !== 'user') h.shift();
+  const sys = [];
+  if (saver) sys.push('Responde en el idioma del usuario, de forma clara y breve, sin relleno.');
+  if (SZ.CFG.beginner) sys.push('Modo principiante: la persona no sabe nada del tema. Usa palabras sencillas y frases cortas, explica paso a paso, evita los tecnicismos (si usas uno, explícalo) y pon un ejemplo de la vida diaria.');
+  if (sys.length) h.unshift({ role:'system', content:sys.join(' ') });
+  return h;
+}
+function msgCost(msgs){ return msgs.reduce((n, m) => n + 4 + (typeof m.content === 'string' ? est(m.content) : m.content.reduce((k, x) => k + (x.type === 'text' ? est(x.text) : 800), 0)), 0); }
+/* caché: la misma pregunta al mismo modelo no se vuelve a pagar */
+const CACHE_KEY = 'synthz:cache';
+function hashStr(s){ let h = 5381; for (let i = 0; i < s.length; i++) h = (h * 33 + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36) + s.length.toString(36); }
+function cacheAll(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY)) || {}; }catch(e){ return {}; } }
+function cacheGet(k){ const c = cacheAll()[k]; return c && Date.now() - c.t < 7 * 864e5 ? c : null; }
+function cachePut(k, r){
+  const c = cacheAll(); c[k] = { t:Date.now(), text:r.text, prompt:r.prompt, completion:r.completion, model:r.model };
+  const ks = Object.keys(c).sort((a, b) => c[b].t - c[a].t); ks.slice(60).forEach(x => delete c[x]);
+  try{ localStorage.setItem(CACHE_KEY, JSON.stringify(c)); }catch(e){}
+}
+/* ---------- v1.8 · modo agente: tú escribes; el agente entiende y mejora tu pedido, elige la IA que más sabe de eso
+   y te muestra cada paso. Al final decides: quedarte con esa IA o seguir en modo agente ---------- */
+let agentBusy = false;
+const agentOn = () => !!st().agent && !trialOn;
+$('#agPill').addEventListener('click', () => { if (isMobile()) closeChatsSheet && closeChatsSheet(); cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(false); });
+function paintAgent(){ $$('.agentb, #railAgent').forEach(b => { b.setAttribute('aria-pressed', String(agentOn())); b.classList.toggle('on', agentOn()); }); document.body.classList.toggle('agenting', agentOn()); inp.placeholder = agentOn() ? 'Modo agente: cuéntame qué necesitas…' : (isLocked() ? inp.placeholder : 'Escribe tu mensaje...'); }
+function setAgent(on){
+  if (!!st().agent === !!on){ paintAgent(); return; }
+  if (mode !== 'solo'){ stopNow(); cmpRun++; cmpLast = null; mode = 'solo'; }
+  st().agent = !!on; save(); paintAgent(); gen++;
+  try{ renderMsgs(); updateHint(); renderTop(true); renderNow(); renderChats(false); }catch(e){}
+  toast(on ? 'Modo agente activado: tú escribes y el agente elige la IA que más sabe de eso.' : 'Modo agente apagado: ahora eliges tú la IA.');
+}
+const AG_STEPS = ['Entendiendo tu pedido', 'Mejorando tu pedido para que la IA lo entienda mejor', 'Eligiendo la IA que más sabe de esto', 'Pasándole tu pedido a la IA'];
+const AG_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>';
+/* lo que hace el agente, en vivo: su loguito de píxeles y los pasos que se van marcando */
+function agentCard(){
+  const el = document.createElement('div'); el.className = 'agrun';
+  el.innerHTML = '<div class="ag-h"><span class="pxw">' + SZ.pixelGrid() + '</span><span class="ag-t"><b>Modo agente</b><small>Trabajando en tu pedido…</small></span></div><ol class="ag-s">' + AG_STEPS.map((t, i) => '<li data-i="' + i + '"><i aria-hidden="true"></i><span>' + t + '</span></li>').join('') + '</ol>';
+  const px = SZ.pixelRun($('.pxw', el));
+  return {
+    el,
+    set(i, txt){ $$('li', el).forEach((li, j) => { li.classList.toggle('done', j < i); li.classList.toggle('on', j === i); }); if (txt) $('li[data-i="' + i + '"] span', el).textContent = txt; follow(); },
+    stop(){ px.stop(); $$('li', el).forEach(li => { li.classList.remove('on'); li.classList.add('done'); }); }
+  };
+}
+/* lo que queda guardado debajo de tu mensaje: «El agente eligió …» con el pedido mejorado para ver */
+function agentSumEl(a){
+  const el = document.createElement('div'); el.className = 'agsum';
+  el.innerHTML = '<button type="button" class="ag-row" aria-expanded="false"><span class="ag-ic">' + AG_ICO + '</span><span class="ag-tx">El agente eligió <b></b><em></em></span>' + (a.ask ? '<svg class="ag-c" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>' : '') + '</button>' + (a.ask ? '<div class="ag-d" hidden><small>Tu pedido mejorado (esto le llegó a la IA)</small><p></p></div>' : '');
+  $('.ag-tx b', el).textContent = a.name || 'una IA'; $('.ag-tx em', el).textContent = a.tl ? ', que sabe de ' + a.tl : '';
+  if (a.ask){ $('.ag-d p', el).textContent = a.ask; const row = $('.ag-row', el), d = $('.ag-d', el); row.addEventListener('click', () => { const on = d.hidden; d.hidden = !on; row.setAttribute('aria-expanded', String(on)); el.classList.toggle('open', on); }); }
+  return el;
+}
+function agentPick(tema){
+  const L = tema ? recommendTop(tema, 10).filter(m => connected(m.id)) : [];
+  const top = L.find(m => (info(m.id).spend || 1) < 3) || L[0];   /* no gasta tu Puter en las IA que más consumen si hay otra experta */
+  if (top) return top.id;
+  if (szOn()) return 'sz:auto';
+  if (connected(selId())) return selId();
+  const b = bestUsable(true) || bestUsable(false); return b ? b.id : selId();
+}
+/* después de la respuesta: ¿te quedas con esa IA o sigues en modo agente? */
+function agentChoice(pick){
+  $$('.agkeep', lane).forEach(x => x.remove());
+  const nm = info(pick).name, d = document.createElement('div'); d.className = 'agkeep';
+  d.innerHTML = '<span>¿Te quedas con <b></b> o sigues en modo agente?</span><div class="agk-b"><button type="button" class="btn sm" data-ak="keep"></button><button type="button" class="btn sm ghost" data-ak="go">Seguir en modo agente</button></div><small>Si sigues en modo agente, en tu próximo mensaje vuelvo a elegir la IA que más sepa de eso.</small>';
+  $('span b', d).textContent = nm; $('[data-ak="keep"]', d).textContent = 'Quedarme con ' + nm;
+  lane.appendChild(d); follow();
+  d.addEventListener('click', e => {
+    const b = e.target.closest('[data-ak]'); if (!b) return; d.remove();
+    if (b.dataset.ak === 'go'){ toast('Sigues en modo agente: en tu próximo mensaje vuelvo a elegir la IA.'); return; }
+    /* la conversación sigue igual, ahora con esa IA y sin el agente */
+    const k0 = ckey(), msgs = (st().chats[k0] || []).slice(), tid = 't' + Date.now().toString(36), k1 = 'openrouter::' + pick + '::' + tid;
+    st().chats[k1] = msgs; delete st().chats[k0]; st().del = [...(st().del || []), k0].slice(-300);
+    const L = (st().threads || {})[AGK]; if (L){ const id0 = curT(), e0 = L.find(x => x.id === id0); st().threads[AGK] = L.filter(x => x.id !== id0); if (e0){ const e1 = thMeta(pick, tid, true); e1.title = e0.title; e1.t = Date.now(); } }
+    (st().thread || (st().thread = {}))[pick] = tid; st().model.openrouter = pick; st().pinned = pick; st().agent = false;
+    if (cView === 'agents'){ cView = 'chats'; RS.view = 'chats'; saveRS(); }
+    save(); paintAgent(); gen++; applyRail(); paintSel(); renderTop(true); paintAccent(); renderMsgs(); updateHint(); renderChats(false);
+    toast('Listo: sigues con ' + nm + '. El modo agente quedó apagado; lo vuelves a activar en la barra.');
+  });
+}
+async function agentPlan(text){
+  const keys = TOPICS.map(t => t[0]).join(', ');
+  const sys = 'Eres el planificador de SynthFlow. Lees el pedido de una persona y lo mejoras para que otra IA lo entienda mejor. Responde SOLO con JSON válido y nada más: {"tema":"<una de: ' + keys + '>","pedido":"<el pedido mejorado, en el mismo idioma de la persona, claro, con el contexto que dio y el formato de respuesta que le sirve; no inventes datos; máximo 120 palabras>"}';
+  const r = await SZ.askStream(SZ.SZ_P, [{ role:'system', content:sys }, { role:'user', content:text.slice(0, 4000) }], { model:'sz:auto', _noFall:true });
+  const m = String((r && r.text) || '').match(/\{[\s\S]*\}/); if (!m) throw new Error('sin plan');
+  const j = JSON.parse(m[0]); if (!j || typeof j.pedido !== 'string' || j.pedido.trim().length < 4) throw new Error('sin plan');
+  return { tema:TOPIC[j.tema] ? j.tema : null, pedido:j.pedido.trim().slice(0, 4000) };
+}
+async function send(){
+  if (isLocked()){ lockNudge(); return; }
+  if (mode === 'cmp') return compare();
+  const text = inp.value.trim(), ready = files.filter(f => f.state === 'ok');
+  if (!text && !ready.length) return;
+  if (Object.keys(busy).length){ toast('Espera a que termine de responder, o detenla con el botón ■.'); return; }
+  if (files.some(f => f.state === 'load')){ toast('Espera a que terminen de cargar los archivos.'); return; }
+  try{ SZ.setTurn(text + '|' + Date.now()); }catch(e){}
+  if (trialOn && trialLeft() <= 0){ toast('Se acabaron tus mensajes de prueba.'); const tb = $('#trialBar'); tb.classList.remove('pulse'); void tb.offsetWidth; tb.classList.add('pulse'); return; }
+  if (trialOn && files.length){ toast('La prueba guiada es solo de texto. Conecta una IA para enviar archivos.'); return; }
+  if (!budgetOk()) return;
+  /* modo agente: no eliges IA; el agente entiende tu pedido, lo mejora, elige la IA experta y te muestra los pasos */
+  if (agentOn() && mode === 'solo' && text && !files.length){
+    if (agentBusy) return;
+    agentBusy = true; inp.readOnly = true; sendBtn.disabled = true;
+    try{ localStorage.setItem('synthz:sent', String(sentN() + 1)); }catch(e){}
+    try{ frustration(text, false); }catch(e){}
+    const chat = chatArr(), msg = { role:'user', content:text }, g0 = gen;
+    inp.value = ''; autoGrow(); updateHint();
+    chat.push(msg); touchThread(); save(); renderMsgs();
+    const card = agentCard(); lane.appendChild(card.el); jump();
+    card.set(0);
+    const t1 = setTimeout(() => card.set(1), 1100);
+    let plan = null;
+    if (szOn()){ try{ plan = await agentPlan(text); }catch(e){ try{ SZ.BOT.problem && SZ.BOT.problem('agent'); }catch(x){} } }
+    clearTimeout(t1);
+    if (!plan) plan = { tema:guessTopic(text), pedido:text, raw:true };
+    const same = plan.raw || plan.pedido.trim() === text.trim();
+    card.set(1, same ? 'Tu pedido ya era claro: lo paso tal cual' : 'Mejoré tu pedido para que la IA lo entienda mejor');
+    await SZ.sleepRaw(550);
+    const tl = plan.tema && TOPIC[plan.tema] ? TOPIC[plan.tema].l.toLowerCase() : '';
+    card.set(2, tl ? 'Eligiendo la IA que más sabe de ' + tl : 'Eligiendo la mejor IA para esto');
+    const pick = agentPick(plan.tema);
+    await SZ.sleepRaw(750);
+    card.set(3, 'Le paso tu pedido a ' + info(pick).name);
+    await SZ.sleepRaw(600); card.stop();
+    agentBusy = false; inp.readOnly = false; sendBtn.disabled = false;
+    if (g0 !== gen){ card.el.remove(); return; }                /* cambiaste de chat mientras tanto */
+    if (!same) msg.ask = plan.pedido;
+    msg.agent = { pick, name:info(pick).name, tl, ask:same ? '' : plan.pedido };
+    st().model.openrouter = pick; save(); paintSel(); renderTop(false); paintAccent();
+    let ok = true;
+    await runSolo(err => { ok = false; chat.pop(); save(); renderMsgs(); showErr(err); inp.value = text; autoGrow(); updateHint(); });
+    if (ok && g0 === gen) agentChoice(pick);
+    return;
+  }
+  const th0 = ckey(), m0 = selId(), at0 = Date.now(), needed = needsConn();
+  if (!(await ensureConn())) return;
+  /* si la ventanita de Puter tardó o cambiaste de chat o de IA mientras tanto, no envío solo: tu texto sigue en la caja */
+  if (needed && (ckey() !== th0 || selId() !== m0 || Date.now() - at0 > 15000 || inp.value.trim() !== text)){ toast('¡Listo! Revisa tu mensaje y toca enviar.'); inp.focus(); return; }
+  if (ready.some(f => f.kind === 'img') && !info(selId()).vision){ toast('Este modelo no ve imágenes. Activa el filtro "Visión" y elige otro.'); openSide(); return; }
+  try{ localStorage.setItem('synthz:sent', String(sentN() + 1)); }catch(e){}
+  try{ frustration(text, false); }catch(e){}
+  const chat = chatArr(), sent = files.splice(0).filter(f => f.state === 'ok');
+  inp.value = ''; autoGrow(); updateHint(); renderTray();
+  const msg = { role:'user', content:text };
+  if (sent.length) msg.files = sent.map(f => ({ name:f.name, kind:f.kind, text:f.text, thumb:f.thumb }));
+  const imgs = sent.filter(f => f.kind === 'img').map(f => f.dataUrl);
+  if (imgs.length) Object.defineProperty(msg, '_imgs', { value:imgs, enumerable:false, writable:true });
+  chat.push(msg); touchThread(); save();
+  await runSolo(err => { chat.pop(); save(); renderMsgs(); showErr(err); inp.value = text; files.push(...sent); autoGrow(); updateHint(); renderTray(); });
+}
+
+/* ---------- v1.3 · SynthonIA te rescata cuando una IA falla o cuando notas que no te entiende ---------- */
+const TOPIC_RX = [['codigo', /c[oó]digo|program|funci[oó]n|javascript|python|html|css|sql|bug|error de|script/i], ['mate', /ecuaci|matem|calcul|derivad|integral|\d+\s*[x×*+\/-]\s*\d+/i], ['estudiar', /explica|estudi|examen|tarea|aprend|resum/i], ['correo', /correo|email|e-mail/i], ['marketing', /marketing|publicidad|anuncio|vender|ventas|campa[ñn]a/i], ['redes', /instagram|tiktok|reel|post|redes/i], ['idiomas', /traduc|ingl[eé]s|franc[eé]s|idioma/i], ['negocios', /negocio|emprend|empresa|cliente/i], ['ideas', /idea|nombre para|lluvia de/i], ['escribir', /escrib|texto|carta|historia|poema|redact/i]];
+function guessTopic(t){ const f = TOPIC_RX.find(([k, rx]) => TOPIC[k] && rx.test(t)); return f ? f[0] : null; }
+function altFor(mid, text){
+  const tk = guessTopic(text || '');
+  const ok = m => m && m.id !== mid && connected(m.id) && !SZ.isBad(m.id);
+  const alt = (tk ? recommendTop(tk, 12) : []).find(ok) || (mid !== APODEX && szOn() ? info(APODEX) : null) || [bestUsable(true), bestUsable(false)].find(ok);
+  return { tk, alt };
+}
+async function rescue(mid, err){
+  try{ SZ.BOT.problem && SZ.BOT.problem('error'); }catch(e){}
+  if (!SZ.BOT || !SZ.BOT.offer || (err && err.aborted) || G) return;
+  const q = [...chatArr()].reverse().find(m => m.role === 'user'); if (!q || typeof q.content !== 'string') return;
+  const { tk, alt } = altFor(mid, q.content); if (!alt) return;
+  let ready = q.content;
+  if (szOn()) try{ ready = (await agentPlan(q.content)).pedido; }catch(e){}
+  SZ.BOT.offer(info(mid).name + ' falló 😕 ' + (tk ? 'Querías ayuda con ' + TOPIC[tk].l.toLowerCase() + ', y ' : '') + alt.name + ' es parecida y está funcionando ahora. Aquí te dejo tu prompt listo (lo mejoré un poquito). Perdona las interrupciones en tu Flow.', 'disculpa', 'Ir con ' + alt.name, () => { pickModel(alt.id, null); inp.value = ready; autoGrow(); updateHint(); inp.focus(); });
+}
+/* frustración: palabras de enojo o pedir «Otra vez» seguido → «esa IA no tiene el flow» */
+const FRUST = /no sirve|no entiendes|no entendiste|mal(a|isima)? respuesta|est[uú]pid|in[uú]til|que mal|otra vez no|no es eso|te equivocas|equivocad|horrible|p[eé]sim|ya te dije|😡|🤬|😤/i;
+let frustN = 0, frustAt = 0;
+function frustration(text, regen){
+  if (G || mode !== 'solo') return;
+  const angry = regen || FRUST.test(text || '') || /!{3,}/.test(text || '') || (text && text.length > 12 && text === text.toUpperCase() && /[A-ZÁÉÍÓÚ]{6}/.test(text));
+  if (!angry) return;
+  frustN = Date.now() - frustAt < 300000 ? frustN + 1 : 1; frustAt = Date.now();
+  if (frustN < (regen ? 2 : 1)) return;
+  frustN = 0; try{ SZ.BOT.problem && SZ.BOT.problem('frust'); }catch(e){}
+  const mid = selId(), q = [...chatArr()].reverse().find(m => m.role === 'user');
+  const { alt } = altFor(mid, (q && typeof q.content === 'string' ? q.content : '') + ' ' + (text || '')); if (!alt) return;
+  SZ.BOT.offer('Mmm… parece que ' + info(mid).name + ' no tiene el flow para esto. ' + alt.name + ' tiene más flow 😎 ¿Probamos con ella?', 'guino', 'Cambiar a ' + alt.name, () => { pickModel(alt.id, null); toast('Ahora hablas con ' + alt.name + '. Vuelve a enviar tu mensaje o escribe uno nuevo.'); inp.focus(); });
+}
+async function runSolo(onFail, o = {}){
+  const mid = selId(), chat = chatArr(), g = gen, vis = info(mid).vision, saver = st().sx.saver;
+  const slowT = setTimeout(() => { if (busy[mid] === 'think' && SZ.BOT.react) SZ.BOT.react('slow'); }, 14000);
+  const sent = apiMsgs(chat, vis), naive = apiMsgs(chat, vis, { naive:true }), ck = hashStr(mid + '|' + saver + '|' + JSON.stringify(sent));
+  const canCache = !sent.some(m => Array.isArray(m.content));
+  if (works[mid]) works[mid].stop();
+  works[mid] = SZ.workView({ model:info(mid).name, inTok:msgCost(sent) });
+  const W = works[mid];
+  busy[mid] = 'think'; renderMsgs(); renderNow();
+  let el = null, rv = null;
+  const here = () => g === gen && mode === 'solo' && mid === selId();
+  const mount = () => {
+    if (el || !here()) return;
+    busy[mid] = 'write'; renderNow();
+    const t = $('.think-wrap', lane); if (t) t.remove();
+    const e = $('.empty', lane); if (e) e.remove();
+    $$('.m.last', lane).forEach(x => x.classList.remove('last'));
+    el = botEl(mid); el.classList.add('writing'); el.insertBefore(W.el, $('.body', el)); lane.appendChild(el); stick = true;
+    const body = $('.body', el), tk = $('.tk', el);
+    rv = SZ.mkReveal(body, (s, n) => { tk.textContent = fmt(Math.ceil(s / 5.5)); el.style.setProperty('--p', n ? (s / n).toFixed(3) : 0); follow(); });
+  };
+  try{
+    let r = !o.fresh && canCache ? cacheGet(ck) : null;
+    if (r){ r = Object.assign({}, r, { ms:0, cached:true }); st().sx.saved += r.prompt + r.completion; st().sx.hits += 1; save(); mount(); if (rv) rv.push(r.text); }
+    else {
+      const ctl = new AbortController(); ctls.add(ctl);
+      try{ r = await SZ.askStream(OR, sent, { model:mid, maxTokens: saver ? 700 : 0, signal:ctl.signal, onReason:t => W.reason(t) }, txt => { mount(); W.write(txt); if (rv) rv.push(txt); }); }finally{ ctls.delete(ctl); }
+      addUsage(r.prov || SZ.provOf(mid), r.prompt, r.completion, true, { est:r.est, free:/:free$/.test(mid) || r.prov === 'synthz', rid:r.rid });
+      if (!r.aborted && !r.swapped) SZ.markGood(mid);
+      SZ.TEL.msgs++; SZ.TEL.ai = (r.prov || SZ.provOf(mid)).slice(0, 12);
+      st().sx.saved += Math.max(0, msgCost(naive) - msgCost(sent)); save();
+      if (canCache && !r.aborted) cachePut(ck, r);
+    }
+    if (g !== gen){ if (rv) rv.skip(); return; }
+    const tail = r.aborted ? ' · detenido' : r.cut ? ' · se cortó la conexión' : r.finish === 'length' ? ' · se cortó porque era muy larga (toca «Continuar»)' : '';
+    const who = r.swapped ? ' · se acabó tu saldo de Puter este mes; respondió ' + (r.real || 'otra IA') : mid === 'sz:auto' && r.real ? ' · respondió ' + r.real : '';
+    W.write(r.text); W.finish({ ms:r.ms, real:r.real || '' });
+    const work = { ms:Math.round(r.ms || 0), words:W.state.words, real:r.real || '', steps:W.state.steps.map(([a, b]) => [Math.round(a), b]), reason:(r.reasoning || '').slice(0, 4000) || undefined };
+    const msg = { role:'assistant', content:r.text, work, meta:metaOf(r) + tail + who + (r.via ? ' · vía ' + r.via + ' (prueba de SynthZ)' : ''), model:mid, cont: !!(r.cut || r.finish === 'length') || undefined };
+    chat.push(msg); touchThread(); save();
+    if (here()){
+      mount(); rv.push(r.text);
+      await rv.end();
+      el.classList.remove('writing'); el.style.removeProperty('--p'); el._raw = r.text; el._ck = ckey(); el._ci = chat.length - 1; el.dataset.ci = el._ci;
+      $('.body', el).innerHTML = md(r.text);
+      finishBot(el, msg.meta, true, msg.cont); follow();
+      if (SZ.BOT.react && !r.aborted && !G) SZ.BOT.react('done', { cool:180000 });
+    }
+  }catch(err){
+    if (rv) rv.skip();
+    if (g === gen && !(err && err.aborted)) setTimeout(() => rescue(mid, err), 900);
+    W.finish({ error:!(err && err.aborted), aborted:err && err.aborted });
+    if (el) el.remove();
+    if (err && err.gone) hideBadModel(mid, err);
+    if (g === gen && onFail) onFail(err);
+  }finally{ clearTimeout(slowT); if (g === gen){ delete busy[mid]; renderNow(); if (!el){ const t = $('.think-wrap', lane); if (t) t.remove(); } } }
+}
+/* una IA que falló por culpa del modelo (ya no existe o no tiene servidores) se esconde y se cambia por otra que sí funcione */
+function hideBadModel(id, err){
+  SZ.markBad(id);
+  const name = info(id).name;
+  setCatalog(cat.list.filter(m => m.id !== id), cat.t, cat.status);
+  if (st().pinned === id) delete st().pinned;
+  if (st().cmp.includes(id)) st().cmp = st().cmp.filter(x => x !== id);
+  save();
+  const b = bestUsable(true) || bestUsable(false);
+  if (b && b.id !== id && selId() === id){ pickModel(b.id, null); if (err) err.message = name + ' no está funcionando ahora mismo, así que la escondí de la lista. Te cambié a ' + b.name + ': vuelve a enviar tu mensaje.'; }
+  else if (err) err.message = name + ' no está funcionando ahora mismo, así que la escondí de la lista. Elige otra IA y vuelve a enviar.';
+  renderList({ keep:true });
+}
+SZ.badReady.then(set => { if (!set.size || !cat.list.length) return; const before = cat.list.length; setCatalog(cat.list.filter(m => !SZ.isBad(m.id)), cat.t, cat.status); if (cat.list.length !== before){ renderList({ keep:true }); fixModel(true); } });
+async function regen(){
+  const chat = chatArr();
+  try{ frustration('', true); }catch(e){}
+  if (mode !== 'solo' || Object.keys(busy).length || !chat.length || chat[chat.length - 1].role !== 'assistant') return;
+  /* si la respuesta era favorita, se queda: la nueva llega debajo (tu pregunta se repite) */
+  if (chat[chat.length - 1].star){
+    const q = [...chat].reverse().find(m => m.role === 'user'); if (!q) return;
+    const again = { role:'user', content:q.content, again:true }; if (q.files) again.files = q.files;
+    chat.push(again); touchThread(); save(); renderMsgs(); toast('Tu favorita se queda guardada ★ Te traigo otra respuesta debajo.');
+    await runSolo(err => { const i = chat.lastIndexOf(again); if (i > -1) chat.splice(i, 1); save(); renderMsgs(); showErr(err, { regen:true }); }, { fresh:true });
+    return;
+  }
+  const last = chat.pop(); save();
+  await runSolo(err => { chat.push(last); save(); renderMsgs(); showErr(err, { regen:true }); }, { fresh:true });
+}
+
+/* ---------- comparar: las respuestas llegan en orden, sin cajas vacías, y puedes sumar IA después ---------- */
+/* «Esta tiene más Flow»: cada respuesta trae una carita buena de SynthonIA, distinta a las demás */
+function flowBtn(C){ const f = SZ.randomGoodFace(C.faces); C.faces.add(f); return '<button class="flowb" type="button" title="Sigue la conversación con esta IA"><i aria-hidden="true">' + SZ.face(f, 24) + '</i>Esta tiene más Flow</button>'; }
+function flipAdd(grid, el){
+  const kids = [...grid.children].filter(k => k.classList.contains('cmp-card')), before = kids.map(k => k.getBoundingClientRect());
+  el.classList.add('arrive');
+  const vote = $('.vote', grid); if (vote) grid.insertBefore(el, vote); else grid.appendChild(el);
+  if (SZ.reduce || root.classList.contains('noanim')) return;
+  kids.forEach((k, i) => { const a = before[i], b = k.getBoundingClientRect(), dx = a.left - b.left, dy = a.top - b.top, sx = a.width / (b.width || 1); if (Math.abs(dx) + Math.abs(dy) > 1 || Math.abs(sx - 1) > .01) k.animate([{ transform:'translate(' + dx + 'px,' + dy + 'px) scaleX(' + sx + ')', transformOrigin:'left top' }, { transform:'none', transformOrigin:'left top' }], { duration:700, easing:'cubic-bezier(.22,1,.36,1)' }); });
+}
+function newCmpRun(text){
+  const run = ++cmpRun, node = document.createElement('div'); node.className = 'cmp-run';
+  node.appendChild(userEl(text));
+  const wait = document.createElement('div'); wait.className = 'cmp-wait';
+  const grid = document.createElement('div'); grid.className = 'cmp-grid';
+  const note = document.createElement('p'); note.className = 'cmp-note'; note.textContent = 'Para ahorrar, en Comparar cada IA responde más corto y sin el historial. Si repites la misma pregunta, sale de la caché gratis.';
+  node.append(wait, grid, note);
+  cmpLast = { run, text, node, grid, wait, cards:new Map(), done:[], blind:!!st().battle, n:0, faces:new Set() };
+  parkComposer(); setFresh(false); lane.innerHTML = ''; lane.appendChild(node); jump();
+  return cmpLast;
+}
+function cardEl(C, mid){
+  const m = info(mid), card = document.createElement('div');
+  C.n++; card._order = C.n; card._mid = mid;
+  card.className = 'cmp-card live'; if (!C.blind) card.style.cssText = brandVars(m); else card.style.setProperty('--c', vendorColor(m.vendor));
+  card.innerHTML = '<div class="who">' + (C.blind ? '<span class="av xs" style="--vc:#c9566c">?</span><b>IA sorpresa ' + 'ABCDEFGH'[C.n - 1] + '</b>' : av(m, 'xs') + '<b>' + esc(m.name) + '</b>') + '<span class="stat">escribiendo…</span></div><div class="body"></div><div class="meta"></div>';
+  if (!C.blind) card.dataset.mid = mid;
+  C.cards.set(mid, card);
+  return card;
+}
+function finishCard(C, card, text, meta){
+  card._raw = text; card._meta = meta; card.classList.remove('live');
+  const body = $('.body', card); body.innerHTML = md(text); codeButtons(body);
+  $('.meta', card).innerHTML = C.blind ? '<span>Datos ocultos hasta que votes</span>' : '<span>' + esc(meta) + '</span>' + (card._order === 1 ? '<span class="badge-fast">⚡ llegó primero</span>' : '');
+  if (card._order === 1 && !C.blind) card.classList.add('fast');
+  card.insertAdjacentHTML('beforeend', '<div class="acts"><button class="act" data-a="copy">' + COPY + 'Copiar</button>' + (C.blind ? '' : flowBtn(C)) + '</div>');
+  $('.stat', card).textContent = 'listo';
+}
+function cmpJob(mid, C){
+  if (C.cards.has(mid) || jobOwn[mid]) return;
+  const m = info(mid), tok = {}, live = () => C.run === cmpRun && cmpLast === C;
+  jobOwn[mid] = tok; busy[mid] = 'think'; renderNow();
+  if (C.vote){ C.vote.remove(); C.vote = null; }
+  const pill = document.createElement('span'); pill.style.cssText = C.blind ? '' : brandVars(m); pill.innerHTML = (C.blind ? '<span class="av xs" style="--vc:#c9566c">?</span>Una IA' : av(m, 'xs') + esc(m.name)) + ' está pensando <span class="pxw">' + SZ.pixelGrid() + '</span>'; C.wait.appendChild(pill);
+  const pxr = SZ.pixelRun($('.pxw', pill), C.n + Math.floor(Math.random() * 10));
+  let card = null, rv = null;
+  const mount = () => {
+    if (card || !live()) return;
+    pill.classList.add('out'); setTimeout(() => pill.remove(), 420);
+    card = cardEl(C, mid); flipAdd(C.grid, card); follow();
+    busy[mid] = 'write'; renderNow();
+    rv = SZ.mkReveal($('.body', card), () => follow());
+  };
+  const ck = hashStr('cmp|' + mid + '|' + C.text), hit = cacheGet(ck);
+  const ctl = new AbortController(); ctls.add(ctl);
+  const stopPx = () => { try{ pxr.stop(); }catch(e){} };
+  const p = hit ? Promise.resolve(Object.assign({}, hit, { ms:0, cached:true })) : SZ.askStream(OR, [{ role:'user', content:C.text }], { model:mid, signal:ctl.signal, maxTokens:800 }, txt => { if (!live()) return; mount(); if (rv) rv.push(txt); });
+  return p.finally(() => { ctls.delete(ctl); stopPx(); }).then(async r => {
+    if (r.cached){ st().sx.hits += 1; st().sx.saved += (r.prompt || 0) + (r.completion || 0); save(); }
+    else { addUsage(r.prov || SZ.provOf(mid), r.prompt, r.completion, true, { est:r.est, free:/:free$/.test(mid) || r.prov === 'synthz', rid:r.rid }); SZ.TEL.msgs++; if (!r.aborted){ cachePut(ck, r); if (!r.swapped) SZ.markGood(mid); } }
+    if (!live()) return;
+    mount(); if (!card) return;
+    rv.push(r.text); await rv.end();
+    finishCard(C, card, r.text, metaOf(r) + (r.cached ? ' · respuesta guardada, no gastó nada' : '') + (r.aborted ? ' · detenido' : '') + (r.swapped ? ' · se acabó tu saldo de Puter este mes; respondió ' + (r.real || 'otra IA') : /^sz:/.test(mid) && r.real && mid === 'sz:auto' ? ' · respondió ' + r.real : ''));
+    C.done.push({ card, mid, ms:r.ms, ttft:r.ttft || r.ms });
+  }).catch(err => {
+    if (err && err.gone){ SZ.markBad(mid); setCatalog(cat.list.filter(m => m.id !== mid), cat.t, cat.status); err.message = info(mid).name + ' no está funcionando ahora mismo: la escondí de la lista. Quítala y suma otra.'; }
+    if (rv) rv.skip();
+    pill.classList.add('out'); setTimeout(() => pill.remove(), 420);
+    if (!live()) return;
+    if (!card){ card = cardEl(C, mid); flipAdd(C.grid, card); }
+    card.classList.remove('live');
+    $('.body', card).innerHTML = '<span style="color:#ffb3a7">' + esc(err.aborted ? 'Detenido.' : err.message) + '</span>'; $('.meta', card).textContent = 'sin respuesta'; $('.stat', card).textContent = err.aborted ? 'detenido' : 'no respondió';
+  }).finally(() => {
+    if (jobOwn[mid] === tok){ delete jobOwn[mid]; delete busy[mid]; }
+    renderNow();
+    if (live() && !Object.keys(jobOwn).length && C.blind && C.done.length > 1 && !C.voted){ C.vote = battleVote(C.grid, C.done, C); }
+  });
+}
+async function compare(){
+  if (isLocked()){ lockNudge(); return; }
+  const text = inp.value.trim(); if (!text) return;
+  if (Object.keys(busy).length){ toast('Espera a que terminen de responder, o detenlas con el botón ■.'); return; }
+  const ids = st().cmp.slice();
+  if (ids.length < 2){ toast('Agrega otra IA con el botón +.'); openSide('add'); return; }
+  if (files.length){ toast('Los archivos funcionan con una sola IA. Quítalos para comparar.'); return; }
+  if (!budgetOk()) return;
+  try{ SZ.setTurn(text + '|' + Date.now()); }catch(e){}
+  if (!(await ensureConn())) return;
+  inp.value = ''; autoGrow(); updateHint();
+  const C = newCmpRun(text);
+  ids.forEach(id => cmpJob(id, C));
+}
+/* entrar a Comparar con las IA marcadas (desde los temas) */
+function startCompare(ids){
+  ids = ids.filter((x, i) => ids.indexOf(x) === i).slice(0, CMP_MAX);
+  if (ids.length < 2) return;
+  if (trialOn) exitTrial(true);
+  st().cmp = ids; save(); cmpLast = null; setMode('cmp');
+  toast('Listo: escribe tu pregunta y responden las ' + ids.length + '.'); inp.focus();
+}
+/* la IA elegida vuela desde el selector hasta su lugar arriba, con una curva y un rebote suave */
+function flyChips(ids, from){
+  if (SZ.reduce) return;
+  requestAnimationFrame(() => requestAnimationFrame(() => ids.forEach((id, k) => {
+    const f = from[k], tg = $('#pickRow [data-rm="' + CSS.escape(id) + '"]'), chip = tg && tg.closest('.mchip'); if (!f || !chip) return;
+    const t = chip.getBoundingClientRect(), m = info(id);
+    chip.style.visibility = 'hidden';
+    const g = document.createElement('div'); g.className = 'flychip'; g.style.setProperty('--vc', vendorColor(m.vendor)); g.innerHTML = av(m, 'xs') + '<b>' + esc(m.name) + '</b>'; document.body.appendChild(g);
+    const x0 = f.left, y0 = f.top + f.height / 2 - g.offsetHeight / 2, x1 = t.left, y1 = t.top + t.height / 2 - g.offsetHeight / 2, mx = (x0 + x1) / 2 + (k % 2 ? 40 : -40), my = Math.min(y0, y1) - 90;
+    g.animate([
+      { transform:'translate(' + x0 + 'px,' + y0 + 'px) scale(.9)', opacity:0, filter:'blur(6px)' },
+      { transform:'translate(' + x0 + 'px,' + (y0 - 8) + 'px) scale(1.05)', opacity:1, filter:'blur(0)', offset:.12 },
+      { transform:'translate(' + mx + 'px,' + my + 'px) scale(1.12) rotate(' + (k % 2 ? 4 : -4) + 'deg)', offset:.55 },
+      { transform:'translate(' + x1 + 'px,' + (y1 + 4) + 'px) scale(.97)', offset:.86 },
+      { transform:'translate(' + x1 + 'px,' + y1 + 'px) scale(1)', opacity:1 }
+    ], { duration:820, delay:k * 110, easing:'cubic-bezier(.65,0,.35,1)', fill:'both' }).onfinish = () => {
+      g.remove(); chip.style.visibility = '';
+      chip.animate([{ transform:'scale(1.12)', boxShadow:'0 0 0 2px rgba(230,182,95,.6), 0 0 26px rgba(230,182,95,.5)' }, { transform:'none', boxShadow:'0 0 0 0 rgba(230,182,95,0)' }], { duration:520, easing:'cubic-bezier(.22,1,.36,1)' });
+      const r = chip.getBoundingClientRect(); burst(r.left + 18, r.top + r.height / 2, [vendorColor(m.vendor), '#e6b65f', '#ffffff'], 7);
+    };
+  })));
+}
+/* sumar una IA: si ya preguntaste algo, responde lo mismo sin volver a enviarlo */
+function addToCompare(id, node){
+  const fromR = node && $('.av', node) ? $('.av', node).getBoundingClientRect() : null;
+  if (trialOn){ toast('La prueba guiada usa una sola IA. Para comparar, conecta Puter (es gratis).'); return; }
+  setTimeout(() => { if (fromR) flyChips([id], [fromR]); }, 0);
+  if (!sessionStorage.getItem('synthz:cmpwarn')){ try{ sessionStorage.setItem('synthz:cmpwarn', '1'); }catch(x){} setTimeout(() => toast('Ojo: cada IA que sumas responde por separado y cuenta como un mensaje. Por eso se llama Comparar, no Unir.'), 900); }
+  closeSide();
+  if (mode !== 'cmp'){
+    const cur = selId(), chat = chatArr(), L = chat.length;
+    const seed = L >= 2 && chat[L - 1].role === 'assistant' && chat[L - 2].role === 'user' && chat[L - 2].content && !(chat[L - 2].files && chat[L - 2].files.length) && !Object.keys(busy).length ? { text:chat[L - 2].content, ans:chat[L - 1] } : null;
+    st().cmp = [cur, id]; save(); cmpLast = null; setMode('cmp');
+    if (seed){
+      const C = newCmpRun(seed.text), card = cardEl(C, cur);
+      flipAdd(C.grid, card); finishCard(C, card, seed.ans.content, (seed.ans.meta || '') + ' · ya la tenías');
+      C.done.push({ card, mid:cur, ms:0, ttft:0 });
+      cmpJob(id, C);
+      toast(info(id).name + ' responde a tu última pregunta, al lado.');
+    } else toast('Escribe tu pregunta: responden las dos a la vez.');
+    return;
+  }
+  st().cmp.push(id); save(); paintSel(); renderTop(); updateHint(); renderNow();
+  if (cmpLast && cmpLast.text){ if (!budgetOk()) return; ensureConn().then(ok => { if (ok && cmpLast) cmpJob(id, cmpLast); }); toast(info(id).name + ' se suma a la misma pregunta.'); }
+}
+function removeCmp(id, chip){
+  const a = st().cmp, i = a.indexOf(id); if (i < 0) return;
+  const go = () => {
+    a.splice(i, 1); save();
+    if (cmpLast){ const c = cmpLast.cards.get(id); if (c){ c.animate([{ opacity:1, transform:'none' }, { opacity:0, transform:'scale(.95)', filter:'blur(8px)' }], { duration:320, easing:'ease-in' }).onfinish = () => c.remove(); cmpLast.cards.delete(id); } }
+    if (a.length <= 1){ const left = a[0]; st().cmp = []; save(); cmpLast = null; if (left){ st().model.openrouter = left; save(); } setMode('solo'); return; }
+    paintSel(); renderTop(); updateHint();
+  };
+  if (chip && !SZ.reduce){ chip.classList.add('out'); setTimeout(go, 300); } else go();
+}
+/* «Esta tiene más Flow»: sigues el chat solo con esa IA, con la pregunta y su respuesta */
+function pickWinner(card){
+  const C = cmpLast; if (!C || !card || !card._mid) return;
+  const mid = card._mid; card.classList.add('picked');
+  const r = card.getBoundingClientRect(); burst(r.left + r.width / 2, r.top + 30, ['#e6b65f', '#ffe2a8', '#c9566c', '#ffffff'], 18);
+  setTimeout(() => {
+    (st().thread || (st().thread = {}))[mid] = 't' + Date.now().toString(36);
+    st().cmp = []; cmpLast = null; st().model.openrouter = mid; st().pinned = mid;
+    const arr = st().chats[ckey()] = [];
+    arr.push({ role:'user', content:C.text }, { role:'assistant', content:card._raw || '', meta:(card._meta || '') + ' · la elegiste en Comparar', model:mid });
+    touchThread(); save(); setMode('solo');
+    toast(info(mid).name + ' tiene más Flow 😎 Sigues con ella.');
+  }, 700);
+}
+
+/* ---------- modo, panel móvil y atajos ---------- */
+function setMode(m){
+  mode = m; document.body.classList.toggle('cmpm', m === 'cmp');
+  if (m !== 'cmp') cmpLast = null;
+  inp.placeholder = m === 'cmp' ? 'Una pregunta para todas las IA…' : 'Escribe tu mensaje…';
+  paintSel(); renderTop(); renderMsgs(); renderNow(); renderFoot(); updateHint(); paintAccent();
+}
+/* ---------- selector de IA flotante (computador) u hoja que sube (celular) ---------- */
+const side = $('#side'), scrim = $('#scrim');
+/* ---------- selector en dos paneles: «Filtros» (en el centro) y «Las IA» (se abre a la derecha) ---------- */
+const LUPA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>';
+(function twoPanels(){
+  const L = document.createElement('div'); L.className = 'pf-l'; L.setAttribute('role', 'group'); L.setAttribute('aria-label', 'Filtros');
+  const R = document.createElement('div'); R.className = 'pf-r'; R.setAttribute('role', 'group'); R.setAttribute('aria-label', 'Las IA');
+  const head = $('.phead', side), fw = $('.fwrap', side) || $('#filters'), prov = $('#provSeg'), sortr = $('.sortrow', side), more = $('#pMore'), pfoot = $('.pfoot', side);
+  const lbl = t => { const e = document.createElement('p'); e.className = 'plbl'; e.textContent = t; return e; };
+  head.insertAdjacentHTML('beforeend', '<button type="button" class="plupa" id="pLupa" aria-label="Buscar una IA" data-tip="Buscar una IA">' + LUPA + '</button>');
+  const go = document.createElement('div'); go.className = 'pl-go';
+  go.innerHTML = '<button type="button" class="btn sm flow" id="pSee">Ver las IA <span aria-hidden="true">→</span></button>';
+  L.append(head, lbl('Qué mostrar'), $('#pTabs'), lbl('¿Para qué la quieres?'), $('#pTopics'), lbl('En qué son buenas'), fw, lbl('De dónde'), prov, sortr, go);
+  const rh = document.createElement('div'); rh.className = 'pr-head';
+  rh.innerHTML = '<button type="button" class="pr-back" id="pBack" aria-label="Volver a los filtros"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg><span>Filtros</span></button><b>Las IA</b><span class="pr-n" id="prN"></span>';
+  R.append(rh, $('#searchBox'), $('#pNote'), $('#mlist'), pfoot);
+  if (more) more.remove();
+  side.append(L, R); side.classList.add('two-p');
+})();
+const sideL = $('.pf-l', side), sideR = $('.pf-r', side);
+const wide2 = () => matchMedia('(min-width:900px)').matches;
+function sideShift(){ const w = side.offsetWidth, lw = sideL.offsetWidth;   /* v1.8: medidas sin la animación de entrada (antes quedaba corrido a la izquierda) */ side.style.setProperty('--shift', Math.max(0, (w - lw) / 2).toFixed(0) + 'px'); }
+function sideStage(two, o = {}){
+  requestAnimationFrame(() => { try{ placePill($('#provSeg')); placePill($('#sortSeg')); placePill($('#pTabs')); }catch(e){} });
+  if (two === side.classList.contains('two')){ if (two && o.focus) setTimeout(() => $('#q').focus(), 50); return; }
+  sideShift(); side.classList.toggle('two', two); SZ.SND.expand && two && SZ.SND.expand();
+  if (two){ requestAnimationFrame(() => { V.hM = 0; renderList({ keep:true, animate:true }); }); if (o.focus) setTimeout(() => $('#q').focus(), wide2() ? 520 : 120); }
+}
+addEventListener('resize', () => { if (side.classList.contains('open')) sideShift(); });
+$('#pLupa').addEventListener('click', () => sideStage(true, { focus:true }));
+$('#pSee').addEventListener('click', () => sideStage(true));
+$('#pBack').addEventListener('click', () => sideStage(false));
+/* elegir cualquier cosa en «Filtros» abre «Las IA» */
+sideL.addEventListener('click', e => { if (e.target.closest('[data-ptk],.fchip,#pTabs button,#provSeg button,#sortSeg button')) setTimeout(() => sideStage(true), 260); });
+/* el selector se amplía desde donde lo tocaste hasta el centro, y al cerrarlo vuelve allí (animación al revés) */
+let sideFrom = null;
+function sideFlip(open){
+  if (SZ.reduce) return Promise.resolve();
+  const r = side.getBoundingClientRect(), a = sideFrom;
+  const cx = a ? a.left + a.width / 2 : r.left + r.width / 2, cy = a ? a.top + a.height / 2 : r.top + r.height / 2;
+  const dx = cx - (r.left + r.width / 2), dy = cy - (r.top + r.height / 2), sx = a ? Math.max(.12, a.width / r.width) : .9, sy = a ? Math.max(.08, a.height / r.height) : .9;
+  const A = { transform:'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px) scale(' + sx.toFixed(3) + ',' + sy.toFixed(3) + ')', opacity:0, filter:'blur(10px)', borderRadius:'999px' }, B = { transform:'none', opacity:1, filter:'blur(0)', borderRadius:'28px' };
+  if (isMobile()){ A.transform = 'translateY(70px)'; A.borderRadius = B.borderRadius = '26px 26px 0 0'; }
+  /* si el navegador pausa la animación (pestaña en segundo plano), igual se termina: nunca queda la ventana trabada */
+  const D = open ? 620 : 420;
+  return Promise.race([side.animate(open ? [A, B] : [B, A], { duration:D, easing:open ? 'cubic-bezier(.22,1,.36,1)' : 'cubic-bezier(.55,0,.75,.2)' }).finished.catch(() => {}), new Promise(r => setTimeout(r, D + 180))]);
+}
+function placeSide(){}
+function openSide(kind, anchor){
+  if (isLocked()){ lockNudge(); toast('Primero conecta Puter: es gratis y con un clic.'); return; }
+  if (agentOn() && mode === 'solo' && kind !== 'add'){ toast('En modo agente la IA la elige el agente. Si quieres elegirla tú, apaga el modo agente.'); return; }
+  pickMode = kind === 'add' || mode === 'cmp' ? 'add' : 'set';
+  $('#pTitle').textContent = pickMode === 'add' ? 'Suma otra IA a la mesa' : '¿Con quién fluyes hoy?';
+  const a = anchor && anchor.isConnected ? anchor : $('#curChip') || $('#cPick') || $('#pickRow');
+  sideFrom = a ? a.getBoundingClientRect() : null;
+  if (pickMode === 'set' && !ptopic && curTopic) ptopic = curTopic;
+  renderPTopics(); paintPNote(); paintPGo();
+  const wasOpen = side.classList.contains('open');
+  if (!wasOpen) side.classList.toggle('two', !!(pickMode === 'add' && !wide2()));
+  side.classList.add('open'); { sideL.style.transition = 'none'; sideShift(); void sideL.offsetWidth; sideL.style.transition = ''; } requestAnimationFrame(sideShift);   /* v1.8: abre ya centrado, sin saltar desde la izquierda */ side.setAttribute('aria-hidden', 'false'); scrim.classList.add('on', 'pick');
+  $$('#pickRow .mchip').forEach(c => c.setAttribute('aria-expanded', String(pickMode === 'set')));
+  setTab(isMobile() ? 'ia' : null);
+  renderList({ keep:true });
+  requestAnimationFrame(() => placePill($('#pTabs')));
+  if (!wasOpen) sideFlip(true);
+  if (pickMode === 'set') setTimeout(() => scrollToSel(), 60);
+}
+/* al abrir la lista, se ve la IA que estás usando (con su proveedor elegido) */
+function scrollToSel(){
+  const id = selId(); if (!V.rows) return;
+  const i = V.rows.findIndex(r => r.t === 'm' && r.m.id === id); if (i < 0) return;
+  listEl.scrollTop = Math.max(0, V.tops[i] - 80); vPaint(true);
+}
+let sideClosing = false;
+function closeSide(){
+  if (!side.classList.contains('open') || sideClosing) return;
+  sideClosing = true;
+  const fin = () => {
+    sideClosing = false;
+    side.classList.remove('open'); side.setAttribute('aria-hidden', 'true');
+    if (!$('#chats').classList.contains('msheet')) scrim.classList.remove('on');
+    scrim.classList.remove('pick');
+    pickMode = 'set'; $$('#pickRow .mchip').forEach(c => c.setAttribute('aria-expanded', 'false'));
+    setTab(null); paintSel();
+  };
+  scrim.classList.remove('pick');
+  sideFlip(false).then(fin);
+}
+$('#sideClose').addEventListener('click', closeSide);
+$('#sideDone').addEventListener('click', closeSide);
+scrim.addEventListener('click', () => { closeSide(); closeChatsSheet(); });
+document.addEventListener('pointerdown', e => {
+  if (!side.classList.contains('open') || isMobile()) return;
+  if (side.contains(e.target) || e.target.closest('.mchip, .addb, [data-pick], [data-add-cmp], .szm, .ctxm, #tour, #conn, #blk, #svm')) return;
+  closeSide();
+});
+addEventListener('resize', () => { if (side.classList.contains('open') && !isMobile()) placeSide(); });
+addEventListener('keydown', e => {
+  const tag = e.target.tagName || '', typing = /INPUT|TEXTAREA|SELECT/.test(tag);
+  if ((e.key === '/' && !typing) || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k')){ e.preventDefault(); openSide('set'); setTimeout(() => { $('#q').focus(); $('#q').select(); }, 60); }
+  else if (e.key === 'Escape'){ if (document.activeElement === $('#q') && $('#q').value){ clearQuery(); } else if (side.classList.contains('open')){ closeSide(); const c = $('#curChip'); if (c) c.focus(); } else closeChatsSheet(); }
+});
+
+/* ---------- barrita lateral y tus chats ---------- */
+const RAIL_KEY = 'synthz:rail';
+const RS = { open:false, chats:null, view:'chats' };
+try{ const r = JSON.parse(localStorage.getItem(RAIL_KEY)) || {}; if (typeof r.open === 'boolean') RS.open = r.open; if (typeof r.chats === 'boolean') RS.chats = r.chats; if (r.view === 'favs' || r.view === 'agents') RS.view = r.view; }catch(e){}
+if (RS.chats === null) RS.chats = !isTablet();
+let cView = RS.view;
+const saveRS = () => { try{ localStorage.setItem(RAIL_KEY, JSON.stringify(RS)); }catch(e){} };
+function applyRail(){
+  const sh = $('#shell'), tg = $('#railTog');
+  $('#rail').classList.toggle('open', !!RS.open); sh.classList.toggle('ropen', !!RS.open); sh.classList.toggle('nochats', !RS.chats);
+  tg.setAttribute('aria-expanded', String(!!RS.open)); tg.setAttribute('aria-label', RS.open ? 'Cerrar la barra' : 'Abrir la barra'); tg.dataset.tip = RS.open ? 'Cerrar la barra' : 'Abrir la barra';
+  $$('#rail [data-r]').forEach(b => { const r = b.dataset.r; b.setAttribute('aria-pressed', String((r === 'agents' && cView === 'agents') || (r === 'chats' && RS.chats && cView === 'chats') || (r === 'favs' && RS.chats && cView === 'favs'))); });
+  $$('#cSeg button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.v === cView))); placePill($('#cSeg'));
+  $('#railWord').tabIndex = RS.open ? 0 : -1;
+  setAgent(cView === 'agents');
+}
+function showChats(view, focus){
+  if (isMobile()){ cView = view || cView; openChatsSheet(focus); return; }
+  RS.chats = true; if (view){ cView = view; RS.view = view; } RS.open = false; saveRS(); applyRail(); renderChats(true);
+  if (focus) setTimeout(() => $('#thQ').focus(), 380);
+}
+$('#railTog').addEventListener('click', () => { RS.open = !RS.open; saveRS(); applyRail(); });
+$('#rail').addEventListener('click', e => {
+  const b = e.target.closest('[data-r]'); if (!b) return;
+  const r = b.dataset.r;
+  if (r === 'new'){ newChat(); return; }
+  if (r === 'search'){ showChats('chats', true); return; }
+  if (r === 'agents' && cView === 'agents'){ cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(true); toast('Saliste del modo agente.'); return; }
+  if ((r === 'chats' || r === 'favs') && RS.chats && cView === r && !RS.open){ RS.chats = false; saveRS(); applyRail(); return; }
+  showChats(r);
+});
+$('#railCoin').addEventListener('click', () => coinModal('panel'));
+$('#chatsClose').addEventListener('click', () => { if (isMobile()) closeChatsSheet(); else { RS.chats = false; saveRS(); applyRail(); } });
+$$('#cSeg button').forEach(b => b.addEventListener('click', () => { cView = b.dataset.v; RS.view = cView; saveRS(); applyRail(); renderChats(true); }));
+/* celular: tus chats suben como una hoja */
+function openChatsSheet(focus){ const c = $('#chats'); c.classList.add('msheet'); scrim.classList.add('on'); applyRail(); renderChats(true); setTab('chats'); if (focus) setTimeout(() => $('#thQ').focus(), 420); }
+function closeChatsSheet(){ const c = $('#chats'); if (!c.classList.contains('msheet')) return; c.classList.remove('msheet'); if (!side.classList.contains('open')) scrim.classList.remove('on'); setTab(null); }
+function setTab(t){ $$('#tabbar [data-tab]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tab === t))); }
+$('#tabbar').addEventListener('click', e => {
+  const b = e.target.closest('[data-tab]'); if (!b) return;
+  const t = b.dataset.tab;
+  if (t === 'chats'){ if ($('#chats').classList.contains('msheet')) closeChatsSheet(); else { closeSide(); openChatsSheet(); } }
+  else if (t === 'ia'){ if (side.classList.contains('open')) closeSide(); else { closeChatsSheet(); openSide(mode === 'cmp' ? 'add' : 'set'); } }
+  else { closeSide(); closeChatsSheet(); if (t === 'coins') coinModal('panel'); else if (t === 'cfg') SZ.cfgModal(); else if (t === 'me') accModal(); }
+});
+/* chat nuevo: también cambia la frase de bienvenida */
+function newChat(){
+  closeSide(); closeChatsSheet();
+  if (mode !== 'solo'){ stopNow(); cmpRun++; setMode('solo'); }
+  if (chatArr().length) (st().thread || (st().thread = {}))[thModel()] = 't' + Date.now().toString(36);
+  save(); gen++; nextGreet(); curTopic = null; topicsAll = false;
+  renderMsgs(); updateHint(); renderChats(); renderNow();
+  if (matchMedia('(pointer: fine)').matches) inp.focus();
+  if (isTablet() && RS.chats){ RS.chats = false; saveRS(); applyRail(); }
+}
+
+/* volver con un fundido */
+/* volver a SynthZ: la película del portal al revés */
+/* v1.4: con la barra lateral abierta, el logo «SynthFlow» NO lleva a la portada (solo hace un brillito) */
+document.addEventListener('click', e => { const w = e.target.closest && e.target.closest('#railWord'); if (w){ e.preventDefault(); e.stopPropagation(); w.classList.remove('tw'); void w.offsetWidth; w.classList.add('tw'); } }, true);
+document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('a[href="index.html"]'); if (!a || a.id === 'railWord' || (e.defaultPrevented && !/^(backLink|mLogo)$/.test(a.id)) || e.button || e.ctrlKey || e.metaKey || e.shiftKey) return; e.preventDefault(); SZ.portalBack('index.html'); });
+addEventListener('pageshow', e => { if (e.persisted){ root.classList.remove('bye'); const pp = document.getElementById('portal'); if (pp) pp.remove(); SZ.S.busy(false); } });
+SZ.hooks.usage = () => { renderFoot(); coinWatch(); };
+SZ.hooks.md = () => { if (!Object.keys(busy).length && mode === 'solo' && chatArr().length) renderMsgs(); };
+
+/* ---------- tutorial, mejor IA gratis y menú contextual ---------- */
+const APODEX_NAME = 'Automática';
+const TOUR = [
+  { t:'Bienvenido a SynthFlow', p:'Aquí chateas gratis con muchas IA. No tienes que configurar nada: escribe y listo.' },
+  { t:'Tu Puter (opcional)', p:'Cada día tienes un límite gratis para usar las IAs conectadas. A medianoche se vuelve a llenar. Si se te acaban, puedes seguir con Puter. Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.', x:'conn' },
+  { t:'¿Dónde quieres empezar?', p:'Elige y te dejo en su pestaña con su mejor IA. Si no eliges, empiezas con ' + APODEX_NAME + '.', x:'pick' },
+  { t:'Tu límite de hoy', p:'Cada día tienes un límite gratis. El anillo de la barrita se va vaciando mientras chateas y se llena otra vez a medianoche. «Respuestas cortas» te ayuda a que te alcancen más.' },
+  { t:'Más trucos', p:'Adjunta imágenes, PDF o código con el clip. En "Comparar" le preguntas lo mismo a hasta 4 IAs. El botón «?» de arriba abre la guía rápida cuando quieras.' },
+  { t:'Todo listo', p:'', x:'done' }
+];
+const TCOL = ['#8fb0ff', '#7fd6b8', '#c9566c', '#f2b36b', '#ff8f7a', '#c9566c'];
+let tourI = 0, tourEl = null, tourPick = null;
+function pickTarget(){ const m = tourPick === 'pu' ? bestOf('pu') : tourPick === 'sz' ? bestOf('sz') : null; return m ? m.id : APODEX; }
+function tourBox(box, kind){
+  if (kind === 'conn'){
+    const hasP = puterOn(), on = szOn();
+    box.innerHTML = '<div class="tconn"><div class="trow"><b><i class="pdot' + (on ? ' on' : '') + '"></i> <span class="sz-logo" aria-hidden="true"></span> IAs conectadas</b><span>' + (on ? 'Listas · gratis' : 'Descansando un momento') + '</span>' + (on ? '<i class="ok">✓ Lista</i>' : '') + '</div>'
+      + '<div class="trow"><b><i class="pdot' + (hasP ? ' on' : '') + '"></i> ' + SZ.puterLogo() + ' Puter</b><span>Opcional · un clic</span>' + (hasP ? '<i class="ok">✓ Conectada</i>' : '<button class="btn sm" data-tpu type="button">Conectar</button><button class="lnk" data-tpt type="button">Sin cuenta de Puter</button>') + '</div></div>';
+    const pu = $('[data-tpu]', box);
+    if (pu) pu.addEventListener('click', () => { pu.textContent = 'Conectando…'; puterSignIn().then(() => { afterConnect('¡Puter conectado!'); tourBox(box, 'conn'); }).catch(e => { pu.textContent = 'Conectar'; if (!(e && e.shown)) toast('No terminaste de entrar a Puter. Inténtalo otra vez.'); }); });
+    const pt = $('[data-tpt]', box);
+    if (pt) pt.addEventListener('click', () => { pt.textContent = '…'; puterSignIn({ attempt_temp_user_creation:true }).then(() => { afterConnect('¡Puter conectado!'); tourBox(box, 'conn'); }).catch(e => { pt.textContent = 'Sin cuenta de Puter'; if (!(e && e.shown)) toast('No terminaste de entrar a Puter. Inténtalo otra vez.'); }); });
+  } else if (kind === 'pick'){
+    const bp = bestOf('pu'), bo = bestOf('sz');
+    const card = (k, title, sub, model) => '<button type="button" class="tpick' + (tourPick === k ? ' on' : '') + '" data-k="' + k + '"><b>' + title + '</b><span>' + sub + '</span><em>' + esc(model) + '</em></button>';
+    box.innerHTML = '<div class="tpicks">' + card('sz', 'IAs conectadas', 'Gratis · listas', bo ? bo.name : 'Automática') + card('pu', 'Puter', 'Opcional · un clic', bp ? bp.name : 'ChatGPT') + card('none', 'Ninguno', 'Por defecto', 'Automática') + '</div>';
+    $$('.tpick', box).forEach(b => b.addEventListener('click', () => { tourPick = b.dataset.k; tourBox(box, 'pick'); }));
+  } else if (kind === 'done'){
+    const id = pickTarget(), where = tourPick === 'pu' ? 'Puter' : tourPick === 'sz' ? 'SynthZ' : 'Todos';
+    box.innerHTML = '<div class="tsum">Empiezas con <b>' + esc(info(id).name) + '</b> en la pestaña <b>' + where + '</b>.' + (connected(id) ? '' : /^pu:/.test(id) ? ' Te pediré entrar a Puter cuando escribas tu primer mensaje.' : '') + '</div>';
+  } else box.innerHTML = '';
+}
+function tourStep(anim, dir){
+  const c = $('.tcard', tourEl), b = $('.tb', c), d = TOUR[tourI], last = tourI === TOUR.length - 1;
+  const set = () => {
+    $('h3', b).textContent = d.t; $('p', b).textContent = d.p; $('p', b).style.display = d.p ? '' : 'none';
+    tourBox($('.tx', b), d.x);
+    $('.tn', c).textContent = '0' + (tourI + 1) + ' / 0' + TOUR.length;
+    $('#tNext').textContent = last ? 'Empezar' : d.x === 'conn' ? (puterOn() ? 'Siguiente' : 'Ahora no, siguiente') : 'Siguiente';
+    $('#tBack').style.visibility = tourI ? 'visible' : 'hidden';
+    tourEl.style.setProperty('--tc', TCOL[tourI]); $$('.tdots i', c).forEach((x, i) => x.classList.toggle('on', i === tourI)); $('#tSkip').style.visibility = last ? 'hidden' : 'visible';
+  };
+  if (!anim){ set(); return; }
+  SZ.swapDir(b, dir || 1, set);
+}
+function openHelp(){ SZ.helpGuide({ extra:[['Ver la Guía Asistida', () => runGuide()], ['Conectar mi Puter (opcional)', openTour], ['Ver mi límite de hoy', () => coinModal('panel')]] }); }
+$('#helpBtn').addEventListener('click', () => openGuide());
+$('#guideTop').addEventListener('click', () => openGuide());
+function openTour(){
+  if (tourEl) return; tourI = 0; tourPick = null;
+  tourEl = document.createElement('div'); tourEl.id = 'tour';
+  tourEl.innerHTML = '<div class="tcard" role="dialog" aria-modal="true"><div class="word" id="tWord"></div><div class="tn"></div><div class="tb"><h3></h3><p></p><div class="tx"></div></div><div class="tdots"></div><div class="tbtn"><button class="lnk" id="tSkip" type="button">Saltar</button><span style="flex:1"></span><button class="lnk" id="tBack" type="button">Atrás</button><button class="btn sm" id="tNext" type="button"></button></div></div>';
+  document.body.appendChild(tourEl); $('#tWord').innerHTML = zWord('Synth');
+  $('.tdots', tourEl).innerHTML = TOUR.map(() => '<i></i>').join('');
+  tourStep(false); requestAnimationFrame(() => tourEl.classList.add('on'));
+  $('.tcard', tourEl).animate([{ transform:'scale(.9) translateY(24px)', opacity:0, filter:'blur(10px)' }, { transform:'none', opacity:1, filter:'blur(0)' }], { duration:700, easing:'cubic-bezier(.22,1,.36,1)' });
+  $('#tSkip').addEventListener('click', () => closeTour(false));
+  $('#tBack').addEventListener('click', () => { if (tourI > 0){ tourI--; tourStep(true, -1); } });
+  $('#tNext').addEventListener('click', () => { if (tourI < TOUR.length - 1){ tourI++; tourStep(true); } else closeTour(true); });
+}
+function closeTour(go){
+  if (!tourEl) return; const el = tourEl; tourEl = null; setTimeout(warnBlocked, 700);
+  try{ localStorage.setItem('synthz:tour', '1'); }catch(e){}
+  el.classList.remove('on'); setTimeout(() => el.remove(), 520);
+  if (!go && !tourPick) return;
+  if (mode !== 'solo') setMode('solo');
+  const id = pickTarget();
+  st().pinned = id; pickModel(id, null);
+  ui.prov = tourPick === 'pu' ? 'pu' : tourPick === 'sz' ? 'sz' : 'all'; saveUI();
+  $$('#provSeg button').forEach(x => x.setAttribute('aria-selected', String(x.dataset.p === ui.prov))); placePill($('#provSeg')); renderList({ animate:true });
+  toast('Empiezas con ' + info(id).name + '.');
+  burst(innerWidth / 2, innerHeight / 2, ['#8fb0ff', '#c9566c', '#ff8f7a', '#7fd6b8'], 22);
+}
+/* =====================================================================
+   Guía Asistida: SynthonIA enseña SynthFlow con su manita (camino B)
+   1 temas · 2 IA recomendadas · 3 recorrido · 4 comparar 2 · 5 prueba real · 6 conectar
+   ===================================================================== */
+const H = SZ.HAND;
+const GUIDE_PROMPTS = {
+  marketing:'Dame 3 ideas cortas de publicaciones para vender postres caseros en Instagram.',
+  escribir:'Escribe un mensaje corto y amable para invitar a mis amigos a una reunión el sábado.',
+  codigo:'Explícame en 4 pasos qué hace un bucle «for» en JavaScript, con un ejemplo corto.',
+  estudiar:'Explícame la fotosíntesis como a un principiante, con un ejemplo y 2 preguntas para repasar.',
+  planos:'Ayúdame a distribuir una habitación de 3 x 4 metros con cama, escritorio y clóset.',
+  negocios:'Dame un plan de 5 pasos para empezar a vender comida desde mi casa.',
+  ideas:'Dame 8 ideas originales para un regalo de cumpleaños que no cueste mucho.',
+  imagenes:'¿Qué cosas puede hacer una IA con una foto o un PDF? Dame 5 ejemplos cortos.',
+  redes:'Escribe un guion de 20 segundos para un reel que presente mi emprendimiento.',
+  ventas:'Ayúdame a responder a un cliente que dice que mi producto está caro, de forma amable.',
+  correo:'Escribe un correo formal y corto pidiendo un día libre en el trabajo.',
+  empleo:'Dame 5 preguntas típicas de una entrevista de trabajo y cómo responderlas.',
+  web:'Explícame qué partes tiene una página web sencilla, en palabras fáciles.',
+  datos:'¿Qué fórmula de Excel suma solo los valores mayores a 100? Explícala corto.',
+  idiomas:'Enséñame 5 frases útiles en inglés para pedir comida en un restaurante.',
+  mate:'Resuelve paso a paso: 3x + 7 = 22.',
+  ciencia:'Explícame de forma sencilla por qué el cielo es azul.',
+  diseno:'Propón 3 paletas de colores (con códigos HEX) para una marca de café.',
+  finanzas:'Dame 5 consejos sencillos para ahorrar cada mes.',
+  legal:'Explícame en palabras sencillas qué es un contrato de arrendamiento.',
+  salud:'Propón una rutina suave de estiramientos de 10 minutos para empezar el día.',
+  cocina:'Tengo arroz, huevos y tomate. ¿Qué puedo cocinar? Dame 2 opciones fáciles.',
+  viajes:'Hazme un plan de 2 días para conocer una ciudad nueva con poco presupuesto.',
+  musica:'Ayúdame con 4 versos para una canción sobre empezar de nuevo.',
+  historias:'Escribe el inicio de una historia corta sobre un robot que aprende a pintar.',
+  juegos:'Propón una idea sencilla de videojuego con sus reglas en 5 líneas.',
+  productividad:'Divide en pasos pequeños la tarea de ordenar mi cuarto.',
+  complejo:'Compara en una tabla corta estudiar de día o de noche: ventajas y desventajas.'
+};
+const GUIDE_DEMO = {
+  marketing:[['Carrusel «antes y después»: la masa cruda y el postre terminado.', 'Encuesta en historias: «¿Cuál sale el viernes?».', 'Video de 10 s cortando la torta, con precio.'], ['Cuenta la historia de tu receta favorita en 3 frases.', 'Promo «Martes dulce» para quien comente.', 'Reseña real de un cliente, con su foto.']],
+  codigo:[['Un «for» repite un bloque varias veces.', 'Tiene inicio, condición y paso: for (let i = 0; i < 3; i++).', 'Sirve para recorrer listas.'], ['Piensa en «haz esto N veces».', 'La variable i cuenta cada vuelta.', 'Cuando la condición es falsa, se detiene.']],
+  estudiar:[['Las plantas usan luz para hacer su comida.', 'Toman agua y CO₂ y sueltan oxígeno.', 'Ejemplo: por eso crecen hacia la ventana.'], ['Es como una cocina solar dentro de la hoja.', 'La clorofila atrapa la luz.', 'Pregunta: ¿qué gas sueltan las plantas?']]
+};
+const GUIDE_DEMO_ANY = [['Primero te doy una respuesta corta y directa.', 'Luego un ejemplo práctico.', 'Al final, un consejo extra.'], ['Te lo explico con otras palabras.', 'Con un ejemplo distinto.', 'Y una idea que la otra no dio.']];
+let G = null;
+const gNeed = () => { if (!G || G.skip) throw Object.assign(new Error('guía cerrada'), { guide:true }); };
+const gWait = ms => new Promise(r => setTimeout(r, SZ.reduce ? Math.min(ms, 260) : ms)).then(gNeed);
+function gHud(n, label){
+  if (!G) return;
+  let h = $('#szgHud');
+  if (!h){
+    h = document.createElement('div'); h.id = 'szgHud'; h.setAttribute('role', 'status');
+    h.innerHTML = '<span class="gh-f">' + SZ.face('feliz', 22) + '</span><span class="gh-t"><b>GUÍA</b> <i></i></span><span class="gh-bar"><i></i></span><button type="button" class="gh-x">Saltar guía</button>';
+    document.body.appendChild(h); requestAnimationFrame(() => h.classList.add('on'));
+    $('.gh-x', h).addEventListener('click', () => endGuide(false));
+  }
+  $('.gh-t i', h).textContent = n + ' de ' + G.total + ' · ' + label;
+  $('.gh-bar i', h).style.transform = 'scaleX(' + (n / G.total).toFixed(3) + ')';
+}
+function gPanel(html, cls, say, mood, dir){
+  gPanelClose(dir); H.quiet();
+  const p = document.createElement('div'); p.id = 'szgPanel'; p.className = 'szgp' + (cls ? ' ' + cls : '') + (dir < 0 ? ' rev' : '');
+  p.innerHTML = '<div class="gp-in">' + (say ? '<div class="gp-say"><span class="sf">' + SZ.face(mood || 'feliz', 58) + '</span><p>' + esc(say) + '</p></div>' : '') + html + '</div>';
+  document.body.appendChild(p); requestAnimationFrame(() => p.classList.add('on'));
+  if (say){ SZ.SND.blip(mood); if (!SZ.reduce) SZ.typeIn($('.gp-say p', p), { cps:70, max:1.6, delay:250 }).catch(() => {}); }
+  return p;
+}
+/* la barra de la guía se aparta si tapa lo que SynthonIA está señalando */
+function gDodge(t){ const h = $('#szgHud'); if (!h || !t || !t.getBoundingClientRect) return; const r = t.getBoundingClientRect(); h.classList.toggle('low', r.top < 96); }
+function gPanelClose(dir){ if (H.wander) H.wander(null); const p = $('#szgPanel'); if (!p) return; p.id = ''; p.classList.remove('on', 'rev'); p.classList.add('bye'); if (dir < 0) p.classList.add('back'); setTimeout(() => p.remove(), 520); }
+/* lo primero que se vea de una lista de opciones (la pantalla cambia entre el inicio limpio y el chat) */
+const gAny = (...L) => { for (const x of L){ const n = gT(x, x); if (n) return n; } return null; };
+const gT = (desk, mob) => { const s = isMobile() ? mob : desk; const n = s && $(s); return n && n.getClientRects().length ? n : null; };
+async function gPoint(target, text, o = {}){
+  gNeed();
+  if (!target){ return H.talk(text, Object.assign({ mood:o.mood || 'feliz', buttons:[{ label:o.next || 'Siguiente' }], auto:o.auto || Math.min(9000, 2600 + text.length * 48) }, o)).then(r => { gNeed(); return r; }); }
+  try{ target.scrollIntoView({ block:'nearest', behavior:SZ.reduce ? 'auto' : 'smooth' }); }catch(e){}
+  gDodge(target); H.spot(target, o.pad);
+  await H.moveTo(target, { shape:o.shape || 'point', fx:o.fx, fy:o.fy }); gNeed();
+  const r = await H.talk(text, Object.assign({ near:target, mood:o.mood || 'senalando', buttons:[{ label:o.next || 'Siguiente' }], auto:o.auto || Math.min(9000, 2600 + text.length * 48) }, o));
+  gNeed(); return r;
+}
+async function waitCatalog(ms){ const t0 = Date.now(); while (!cat.list.length && Date.now() - t0 < ms){ await gWait(250); } }
+
+async function runGuide(){
+  if (G) return;
+  closeSide(); closeChatsSheet(); if (tourEl) closeTour(false);
+  if ($('#conn')) { const c = $('#cClose'); if (c) c.click(); }
+  G = { skip:false, total:SZ.ACC.dcid ? 7 : 6, topics:[] };
+  SZ.DRIVE.cid().then(c => { if (G && c && !(SZ.DRIVE.meta() || {}).linked){ G.total = 7; const h = $('#szgHud .gh-t i'); if (h) h.textContent = h.textContent.replace(/de \d+/, 'de 7'); } else if (G && !c) G.total = 6; }).catch(() => {});
+  root.classList.add('guiding');
+  try{
+    if (mode !== 'solo') setMode('solo');
+    if (chatArr().length) newChat();
+    H.show({ x:innerWidth - 60, y:innerHeight - 70 });
+    await gWait(80);
+    await H.moveTo({ x:innerWidth / 2, y:innerHeight * .26 }, { shape:'arrow' });
+    H.wave(2);
+    let r = await H.talk('¡Hola! Soy SynthonIA. Te enseño SynthFlow en unos 2 minutos: eliges tus temas, te muestro las IA que mejor los hacen, comparamos 2 y chateas de verdad, gratis.', { mood:'feliz', buttons:[{ label:'¡Vamos!' }, { label:'Saltar', ghost:true }] });
+    if (r === 1){ endGuide(false); return; }
+    gNeed();
+
+    /* 1 · temas y 2 · IA recomendadas (camino B). «← Cambiar temas» vuelve con la animación al revés */
+    let gdir = 1;
+    for (;;){
+    gHud(1, 'Tus temas');
+    H.quiet();
+    const P = gPanel('<h3>¿Qué te interesa?</h3><div class="gp-topics">' + TOPICS.map(([k, e, l], i) => '<button type="button" class="tchip" data-gt="' + k + '" aria-pressed="' + G.topics.includes(k) + '" style="--i:' + i + '"><span aria-hidden="true">' + e + '</span>' + esc(l) + '</button>').join('') + '</div><div class="gp-act"><span class="gp-n">' + G.topics.length + ' de 3</span><button type="button" class="btn sm flow" data-gnext' + (G.topics.length ? '' : ' disabled') + '>Siguiente →</button></div>', 'pick', 'Elige hasta 3 temas que te interesen. Por ejemplo, si vendes algo: «Marketing» y «Ventas».', 'senalando', gdir);
+    const pickN = () => $$('[data-gt][aria-pressed="true"]', P).length;
+    P.addEventListener('click', e => {
+      const b = e.target.closest('[data-gt]'); if (!b) return;
+      const on = b.getAttribute('aria-pressed') === 'true';
+      if (!on && pickN() >= 3){ toast('Máximo 3 temas: quita uno para elegir otro.'); return; }
+      b.setAttribute('aria-pressed', String(!on)); SZ.SND.tap();
+      const n = pickN(); $('.gp-n', P).textContent = n + ' de 3'; $('[data-gnext]', P).disabled = !n;
+    });
+    /* el botón responde desde el primer instante, aunque la manita aún se esté moviendo */
+    const go1 = new Promise(res => { $('[data-gnext]', P).addEventListener('click', res, { once:true }); const iv = setInterval(() => { if (!G || G.skip){ clearInterval(iv); res(); } }, 300); });
+    await gWait(450);
+    const firstChip = $('[data-gt]', P);
+    /* señala un momento y luego flota por fuera del panel: no se queda tapando los temas */
+    if (firstChip) H.moveTo(firstChip, { shape:'point' }).then(() => SZ.sleepRaw(1100)).then(() => { if (G && !G.skip && P.isConnected) H.wander(P); });
+    await go1;
+    gNeed();
+    G.topics = $$('[data-gt][aria-pressed="true"]', P).map(b => b.dataset.gt);
+    if (!G.topics.length) G.topics = ['ideas'];
+    try{ st().guide = { topics:G.topics, t:Date.now() }; save(); }catch(e){}
+
+    gHud(2, 'IA para ti');
+    await waitCatalog(4000);
+    const rows = G.topics.map(k => {
+      const T = TOPIC[k], L = recommendTop(k, 3);
+      return '<div class="gp-row"><b><span aria-hidden="true">' + T.e + '</span> ' + esc(T.l) + '</b><div class="gp-ias">' + (L.length ? L.map((m, i) => '<span class="gp-ia" style="--vc:' + vendorColor(m.vendor) + ';--i:' + i + '">' + av(m, 'xs') + '<span><em>' + esc(m.name) + '</em><small>' + esc(payOf(m.id)[2]) + '</small></span></span>').join('') : '<span class="gp-ia none">La lista de IA está cargando; aparecerá en «Temas».</span>') + '</div></div>';
+    }).join('');
+    const P2 = gPanel('<h3>Tus IA recomendadas</h3><p>En el mundo hay más de mil IA y cada una es experta en algo. Aquí tienes varias gratis y puedes usar una para escribir, otra para código…</p>' + rows + '<div class="gp-act"><button type="button" class="lnk gp-back" data-gback>← Cambiar temas</button><span style="flex:1"></span><button type="button" class="btn sm flow" data-gnext>Ver dónde está todo →</button></div>', 'recs', 'Estas son las mejores para lo que te gusta. ¡Todas gratis!', 'guino', 1);
+    const go2 = new Promise(res => { $('[data-gnext]', P2).addEventListener('click', () => res('next'), { once:true }); $('[data-gback]', P2).addEventListener('click', () => res('back'), { once:true }); const iv = setInterval(() => { if (!G || G.skip){ clearInterval(iv); res('next'); } }, 300); });
+    await gWait(500);
+    const ia1 = $('.gp-ia', P2);
+    if (ia1) H.moveTo(ia1, { shape:'point' }).then(() => SZ.sleepRaw(1300)).then(() => { if (G && !G.skip && P2.isConnected) H.wander(P2); });
+    const how = await go2;
+    gNeed();
+    if (how === 'back'){ gdir = -1; continue; }
+    break;
+    }
+    gPanelClose(); H.quiet();
+
+    /* 3 · recorrido por la pantalla (camino A) */
+    gHud(3, 'La pantalla');
+    await gWait(350);
+    await gPoint(gAny('#cPick', '#curChip'), 'Aquí eliges con qué IA hablas. Tócalo y se abre su ventana, con temas, buscador y filtros.');
+    await gPoint(gAny('#cCmp', '#pickRow [data-add]'), 'Aquí sumas otra IA: hasta 4 a la vez. Todas responden la misma pregunta y las comparas. Ojo: cada una gasta lo suyo.');
+    await gPoint(gAny('#payPill', '#payL', '#payM'), 'Aquí ves cómo va tu límite gratis de hoy.', { pad:6 });
+    await gPoint(gT('#rail [data-r="chats"]', '#tabbar [data-tab="chats"]'), 'Tus chats y tus mensajes favoritos quedan aquí, en cualquier dispositivo si entras con tu cuenta.', { side:true });
+    await gPoint(gT('.tchip[data-topic]', '.tchip[data-topic]'), 'Toca un tema cuando quieras y te recomiendo IA expertas en eso.');
+    await gPoint(gT('#guideTop', '#guideTop') || gT('#helpBtn', '#helpBtn'), 'Y si te pierdes, la Guía siempre está aquí. Puedes verla Asistida o en Lectura.', { mood:'guino' });
+    H.unspot(); H.quiet();
+
+    /* 4 · comparar 2 IA (ejemplo animado: no gasta nada) */
+    gHud(4, 'Comparar 2 IA');
+    const k0 = G.topics[0], recs = recommendTop(k0, 2);
+    const names = [recs[0] ? recs[0] : null, recs[1] ? recs[1] : null];
+    const nm = i => names[i] ? esc(names[i].name) : (i ? 'Mistral Small' : 'Llama 3.3');
+    const avx = i => names[i] ? av(names[i], 'xs') : '<span class="av xs" style="--vc:' + (i ? '#f5c46b' : '#f2a07b') + '">' + (i ? 'M' : 'L') + '</span>';
+    const D = GUIDE_DEMO[k0] || GUIDE_DEMO_ANY, q = GUIDE_PROMPTS[k0] || 'Dame una idea útil para hoy.';
+    const P3 = gPanel('<h3>Así se ve comparar</h3><p class="gp-tag">Ejemplo animado · no gasta mensajes</p><div class="gd-q">' + esc(q) + '</div><div class="gd-wait"></div><div class="gd-grid"></div><div class="gp-act"><button type="button" class="btn sm flow" data-gnext hidden>Ahora pruébalo tú →</button></div>', 'demo', 'Mira: le hago la misma pregunta a 2 IA a la vez. Aparecen en el orden en que llegan.', 'sorprendida');
+    const wait = $('.gd-wait', P3), grid = $('.gd-grid', P3);
+    const pill = i => { const s = document.createElement('span'); s.innerHTML = avx(i) + nm(i) + ' está pensando <span class="dots"><i></i><i></i><i></i></span>'; wait.appendChild(s); return s; };
+    const card = (i, first) => { const c = document.createElement('div'); c.className = 'gd-card'; c.innerHTML = '<div class="gd-who">' + avx(i) + '<b>' + nm(i) + '</b>' + (first ? '<span class="gd-fast">⚡ llegó primero</span>' : '') + '</div><ol>' + D[i].map(x => '<li>' + esc(x) + '</li>').join('') + '</ol><button type="button" class="gd-flow" data-gf="' + i + '">' + SZ.face(SZ.randomGoodFace ? SZ.randomGoodFace() : 'feliz', 20) + 'Esta tiene más Flow</button>'; return c; };
+    const p0 = pill(0), p1 = pill(1);
+    await gWait(1100); p1.classList.add('out'); setTimeout(() => p1.remove(), 400); grid.appendChild(card(1, true)); SZ.SND.tap();
+    await gWait(1200); p0.classList.add('out'); setTimeout(() => p0.remove(), 400); grid.appendChild(card(0, false)); SZ.SND.tap();
+    await gWait(500);
+    await H.moveTo(grid.firstChild, { shape:'arrow', fx:.5, fy:.3 });
+    const gs = $('.gp-say p', P3); if (gs){ gs._chars = null; gs.textContent = 'Con «+» puedes sumar otra IA incluso después de preguntar: responde lo mismo y aparece al lado.'; if (!SZ.reduce) SZ.typeIn(gs, { cps:70, max:1.6 }).catch(() => {}); }
+    await gWait(3400);
+    const fb = $('[data-gf]', grid);
+    await H.click(fb);
+    fb.classList.add('won'); const fr = fb.getBoundingClientRect(); burst(fr.left + fr.width / 2, fr.top + fr.height / 2, ['#e6b65f', '#ffe2a8', '#c9566c'], 12);
+    if (gs){ gs._chars = null; gs.textContent = 'Cuando una te gusta más: «Esta tiene más Flow» y sigues el chat solo con ella.'; const f = $('.gp-say .sf', P3); if (f) f.innerHTML = SZ.face('riendo', 58); SZ.SND.blip('riendo'); if (!SZ.reduce) SZ.typeIn(gs, { cps:70, max:1.6 }).catch(() => {}); }
+    const nb = $('[data-gnext]', P3); nb.hidden = false;
+    await new Promise(res => { nb.addEventListener('click', res, { once:true }); const iv = setInterval(() => { if (!G || G.skip){ clearInterval(iv); res(); } }, 300); });
+    gNeed(); gPanelClose(); H.quiet();
+
+    /* 5 · chatear de verdad: las IAs conectadas ya está activada (si no lo está, la prueba de 5 mensajes de la guía) */
+    gHud(5, 'Tu primer chat');
+    const useSz = szOn() && !trialOn;
+    let ok = useSz || (trialOn && trialLeft() > 0);
+    if (useSz){ const pk = recommendTop(k0, 8).find(m => /^sz:/.test(m.id)) || info(APODEX); if (selId() !== pk.id) pickModel(pk.id, null); }
+    if (!ok){ H.talk('Preparando tus 5 mensajes de prueba…', { mood:'pensando' }); ok = await enterTrial(); }
+    gNeed();
+    if (!ok){
+      await H.talk(connected(selId()) ? 'La prueba no está disponible ahora, pero ya tienes una IA conectada: practica con ella.' : 'Las IAs gratis están descansando un momento. Ahora te muestro Puter: una cuenta gratis para seguir.', { mood:'disculpa', buttons:[{ label:'Siguiente' }] });
+    } else {
+      await H.talk(useSz ? 'Ya puedes chatear gratis. Te escribo un mensaje de ejemplo sobre «' + TOPIC[k0].l + '».' : '¡Listo! Tienes ' + trialLeft() + ' mensajes de prueba gratis, solo para aprender. Te escribo uno de ejemplo sobre «' + TOPIC[k0].l + '».', { mood:'celebrando', auto:3200, buttons:[{ label:'Siguiente' }] });
+      gNeed(); H.quiet();
+      const myN = $$('.m.user', lane).length, errN = $$('.m.err', lane).length, left0 = trialLeft();
+      await H.type(inp, GUIDE_PROMPTS[k0] || q); autoGrow(); updateHint(); gNeed();
+      H.spot(sendBtn, 6); inp.setAttribute('data-guide-ok', ''); await H.moveTo(sendBtn, { shape:'point' });
+      H.talk('Ahora envíalo tú con este botón (o con Enter). También puedes cambiar el texto.', { near:sendBtn, mood:'senalando' });
+      const sent = await new Promise(res => { const t0 = Date.now(); const iv = setInterval(() => { if (!G || G.skip){ clearInterval(iv); res(false); } else if ($$('.m.user', lane).length > myN){ clearInterval(iv); res(true); } else if (Date.now() - t0 > 120000){ clearInterval(iv); res(false); } }, 250); });
+      inp.removeAttribute('data-guide-ok'); gNeed(); H.unspot();
+      if (sent){
+        H.talk('¡Eso! Mira cómo llega la respuesta en vivo…', { mood:'pensando' });
+        await new Promise(res => { const t0 = Date.now(); const iv = setInterval(() => { if (!G || G.skip || (!Object.keys(busy).length && Date.now() - t0 > 600) || Date.now() - t0 > 60000){ clearInterval(iv); res(); } }, 250); });
+        gNeed();
+        const last = $$('.m.bot', lane).pop(), failed = $$('.m.err', lane).length > errN || (!useSz && trialLeft() >= left0);
+        if (failed){
+          const em = $$('.m.err', lane).pop();
+          if (em) await H.moveTo(em, { shape:'arrow', fx:.1, fy:.2 });
+          await H.talk('Uy, esta vez no respondió (no gastaste nada). Ahora te muestro Puter: una cuenta gratis para tener siempre otra opción.', { near:em || inp, mood:'disculpa', buttons:[{ label:'Siguiente' }], auto:9000 });
+        } else {
+        if (last) await H.moveTo(last, { shape:'arrow', fx:.15, fy:.2 });
+        SZ.SND.done();
+        await H.talk(useSz ? '¡Lo lograste! Puedes seguir chateando gratis. Abajo ves cómo va tu límite de hoy.' : '¡Lo lograste! Te quedan ' + trialLeft() + ' mensajes de prueba para seguir practicando. Abajo dice quién la paga: SynthZ.', { near:last || inp, mood:'celebrando', buttons:[{ label:'Siguiente' }], auto:9000 });
+        }
+      } else await H.talk('Puedes enviarlo después: el mensaje te espera en la caja.', { mood:'guino', buttons:[{ label:'Siguiente' }] });
+    }
+    gNeed();
+
+    /* 6 · ¿qué es Puter? (opcional): más IA con tus créditos personales */
+    gHud(6, 'Tu Puter');
+    H.quiet();
+    const P6 = gPanel('<h3>¿Qué es Puter?</h3><div class="gp-pu"><div class="gp-pc" style="--i:0"><span class="gp-pi">' + SZ.puterLogo() + '</span><b>Tu versión pro de las IAs más usadas</b><small>ChatGPT, Claude, Gemini y más, en su versión más potente. Gratis.</small></div><div class="gp-pc" style="--i:1"><span class="gp-pi">✨</span><b>Con un límite cada mes</b><small>Tienes un saldo gratis que se llena de nuevo cada mes. Se crea con un clic, sin tarjeta.</small></div><div class="gp-pc" style="--i:2"><span class="gp-pi"><span class="sz-logo" aria-hidden="true"></span></span><b>Es opcional</b><small>Si no lo conectas, sigues con las IAs conectadas y su límite gratis de cada día.</small></div></div><div class="gp-act"><button type="button" class="lnk" data-glater>Después</button><span style="flex:1"></span>' + (puterOn() ? '<span class="gp-ok">✓ Ya tienes tu Puter conectado</span><button type="button" class="btn sm flow" data-gnext>Siguiente →</button>' : '<button type="button" class="btn sm flow" data-gnext>Conectar mi Puter</button>') + '</div>', 'puter', puterOn() ? 'Ya tienes tu Puter conectado: si se acaba tu límite de hoy, sigues con él.' : 'Ya puedes chatear gratis. Y si quieres más: Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.', puterOn() ? 'encantada' : 'guino', 1);
+    await gWait(420);
+    H.wander && H.wander(P6);
+    const r6 = await new Promise(res => { $('[data-gnext]', P6).addEventListener('click', () => res('go'), { once:true }); $('[data-glater]', P6).addEventListener('click', () => res('later'), { once:true }); const iv = setInterval(() => { if (!G || G.skip){ clearInterval(iv); res('later'); } }, 300); });
+    H.wander && H.wander(null);
+    gNeed(); gPanelClose(); H.quiet();
+    if (r6 === 'go' && !puterOn()){
+      openConnect(); await gWait(650);
+      const b = $('#cPU');
+      if (b){ await H.moveTo(b, { shape:'point' }); await H.talk('Toca aquí para conectar Puter. Se abre una ventanita para entrar y listo.', { near:b, mood:'senalando', buttons:[{ label:'Siguiente' }] }); }
+    }
+    gNeed();
+
+    /* 7 · tu Drive (opcional): más espacio y una copia de tus chats */
+    if (SZ.ACC.dcid && !(SZ.DRIVE.meta() || {}).linked){
+      gHud(7, 'Tu Drive'); SZ.DRIVE.preload(); H.quiet();
+      const r7 = await H.talk('¿Quieres más espacio? Vincula tu Google Drive y guardo una copia de tus chats en una carpeta privada de SynthFlow. No puedo ver tus otros archivos.', { mood:'encantada', buttons:[{ label:'Vincular mi Drive' }, { label:'Ahora no', ghost:true }] });
+      gNeed();
+      if (r7 === 0){ H.quiet(); const ok = await driveGo(null); gNeed(); if (ok) await H.talk('¡Hecho! Desde ahora tus chats también viven en tu Drive. Lo encuentras en «⋯ › Google Drive».', { mood:'celebrando', buttons:[{ label:'Terminar' }] }); }
+      else { H.talk('Sin problema. Cuando quieras, está en «⋯ › Google Drive».', { mood:'guino' }); await gWait(2400); }
+      gNeed();
+    }
+    endGuide(true);
+  }catch(e){ if (!(e && e.guide)) { console.error('[synthz] guía', e); endGuide(false); } }
+}
+function endGuide(done){
+  if (!G) return;
+  const was = G; G = null; was.skip = true;
+  try{ localStorage.setItem('synthz:guide', '1'); localStorage.setItem('synthz:tour', '1'); }catch(e){}
+  gPanelClose(); root.classList.remove('guiding'); try{ inp.removeAttribute('data-guide-ok'); }catch(e){}
+  const h = $('#szgHud'); if (h){ h.classList.remove('on'); setTimeout(() => h.remove(), 500); }
+  if (done){ SZ.SND.done(); burst(innerWidth / 2, innerHeight * .3, ['#e6b65f', '#c9566c', '#ffe2a8', '#8fb0ff'], 22); H.talk('¡Ya tienes el Flow! Si me necesitas, la Guía está siempre a mano.', { mood:'flow' }); setTimeout(() => H.hide(), 3200); }
+  else H.hide();
+}
+addEventListener('keydown', e => { if (e.key === 'Escape' && G && !document.querySelector('.szm,#conn,#acc,#sx,#blk')){ e.preventDefault(); endGuide(false); } });
+/* =====================================================================
+   Primera vez en SynthFlow (camino B): 1 ¿qué quieres FlowIA'r? · 2 elige tu IA · 3 chatea
+   «Siguiente» sube y «Atrás» baja (la animación al revés)
+   ===================================================================== */
+const BICO = {
+  marketing:'M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1zM15 9.5a3.5 3.5 0 0 1 0 5M18 7a7 7 0 0 1 0 10',
+  escribir:'M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4',
+  codigo:'m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16',
+  estudiar:'M3 7l9-4 9 4-9 4zM7 9v5c0 1.5 2.2 3 5 3s5-1.5 5-3V9',
+  planos:'M4 4h16v16H4zM4 12h7v8M11 4v5h9',
+  negocios:'M4 20V10M10 20V4M16 20v-7M22 20H2',
+  imagenes:'M4 5h16v14H4zM4 15l4-4 4 4 3-3 5 5M15 9h.01',
+  mate:'M5 7h14M5 12h6M8 9v6M14 15l5 5M19 15l-5 5'
+};
+const BEX = { marketing:'Posts, anuncios, nombres y campañas', escribir:'Correos, textos, cuentos y correcciones', codigo:'Programas, errores y páginas web', estudiar:'Resúmenes, explicaciones y exámenes', planos:'Planos de casa, medidas y espacios', negocios:'Planes, precios y presupuestos', imagenes:'Leer documentos y describir fotos', mate:'Ejercicios paso a paso' };
+const BCOL = { marketing:'#e6b65f', escribir:'#f2a07b', codigo:'#b8c4ff', estudiar:'#8fd3c7', planos:'#d6a0ff', negocios:'#e6b65f', imagenes:'#f2a07b', mate:'#b8c4ff' };
+const BPRO = { write:'Escribe muy natural', code:'Buena con código', reason:'Piensa antes de responder', fast:'Responde rápido', vision:'Lee imágenes', long:'Lee textos largos', lang:'Buen español', math:'Buena con números' };
+let BF = null;
+function bflowOpen(delay){
+  if (BF || $('#bflow')) return;
+  setTimeout(() => {
+    BF = { step:1, topic:null, all:false, sel:new Set() };
+    const o = document.createElement('div'); o.id = 'bflow'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', 'Empieza en SynthFlow');
+    o.innerHTML = '<header class="bf-top"><span class="bf-logo">' + SZ.flowWord() + '</span><ol class="bf-steps" aria-label="Pasos"></ol><div class="bf-r"><button type="button" class="btn sm ghost bf-guide">Guía</button><button type="button" class="btn sm bf-acc">Entrar</button></div></header><div class="bf-stage"></div>';
+    document.body.appendChild(o); root.classList.add('bflowing');
+    requestAnimationFrame(() => o.classList.add('on'));
+    $('.bf-guide', o).addEventListener('click', () => { bflowClose(false); setTimeout(openGuide, 500); });
+    $('.bf-acc', o).addEventListener('click', () => accModal());
+    o.addEventListener('click', bflowClick); o.addEventListener('change', bflowChange);
+    bStep(1, 0);
+  }, delay || 0);
+}
+function bStepsHtml(){
+  const n = BF.step, T = BF.topic && TOPIC[BF.topic];
+  const L = [[1, n > 1 && T ? T.l : 'Qué quieres hacer'], [2, 'Elige tu IA'], [3, 'Chatea']];
+  return L.map(([k, l]) => '<li class="' + (k === n ? 'on' : k < n ? 'done' : '') + '"><b>' + (k < n ? '✓' : k) + '</b><span>' + esc(l) + '</span></li>').join('');
+}
+function bStep(n, dir){
+  const o = $('#bflow'); if (!o) return;
+  BF.step = n; $('.bf-steps', o).innerHTML = bStepsHtml();
+  const st0 = $('.bf-stage', o), old = $('.bf-pane', st0);
+  const pane = document.createElement('div'); pane.className = 'bf-pane'; pane.innerHTML = n === 1 ? bPane1() : bPane2();
+  const D = SZ.reduce ? 1 : 1, E = 'cubic-bezier(.22,1,.36,1)', up = dir >= 0;
+  if (old){
+    /* se queda exactamente donde estaba mientras se va (sin saltar al borde) */
+    const ol = old.offsetLeft, ot = old.offsetTop, ow = old.offsetWidth;
+    Object.assign(old.style, { position:'absolute', left:ol + 'px', top:ot + 'px', width:ow + 'px', margin:'0', pointerEvents:'none' });
+    old.animate([{ opacity:1, transform:'none', filter:'blur(0)' }, { opacity:0, transform:'translateY(' + (up ? -46 : 46) + 'px) scale(.98)', filter:'blur(8px)' }], { duration:SZ.reduce ? 1 : 420, easing:'cubic-bezier(.55,0,.75,.2)', fill:'forwards' }).onfinish = () => old.remove();
+  }
+  st0.appendChild(pane);
+  if (dir !== 0 || !SZ.reduce) pane.animate([{ opacity:0, transform:'translateY(' + (up ? 54 : -54) + 'px) scale(.985)', filter:'blur(10px)' }, { opacity:1, transform:'none', filter:'blur(0)' }], { duration:SZ.reduce ? 1 : 700, delay:old ? 140 : 0, easing:E, fill:'backwards' });
+  st0.scrollTop = 0;
+}
+function bPane1(){
+  const keys = BF.all ? TOPICS.map(t => t[0]) : (isMobile() ? Object.keys(BICO).slice(0, 7) : Object.keys(BICO));
+  const card = (k, i) => { const T = TOPIC[k], ic = BICO[k], c = BCOL[k] || '#e6b65f'; return '<button type="button" class="bf-card" data-bt="' + k + '" style="--i:' + i + ';--tc:' + c + '"><span class="bf-ic">' + (ic ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + ic + '"/></svg>' : '<i aria-hidden="true">' + T.e + '</i>') + '</span><b>' + esc(T.l) + '</b><small>' + esc(BEX[k] || T.ex.map(x => x[0]).join(' · ')) + '</small></button>'; };
+  return '<div class="bf-h"><h1 class="greet">' + greetHtml(GREET[0]) + '</h1><p>Toca un tema. En el siguiente paso te muestro las IA que mejor lo hacen.</p></div>'
+    + '<div class="bf-grid' + (BF.all ? ' all' : '') + '">' + keys.map(card).join('') + (BF.all || !isMobile() ? '' : '<button type="button" class="bf-card more" data-bmore style="--i:' + keys.length + '"><span class="bf-ic"><i aria-hidden="true">✦</i></span><b>Más temas</b><small>Ver los ' + TOPICS.length + '</small></button>') + '</div>'
+    + (BF.all || isMobile() ? '' : '<p class="bf-skip"><button type="button" class="btn sm ghost" data-bmore>✦ Ver los ' + TOPICS.length + ' temas</button></p>')
+    + '<p class="bf-skip">¿Ya sabes qué IA quieres? <button type="button" class="lnk" data-bskip>Ir directo al chat →</button></p>';
+}
+function bPane2(){
+  const T = TOPIC[BF.topic], R = recommendTop(BF.topic, 3);
+  const pros = m => { const t = expert(m).tags, L = []; t.forEach(x => { if (BPRO[x] && L.length < 2) L.push(BPRO[x]); }); if (m.vision && L.length < 2 && !L.includes(BPRO.vision)) L.push(BPRO.vision); if (m.ctx >= 100000 && L.length < 2) L.push(kfmt(m.ctx) + ' de contexto'); if (!L.length) L.push('Gratis para empezar'); return L; };
+  const card = (m, i) => { const p = payOf(m.id), ok = connected(m.id); return '<article class="bf-rec' + (BF.sel.has(m.id) ? ' on' : '') + '" data-id="' + esc(m.id) + '" style="--i:' + i + ';--vc:' + vendorColor(m.vendor) + '"><div class="bf-rh">' + av(m) + '<div><b>' + esc(m.name) + '</b><small>de ' + esc(m.vlabel) + '</small></div></div><p>' + esc(expert(m).line) + '</p><ul>' + pros(m).map(x => '<li>' + esc(x) + '</li>').join('') + '</ul><span class="mpay ' + p[0] + (ok ? '' : ' lock') + '">' + esc(ok ? p[2] : /^pu:/.test(m.id) ? 'Conecta tu Puter (gratis)' : 'Necesita tu llave de OpenRouter') + '</span><div class="bf-ra"><button type="button" class="btn sm" data-bstart>Empezar con esta</button><label class="ckb"><input type="checkbox" data-bck' + (BF.sel.has(m.id) ? ' checked' : '') + '><span>Comparar</span></label></div></article>'; };
+  return '<div class="bf-h2"><div><button type="button" class="lnk bf-back" data-bback>← Cambiar tema</button><h2>Para <em>' + esc(T.l) + '</em>, te recomiendo estas</h2><p>Empieza con una, o marca dos y compáralas con el mismo mensaje.</p></div><button type="button" class="btn sm ghost" data-ball>Ver todas las IA</button></div>'
+    + (R.length ? '<div class="bf-recs">' + R.map(card).join('') + '</div>' : '<p class="bf-wait">' + (cat.list.length ? 'Las IAs están descansando un momento. Vuelve a intentarlo en un ratito.' : 'Cargando las IA…') + '</p>')
+    + '<div class="bf-go" hidden></div>';
+}
+function bPaintGo(){
+  const g = $('#bflow .bf-go'); if (!g) return; const ids = [...BF.sel];
+  $$('#bflow .bf-rec').forEach(c => c.classList.toggle('on', BF.sel.has(c.dataset.id)));
+  if (ids.length < 2){ g.hidden = true; return; }
+  g.hidden = false; g.innerHTML = '<span>Marcaste ' + ids.map(id => '<b>' + esc(info(id).name) + '</b>').join(' y ') + '</span><button type="button" class="btn sm flow" data-bcmp>Comparar estas ' + ids.length + ' →</button>';
+  g.animate([{ opacity:0, transform:'translateY(16px) scale(.96)' }, { opacity:1, transform:'none' }], { duration:450, easing:'cubic-bezier(.22,1,.36,1)' });
+}
+function bflowClick(e){
+  const t = e.target;
+  if (t.closest('[data-bmore]')){ BF.all = true; const g = $('#bflow .bf-grid'); const h0 = g.offsetHeight; const pane = $$('#bflow .bf-pane').pop(); pane.innerHTML = bPane1(); const g2 = $('#bflow .bf-grid'); if (!SZ.reduce) g2.animate([{ height:h0 + 'px', overflow:'hidden' }, { height:g2.offsetHeight + 'px', overflow:'hidden' }], { duration:620, easing:'cubic-bezier(.22,1,.36,1)' }); return; }
+  const c = t.closest('[data-bt]'); if (c){ BF.topic = c.dataset.bt; curTopic = BF.topic; BF.sel.clear(); bStep(2, 1); return; }
+  if (t.closest('[data-bback]')){ bStep(1, -1); return; }
+  if (t.closest('[data-bskip]')){ bflowClose(true); return; }
+  if (t.closest('[data-ball]')){ bflowClose(true); setTimeout(() => openSide('set'), 520); return; }
+  const st1 = t.closest('[data-bstart]'); if (st1){ const id = st1.closest('.bf-rec').dataset.id; bflowClose(true, () => { pickMode = 'set'; pickModel(id, null); const x = TOPIC[BF0].ex[0]; if (x) setTimeout(() => useText(x[1], x[2]), 300); if (isLocked()) setTimeout(() => { lockNudge(); openConnect(); }, 900); }); return; }
+  if (t.closest('[data-bcmp]')){ const ids = [...BF.sel]; bflowClose(true, () => startCompare(ids)); return; }
+}
+function bflowChange(e){
+  const c = e.target.closest('[data-bck]'); if (!c) return;
+  const id = c.closest('.bf-rec').dataset.id;
+  if (c.checked){ const why = cmpWhyNot(id, [...BF.sel]); if (why && why !== 'ya'){ c.checked = false; toast(why); return; } BF.sel.add(id); } else BF.sel.delete(id);
+  bPaintGo();
+}
+let BF0 = null;
+function bflowClose(toChat, then){
+  const o = $('#bflow'); if (!o) return;
+  BF0 = BF && BF.topic; BF = null;
+  try{ localStorage.setItem('synthz:tour', '1'); localStorage.setItem('synthz:bflow', '1'); }catch(e){}
+  if (toChat){ $('.bf-steps', o).innerHTML = '<li class="done"><b>✓</b><span>' + esc(BF0 && TOPIC[BF0] ? TOPIC[BF0].l : 'Qué quieres hacer') + '</span></li><li class="done"><b>✓</b><span>Elige tu IA</span></li><li class="on"><b>3</b><span>Chatea</span></li>'; }
+  o.classList.add('bye');
+  setTimeout(() => { o.remove(); root.classList.remove('bflowing'); if (then) then(); else if (matchMedia('(pointer: fine)').matches) inp.focus(); }, SZ.reduce ? 10 : 620);
+}
+function openGuide(){ SZ.guideChooser({ asistida:runGuide, lectura:openHelp }); }
+window.SynthFlowGuide = { run:runGuide, end:() => endGuide(false), on:() => !!G };
+addEventListener('keydown', e => {
+  if (e.key === 'Escape' && tourEl) closeTour(false);
+  else if (e.key === '?' && !/INPUT|TEXTAREA|SELECT/.test(e.target.tagName || '')) openHelp();
+});
+const chatMd = () => chatArr().map(m => (m.role === 'user' ? '## Tú' : '## ' + info(m.model || selId()).name) + '\n\n' + m.content).join('\n\n');
+function exportMd(){
+  if (!chatArr().length){ toast('Esta conversación está vacía.'); return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([chatMd()], { type:'text/markdown' })); a.download = 'chat-' + info(selId()).name.replace(/[^\w.-]+/g, '_') + '.md'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+SZ.ctxMenu(() => [
+  { label:'Borrar este chat', fn:() => clearChat(true) },
+  { label:'Copiar toda la conversación', fn:() => { navigator.clipboard && navigator.clipboard.writeText(chatMd()); toast('Conversación copiada.'); } },
+  { label:'Exportar como .md', fn:exportMd },
+  { label:'Guía (Asistida o Lectura)', fn:() => openGuide() },
+  { label:'Guía rápida (leer)', fn:() => openHelp() },
+  { label:'Ver tutorial de conexión', fn:openTour },
+  { label:'Mis IA conectadas', fn:() => openConnect() },
+  { label:'Mi límite de hoy', fn:() => coinModal('panel') },
+  { label:'Mi cuenta', fn:() => accModal() },
+  { label:'Elegir mis IA (3 preguntas)', fn:() => SZ.surveyModal(ok => { if (ok){ forMeK = ''; applySurvey(true); renderList({ keep:true }); } }) },
+  { label:'Mis chats', fn:() => thOpen() },
+  { label:'Chat nuevo', fn:() => newChat() },
+  { label:'Mis IA favoritas (por mis votos)', fn:() => rankModal() },
+  { label:'Configuración', fn:() => SZ.cfgModal() },
+  { label:'Ayuda: algo no carga', fn:() => showBlockHelp(window.__puterBlocked ? 'script' : 'popup') },
+  { label:'Privacidad y términos', fn:() => window.open('privacidad.html', '_blank', 'noopener') },
+  { label:'Volver a SynthZ', fn:() => $('#backLink').click() }]);
+
+/* ---------- conexión: las IAs conectadas (ya activada para todos) y, si quieres más, tu Puter ---------- */
+let connEl = null;
+function puterOn(){ return !!(window.puter && puter.auth && puter.auth.isSignedIn()); }
+function orOn(){ return false; }   /* OpenRouter ya no se muestra a las personas */
+function openOrGuide(){ SZ.orGuide(() => { afterConnect('¡OpenRouter desbloqueado!'); paintProv(); renderList({ keep:true }); updateHint(); }); }
+function gqOn(){ return false; }
+/* las IAs conectadas: activada salvo que el servidor diga que no tiene llaves (mientras carga, se asume que sí) */
+function szOn(){ const q = SZ.SZQ; return q.on !== false && !(q.limit > 0 && (q.used || 0) >= q.limit) && !SZ.guestFull(); }
+function connected(id){ return /^tr:/.test(String(id)) ? trialOn && trialLeft() > 0 : /^sz:/.test(String(id)) ? szOn() : /^pu:/.test(String(id)) ? puterOn() : /^gq:/.test(String(id)) ? gqOn() : orOn(); }
+let szqT = 0; addEventListener('synthz-szq', () => { clearTimeout(szqT); szqT = setTimeout(() => { try{ paintPay(); paintProv(); paintLock(); renderFoot(); if (!Object.keys(busy).length) renderTop(); }catch(e){} }, 120); });
+addEventListener('synthz-puter-out', () => { try{ paintPay(); }catch(e){} });
+addEventListener('synthz-useputer', () => { try{ switchProv('pu'); }catch(e){} });
+const trialLeft = () => { const t = SZ.trialGet(); return t && t.token ? +t.left || 0 : 0; };
+/* entrar y salir de la prueba guiada */
+async function enterTrial(){
+  try{ await SZ.trialStart(); }
+  catch(e){ toast(e.status === 429 ? 'Ya hiciste varias pruebas hoy. Para seguir, conecta Puter: es gratis y con un clic.' : e.status === 503 ? 'La prueba todavía no está lista. Conecta Puter: es gratis y con un clic.' : (e.message || 'No pude empezar la prueba.')); return false; }
+  trialOn = true; if (mode !== 'solo') setMode && setMode('solo');
+  renderTrialBar(); renderTop(true); renderMsgs(); renderNow(); updateHint(); paintSel();
+  return true;
+}
+function exitTrial(quiet){ if (!trialOn) return; trialOn = false; renderTrialBar(); renderTop(true); renderMsgs(); renderNow(); updateHint(); paintSel(); if (!quiet) toast('Saliste de la prueba guiada.'); }
+function renderTrialBar(){
+  const bar = $('#trialBar'); if (!bar) return;
+  paintPay();
+  /* lo que queda de la prueba se ve abajo (computador) o junto a la IA (celular); esta barra solo sale al terminarse */
+  if (!trialOn || trialLeft() > 0){ bar.hidden = true; return; }
+  const max = (SZ.trialGet() || {}).max || 5;
+  bar.hidden = false;
+  bar.innerHTML = '<span class="tb-ico" aria-hidden="true">✨</span><span><b>Se acabaron tus ' + max + ' mensajes de prueba.</b> Para seguir, conecta Puter: es gratis y con un clic.</span><button type="button" class="btn sm" data-tx="conn">Conectar</button><button type="button" class="lnk" data-tx="exit">Salir</button>';
+}
+$('#trialBar').addEventListener('click', e => { const b = e.target.closest('[data-tx]'); if (!b) return; if (b.dataset.tx === 'conn'){ exitTrial(true); openConnect(); } else exitTrial(); });
+addEventListener('synthz-trial', () => { if (trialOn){ renderTrialBar(); renderNow(); } });
+window.SynthFlowTrial = { enter:enterTrial, exit:exitTrial, on:() => trialOn };
+
+/* ---------- bloqueo: solo si las IAs conectadas está apagada y no hay Puter (ni prueba activa) ---------- */
+let lockReady = !!(window.__puterOK || window.__puterBlocked), lockWas = null, lockAt = 0;
+addEventListener('puter-ready', () => { lockReady = true; paintLock(); });
+addEventListener('puter-blocked', () => { lockReady = true; paintLock(); });
+setTimeout(() => { lockReady = true; paintLock(); }, 2600);
+function isLocked(){ return lockReady && !G && !szOn() && !(trialOn && trialLeft() > 0) && !puterOn() && !orOn() && !gqOn(); }
+function paintLock(){
+  const L = isLocked(), gst = L && SZ.guestFull(), key = L + ':' + gst;
+  if (key === lockWas) return;
+  lockWas = key; lockAt = Date.now();
+  document.body.classList.toggle('locked', L);
+  const c = $('#lockCard'); if (c) c.hidden = !L;
+  inp.readOnly = L; inp.setAttribute('aria-disabled', String(L));
+  inp.placeholder = L ? (gst ? (isMobile() ? 'Entra para seguir…' : 'Entra a tu cuenta para seguir FlowIAndo…') : isMobile() ? 'Conecta tu Puter…' : 'Conecta tu Puter para escribir…') : 'Escribe tu mensaje…';
+  $$('#lockCard [data-lk="acc"],#lockCard [data-lk="in"]').forEach(b => { b.hidden = !gst; });
+  $$('#lockCard [data-lk="pu"],#lockCard [data-lk="guide"]').forEach(b => { b.hidden = !!gst; });
+  SZ.TEL.locked = L;
+  if (L){
+    const done = trialOn && trialLeft() <= 0;
+    const gm = (SZ.SZQ.guest && SZ.SZQ.guest.max) || 5;
+    $('#lockT').textContent = gst ? 'Para seguir FlowIAndo, entra a tu cuenta' : done ? 'Se acabaron tus mensajes de prueba' : SZ.SZQ.on === false ? 'Las IAs gratis están descansando' : 'Usaste tu límite gratis de hoy';
+    $('#lockS').textContent = gst ? 'Ya usaste tus ' + gm + ' mensajes de prueba de hoy sin cuenta. Crear tu cuenta es gratis, sin correo ni tarjeta, y te da mucho más límite cada día.' : done ? 'Para seguir chateando conecta tu cuenta de Puter (gratis, con un clic).' : 'Vuelve en un momento, o sigue ya con Puter. Conecta tu versión pro de las IAs más usadas.';
+    SZ.telEv('noai', 'sin IA: la de SynthZ está apagada y no hay Puter');
+    if (side.classList.contains('open')) closeSide();
+  } else { wHide(); }
+  try{ renderTop(); }catch(e){}
+}
+setInterval(paintLock, 1500);
+{ paintAgent(); $$('.agentb-x').forEach(ab => { ab.addEventListener('click', () => { st().agent = !agentOn(); save(); paintAgent(); toast(agentOn() ? 'Modo agente encendido: antes de enviar, una IA mejora tu pedido y elige la IA que más sabe de eso.' : 'Modo agente apagado: tu mensaje va tal cual.'); }); }); }
+function lockNudge(){
+  try{ SZ.BOT.problem && SZ.BOT.problem('lock'); }catch(e){}
+  const c = $('#lockCard'); if (!c || c.hidden) return;
+  c.classList.remove('nudge'); void c.offsetWidth; c.classList.add('nudge');
+  confuse(1.5);
+}
+$('#lockCard').addEventListener('click', async e => {
+  const b = e.target.closest('[data-lk]'); if (!b) return;
+  const k = b.dataset.lk;
+  if (k === 'acc' || k === 'in'){ SZ.guestGate({ mode:k === 'acc' ? 'signup' : 'login', done:() => { lockWas = null; paintLock(); renderAccBtn && renderAccBtn(); } }); return; }
+  if (k === 'pu'){
+    try{ await puterSignIn(); afterConnect('¡Puter conectado!'); paintLock(); }
+    catch(err){ if (!(err && err.shown)) toast('No terminaste de entrar a Puter. Inténtalo otra vez.'); }
+  } else openGuide();
+});
+inp.addEventListener('pointerdown', () => { if (isLocked()) lockNudge(); });
+inp.addEventListener('keydown', e => { if (isLocked() && e.key.length === 1){ lockNudge(); } });
+
+/* ---------- SynthonIA preocupada: si te ve perdido (muchos clics al azar o el mouse por todas partes) ---------- */
+const CF = { pts:[], hits:[], shows:0, last:0 };
+function wBusy(){ return !!(G || document.querySelector('#szWorry,#conn,.szm,#szgPanel,#bflow,#tour,#side.open,#blk,#acc,#sx,#portal,#drv')); }
+function confuse(w){
+  if (!isLocked() || wBusy() || Date.now() - lockAt < 1800) return;
+  const now = Date.now(); CF.hits = CF.hits.filter(h => now - h[0] < 6000); CF.hits.push([now, w || 1]);
+  if (CF.hits.reduce((a, h) => a + h[1], 0) >= 6) worry();
+}
+document.addEventListener('pointerdown', e => {
+  if (!isLocked() || e.target.closest('#lockCard,#szWorry,#inp')) return;
+  /* los clics que no hacen nada (zonas vacías) cuentan más que los clics en botones */
+  confuse(e.target.closest('button,a,input,textarea,select,label,[role=button]') ? .8 : 1.4);
+}, true);
+document.addEventListener('pointermove', e => {
+  if (e.pointerType !== 'mouse' || !isLocked() || wBusy()) return;
+  const now = Date.now(); CF.pts.push([now, e.clientX, e.clientY]);
+  CF.pts = CF.pts.filter(p => now - p[0] < 2600);
+  if (CF.pts.length < 25) return;
+  let d = 0, turns = 0, sx = 0;
+  for (let i = 1; i < CF.pts.length; i++){
+    const dx = CF.pts[i][1] - CF.pts[i - 1][1], dy = CF.pts[i][2] - CF.pts[i - 1][2]; d += Math.hypot(dx, dy);
+    const sg = Math.sign(dx); if (Math.abs(dx) > 6 && sg && sx && sg !== sx) turns++; if (Math.abs(dx) > 6 && sg) sx = sg;
+  }
+  /* mucho recorrido y muchos cambios de dirección en ~2,5 s = mouse «perdido» */
+  if (d > 1.7 * (innerWidth + innerHeight) && turns >= 6){ CF.pts = []; confuse(6); }
+}, { passive:true });
+const W_FAQ = [
+  ['¿Por qué no puedo escribir?', 'Porque ahora no hay ninguna IA libre para ti: usaste tu límite gratis de hoy o las IAs están descansando. Conecta Puter y la caja se abre al instante.'],
+  ['¿Qué es Puter?', 'Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.'],
+  ['¿Me cobran algo?', 'No. SynthZ es gratis y nunca te cobra. Tienes un límite gratis cada día.'],
+  ['¿Qué hay en la Guía?', 'Te muestro todo paso a paso con mi manita: temas, IA recomendadas para ti, cómo comparar dos y tu primer chat de verdad.']
+];
+let wTok = 0;
+const zz = ms => new Promise(r => setTimeout(r, ms));
+function wSay(text, mood){
+  const w = $('#szWorry'); if (!w) return Promise.resolve();
+  const p = $('.wb p', w); p._chars = null; p.textContent = text;
+  if (mood){ const f = $('.wme', w); f.innerHTML = SZ.face(mood, isMobile() ? 60 : 72); }
+  SZ.SND.blip(mood || 'preocupada');
+  return SZ.reduce ? Promise.resolve() : SZ.typeIn(p, { cps:60, max:1.8 }).catch(() => {});
+}
+function wHide(){
+  const w = $('#szWorry'); if (!w) return; wTok++;
+  w.classList.add('out'); w.classList.remove('say'); document.body.classList.remove('szworrying');
+  try{ SZ.HAND.unspot(); SZ.HAND.hide(); }catch(e){}
+  setTimeout(() => w.remove(), 650);
+}
+async function worry(){
+  if (wBusy() || CF.shows >= 3 || Date.now() - CF.last < 45000) return;
+  CF.shows++; CF.last = Date.now(); CF.hits = []; CF.pts = [];
+  const tok = ++wTok, H2 = SZ.HAND, alive = () => tok === wTok && $('#szWorry');
+  const w = document.createElement('div'); w.id = 'szWorry'; w.setAttribute('role', 'dialog'); w.setAttribute('aria-label', 'SynthonIA');
+  w.innerHTML = '<div class="wb"><button type="button" class="wx" data-w="x" aria-label="Cerrar">×</button><b>SynthonIA</b><p></p><div class="wq" hidden>' + W_FAQ.map((q, i) => '<button type="button" data-wq="' + i + '">' + esc(q[0]) + '</button>').join('') + '</div><div class="wa" hidden><button type="button" class="btn sm flow" data-w="guide">Mostrarme la Guía</button><button type="button" class="btn sm ghost" data-w="conn">Conectar una IA</button></div></div>'
+    + '<button type="button" class="wme" data-w="me" aria-label="SynthonIA">' + SZ.face('preocupada', isMobile() ? 60 : 72) + '</button>';
+  document.body.appendChild(w); document.body.classList.add('szworrying');
+  /* en celular se para justo encima del aviso de bloqueo, sin taparlo */
+  const lk0 = $('#lockCard'); if (isMobile() && lk0 && !lk0.hidden) w.style.bottom = Math.max(150, innerHeight - lk0.getBoundingClientRect().top + 12) + 'px';
+  w.addEventListener('click', e => {
+    const q = e.target.closest('[data-wq]'); if (q){ wTok++; const [t, a] = W_FAQ[+q.dataset.wq]; wSay(a, 'feliz'); return; }
+    const b = e.target.closest('[data-w]'); if (!b) return;
+    const k = b.dataset.w;
+    if (k === 'x'){ wHide(); return; }
+    if (k === 'me'){ w.classList.toggle('say'); return; }
+    wHide();
+    if (k === 'guide') setTimeout(openGuide, 300); else setTimeout(openConnect, 300);
+  });
+  requestAnimationFrame(() => w.classList.add('in'));
+  await zz(SZ.reduce ? 60 : 650); if (!alive()) return;
+  w.classList.add('say');
+  await wSay('Ay… te veo un poquito perdido 😟', 'preocupada'); if (!alive()) return;
+  await zz(SZ.reduce ? 200 : 700); if (!alive()) return;
+  /* con su manita: primero se señala a ella, luego la Guía (se nota el esfuerzo) */
+  const me = $('.wme', w), gd = [$('#guideTop'), $('#helpBtn')].find(n => n && n.getClientRects().length && n.getBoundingClientRect().width);
+  try{
+    H2.show({ x:innerWidth * .55, y:innerHeight * .45 });
+    wSay('Tranqui, aquí estoy yo. Si tienes dudas o necesitas ayuda, pregúntame sin pena…', 'senalando');
+    await H2.moveTo(me, { shape:'point', fx:.3, fy:.2 }); if (!alive()) return;
+    H2.spot(me, 6); await H2.click(null); await zz(SZ.reduce ? 300 : 1500); if (!alive()) return;
+    if (gd){
+      wSay('…o échale un ojo a la Guía: ahí te enseño todo paso a paso. 👀', 'guino');
+      await H2.moveTo(gd, { shape:'point' }); if (!alive()) return;
+      H2.spot(gd, 6); await H2.click(null); await zz(SZ.reduce ? 300 : 1700); if (!alive()) return;
+    }
+    const lk = $('#lockCard');
+    if (lk && !lk.hidden){
+      wSay('Y para escribir, solo falta conectar una IA aquí. ¡Es un clic!', 'senalando');
+      await H2.moveTo($('[data-lk="pu"]', lk) || lk, { shape:'point' }); if (!alive()) return;
+      H2.spot(lk, 6); await zz(SZ.reduce ? 300 : 1500); if (!alive()) return;
+    }
+  }catch(e){}
+  try{ H2.unspot(); H2.hide(); }catch(e){}
+  if (!alive()) return;
+  $('.wq', w).hidden = false; $('.wa', w).hidden = false;
+  if (!SZ.reduce) $$('.wq button,.wa .btn', w).forEach((n, i) => n.animate([{ opacity:0, transform:'translateY(8px)' }, { opacity:1, transform:'none' }], { duration:420, delay:i * 60, easing:'cubic-bezier(.22,1,.36,1)', fill:'backwards' }));
+  wSay('¿Te ayudo con algo de esto? Toca una pregunta y te respondo al tiro.', 'feliz');
+}
+function needsConn(){ return (mode === 'cmp' ? st().cmp : [selId()]).some(id => !connected(id)); }
+async function puterSignIn(opts){
+  if (!window.puter){ showBlockHelp(window.__puterBlocked ? 'script' : 'script'); throw Object.assign(new Error('sin puter'), { shown:true }); }
+  try{ return await puter.auth.signIn(opts || {}); }
+  catch(e){ if (e && (e.error === 'popup_blocked' || e.code === 'popup_blocked')){ showBlockHelp('popup'); throw Object.assign(new Error('popup'), { shown:true }); } throw e; }
+}
+function mScore(m){ const b = (m.id.match(/(\d{2,3})b/i) || [])[1]; return (b ? +b : 20) + (m.reasoning ? 25 : 0) + Math.min(m.ctx, 262144) / 8000 + (/gpt-oss|deepseek|qwen|llama-3\.3|gemini|kimi|glm/i.test(m.id) ? 15 : 0) + (/^pu:/.test(m.id) && /gpt-5|gemini-3|claude|deepseek/i.test(m.id) ? 40 : 0) - (/nano|lite|mini/i.test(m.id) ? 10 : 0) + (/gpt-5\.6-luna$/i.test(m.id) ? 30 : 0) + (/^or:openrouter\/free$/.test(m.id) ? 20 : 0) + (/^gq:/.test(m.id) && gqOn() ? 60 : 0) + (m.id === 'sz:auto' ? 140 : /^sz:/.test(m.id) ? 10 : 0) - (/allam/i.test(m.id) ? 999 : 0) - (SZ.isBad(m.id) ? 999 : 0); }
+function bestOf(prefix){ const l = cat.list.filter(m => m.id.startsWith(prefix + ':') && (m.free || prefix === 'pu')); if (prefix === 'sz' || prefix === 'or'){ const ap = l.find(m => m.id === APODEX); if (ap) return ap; } return l.length ? l.slice().sort((a, b) => mScore(b) - mScore(a))[0] : null; }
+function switchProv(prefix){
+  if (mode !== 'solo') setMode('solo');
+  const b = bestOf(prefix);
+  if (!b){ toast('No encontré IA de ' + (prefix === 'pu' ? 'Puter' : prefix === 'sz' ? 'las IAs conectadas' : 'ese lugar') + ' ahora mismo.'); return; }
+  pickModel(b.id, null); toast('Cambié a ' + b.name + '.');
+  if (!connected(b.id)) openConnect();
+}
+/* el mejor modelo que ya puedes usar; si no hay ninguno, el mejor de Puter (solo pide un clic) */
+function bestUsable(strict){
+  const l = cat.list.filter(m => m.free || /^pu:/.test(m.id)); if (!l.length) return null;
+  const ok = l.filter(m => connected(m.id)), pu = l.filter(m => /^pu:/.test(m.id));
+  const pool = ok.length ? ok : strict ? [] : pu;
+  if (!pool.length) return null;
+  return pool.slice().sort((a, b) => mScore(b) - mScore(a))[0];
+}
+/* si el modelo elegido no se puede usar pero hay otro conectado, cambia solo */
+function fixModel(quiet){
+  if (mode !== 'solo' || !cat.list.length) return false;
+  const cur = selId(), missing = !idx.has(cur);
+  if (/^pu:/.test(cur) && !window.__puterBlocked && !cat.list.some(m => /^pu:/.test(m.id))) return false;
+  if (!missing && st().pinned === cur) return false;
+  if (!missing && connected(cur)) return false;
+  const b = bestUsable(!missing);
+  if (!b || b.id === cur) return false;
+  pickModel(b.id, null);
+  if (!quiet) toast('Te puse ' + b.name + ', que ya puedes usar.');
+  return true;
+}
+function applySurvey(force){
+  const s = st().survey; if (!s || !cat.list.length || (!force && s.applied)) return;
+  const picks = SZ.surveyPicks(cat.list, s, 8).filter(id => connected(id) || /^pu:/.test(id));
+  if (!picks.length) return;
+  s.applied = Date.now(); save();
+  if (mode !== 'solo') setMode('solo');
+  st().pinned = picks[0]; pickModel(picks[0], null);
+  toast('Según lo que me contaste, te recomiendo ' + info(picks[0]).name + '. Mira el filtro «Para ti».');
+}
+function afterConnect(msg){ try{ SZ.accStart(); }catch(e){} toast(msg); burst(innerWidth / 2, innerHeight / 2); fixModel(true); refresh(true); renderMsgs(); updateHint(); }
+/* se llama dentro del clic/Enter: así el inicio de sesión de Puter no queda bloqueado */
+async function ensureConn(){
+  if (!needsConn()) return true;
+  if (fixModel(false) && !needsConn()) return true;
+  const ids = mode === 'cmp' ? st().cmp : [selId()];
+  if (window.puter && ids.every(id => connected(id) || /^pu:/.test(id))){
+    const slow = setTimeout(() => toast('Abriendo Puter… entra en la ventanita que aparece. Tu mensaje te espera en la caja.'), 900);
+    try{ await puterSignIn(); clearTimeout(slow); afterConnect('¡Puter conectado!'); return !needsConn(); }
+    catch(e){ clearTimeout(slow); if (!(e && e.shown)) toast('No terminaste de entrar a Puter. Inténtalo otra vez.'); return false; }
+  }
+  openConnect(); return false;
+}
+document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-conn]')){ e.preventDefault(); openConnect(); } });
+function openConnect(){
+  if (connEl) return;
+  const hasP = puterOn(), on = szOn(), q = SZ.SZQ, left = Math.max(0, (q.limit || 20000) - (q.used || 0)), legacy = !!(st().keys.openrouter || st().keys.groq);
+  connEl = document.createElement('div'); connEl.id = 'conn';
+  connEl.innerHTML = '<div class="tcard"><div class="word" id="cWord"></div><div class="tn">TU IA</div><div class="tb"><h3>' + (on ? 'Ya puedes chatear gratis' : 'Las IAs están descansando') + '</h3><p>' + (on ? 'No tienes que conectar nada. Solo escribe.' : 'Vuelve en un momento, o sigue ya con Puter.') + '</p></div>'
+    + SZ.limBar({ title:'Tu límite de hoy' })
+    + '<div class="cbox"><span>' + SZ.puterLogo() + 'Puter <small class="opt">opcional</small></span>' + (hasP ? '<i class="ok">✓ Conectado</i>' : '<button class="btn sm" id="cPU" type="button">Conectar Puter</button>') + '</div>'
+    + '<p class="cnote"><b>¿Qué es Puter?</b> Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.</p>'
+    + '<div class="tbtn" style="margin-top:18px"><button class="lnk" id="cClose" type="button">Cerrar</button></div></div>';
+  document.body.appendChild(connEl); $('#cWord').innerHTML = zWord('Synth');
+  requestAnimationFrame(() => connEl.classList.add('on'));
+  $('.tcard', connEl).animate([{ transform:'scale(.9) translateY(24px)', opacity:0, filter:'blur(10px)' }, { transform:'none', opacity:1, filter:'blur(0)' }], { duration:700, easing:'cubic-bezier(.22,1,.36,1)' });
+  const close = () => { if (!connEl) return; const el = connEl; connEl = null; el.classList.remove('on'); setTimeout(() => el.remove(), 520); };
+  connEl._close = close;
+  $('#cClose').addEventListener('click', close);
+  connEl.addEventListener('pointerdown', e => { if (e.target === connEl) close(); });
+  const lx = $('#cLegx'); if (lx) lx.addEventListener('click', async () => { if (!(await SZ.szConfirm('¿Quitar tus llaves de antes?', 'Se borran solo de este equipo. Ya no las necesitas: las IAs conectadas son gratis para todos.', 'Quitar', true))) return; delete st().keys.openrouter; delete st().keys.groq; if (/^(or|gq):/.test(st().model.openrouter || '')) st().model.openrouter = APODEX; save(); close(); toast('Listo: quitaste tus llaves de este navegador.'); refresh(true); paintProv(); paintLock(); });
+  const pu = $('#cPU');
+  if (pu) pu.addEventListener('click', () => {
+    if (!window.puter){ showBlockHelp('script'); return; }
+    pu.textContent = 'Conectando…';
+    puterSignIn().then(() => { close(); afterConnect('¡Puter conectado!'); }).catch(e => { pu.textContent = 'Conectar con Puter'; if (!(e && e.shown)) toast('No terminaste de entrar a Puter. Inténtalo otra vez.'); });
+  });
+}
+
+/* ---------- ayuda con bloqueadores de ventanas y de anuncios ---------- */
+function browserName(){ const u = navigator.userAgent; if (navigator.brave) return 'Brave'; if (/Edg\//.test(u)) return 'Edge'; if (/OPR\//.test(u)) return 'Opera'; if (/Firefox\//.test(u)) return 'Firefox'; if (/Safari\//.test(u) && !/Chrome\//.test(u)) return 'Safari'; return 'Chrome'; }
+const ICO = {
+  pop:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18"/><path d="M10 12.5l4 4M14 12.5l-4 4" stroke="#ff8f7a"/></svg>',
+  ext:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4a2 2 0 0 1 4 0v2h3a1 1 0 0 1 1 1v3h-1.5a2 2 0 0 0 0 4H18v3a1 1 0 0 1-1 1h-3v-1.5a2 2 0 0 0-4 0V20H7a1 1 0 0 1-1-1v-3h1.5a2 2 0 0 0 0-4H6V7a1 1 0 0 1 1-1h3z"/></svg>',
+  shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg>',
+  lock:'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>'
+};
+let blkEl = null;
+function showBlockHelp(kind){
+  if (blkEl) return;
+  const br = browserName(), pop = kind === 'popup', brave = br === 'Brave';
+  const steps = pop
+    ? (br === 'Firefox' ? ['Arriba aparece una barra amarilla: <b>Firefox impidió que este sitio abriera una ventana</b>.', 'Pulsa <b>Preferencias</b> y elige <b>Permitir ventanas emergentes</b> para este sitio.', 'Vuelve aquí y pulsa <b>Reintentar</b>.']
+      : br === 'Safari' ? ['En el menú <b>Safari</b>, abre <b>Ajustes para este sitio web</b>.', 'En <b>Ventanas emergentes</b>, elige <b>Permitir</b>.', 'Vuelve aquí y pulsa <b>Reintentar</b>.']
+      : ['Al final de la barra de direcciones apareció un icono de <b>ventana con una ✕</b> (el número 1).', 'Haz clic y elige <b>Permitir siempre ventanas emergentes</b> de este sitio.', 'Pulsa <b>Reintentar</b>. Si no ves el icono, revisa tu bloqueador de anuncios en <b>extensiones</b> (el paso 2).'])
+    : (brave ? ['Haz clic en el <b>león de Brave Shields</b> en la barra (el número 1).', 'Baja los escudos para este sitio.', 'Pulsa <b>Recargar</b>.']
+      : ['Haz clic en el icono de <b>extensiones</b>, la pieza de puzle a la derecha (el número 1).', 'Abre tu bloqueador (uBlock, AdBlock, AdGuard…) y <b>desactívalo para este sitio</b>.', 'Pulsa <b>Recargar</b>.']);
+  const bi = (ico, n) => '<span class="bi' + (n ? ' hl' : '') + '">' + ico + (n ? '<i class="nb">' + n + '</i>' : '') + '</span>';
+  const icons = pop ? bi(ICO.pop, br === 'Firefox' || br === 'Safari' ? 0 : 1) + bi(ICO.ext, br === 'Firefox' || br === 'Safari' ? 0 : 2) : (brave ? bi(ICO.shield, 1) + bi(ICO.ext, 0) : bi(ICO.ext, 1));
+  blkEl = document.createElement('div'); blkEl.id = 'blk';
+  blkEl.innerHTML = '<div class="tcard" role="dialog" aria-modal="true"><div class="word" id="bWord"></div><div class="tn">AVISO · ' + esc(br.toUpperCase()) + '</div><div class="tb"><h3>' + (pop ? 'Tu navegador no dejó abrir la ventanita de Puter' : 'Tu bloqueador de anuncios está frenando a Puter') + '</h3><p>' + (pop ? 'Para entrar a Puter se abre una ventanita, y ' + esc(br) + ' no la dejó abrir. Así la permites:' : 'Un bloqueador de anuncios no deja cargar Puter. Las IAs conectadas siguen funcionando. Así lo arreglas:') + '</p></div>'
+    + '<div class="bbar" aria-hidden="true"><span class="dots"><i></i><i></i><i></i></span><span class="url">' + ICO.lock + esc(location.host || 'tu-sitio') + '</span>' + icons + '</div>'
+    + '<ol class="bsteps">' + steps.map(s => '<li>' + s + '</li>').join('') + '</ol>'
+    + (pop ? '<div class="bforce" id="bForce"><b>¿Lo intento de otra forma?</b> Pruebo entrar a Puter por otro camino. Puede que tampoco funcione si el bloqueo es muy fuerte.<div class="tbtn"><button class="lnk" id="bNo" type="button">No</button><button class="btn sm" id="bYes" type="button">Sí, forzar</button></div></div>' : '')
+    + '<div class="tbtn" style="margin-top:16px"><button class="lnk" id="bClose" type="button">' + (pop ? 'Cerrar' : 'Seguir sin Puter') + '</button>' + (pop ? '<button class="lnk" id="bAsk" type="button">Forzar</button>' : '') + '<button class="btn sm" id="bGo" type="button">' + (pop ? 'Reintentar' : 'Recargar') + '</button></div></div>';
+  document.body.appendChild(blkEl); $('#bWord').innerHTML = zWord('Synth');
+  requestAnimationFrame(() => blkEl.classList.add('on'));
+  $('.tcard', blkEl).animate([{ transform:'scale(.9) translateY(24px)', opacity:0, filter:'blur(10px)' }, { transform:'none', opacity:1, filter:'blur(0)' }], { duration:700, easing:'cubic-bezier(.22,1,.36,1)' });
+  const close = () => { if (!blkEl) return; const el = blkEl; blkEl = null; el.classList.remove('on'); setTimeout(() => el.remove(), 470); };
+  $('#bClose').addEventListener('click', () => { close(); if (!pop) openConnect(); });
+  blkEl.addEventListener('pointerdown', e => { if (e.target === blkEl) close(); });
+  $('#bGo').addEventListener('click', () => {
+    if (!pop){ location.reload(); return; }
+    close(); puterSignIn().then(() => afterConnect('¡Puter conectado!')).catch(() => {});
+  });
+  if (pop){
+    $('#bAsk').addEventListener('click', () => $('#bForce').classList.add('on'));
+    $('#bNo').addEventListener('click', () => $('#bForce').classList.remove('on'));
+    $('#bYes').addEventListener('click', () => {
+      const ui2 = window.puter && puter.ui && puter.ui.authenticateWithPuter;
+      if (!ui2){ toast('Ese camino no funcionó. Permite las ventanitas de este sitio y pulsa Reintentar.'); return; }
+      close(); puter.ui.authenticateWithPuter().then(() => afterConnect('¡Puter conectado!')).catch(() => toast('Tampoco funcionó. Permite las ventanitas de este sitio y pulsa Reintentar.'));
+    });
+  }
+}
+addEventListener('puter-ready', () => { const go = () => loading ? setTimeout(go, 300) : (refresh(true), renderNow()); go(); });
+if (window.puter && !cat.list.some(m => /^pu:/.test(m.id))) setTimeout(() => { const go = () => loading ? setTimeout(go, 300) : refresh(true); go(); }, 0);
+addEventListener('puter-blocked', () => { toast('Tu bloqueador de anuncios está frenando a Puter.'); });
+function warnBlocked(){
+  if (!window.__puterBlocked) return;
+  try{ if (sessionStorage.getItem('synthz:blkwarn')) { toast('Puter no carga en tu navegador. Toca «⋯ › Ayuda: algo no carga».'); return; } sessionStorage.setItem('synthz:blkwarn', '1'); }catch(e){}
+  showBlockHelp('script');
+}
+
+/* ---------- SynXCoin's: medidor, límite diario, avisos y modo ahorro ---------- */
+function todayUsed(){ return SZ.todayAll(); }
+let sxEl = null;
+function budgetOk(){ return true; }        /* ya no hay límite personal: el límite de hoy lo pone SynthZ */
+let limWarned = '';
+function coinWatch(){
+  const q = SZ.SZQ; if (!q.limit || q.on === false) return;
+  const k = SZ.limPct(), d = today();
+  if (k >= 1 && limWarned !== d + 'x'){ limWarned = d + 'x'; toast(puterOn() ? 'Llegaste al límite de hoy. Sigues con tu Puter.' : 'Usaste tu límite gratis de hoy. A medianoche se llenan otra vez, o sigue ya con Puter.'); try{ SZ.BOT.react && SZ.BOT.react('limit'); }catch(e){} }
+  else if (k >= .8 && k < 1 && !limWarned.startsWith(d)){ limWarned = d; toast('Te queda poco por hoy: ' + SZ.limTxt().toLowerCase() + '.'); }
+}
+addEventListener('synthz-szq', coinWatch);
+function coinModal(kind){
+  if (sxEl) sxEl.remove();
+  const T = {
+    pu:['Usaste el saldo de este mes de Puter', 'Se llena otra vez el próximo mes. Mientras tanto sigues con las IAs conectadas, gratis.'],
+    or:['Llegaste al límite de hoy', 'A medianoche se llenan otra vez. Si quieres seguir ya, conecta Puter. Conecta tu versión pro de las IAs más usadas.'],
+    panel:['Tu límite de hoy', 'Tienes un límite gratis cada día. A medianoche se llena otra vez.']
+  }[kind] || ['Tu límite de hoy', ''];
+  sxEl = document.createElement('div'); sxEl.id = 'sx';
+  sxEl.innerHTML = '<div class="tcard" role="dialog" aria-modal="true"><div class="word" id="sxWord"></div><div class="tn">TU LÍMITE</div><div class="tb"><h3>' + T[0] + '</h3><p>' + T[1] + '</p></div>'
+    + '<div class="limbig">' + SZ.limRing(84) + '<div><b>' + esc(SZ.limShort()) + '</b><span>tu límite de hoy</span></div></div>'
+    + SZ.limBar({ title:'IAs conectadas', puter:!puterOn() })
+    + '<div id="sxBal"><div class="bl-load">Revisando tu cuenta de Puter…</div></div>'
+    + '<div class="sxlbl">RESPUESTAS CORTAS</div><div class="sxsave"><p>La IA responde más corto y usa menos de tu historial. Así te alcanza para más.</p><button class="sxsw" id="sxSw" type="button" aria-pressed="' + st().sx.saver + '" aria-label="Respuestas cortas"></button></div>'
+    + '<div class="tbtn" style="margin-top:18px"><button class="lnk" id="sxClose" type="button">Cerrar</button>'
+    + (kind === 'pu' && szOn() ? '<button class="btn sm" id="sxGo" type="button">Seguir gratis</button>' : kind === 'or' ? '<button class="btn sm" id="sxGo" type="button">' + (puterOn() ? 'Seguir con mi Puter' : 'Conectar Puter') + '</button>' : '') + '</div></div>';
+  document.body.appendChild(sxEl); $('#sxWord').innerHTML = zWord('Synth');
+  const bal = $('#sxBal', sxEl);
+  if (bal) SZ.providerBalance(true).then(b => { if (bal.isConnected) bal.innerHTML = SZ.balanceHtml(b); });
+  requestAnimationFrame(() => sxEl.classList.add('on'));
+  $('.tcard', sxEl).animate([{ transform:'scale(.9) translateY(24px)', opacity:0, filter:'blur(10px)' }, { transform:'none', opacity:1, filter:'blur(0)' }], { duration:700, easing:'cubic-bezier(.22,1,.36,1)' });
+  const close = () => { if (!sxEl) return; const el = sxEl; sxEl = null; el.classList.remove('on'); setTimeout(() => el.remove(), 470); };
+  $('#sxClose').addEventListener('click', close);
+  sxEl.addEventListener('pointerdown', e => { if (e.target === sxEl) close(); });
+  const go = $('#sxGo');
+  if (go) go.addEventListener('click', () => { close(); if (kind === 'or' && !puterOn()) openConnect(); else switchProv(kind === 'pu' ? 'sz' : 'pu'); });
+  const sw = $('#sxSw');
+  if (sw) sw.addEventListener('click', () => setSaver(!st().sx.saver));
+}
+function setSaver(on){
+  st().sx.saver = on; save();
+  $$('#sxSw, #saverBtn').forEach(x => x.setAttribute('aria-pressed', String(on)));
+  updateHint(); toast(on ? 'Modo ahorro activado.' : 'Modo ahorro desactivado.');
+}
+$('#saverBtn').setAttribute('aria-pressed', String(st().sx.saver));
+$('#saverBtn').addEventListener('click', () => setSaver(!st().sx.saver));
+$('#sideFoot').addEventListener('click', e => { if (e.target.closest('#sxBtn')) coinModal('panel'); });
+
+/* ---------- equipos: comparte tu OpenRouter sin que nadie vea tu llave ---------- */
+let TEAMS = { teams:[], invites:[], at:0 };
+async function loadTeams(){ if (!SZ.ACC.ready) return TEAMS; try{ const d = await SZ.api('teams'); TEAMS = { teams:d.teams || [], invites:d.invites || [], at:Date.now() }; }catch(e){} if (st().useTeam && !TEAMS.teams.some(x => x.id === st().useTeam && x.hasKey)){ delete st().useTeam; save(); } paintProv(); return TEAMS; }
+const LIMITS = [[0, 'Sin límite'], [10000, '10 mil'], [20000, '20 mil'], [50000, '50 mil'], [100000, '100 mil']];
+function teamsHtml(){
+  const T = TEAMS, me = SZ.ACC.user || {};
+  let h = '<div class="sxlbl">EQUIPOS</div>' + (SZ.accHandle() ? '<p class="cnote tmme">Para que te inviten, comparte tu usuario: <b>' + esc(SZ.accHandle()) + '</b></p>' : '');
+  h += T.invites.map(i => '<div class="tminv">' + SZ.avatarHtml(i.from, i.from) + '<p><b>' + esc(i.from.name) + '</b>' + (i.from.handle ? ' <small>' + esc(i.from.handle) + '</small>' : '') + ' te invitó a <b>«' + esc(i.name) + '»</b>' + (i.hasKey ? ' · comparte OpenRouter' : '') + '</p><button class="btn sm" type="button" data-ta="accept" data-id="' + esc(i.id) + '">Aceptar</button><button class="lnk" type="button" data-ta="decline" data-id="' + esc(i.id) + '">No</button></div>').join('');
+  T.teams.forEach(x => {
+    const lim = x.daily ? Math.min(1, x.myUse / x.daily) : 0;
+    h += '<div class="tmc"><h4>' + esc(x.name) + '<small>' + (x.owner ? 'tuyo' : 'de ' + esc(x.ownerInfo.name)) + '</small></h4>';
+    if (x.owner){
+      h += x.hasKey ? '<div class="tmkey">🔒 <span>Compartes tu OpenRouter (' + esc(x.keyLabel) + '). Tu equipo lo usa sin ver la llave.</span><button class="lnk" type="button" data-ta="nokey" data-id="' + esc(x.id) + '">Dejar de compartir</button></div>'
+        : '<div class="cfgrow"><p>Compartir mi OpenRouter<small>Pega una llave: se guarda cifrada en SynthFlow y tu equipo nunca la ve. Mejor una llave solo para el equipo, con límite de crédito.</small></p></div><div class="tinv"><input type="text" data-sec="1" data-tk="' + esc(x.id) + '" placeholder="sk-or-…" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other" spellcheck="false"><button class="btn sm" type="button" data-ta="key" data-id="' + esc(x.id) + '">Compartir</button></div>';
+      h += '<div class="sxlbl">MIEMBROS</div>' + (x.members.length ? x.members.map(m => '<div class="tmrow">' + SZ.avatarHtml(m, m) + '<div class="tx"><b>' + esc(m.name) + '</b><small>' + esc(m.handle || m.email || '') + ' · hoy ' + fmt(m.used) + (x.daily ? ' / ' + fmt(x.daily) : '') + '</small></div>' + (x.daily ? '<span class="tmbar"><i style="transform:scaleX(' + Math.min(1, m.used / x.daily).toFixed(3) + ')"></i></span>' : '') + '<button class="x" type="button" data-ta="remove" data-id="' + esc(x.id) + '" data-sub="' + esc(m.sub) + '" data-nm="' + esc(m.name) + '" aria-label="Quitar a ' + esc(m.name) + '">✕</button></div>').join('') : '<p class="cnote" style="margin:4px 0">Aún sin miembros.</p>')
+        + x.invites.map(i => '<div class="tmrow"><span class="av-me" style="background:rgba(255,255,255,.1);color:var(--soft)">' + (/^@/.test(i.to || '') ? '@' : '✉') + '</span><div class="tx"><b>' + esc(i.to || i.email) + '</b><small>invitación pendiente</small></div><button class="x" type="button" data-ta="uninvite" data-id="' + esc(x.id) + '" data-to="' + esc(i.to || i.email) + '" aria-label="Cancelar invitación">✕</button></div>').join('')
+        + '<div class="tinv"><input data-te="' + esc(x.id) + '" type="text" placeholder="@usuario de tu amigo" autocomplete="off" autocapitalize="none" spellcheck="false"><button class="btn sm" type="button" data-ta="invite" data-id="' + esc(x.id) + '">Invitar</button></div>'
+        + '<div class="cfgrow"><p>Solo modelos gratis<small>Así nadie gasta crédito de tu llave.</small></p><button class="cfgsw" type="button" data-ta="free" data-id="' + esc(x.id) + '" aria-pressed="' + x.freeOnly + '" aria-label="Solo modelos gratis"></button></div>'
+        + '<div class="sxlbl">LÍMITE DIARIO POR PERSONA</div><div class="tmseg">' + LIMITS.map(([v, l]) => '<button type="button" data-ta="daily" data-id="' + esc(x.id) + '" data-v="' + v + '" aria-pressed="' + (x.daily === v) + '">' + l + '</button>').join('') + '</div>'
+        + '<div class="tbtn" style="margin-top:8px"><span></span><button class="lnk" type="button" data-ta="delete" data-id="' + esc(x.id) + '" data-nm="' + esc(x.name) + '">Borrar equipo</button></div>';
+    } else {
+      h += '<div class="tmrow">' + SZ.avatarHtml(x.ownerInfo, x.ownerInfo) + '<div class="tx"><b>' + esc(x.ownerInfo.name) + '</b><small>dueño · ' + x.members.length + ' miembros</small></div></div>';
+      h += x.hasKey ? '<div class="cfgrow"><p>Usar el OpenRouter de este equipo<small>Hoy llevas ' + fmt(x.myUse) + (x.daily ? ' de ' + fmt(x.daily) + ' SynXCoin\'s' : ' SynXCoin\'s') + (x.freeOnly ? ' · solo modelos gratis' : '') + '. El dueño ve cuánto usas, no lo que escribes.</small></p><button class="cfgsw" type="button" data-ta="use" data-id="' + esc(x.id) + '" aria-pressed="' + (st().useTeam === x.id) + '" aria-label="Usar su OpenRouter"></button></div>' + (x.daily ? '<span class="tmbar" style="width:100%;margin-top:6px"><i style="transform:scaleX(' + lim.toFixed(3) + ')"></i></span>' : '')
+        : '<p class="cnote">El dueño todavía no comparte su OpenRouter.</p>';
+      h += '<div class="tbtn" style="margin-top:8px"><span></span><button class="lnk" type="button" data-ta="leave" data-id="' + esc(x.id) + '" data-nm="' + esc(x.name) + '">Salir del equipo</button></div>';
+    }
+    h += '</div>';
+  });
+  h += '<div class="tinv" style="margin-top:12px"><input id="tNewName" maxlength="40" placeholder="Nombre de un equipo nuevo"><button class="btn sm ghost" type="button" data-ta="create">Crear equipo</button></div>';
+  return h;
+}
+function teamsBind(box, reopen){
+  box.addEventListener('click', async e => {
+    const b = e.target.closest('[data-ta]'); if (!b) return;
+    const a = b.dataset.ta, id = b.dataset.id, run = async (body, ok) => { const l = b.textContent; b.disabled = true; if (b.tagName === 'BUTTON' && !b.classList.contains('cfgsw') && !b.classList.contains('x')) b.textContent = '…'; try{ await SZ.api('teams', { method:'POST', body }); if (ok) toast(ok); await loadTeams(); reopen(); }catch(er){ b.disabled = false; b.textContent = l; toast(er.message); } };
+    if (a === 'use'){ const on = st().useTeam === id; if (on) delete st().useTeam; else st().useTeam = id; save(); b.setAttribute('aria-pressed', String(!on)); paintProv(); fixModel(true); renderList({ keep:true }); updateHint(); toast(on ? 'Ya no usas el OpenRouter del equipo.' : 'Listo: usas el OpenRouter del equipo.'); return; }
+    if (a === 'create'){ const n = $('#tNewName', box).value.trim(); if (!n){ toast('Ponle un nombre a tu equipo.'); return; } return run({ action:'create', name:n }, 'Equipo creado. Ahora invita a tus amigos.'); }
+    if (a === 'invite'){ const v = $('[data-te="' + id + '"]', box).value.trim(); if (!v){ toast('Escribe el @usuario de tu amigo.'); return; } return run({ action:'invite', id, to:v }, 'Invitación enviada. Le aparecerá cuando entre a su cuenta de SynthZ.'); }
+    if (a === 'key'){ const v = $('[data-tk="' + id + '"]', box).value.trim(); if (!v){ toast('Pega la llave de OpenRouter.'); return; } return run({ action:'key', id, key:v }, 'Tu equipo ya puede usar tu OpenRouter (sin ver la llave).'); }
+    if (a === 'nokey') return run({ action:'key', id, key:'' }, 'Dejaste de compartir tu OpenRouter.');
+    if (a === 'free') return run({ action:'settings', id, freeOnly:b.getAttribute('aria-pressed') !== 'true' }, 'Guardado.');
+    if (a === 'daily') return run({ action:'settings', id, daily:+b.dataset.v }, 'Límite actualizado.');
+    if (a === 'accept') return run({ action:'accept', id }, '¡Te uniste al equipo!');
+    if (a === 'decline') return run({ action:'decline', id }, 'Invitación rechazada.');
+    if (a === 'uninvite') return run({ action:'uninvite', id, to:b.dataset.to }, 'Invitación cancelada.');
+    if (a === 'remove'){ if (await SZ.szConfirm('¿Quitar a ' + b.dataset.nm + '?', 'Dejará de poder usar el OpenRouter del equipo al instante.', 'Quitar', true)) run({ action:'remove', id, sub:b.dataset.sub }, 'Quitado del equipo.'); return; }
+    if (a === 'leave'){ if (await SZ.szConfirm('¿Salir de «' + b.dataset.nm + '»?', 'Dejarás de poder usar su OpenRouter.', 'Salir', true)){ if (st().useTeam === id){ delete st().useTeam; save(); } run({ action:'leave', id }, 'Saliste del equipo.'); } return; }
+    if (a === 'delete'){ if (await SZ.szConfirm('¿Borrar «' + b.dataset.nm + '»?', 'Todos pierden el acceso y la llave compartida se borra del servidor.', 'Borrar equipo', true)) run({ action:'delete', id }, 'Equipo borrado.'); return; }
+  });
+}
+
+/* ---------- varias conversaciones por modelo ---------- */
+const curT = () => ((st().thread || {})[thModel()] || '');
+function parseKey(k){ const r = k.slice('openrouter::'.length), i = r.lastIndexOf('::'); return i > 0 && /^t[0-9a-z]+$/.test(r.slice(i + 2)) ? { model:r.slice(0, i), id:r.slice(i + 2) } : { model:r, id:'' }; }
+function thMeta(model, id, create){
+  st().threads = st().threads || {};
+  const L = st().threads[model] || (create ? (st().threads[model] = []) : null); if (!L) return null;
+  let e = L.find(x => x.id === id); if (!e && create){ e = { id, title:'', t:0 }; L.push(e); } return e;
+}
+function touchThread(){
+  const e = thMeta(thModel(), curT(), true); e.t = Date.now();
+  if (!e.title){ const u = chatArr().find(x => x.role === 'user'); if (u) e.title = (u.content || (u.files && u.files[0] && u.files[0].name) || 'Conversación').replace(/\s+/g, ' ').slice(0, 60); }
+  renderThBtn();
+}
+function allThreads(){
+  return Object.keys(st().chats).filter(k => /^openrouter::./.test(k) && Array.isArray(st().chats[k]) && st().chats[k].length).map(k => {
+    const { model, id } = parseKey(k), e = thMeta(model, id, false) || {}, u = st().chats[k].find(x => x.role === 'user');
+    return { k, model, id, title:e.title || (u ? (u.content || 'Conversación').replace(/\s+/g, ' ').slice(0, 60) : 'Conversación'), t:e.t || 0, n:st().chats[k].length };
+  }).sort((a, b) => b.t - a.t);
+}
+/* ---------- tus chats y tus favoritos (panel de la izquierda) ---------- */
+const PEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>';
+const BIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>';
+let chT = 0;
+function renderThBtn(){ clearTimeout(chT); chT = setTimeout(() => renderChats(false), 120); }
+function snipOf(text, q){ const t = text.replace(/\s+/g, ' '), i = t.toLowerCase().indexOf(q); if (i < 0) return ''; const a = Math.max(0, i - 28); return (a ? '…' : '') + t.slice(a, i + q.length + 46) + '…'; }
+const plain = t => t.replace(/```[\s\S]*?```/g, ' [código] ').replace(/[*_#>`~]+/g, '').replace(/^\s*[-+]\s+/gm, '').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').replace(/\s+/g, ' ').trim();
+function allFavs(){
+  const out = [];
+  Object.keys(st().chats).forEach(k => { const arr = st().chats[k]; if (!Array.isArray(arr) || !/^openrouter::./.test(k)) return; arr.forEach((m, i) => { if (m.star && m.role === 'assistant') out.push({ k, i, model:m.model || parseKey(k).model, text:plain(m.content) }); }); });
+  return out.reverse();
+}
+function renderChats(anim){
+  const box = $('#thList'); if (!box) return;
+  const q = $('#thQ').value.trim().toLowerCase();
+  box.classList.toggle('still', !anim);
+  $('#thQ').placeholder = cView === 'favs' ? 'Buscar en tus favoritos…' : 'Buscar en tus chats';
+  $('#cFavH').hidden = cView !== 'favs'; $('#cNew').hidden = cView === 'favs';
+  $('#cAgH').hidden = cView !== 'agents';
+  if (cView === 'favs'){
+    const L = allFavs().filter(x => !q || (x.text + ' ' + info(x.model).name).toLowerCase().includes(q));
+    box.innerHTML = L.length ? L.map((x, i) => '<div class="fvi" data-k="' + esc(x.k) + '" data-i="' + x.i + '" style="--i:' + Math.min(i, 20) + '"><b>' + esc(info(x.model).name) + '</b><p>' + esc(q ? snipOf(x.text, q) || x.text.slice(0, 220) : x.text.slice(0, 220)) + '</p></div>').join('')
+      : '<div class="thnone">' + (q ? 'Ningún favorito coincide.' : 'Aún no tienes favoritos.') + '<em>Toca «Guardar» ★ debajo de una respuesta y vuela hasta aquí.</em></div>';
+    return;
+  }
+  const now = new Date(), d0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const grp = t => !t ? 'Antes' : t >= d0 ? 'Hoy' : t >= d0 - 864e5 ? 'Ayer' : t >= d0 - 6 * 864e5 ? 'Esta semana' : 'Antes';
+  const AG = st().agentT || {};
+  const isAg = x => !!AG[x.k] || x.model === AGK;
+  const L = allThreads().filter(x => cView === 'agents' ? isAg(x) : !isAg(x)).map(x => { if (!q) return x; const hitT = (x.title + ' ' + info(x.model).name).toLowerCase().includes(q); let sn = ''; if (!hitT){ const m = (st().chats[x.k] || []).find(mm => (mm.content || '').toLowerCase().includes(q)); if (!m) return null; sn = snipOf(m.content, q); } return Object.assign({}, x, { sn }); }).filter(Boolean);
+  if (!L.length){ box.innerHTML = '<div class="thnone">' + (q ? 'Nada coincide en tus chats.' : cView === 'agents' ? 'Aún no tienes chats con el agente.' : 'Aún no tienes chats.') + '<em>' + (q ? 'Busco en los títulos y dentro de cada mensaje.' : cView === 'agents' ? 'Escribe lo que necesitas: una IA mejora tu pedido y se lo pasa a la IA que más sabe de eso.' : 'Escribe tu primer mensaje y aparecerá aquí.') + '</em></div>'; return; }
+  let h = '', g0 = '', n = 0;
+  const hlq = t => q ? hl(t, q) : esc(t);
+  L.forEach(x => {
+    const g = grp(x.t); if (g !== g0){ h += '<div class="thg">' + g + '</div>'; g0 = g; }
+    const cur = mode === 'solo' && x.model === thModel() && x.id === curT(), m = info(x.model);
+    h += '<div class="thi' + (cur ? ' cur' : '') + '" data-k="' + esc(x.k) + '" title="' + esc(m.name + ' · ' + x.n + ' mensajes') + '" style="--i:' + Math.min(n++, 20) + ';--vc:' + vendorColor(m.vendor) + '"><i class="thd" aria-hidden="true"></i><div class="tt"><b>' + hlq(x.title) + '</b>' + (x.sn ? '<span class="snip">' + hlq(x.sn) + '</span>' : '') + '</div>'
+      + '<button type="button" data-ren aria-label="Renombrar">' + PEN + '</button><button type="button" data-del aria-label="Borrar">' + BIN + '</button></div>';
+  });
+  box.innerHTML = h;
+}
+$('#thQ').addEventListener('input', () => renderChats(false));
+$('#cNew').addEventListener('click', () => newChat());
+$('#cFavBack').addEventListener('click', () => { cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(true); });
+$('#cAgBack').addEventListener('click', () => { cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(true); });
+function openThread(model, id, ci){
+  if (mode !== 'solo'){ stopNow(); cmpRun++; cmpLast = null; mode = 'solo'; }
+  (st().thread || (st().thread = {}))[model] = id;
+  if (model === AGK){ st().agent = true; paintAgent(); gen++; save(); setMode('solo'); }
+  else {
+    if (st().agent){ st().agent = false; paintAgent(); }
+    st().pinned = model;
+    if (model !== selId()) pickModel(model, null); else { gen++; save(); setMode('solo'); }
+  }
+  if (isMobile()) closeChatsSheet(); else if (isTablet()){ RS.chats = false; saveRS(); applyRail(); }
+  renderChats(false);
+  if (ci != null) setTimeout(() => { const el = lane.querySelector('.m.bot[data-ci="' + ci + '"]'); if (el){ el.scrollIntoView({ behavior:SZ.reduce ? 'auto' : 'smooth', block:'center' }); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); } }, 260);
+}
+$('#thList').addEventListener('click', async e => {
+  const fv = e.target.closest('.fvi');
+  if (fv){ const { model, id } = parseKey(fv.dataset.k); openThread(model, id, +fv.dataset.i); return; }
+  const it = e.target.closest('.thi'); if (!it) return;
+  const k = it.dataset.k, { model, id } = parseKey(k);
+  if (e.target.closest('[data-del]')){
+    if (!(await SZ.szConfirm('¿Borrar esta conversación?', 'Se borra de este dispositivo y de tu cuenta. No se puede deshacer.', 'Borrar', true))) return;
+    delete st().chats[k]; st().del = [...(st().del || []), k].slice(-300);
+    const L = (st().threads || {})[model]; if (L) st().threads[model] = L.filter(x => x.id !== id);
+    save(); if (mode === 'solo' && model === thModel() && id === curT()){ gen++; renderMsgs(); updateHint(); }
+    it.animate([{ opacity:1, transform:'none' }, { opacity:0, transform:'translateX(-14px)', filter:'blur(6px)' }], { duration:300, easing:'ease-in' }).onfinish = () => renderChats(false);
+    toast('Conversación borrada.'); return;
+  }
+  if (e.target.closest('[data-ren]')){
+    const b = $('.tt b', it), inp2 = document.createElement('input'); inp2.value = b.textContent; inp2.maxLength = 60; b.replaceWith(inp2); inp2.focus(); inp2.select();
+    let canceled = false;
+    const ok = () => { if (canceled) return; canceled = true; const v = inp2.value.trim(); if (v){ const m = thMeta(model, id, true); m.title = v; if (!m.t) m.t = Date.now(); save(); } renderChats(false); };
+    inp2.addEventListener('keydown', ev => { if (ev.key === 'Enter'){ ev.preventDefault(); ok(); } if (ev.key === 'Escape'){ ev.preventDefault(); ev.stopPropagation(); canceled = true; renderChats(false); } });
+    inp2.addEventListener('blur', ok); return;
+  }
+  if (e.target.closest('input')) return;
+  openThread(model, id);
+});
+/* compatibilidad: lo que antes abría la ventanita de conversaciones */
+function thOpen(){ showChats('chats', true); }
+
+/* ---------- menú «⋯» de la conversación ---------- */
+let mmEl = null;
+function mmClose(){ if (!mmEl) return; const el = mmEl; mmEl = null; el.animate([{ opacity:1 }, { opacity:0, transform:'translateY(-4px) scale(.97)' }], { duration:180 }).onfinish = () => el.remove(); }
+function mmOpen(){
+  if (mmEl){ mmClose(); return; }
+  const items = [['Nuevo chat', () => newChat()]];
+  if (mode === 'solo') items.push(['Borrar este chat', () => clearChat(true)], ['Copiar la conversación', () => { copyText(chatMd()); toast('Conversación copiada.'); }], ['Exportar como .md', exportMd]);
+  else items.push(['Empezar otra comparación', () => clearChat()], ['Volver a una sola IA', () => removeCmp(st().cmp[st().cmp.length - 1])]);
+  items.push(['—'], ['Tu ranking (a ciegas)', () => rankModal()]);
+  if (trialOn) items.push(['Salir de la prueba guiada', () => exitTrial()]);
+  items.push(['Google Drive · guardar mis chats', () => driveModal()]);
+  items.push(['Conectar IA', () => openConnect()], ['Elegir mis IA ideales', () => SZ.surveyModal(ok => { if (ok){ forMeK = ''; applySurvey(true); renderList({ keep:true }); } })]);
+  mmEl = document.createElement('div'); mmEl.className = 'ctxm mm'; mmEl.setAttribute('role', 'menu');
+  items.forEach(([l, fn]) => { if (l === '—'){ mmEl.appendChild(document.createElement('hr')); return; } const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'menuitem'); b.textContent = l; b.addEventListener('click', () => { mmClose(); fn(); }); mmEl.appendChild(b); });
+  document.body.appendChild(mmEl);
+  const r = $('#moreBtn').getBoundingClientRect(), w = mmEl.offsetWidth;
+  mmEl.style.left = Math.max(10, Math.min(r.right - w, innerWidth - w - 10)) + 'px'; mmEl.style.top = (r.bottom + 8) + 'px';
+  const f = $('button', mmEl); if (f) f.focus();
+}
+$('#moreBtn').addEventListener('click', mmOpen);
+document.addEventListener('pointerdown', e => { if (mmEl && !mmEl.contains(e.target) && !e.target.closest('#moreBtn')) mmClose(); });
+addEventListener('keydown', e => { if (e.key === 'Escape' && mmEl){ e.preventDefault(); mmClose(); $('#moreBtn').focus(); } });
+
+/* ---------- batalla ciega: votas sin saber qué IA es ---------- */
+function arenaVote(winner, ids){
+  /* cada voto cuenta como enfrentamientos de a dos; w + l + d = n siempre */
+  const A = st().arena || (st().arena = {}), g = id => { const e = A[id] || (A[id] = { r:1000, w:0, l:0, d:0, n:0, t:0 }); e.d = e.d || 0; e.n = e.n || 0; return e; };
+  const K = id => g(id).n < 10 ? 32 : 20, now = Date.now();
+  if (winner === 'tie'){ for (let i = 0; i < ids.length; i++) for (let j = i + 1; j < ids.length; j++){ const a = g(ids[i]), b = g(ids[j]), ea = 1 / (1 + Math.pow(10, (b.r - a.r) / 400)); a.r += K(ids[i]) * (.5 - ea); b.r -= K(ids[j]) * (.5 - ea); a.d++; b.d++; a.n++; b.n++; } }
+  else ids.filter(x => x !== winner).forEach(l => { const a = g(winner), b = g(l), ea = 1 / (1 + Math.pow(10, (b.r - a.r) / 400)); a.r += K(winner) * (1 - ea); b.r -= K(l) * (1 - ea); a.w++; b.l++; a.n++; b.n++; });
+  ids.forEach(id => { g(id).t = now; });
+  save();
+}
+function rankModal(){
+  const A = st().arena || {}, all = Object.keys(A).map(id => Object.assign({ id }, A[id], { n:A[id].n || (A[id].w + A[id].l + (A[id].d || 0)) })).sort((a, b) => b.r - a.r);
+  const firm = all.filter(x => x.n >= 3), few = all.filter(x => x.n < 3), votes = Math.round(all.reduce((s, x) => s + x.n, 0) / 2);
+  const row = (x, i) => '<div><i>' + (i == null ? '·' : i + 1) + '</i><b>' + esc(info(x.id).name) + '</b><em>' + (i == null ? x.n + ' enfrent.' : Math.round(x.r) + ' · ' + x.w + 'G ' + x.l + 'P' + (x.d ? ' ' + x.d + 'E' : '')) + '</em></div>';
+  const o = document.createElement('div'); o.className = 'szm';
+  o.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="Tu ranking"><div class="word">' + zWord('Synth') + '</div><div class="tn">BATALLA CIEGA · ' + votes + ' enfrentamientos</div><div class="tb"><h3>Tu ranking</h3><p>Sale de tus votos en «Comparar» con los nombres escondidos: es tu gusto, no una verdad para todos. Una IA aparece aquí cuando ya votaste 3 veces por ella o contra ella.</p></div><div class="rank">'
+    + (all.length ? (firm.length ? firm.map(row).join('') : '<p class="cnote">Todavía ninguna IA tiene 3 votos tuyos.</p>') + (few.length ? '<div class="sxlbl">CON POCOS VOTOS AÚN</div>' + few.map(x => row(x, null)).join('') : '') : '<p class="cnote">Aún no has votado. Activa la batalla ciega en Comparar.</p>')
+    + '</div><div class="tbtn" style="margin-top:16px"><span></span><button class="lnk" type="button" data-close>Cerrar</button></div></div>';
+  document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('on'));
+  const close = () => { o.classList.remove('on'); setTimeout(() => o.remove(), 400); };
+  $('[data-close]', o).addEventListener('click', close); o.addEventListener('pointerdown', e => { if (e.target === o) close(); });
+}
+function battleVote(grid, done, C){
+  const ids = done.map(d => d.mid);
+  const v = document.createElement('div'); v.className = 'vote';
+  v.innerHTML = '<span>¿Cuál respondió mejor?</span>' + done.map(d => '<button class="btn sm ghost" type="button" data-w="' + esc(d.mid) + '">' + esc($('.who b', d.card).textContent) + '</button>').join('') + '<button class="lnk" type="button" data-w="tie">Empate</button>';
+  grid.appendChild(v); follow();
+  v.addEventListener('click', e => {
+    const b = e.target.closest('[data-w]'); if (!b) return;
+    const w = b.dataset.w; arenaVote(w, ids);
+    const f = done.reduce((a, b) => a.ttft <= b.ttft ? a : b);
+    done.forEach(d => { const m = info(d.mid), who = $('.who', d.card); who.innerHTML = av(m, 'xs') + '<b>' + esc(m.name) + '</b><span class="stat">' + (d.mid === w ? 'ganó' : 'listo') + '</span>'; who.classList.add('reveal'); d.card.classList.toggle('win', d.mid === w); d.card.dataset.mid = d.mid; $('.meta', d.card).innerHTML = '<span>' + esc(d.card._meta || '') + '</span><span class="badge-fast">⚡ empezó primero</span>'; d.card.classList.toggle('fast', d === f); });
+    if (C){ C.voted = true; C.vote = null; C.blind = false; done.forEach(d => { const a = $('.acts', d.card); if (a && !$('.flowb', a)) a.insertAdjacentHTML('beforeend', flowBtn(C)); }); }
+    v.remove(); toast(w === 'tie' ? 'Empate guardado en tus favoritas.' : 'Ganó ' + info(w).name + '.');
+  });
+  return v;
+}
+
+/* ---------- Google Drive: más espacio y una copia de tus chats en TU Drive (opcional) ---------- */
+const DRV_ICO = '<svg viewBox="0 0 48 48" width="54" height="54" aria-hidden="true"><path d="M14 36h21a8 8 0 0 0 1.4-15.9A11 11 0 0 0 15.3 18 9 9 0 0 0 14 36z" fill="rgba(143,211,232,.12)" stroke="#8fd3e8" stroke-width="2" stroke-linejoin="round"/><path d="M24 31V21M19.5 25.5 24 21l4.5 4.5" fill="none" stroke="#e6b65f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const agoTxt = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'hace un momento' : m < 60 ? 'hace ' + m + ' min' : m < 1440 ? 'hace ' + Math.round(m / 60) + ' h' : new Date(t).toLocaleDateString('es-CO', { day:'numeric', month:'short' }); };
+async function driveGo(btn, quiet){
+  const l = btn ? btn.textContent : ''; if (btn){ btn.disabled = true; btn.textContent = 'Conectando con Google…'; }
+  try{
+    const r = await SZ.DRIVE.sync(); if (r.busy) return false;
+    if (!quiet) toast(r.got > 0 ? '¡Listo! Traje ' + r.got + (r.got === 1 ? ' chat' : ' chats') + ' de tu Drive y guardé la copia al día.' : '¡Listo! Tus chats quedaron guardados en tu Google Drive.');
+    SZ.SND.done && SZ.SND.done(); burst(innerWidth / 2, innerHeight / 2, ['#8fd3e8', '#e6b65f', '#c9566c'], 16);
+    return true;
+  }catch(e){ toast(e.message || 'No pude conectar con Google Drive.'); return false; }
+  finally{ if (btn && btn.isConnected){ btn.disabled = false; btn.textContent = l; } }
+}
+function driveModal(){
+  if ($('#drv')) return;
+  SZ.DRIVE.preload();
+  const w = document.createElement('div'); w.id = 'drv'; w.className = 'szm';
+  const paint = async () => {
+    const cid = await SZ.DRIVE.cid(), m = SZ.DRIVE.meta();
+    const body = !cid
+      ? '<p class="cnote">Google Drive todavía no está activado en SynthZ. Cuando Prime o ZFlow lo activen, aquí podrás vincular tu Drive con un clic. Mientras tanto, tus chats siguen guardados en este dispositivo' + (SZ.ACC.ready ? ' y en tu cuenta.' : '.') + '</p>'
+      : m && m.linked
+        ? '<div class="drst"><i class="pdot2 ' + (SZ.DRIVE.live() ? 'ok' : 'wait') + '" aria-hidden="true"></i><div><b>Tu Drive está vinculado</b><span>' + (m.last ? 'Última copia ' + agoTxt(m.last) + ' · ' + fmt(m.n || 0) + (m.n === 1 ? ' chat · ' : ' chats · ') + ((m.size || 0) / 1048576).toFixed(2).replace('.', ',') + ' MB' : 'Aún sin copia') + '</span><small>' + (SZ.DRIVE.live() ? 'Mientras esta pestaña esté abierta, cada cambio se guarda solo.' : 'Toca «Guardar ahora» para guardar y traer tus chats.') + '</small></div></div>'
+        : '<ul class="drl"><li><b>Más espacio:</b> tus chats viven también en tu Google Drive, no solo en este dispositivo.</li><li><b>Privado:</b> uso solo una carpeta oculta de SynthFlow. No puedo ver ni tocar tus otros archivos.</li><li><b>Seguro:</b> nunca borro chats al traerlos (se mezclan) y tus llaves no van en la copia.</li></ul>';
+    const cd = $('.tcard', w), h0 = cd.offsetHeight;
+    $('.drb', w).innerHTML = body;
+    $('.tbtn', w).innerHTML = '<button class="lnk" type="button" data-d="x">Cerrar</button>' + (!cid ? '' : m && m.linked ? '<button class="lnk" type="button" data-d="un">Desvincular</button><button class="btn sm flow" type="button" data-d="go">Guardar ahora</button>' : '<button class="btn sm flow" type="button" data-d="go">Vincular mi Google Drive</button>');
+    const h1 = cd.offsetHeight; if (!SZ.reduce && h0 && Math.abs(h1 - h0) > 2){ cd.animate([{ height:h0 + 'px', overflow:'hidden' }, { height:h1 + 'px', overflow:'hidden' }], { duration:520, easing:'cubic-bezier(.22,1,.36,1)' }); $$('.drb > *, .drl li', w).forEach((n, k) => n.animate([{ opacity:0, transform:'translateY(8px)' }, { opacity:1, transform:'none' }], { duration:460, delay:80 + k * 60, easing:'cubic-bezier(.22,1,.36,1)', fill:'backwards' })); }
+  };
+  w.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="Google Drive"><div class="drh">' + DRV_ICO + '<div><div class="tn">GOOGLE DRIVE</div><h3>Guarda tus chats en tu Drive</h3></div></div><div class="drb"><p class="cnote">Cargando…</p></div><div class="tbtn" style="margin-top:16px"></div></div>';
+  document.body.appendChild(w); requestAnimationFrame(() => w.classList.add('on'));
+  $('.tcard', w).animate([{ transform:'scale(.92) translateY(20px)', opacity:0, filter:'blur(8px)' }, { transform:'none', opacity:1, filter:'blur(0)' }], { duration:SZ.reduce ? 10 : 600, easing:'cubic-bezier(.22,1,.36,1)' });
+  const close = () => { w.classList.remove('on'); setTimeout(() => w.remove(), 420); };
+  w.addEventListener('pointerdown', e => { if (e.target === w) close(); });
+  w.addEventListener('click', async e => {
+    const b = e.target.closest('[data-d]'); if (!b) return;
+    if (b.dataset.d === 'x') return close();
+    if (b.dataset.d === 'un'){ if (await SZ.szConfirm('¿Desvincular tu Drive?', 'Dejo de guardar copias en tu Drive. La copia que ya está allá no se borra, y tus chats siguen en este dispositivo.', 'Desvincular')){ SZ.DRIVE.unlink(); toast('Desvinculaste tu Google Drive.'); paint(); } return; }
+    if (await driveGo(b)) paint();
+  });
+  paint();
+}
+/* ---------- tu cuenta de SynthZ ---------- */
+let accEl = null;
+function renderAccBtn(){
+  const b = $('#accBtn'); if (!b) return;
+  const A = SZ.ACC, u = A.user || {}, tm = $('#tabMe .tme');
+  if (A.ready){ b.className = 'rbtn rme'; b.dataset.tip = SZ.accName(); b.setAttribute('aria-label', 'Tu cuenta: ' + SZ.accName()); b.innerHTML = SZ.myAvatar() + '<span class="rl"><b>' + esc(SZ.accName().slice(0, 22)) + '</b><small>' + esc(SZ.ROLE_NAME[u.role || 'user'] || 'Synther') + ' · ' + (A.err ? 'sin guardar en tu cuenta' : 'guardado en tu cuenta') + '</small></span><i class="sy' + (A.err ? ' bad' : '') + '" title="' + (A.err ? esc(A.err) : 'Sincronizado') + '"></i>'; if (tm) tm.innerHTML = SZ.myAvatar(); }
+  else if (A.busy){ b.className = 'rbtn rme'; b.dataset.tip = 'Abriendo tu cuenta…'; b.innerHTML = '<span class="av-me">…</span><span class="rl"><b>Abriendo…</b><small>tu cuenta</small></span><i class="sy wait"></i>'; if (tm) tm.innerHTML = '<span class="av-me">…</span>'; }
+  else { b.className = 'rbtn rme out'; b.dataset.tip = 'Entrar a tu cuenta'; b.setAttribute('aria-label', 'Entrar a tu cuenta'); b.innerHTML = '<span class="av-me" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span><span class="rl"><b>Entrar</b><small>guarda tus chats</small></span>'; if (tm) tm.innerHTML = '<span class="av-me" style="background:rgba(255,255,255,.1);color:var(--soft)" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span>'; }
+  b.style.setProperty('--i', 6);
+}
+/* tu espacio en la nube */
+function spaceHtml(){
+  const s = SZ.ACC.space; if (!s || !s.max) return '';
+  const k = Math.min(1, s.used / s.max), mb = n => (n / 1048576).toFixed(n < 10485760 ? 1 : 0).replace('.', ',');
+  return '<div class="aspace' + (k > .9 ? ' warn' : '') + '"><div><b>Tu nube</b><span>' + mb(s.used) + ' de ' + mb(s.max) + ' MB</span></div><span class="tmbar"><i style="transform:scaleX(' + k.toFixed(3) + ')"></i></span>'
+    + (SZ.ACC.full ? '<small>Está llena: tus chats nuevos se guardan solo en este dispositivo hasta que borres conversaciones viejas.</small>' : '') + '</div>';
+}
+/* IA de SynthZ: resumen para el equipo; las llaves, el estado y la ayuda viven en Pulsem (pulsem.html) */
+function trialAdminHtml(d){
+  const ks = d.keys || [], ok = ks.filter(k => !k.down).length, mine = ks.filter(k => k.mine).length;
+  return '<div class="sxlbl">IAS CONECTADAS · PARA TODOS</div><div class="tmc"><div class="trow2"><i class="pdot2 ' + (ok ? 'ok' : ks.length ? 'warn' : 'off') + '" aria-hidden="true"></i><b>' + ok + ' de ' + ks.length + ' llaves activas</b><span>' + ((d.models && d.models.n) || 0) + ' IA gratis · ' + Math.round((d.dayLimit || 25000) / 800) + ' mensajes por persona al día' + (mine ? ' · ' + mine + ' son tuyas' : '') + '</span></div>'
+    + '<p class="cnote" style="margin:8px 0">En Pulsem ves cómo está la página, quién está conectado y quién necesita ayuda.</p><div class="tbtn"><span></span><a class="btn sm flow" href="pulsem.html">Abrir Pulsem →</a></div></div>';
+}
+function loadTrialAdmin(box){
+  SZ.api('trial').then(d => { if (box.isConnected) box.innerHTML = trialAdminHtml(d); }).catch(e => { if (box.isConnected) box.innerHTML = '<p class="cnote">No pude cargar las IAs conectadas: ' + esc(e.message) + '</p>'; });
+}
+function accModal(){
+  if (accEl) return;
+  const A = SZ.ACC, signed = A.ready, pf = A.profile || {}, u = A.user || {}, n = Object.keys(st().chats).filter(k => st().chats[k].length).length;
+  accEl = document.createElement('div'); accEl.id = 'acc';
+  accEl.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="Tu cuenta">'
+    + (signed
+      ? '<div class="acard"><div class="pfban" style="background:' + SZ.grad(pf.banner || pf.color) + '"></div><div class="pfme">' + SZ.myAvatar('xl') + '<div><b>' + esc(SZ.accName()) + '</b>' + (pf.pronouns ? '<i>' + esc(pf.pronouns) + '</i>' : '') + '<span>' + '<em class="rolep r-' + esc(u.role || 'user') + '">' + esc(SZ.ROLE_NAME[u.role || 'user'] || u.role) + '</em> ' + esc(SZ.accHandle(u)) + ' · ' + (A.full ? 'tu cuenta está llena' : A.err ? 'sin guardar en tu cuenta' : A.t ? 'guardado ' + ago(A.t) : 'guardando…') + '</span></div></div>' + (pf.status ? '<p class="pfs">' + esc(pf.status) + '</p>' : '') + (pf.bio ? '<p class="pfb">' + esc(pf.bio) + '</p>' : '') + '</div>'
+        + '<div class="aact"><button class="btn sm" type="button" id="aEdit">Editar perfil</button><button class="btn sm ghost" type="button" id="aSurvey">Mis IA ideales</button>' + (u.kind === 'pass' || u.username ? '<button class="btn sm ghost" type="button" id="aSec">Seguridad</button>' : '') + '</div>'
+        + '<div class="sxstats"><div><b>' + fmt(n) + '</b><span>chats en la nube</span></div><div><b>' + fmt(Object.values(st().usage || {}).reduce((a, u) => a + (u.requests || 0), 0)) + '</b><span>respuestas en total</span></div><div><b>' + fmt(Object.values(st().chats).reduce((a, c) => a + (Array.isArray(c) ? c.filter(m => m && m.star).length : 0), 0)) + '</b><span>mensajes favoritos</span></div></div>'
+        + (false ? '<div class="sxsave"><p>Guardar mi llave de OpenRouter (de antes) en mi cuenta, cifrada, para no volver a pegarla en otro dispositivo.</p><button class="sxsw" id="aKey" type="button" aria-pressed="' + !!st().syncKey + '" aria-label="Guardar mi llave en mi cuenta"></button></div>' : '')
+        + spaceHtml()
+        + (u.claimable ? '<div class="sxsave"><p>Esta cuenta está reservada para el equipo de SynthZ. Actívala con tu código de configuración.</p><button class="btn sm" id="aClaim" type="button">Activar mi rango</button></div>' : '')
+        + (['owner', 'admin', 'staff'].includes(u.role) ? '<div id="aTrial"><div class="tmload">Cargando las IAs conectadas…</div></div>' : '')
+
+      : '<div class="word" id="aWord"></div><div class="tn">TU CUENTA</div><div class="tb"><h3>Entra a SynthFlow</h3><p>Con tu cuenta tus chats y favoritos te siguen a cualquier dispositivo, personalizas tu perfil y puedes hablar con el equipo de SynthZ. Solo necesitas un usuario y una contraseña (o tu cuenta de Google). Puter sigue siendo solo para sus IA.</p><div id="aAuth"></div></div>')
+    + '<div class="tbtn" style="margin-top:18px"><button class="lnk" id="aClose" type="button">Cerrar</button>'
+    + (signed ? '<button class="lnk" id="aSync" type="button">Guardar ahora</button><button class="lnk" id="aDel" type="button">Borrar cuenta</button><button class="btn sm ghost" id="aOut" type="button">Cerrar sesión</button>' : '') + '</div>'
+    + (signed ? '<div class="aout2"><button class="lnk" id="aOutAll" type="button">Cerrar sesión en todos mis dispositivos</button></div>' : '') + '</div>';
+  document.body.appendChild(accEl); const w = $('#aWord'); if (w) w.innerHTML = zWord('Synth');
+  requestAnimationFrame(() => accEl.classList.add('on'));
+  $('.tcard', accEl).animate([{ transform:'scale(.9) translateY(24px)', opacity:0, filter:'blur(10px)' }, { transform:'none', opacity:1, filter:'blur(0)' }], { duration:700, easing:'cubic-bezier(.22,1,.36,1)' });
+  const close = () => { if (!accEl) return; const el = accEl; accEl = null; el.classList.remove('on'); setTimeout(() => el.remove(), 470); };
+  const reopen = () => { if (accEl){ accEl.remove(); accEl = null; } accModal(); };
+  $('#aClose').addEventListener('click', close);
+  accEl.addEventListener('pointerdown', e => { if (e.target === accEl) close(); });
+  const ab = $('#aAuth');
+  if (ab) SZ.authBox(ab, () => { reopen(); renderAccBtn(); }, k => { close(); showBlockHelp(k); });
+  if (!signed) return;
+  $('#aEdit').addEventListener('click', () => SZ.profileModal(() => { renderAccBtn(); reopen(); }));
+  const sec = $('#aSec'); if (sec) sec.addEventListener('click', () => SZ.securityModal());
+  $('#aSurvey').addEventListener('click', () => SZ.surveyModal(ok => { if (ok){ forMeK = ''; applySurvey(true); renderList({ keep:true }); } }));
+  $('#aKey').addEventListener('click', e => { st().syncKey = !st().syncKey; save(); e.currentTarget.setAttribute('aria-pressed', String(!!st().syncKey)); if (!st().syncKey) SZ.api('me', { method:'PUT', body:{ key:'' } }).catch(() => {}); toast(st().syncKey ? 'Tu llave se guardará cifrada en tu cuenta.' : 'Tu llave se borró de tu cuenta.'); });
+  $('#aSync').addEventListener('click', async e => { const b = e.currentTarget; b.textContent = 'Sincronizando…'; await SZ.accPush({ ledger:true }); b.textContent = 'Sincronizar'; toast(SZ.ACC.err || 'Todo sincronizado.'); });
+  $('#aOut').addEventListener('click', async e => {
+    const b = e.currentTarget; b.textContent = 'Guardando…'; b.disabled = true;
+    try{ await SZ.accSignOut(); }
+    catch(er){
+      b.textContent = 'Cerrar sesión'; b.disabled = false;
+      if (!er.unsynced || !(await SZ.szConfirm('No pude guardar tus últimos cambios', 'Si sales ahora, lo que no alcanzó a guardarse en tu cuenta se borra de este dispositivo. ¿Salir igual?', 'Cerrar igual', true))) return;
+      await SZ.accSignOut(true);
+    }
+    toast('Sesión cerrada. Tus chats quedaron en tu cuenta y se borraron de este dispositivo.'); setTimeout(() => location.reload(), 1100);
+  });
+  $('#aDel').addEventListener('click', async () => {
+    if (!(await SZ.szConfirm('¿Borrar tu cuenta de SynthFlow?', 'Se borran para siempre tu perfil, tus chats guardados en tu cuenta y lo que hay en este dispositivo. No se puede deshacer.', 'Seguir', true))) return;
+    const isPass = u.kind === 'pass' || !!u.username;
+    const v = await SZ.szPrompt('Confirma que eres tú', isPass ? 'Escribe tu contraseña para borrar la cuenta.' : 'Escribe tu correo (' + (u.email || '') + ') para borrar la cuenta.', 'Borrar mi cuenta', { type:isPass ? 'password' : 'email', ac:isPass ? 'current-password' : 'off', danger:true });
+    if (!v) return;
+    try{ await SZ.accDelete(isPass ? { pass:v } : { confirm:v }); toast('Tu cuenta se borró.'); setTimeout(() => location.reload(), 900); }catch(er){ toast(er.message); }
+  });
+  $('#aOutAll').addEventListener('click', async e => {
+    const b = e.currentTarget;
+    if (!(await SZ.szConfirm('¿Cerrar sesión en todos lados?', 'Se cierra tu sesión en todos tus dispositivos, incluido este. Útil si entraste en un computador ajeno.', 'Cerrar en todos', true))) return;
+    b.textContent = 'Guardando…';
+    try{ await SZ.accSignOutAll(); }
+    catch(er){ if (!er.unsynced || !(await SZ.szConfirm('No pude guardar tus últimos cambios', 'Si sigues, lo que no alcanzó a guardarse se borra de este dispositivo.', 'Seguir igual', true))){ b.textContent = 'Cerrar sesión en todos mis dispositivos'; return; } await SZ.accSignOutAll(true); }
+    toast('Cerraste sesión en todos tus dispositivos.'); setTimeout(() => location.reload(), 1100);
+  });
+  const cl = $('#aClaim');
+  if (cl) cl.addEventListener('click', async () => {
+    const v = await SZ.szPrompt('Activar tu rango', 'Escribe el código de configuración del equipo de SynthZ.', 'Activar', { sec:true });
+    if (!v) return;
+    try{ const r = await SZ.accClaim(v); toast('¡Listo! Tu rango: ' + (SZ.ROLE_NAME[r] || r) + '.'); reopen(); }catch(er){ toast(er.message); }
+  });
+  const tr = $('#aTrial');
+  if (tr) loadTrialAdmin(tr);
+
+}
+SZ.accHooks.push(kind => {
+  renderAccBtn();
+  if (kind === 'pull'){ renderMsgs(); renderFoot(); paintSel(); renderTop(); updateHint(); renderChats(false); loadTeams().then(() => { fixModel(true); renderList({ keep:true }); updateHint(); }); try{ renderList({ keep:true }); }catch(e){} }
+  if (kind === 'out'){ delete st().useTeam; paintProv(); renderList({ keep:true }); updateHint(); }
+});
+$('#accBtn').addEventListener('click', accModal);
+SZ.hooks.chats = () => { renderMsgs(); updateHint(); renderFoot(); renderChats(false); };
+$('#cfgBtn').addEventListener('click', () => SZ.cfgModal());
+SZ.smoothWheel(); SZ.orbitBg(msgsEl);
+delete st().teamKey; delete st().team; delete st().teams;
+renderAccBtn();
+if (params.get('acc') === '1') setTimeout(accModal, 2600);
+
+/* ---------- arranque ---------- */
+const wantModel = params.get('model');
+if (wantModel && /^(pu|or):[\w.\/:@-]{2,120}$/.test(wantModel)){ st().model.openrouter = wantModel; save(); }
+{ const PRE = /^(pu|or|gq|sz|tr):/, s0 = st().model.openrouter; if (s0 && !PRE.test(s0)){ st().model.openrouter = 'or:' + s0; save(); } st().cmp = st().cmp.map(x => PRE.test(x) ? x : 'or:' + x);
+  /* beta 2: quien usaba OpenRouter o Groq sin llave pasa a las IAs conectadas (sus chats siguen en «Mis chats») */
+  const s1 = st().model.openrouter || ''; if ((/^or:/.test(s1) && !(st().keys.openrouter || st().useTeam)) || (/^gq:/.test(s1) && !gqOn()) || !s1){ st().model.openrouter = APODEX; delete st().pinned; save(); }
+  const c1 = st().cmp.filter(x => !(/^or:/.test(x) && !(st().keys.openrouter || st().useTeam)) && !(/^gq:/.test(x) && !gqOn())); if (c1.length !== st().cmp.length){ st().cmp = c1; save(); } }
+{ const cc = st().chats; if (Array.isArray(cc.openrouter)){ if (cc.openrouter.length && !(cc[ckey()] || []).length) cc[ckey()] = cc.openrouter; delete cc.openrouter; save(); } }
+root.style.setProperty('--c', mode === 'cmp' ? '#b8c4ff' : vendorColor(info(selId()).vendor));
+if (mode === 'cmp' && st().cmp.length < 2) mode = 'solo';
+document.body.classList.toggle('cmpm', mode === 'cmp');
+inp.placeholder = mode === 'cmp' ? 'Una pregunta para todas las IA…' : 'Escribe tu mensaje…';
+applyRail();
+renderFilters(); renderLive(); renderList({ animate:true }); renderTop(true); renderMsgs(); renderNow(); updateHint(); renderChats(true);
+const fixPills = () => { placePill($('#cSeg')); placePill($('#sortSeg')); placePill($('#provSeg')); };
+/* «Más filtros»: al abrirse, sus píldoras se acomodan y el panel queda dentro de la ventana (con su propio scroll) */
+/* (los filtros ya no van escondidos: viven en el panel «Filtros») */ requestAnimationFrame(fixPills);
+requestAnimationFrame(fixPills);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(fixPills);
+addEventListener('resize', fixPills);
+refresh(true);
+
+/* la entrada continúa la expansión de la página anterior */
+const enter = root.classList.contains('enter');
+let pz = null, po = ''; try{ po = sessionStorage.getItem('synthz:portal') || ''; sessionStorage.removeItem('synthz:portal'); }catch(e){}
+if (enter && !po){ pz = SZ.portalFill($('#veil')); SZ.S.busy(true); }
+/* desde la portada: el hueco de la «o» se abre (o un fundido en modo rendimiento) */
+requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(() => { root.classList.add('go'); if (enter){ if (po === 'o') SZ.portalArrive($('#veil')); else if (!po) SZ.portalReveal(pz); if (po !== 'fade') SZ.waterIn($('.shell')); setTimeout(renderNow, 1500); } }, enter ? 120 : 0)));
+let pendingQ = null; try{ const s0 = JSON.parse(sessionStorage.getItem('synthz:q') || 'null'); sessionStorage.removeItem('synthz:q'); if (s0 && typeof s0.q === 'string' && Date.now() - s0.t < 120000) pendingQ = s0.q; }catch(e){}
+const q = pendingQ || params.get('q'), fromHome = !!pendingQ;
+const draftK = params.get('draft');
+if (params.get('prueba') === '1') setTimeout(() => enterTrial(), enter ? 1600 : 300);
+if (!q && DRAFTS[draftK]){
+  const [ex, ik, txt] = DRAFTS[draftK];
+  setTimeout(() => {
+    if (!st().pinned && cat.list.length) { const r = recommend(ik); if (r.m){ st().intent = { k:ik, id:r.m.id }; if (r.m.id !== selId()) pickModel(r.m.id); else renderMsgs(); } }
+    typeIntoComposer(ex != null ? EXAMPLES[ex][1] : txt);
+  }, enter ? 1700 : 600);
+}
+try{
+  if (params.get('guia') === '1') setTimeout(runGuide, enter ? 2000 : 500);
+  else if (!q && !draftK && !localStorage.getItem('synthz:tour')) bflowOpen(enter ? 1500 : 200);
+  else { setTimeout(warnBlocked, enter ? 2700 : 900); if (!q && SZ.wasAway()) setTimeout(() => SZ.welcomeBack({ learn:runGuide, flow:() => { if (matchMedia('(pointer: fine)').matches) inp.focus(); } }), enter ? 2200 : 700); }
+}catch(e){}
+try{ const clean = new URLSearchParams(location.search); ['q', 'from', 'draft', 'prueba', 'guia'].forEach(k => clean.delete(k)); window.history.replaceState(null, '', location.pathname + (clean.toString() ? '?' + clean.toString() : '')); }catch(e){}
+if (q){ inp.value = q.slice(0, 4000); autoGrow(); updateHint(); if (fromHome) setTimeout(() => { send(); }, enter ? 1500 : 300); else inp.focus(); }
+else if (enter) setTimeout(() => { if (matchMedia('(pointer: fine)').matches) inp.focus(); }, 1300);
+})();

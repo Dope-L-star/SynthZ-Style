@@ -16,7 +16,7 @@ const CFG = (() => {
 })();
 const PERF = CFG.perf === 'speed';
 const reduce = !CFG.anim;
-function cfgClasses(){ const r = document.documentElement; r.classList.toggle('nocur', !CFG.cursor); r.classList.toggle('noglass', !CFG.glass); r.classList.toggle('nobg', !CFG.bg); r.classList.toggle('noanim', !CFG.anim); r.classList.remove('perf'); r.classList.toggle('pmode', CFG.perf === 'speed'); }
+function cfgClasses(){ const r = document.documentElement; r.classList.toggle('nocur', !CFG.cursor); if (!CFG.cursor) r.classList.remove('cursor-on'); r.classList.toggle('noglass', !CFG.glass); r.classList.toggle('nobg', !CFG.bg); r.classList.toggle('noanim', !CFG.anim); r.classList.remove('perf'); r.classList.toggle('pmode', CFG.perf === 'speed'); }
 cfgClasses();
 function saveCfg(){ try{ localStorage.setItem('synthz:cfg', JSON.stringify(CFG)); }catch(e){} }
 const today = () => new Date().toLocaleDateString('en-CA');
@@ -1116,7 +1116,7 @@ if (matchMedia('(pointer: fine)').matches && CFG.cursor){
   const TEXT = 'input:not([type=checkbox]):not([type=file]), textarea, [contenteditable=true]';
   const LINK = 'a[href], button, select, summary, label.ckb, input[type=checkbox], input[type=radio], .chip, [role=tab], [data-hover]';
   /* en toda la web lo que se puede tocar muestra la manita; los switches van sin vidrio encima para que se vea su animación */
-  const NOGLASS = '.cfgsw, .sxsw, [role=switch], .sfb, #szBot, .mi, .mi *, .rcard, .rcard *, input[type=checkbox], label.ckb, .cnv-b';   /* v1.4: en la lista de IA el vidrio tapaba «Comparar» y la estrella */
+  const NOGLASS = '.cfgsw, .sxsw, [role=switch], .sfb, #szBot, .mi, .mi *, .rcard, .rcard *, input[type=checkbox], label.ckb, .cnv-b, .flowbtn, .flowbtn *';   /* v1.8: «Empezar a FlowIA’r» tiene su propio efecto (la copia de vidrio lo partía en dos y escondía la carita) */   /* v1.4: en la lista de IA el vidrio tapaba «Comparar» y la estrella */
   let px = -100, py = -100, ax = -100, ay = -100, rx = -100, ry = -100, rw = 34, rh = 34, rr = 17;
   let cm = 'idle', hov = null, lblEl = null, lx = 0, ly = 0, down = false, active = false, clT = 0;
   let lastX = ax, lastY2 = ay, vx = 0, vy = 0, ang = 0, angV = 0, sc = 1, fl = performance.now();
@@ -1205,6 +1205,7 @@ if (matchMedia('(pointer: fine)').matches && CFG.cursor){
 
   addEventListener('pointermove', e => {
     if (e.pointerType !== 'mouse') return;
+    if (!CFG.cursor){ if (active){ active = false; root.classList.remove('cursor-on', 'cursor-bar'); } return; }   /* v1.8: apagado en Ajustes → vuelve el cursor normal al instante */
     if (down && !e.buttons) down = false;                 /* soltaste el botón donde la página no lo vio */
     if (!active){ active = true; ax = rx = lastX = e.clientX; ay = ry = lastY2 = e.clientY; root.classList.add('cursor-on'); }
     px = e.clientX; py = e.clientY;
@@ -1462,8 +1463,17 @@ function flyWord(P, toCorner, D){
 const imgsReady = P => Promise.race([Promise.all([P.ZZ, P.FL].map(i => i.decode ? i.decode().catch(() => {}) : Promise.resolve())), sleepRaw(1500)]);
 /* el portal es la animación del logo: se ve siempre, también en modo Rendimiento */
 const PCALM = false;
+/* v1.8: con «Animaciones» apagado no hay película: un fundido corto y listo (los logos siempre se ven) */
+function quickGo(href, back){
+  if (document.getElementById('portal')) return;
+  try{ sessionStorage.setItem(back ? 'synthz:back' : 'synthz:portal', 'fade'); }catch(e){}
+  const v = document.createElement('div'); v.id = 'portal'; v.style.cssText = 'position:fixed;inset:0;z-index:2147483000;background:#0b0c10;opacity:0;transition:opacity .18s ease';
+  document.body.appendChild(v); requestAnimationFrame(() => { v.style.opacity = '1'; });
+  setTimeout(() => { location.href = href; }, 200);
+}
 async function portalOut(href){
   if (document.getElementById('portal')) return;
+  if (reduce && !(typeof EV !== 'undefined' && EV.pending())) return quickGo(href, false);
   let gone = false; const go = () => { if (gone) return; gone = true; location.href = href; };
   root.classList.add('leaving'); S.busy(true); portalLock(true); setTimeout(go, 12000);
   try{ const R = logoRect(); sessionStorage.setItem('synthz:logo', JSON.stringify(R)); }catch(e){}
@@ -1502,6 +1512,7 @@ async function portalOut(href){
 /* de vuelta a SynthZ: la misma película al revés */
 async function portalBack(href){
   if (document.getElementById('portal')) return;
+  if (reduce) return quickGo(href, true);
   let gone = false; const go = () => { if (gone) return; gone = true; location.href = href; };
   S.busy(true); portalLock(true); setTimeout(go, 12000);
   try{ sessionStorage.setItem('synthz:back', 'o'); }catch(e){}
@@ -1879,7 +1890,7 @@ function cfgModal(){
   $('#cfgOk', o).addEventListener('click', () => applyCfg(draft, close));
 }
 function applyCfg(draft, close){
-  const reload = draft.anim !== CFG.anim || (draft.cursor && !document.getElementById('cd') && matchMedia('(pointer: fine)').matches) || (draft.bg && !!$('.aurora') && !$('.aurora .orbit'));
+  const reload = draft.anim !== CFG.anim || (draft.cursor !== CFG.cursor && matchMedia('(pointer: fine)').matches) || (draft.bg && !!$('.aurora') && !$('.aurora .orbit'));
   Object.assign(CFG, draft, { v:2 }); saveCfg(); cfgClasses();
   if (CFG.favAnim && window.__favStart) window.__favStart();
   if (close) close();
@@ -2734,7 +2745,7 @@ const BOT_FAQ = [
   { k:'ajustes rendimiento lento animaciones configuracion sonido sonidos cursor principiante', a:'En Ajustes puedes poner la página «más rápida», activar el modo principiante o apagar mis sonidos.', go:['#cfgBtn', '[data-tab="cfg"]'] },
   { k:'favorito favoritos estrella guardar mensaje', a:'Con la estrella guardas un mensaje en favoritos. Están en la barrita, en la estrella.', go:['[data-r="fav"]', '#railFav'] },
   { k:'error no responde falla lenta demora', a:'Si una IA falla, te ofrezco una parecida que sí funcione, con tu mensaje listo para reenviar.' },
-  { k:'agente modo agente mejorar prompt', a:'En el modo agente, una IA mejora lo que escribiste y se lo pasa a la IA que más sabe de eso. Lo activas en la barra de la izquierda, en «Modo agente»: ahí también quedan guardados esos chats.', go:['#agentBtn'] },
+  { k:'agente modo agente mejorar prompt', a:'En el modo agente no eliges IA: tú escribes, el agente entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso. Al final decides si te quedas con esa IA o sigues en modo agente. Lo activas en la barra de la izquierda, debajo de «Mis chats».', go:['#railAgent', '#cSeg [data-v="agents"]'] },
   /* charla sencilla */
   { k:'hola buenas hey saludos holi buenos dias tardes noches', a:'¡Hola! Soy SynthonIA 😊 ¿En qué te ayudo con SynthZ?', wave:true },
   { k:'como estas andas va todo bien que tal', a:'¡Muy bien, gracias por preguntar! Aquí, lista para ayudarte. ¿Y tú cómo vas?', mood:'encantada' },

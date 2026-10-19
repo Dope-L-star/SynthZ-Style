@@ -1,0 +1,252 @@
+/* ---------- v1.8 · modo agente: tú escribes; el agente entiende y mejora tu pedido, elige la IA que más sabe de eso
+   y te muestra cada paso. Al final decides: quedarte con esa IA o seguir en modo agente ---------- */
+let agentBusy = false;
+const agentOn = () => !!st().agent && !trialOn;
+$('#agPill').addEventListener('click', () => { if (isMobile()) closeChatsSheet && closeChatsSheet(); cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(false); });
+function paintAgent(){ $$('.agentb, #railAgent').forEach(b => { b.setAttribute('aria-pressed', String(agentOn())); b.classList.toggle('on', agentOn()); }); document.body.classList.toggle('agenting', agentOn()); inp.placeholder = agentOn() ? 'Modo agente: cuéntame qué necesitas…' : (isLocked() ? inp.placeholder : 'Escribe tu mensaje...'); }
+function setAgent(on){
+  if (!!st().agent === !!on){ paintAgent(); return; }
+  if (mode !== 'solo'){ stopNow(); cmpRun++; cmpLast = null; mode = 'solo'; }
+  st().agent = !!on; save(); paintAgent(); gen++;
+  try{ renderMsgs(); updateHint(); renderTop(true); renderNow(); renderChats(false); }catch(e){}
+  toast(on ? 'Modo agente activado: tú escribes y el agente elige la IA que más sabe de eso.' : 'Modo agente apagado: ahora eliges tú la IA.');
+}
+const AG_STEPS = ['Entendiendo tu pedido', 'Mejorando tu pedido para que la IA lo entienda mejor', 'Eligiendo la IA que más sabe de esto', 'Pasándole tu pedido a la IA'];
+const AG_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>';
+/* lo que hace el agente, en vivo: su loguito de píxeles y los pasos que se van marcando */
+function agentCard(){
+  const el = document.createElement('div'); el.className = 'agrun';
+  el.innerHTML = '<div class="ag-h"><span class="pxw">' + SZ.pixelGrid() + '</span><span class="ag-t"><b>Modo agente</b><small>Trabajando en tu pedido…</small></span></div><ol class="ag-s">' + AG_STEPS.map((t, i) => '<li data-i="' + i + '"><i aria-hidden="true"></i><span>' + t + '</span></li>').join('') + '</ol>';
+  const px = SZ.pixelRun($('.pxw', el));
+  return {
+    el,
+    set(i, txt){ $$('li', el).forEach((li, j) => { li.classList.toggle('done', j < i); li.classList.toggle('on', j === i); }); if (txt) $('li[data-i="' + i + '"] span', el).textContent = txt; follow(); },
+    stop(){ px.stop(); $$('li', el).forEach(li => { li.classList.remove('on'); li.classList.add('done'); }); }
+  };
+}
+/* lo que queda guardado debajo de tu mensaje: «El agente eligió …» con el pedido mejorado para ver */
+function agentSumEl(a){
+  const el = document.createElement('div'); el.className = 'agsum';
+  el.innerHTML = '<button type="button" class="ag-row" aria-expanded="false"><span class="ag-ic">' + AG_ICO + '</span><span class="ag-tx">El agente eligió <b></b><em></em></span>' + (a.ask ? '<svg class="ag-c" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>' : '') + '</button>' + (a.ask ? '<div class="ag-d" hidden><small>Tu pedido mejorado (esto le llegó a la IA)</small><p></p></div>' : '');
+  $('.ag-tx b', el).textContent = a.name || 'una IA'; $('.ag-tx em', el).textContent = a.tl ? ', que sabe de ' + a.tl : '';
+  if (a.ask){ $('.ag-d p', el).textContent = a.ask; const row = $('.ag-row', el), d = $('.ag-d', el); row.addEventListener('click', () => { const on = d.hidden; d.hidden = !on; row.setAttribute('aria-expanded', String(on)); el.classList.toggle('open', on); }); }
+  return el;
+}
+function agentPick(tema){
+  const L = tema ? recommendTop(tema, 10).filter(m => connected(m.id)) : [];
+  const top = L.find(m => (info(m.id).spend || 1) < 3) || L[0];   /* no gasta tu Puter en las IA que más consumen si hay otra experta */
+  if (top) return top.id;
+  if (szOn()) return 'sz:auto';
+  if (connected(selId())) return selId();
+  const b = bestUsable(true) || bestUsable(false); return b ? b.id : selId();
+}
+/* después de la respuesta: ¿te quedas con esa IA o sigues en modo agente? */
+function agentChoice(pick){
+  $$('.agkeep', lane).forEach(x => x.remove());
+  const nm = info(pick).name, d = document.createElement('div'); d.className = 'agkeep';
+  d.innerHTML = '<span>¿Te quedas con <b></b> o sigues en modo agente?</span><div class="agk-b"><button type="button" class="btn sm" data-ak="keep"></button><button type="button" class="btn sm ghost" data-ak="go">Seguir en modo agente</button></div><small>Si sigues en modo agente, en tu próximo mensaje vuelvo a elegir la IA que más sepa de eso.</small>';
+  $('span b', d).textContent = nm; $('[data-ak="keep"]', d).textContent = 'Quedarme con ' + nm;
+  lane.appendChild(d); follow();
+  d.addEventListener('click', e => {
+    const b = e.target.closest('[data-ak]'); if (!b) return; d.remove();
+    if (b.dataset.ak === 'go'){ toast('Sigues en modo agente: en tu próximo mensaje vuelvo a elegir la IA.'); return; }
+    /* la conversación sigue igual, ahora con esa IA y sin el agente */
+    const k0 = ckey(), msgs = (st().chats[k0] || []).slice(), tid = 't' + Date.now().toString(36), k1 = 'openrouter::' + pick + '::' + tid;
+    st().chats[k1] = msgs; delete st().chats[k0]; st().del = [...(st().del || []), k0].slice(-300);
+    const L = (st().threads || {})[AGK]; if (L){ const id0 = curT(), e0 = L.find(x => x.id === id0); st().threads[AGK] = L.filter(x => x.id !== id0); if (e0){ const e1 = thMeta(pick, tid, true); e1.title = e0.title; e1.t = Date.now(); } }
+    (st().thread || (st().thread = {}))[pick] = tid; st().model.openrouter = pick; st().pinned = pick; st().agent = false;
+    if (cView === 'agents'){ cView = 'chats'; RS.view = 'chats'; saveRS(); }
+    save(); paintAgent(); gen++; applyRail(); paintSel(); renderTop(true); paintAccent(); renderMsgs(); updateHint(); renderChats(false);
+    toast('Listo: sigues con ' + nm + '. El modo agente quedó apagado; lo vuelves a activar en la barra.');
+  });
+}
+async function agentPlan(text){
+  const keys = TOPICS.map(t => t[0]).join(', ');
+  const sys = 'Eres el planificador de SynthFlow. Lees el pedido de una persona y lo mejoras para que otra IA lo entienda mejor. Responde SOLO con JSON válido y nada más: {"tema":"<una de: ' + keys + '>","pedido":"<el pedido mejorado, en el mismo idioma de la persona, claro, con el contexto que dio y el formato de respuesta que le sirve; no inventes datos; máximo 120 palabras>"}';
+  const r = await SZ.askStream(SZ.SZ_P, [{ role:'system', content:sys }, { role:'user', content:text.slice(0, 4000) }], { model:'sz:auto', _noFall:true });
+  const m = String((r && r.text) || '').match(/\{[\s\S]*\}/); if (!m) throw new Error('sin plan');
+  const j = JSON.parse(m[0]); if (!j || typeof j.pedido !== 'string' || j.pedido.trim().length < 4) throw new Error('sin plan');
+  return { tema:TOPIC[j.tema] ? j.tema : null, pedido:j.pedido.trim().slice(0, 4000) };
+}
+async function send(){
+  if (isLocked()){ lockNudge(); return; }
+  if (mode === 'cmp') return compare();
+  const text = inp.value.trim(), ready = files.filter(f => f.state === 'ok');
+  if (!text && !ready.length) return;
+  if (Object.keys(busy).length){ toast('Espera a que termine de responder, o detenla con el botón ■.'); return; }
+  if (files.some(f => f.state === 'load')){ toast('Espera a que terminen de cargar los archivos.'); return; }
+  try{ SZ.setTurn(text + '|' + Date.now()); }catch(e){}
+  if (trialOn && trialLeft() <= 0){ toast('Se acabaron tus mensajes de prueba.'); const tb = $('#trialBar'); tb.classList.remove('pulse'); void tb.offsetWidth; tb.classList.add('pulse'); return; }
+  if (trialOn && files.length){ toast('La prueba guiada es solo de texto. Conecta una IA para enviar archivos.'); return; }
+  if (!budgetOk()) return;
+  /* modo agente: no eliges IA; el agente entiende tu pedido, lo mejora, elige la IA experta y te muestra los pasos */
+  if (agentOn() && mode === 'solo' && text && !files.length){
+    if (agentBusy) return;
+    agentBusy = true; inp.readOnly = true; sendBtn.disabled = true;
+    try{ localStorage.setItem('synthz:sent', String(sentN() + 1)); }catch(e){}
+    try{ frustration(text, false); }catch(e){}
+    const chat = chatArr(), msg = { role:'user', content:text }, g0 = gen;
+    inp.value = ''; autoGrow(); updateHint();
+    chat.push(msg); touchThread(); save(); renderMsgs();
+    const card = agentCard(); lane.appendChild(card.el); jump();
+    card.set(0);
+    const t1 = setTimeout(() => card.set(1), 1100);
+    let plan = null;
+    if (szOn()){ try{ plan = await agentPlan(text); }catch(e){ try{ SZ.BOT.problem && SZ.BOT.problem('agent'); }catch(x){} } }
+    clearTimeout(t1);
+    if (!plan) plan = { tema:guessTopic(text), pedido:text, raw:true };
+    const same = plan.raw || plan.pedido.trim() === text.trim();
+    card.set(1, same ? 'Tu pedido ya era claro: lo paso tal cual' : 'Mejoré tu pedido para que la IA lo entienda mejor');
+    await SZ.sleepRaw(550);
+    const tl = plan.tema && TOPIC[plan.tema] ? TOPIC[plan.tema].l.toLowerCase() : '';
+    card.set(2, tl ? 'Eligiendo la IA que más sabe de ' + tl : 'Eligiendo la mejor IA para esto');
+    const pick = agentPick(plan.tema);
+    await SZ.sleepRaw(750);
+    card.set(3, 'Le paso tu pedido a ' + info(pick).name);
+    await SZ.sleepRaw(600); card.stop();
+    agentBusy = false; inp.readOnly = false; sendBtn.disabled = false;
+    if (g0 !== gen){ card.el.remove(); return; }                /* cambiaste de chat mientras tanto */
+    if (!same) msg.ask = plan.pedido;
+    msg.agent = { pick, name:info(pick).name, tl, ask:same ? '' : plan.pedido };
+    st().model.openrouter = pick; save(); paintSel(); renderTop(false); paintAccent();
+    let ok = true;
+    await runSolo(err => { ok = false; chat.pop(); save(); renderMsgs(); showErr(err); inp.value = text; autoGrow(); updateHint(); });
+    if (ok && g0 === gen) agentChoice(pick);
+    return;
+  }
+  const th0 = ckey(), m0 = selId(), at0 = Date.now(), needed = needsConn();
+  if (!(await ensureConn())) return;
+  /* si la ventanita de Puter tardó o cambiaste de chat o de IA mientras tanto, no envío solo: tu texto sigue en la caja */
+  if (needed && (ckey() !== th0 || selId() !== m0 || Date.now() - at0 > 15000 || inp.value.trim() !== text)){ toast('¡Listo! Revisa tu mensaje y toca enviar.'); inp.focus(); return; }
+  if (ready.some(f => f.kind === 'img') && !info(selId()).vision){ toast('Este modelo no ve imágenes. Activa el filtro "Visión" y elige otro.'); openSide(); return; }
+  try{ localStorage.setItem('synthz:sent', String(sentN() + 1)); }catch(e){}
+  try{ frustration(text, false); }catch(e){}
+  const chat = chatArr(), sent = files.splice(0).filter(f => f.state === 'ok');
+  inp.value = ''; autoGrow(); updateHint(); renderTray();
+  const msg = { role:'user', content:text };
+  if (sent.length) msg.files = sent.map(f => ({ name:f.name, kind:f.kind, text:f.text, thumb:f.thumb }));
+  const imgs = sent.filter(f => f.kind === 'img').map(f => f.dataUrl);
+  if (imgs.length) Object.defineProperty(msg, '_imgs', { value:imgs, enumerable:false, writable:true });
+  chat.push(msg); touchThread(); save();
+  await runSolo(err => { chat.pop(); save(); renderMsgs(); showErr(err); inp.value = text; files.push(...sent); autoGrow(); updateHint(); renderTray(); });
+}
+
+/* ---------- v1.3 · SynthonIA te rescata cuando una IA falla o cuando notas que no te entiende ---------- */
+const TOPIC_RX = [['codigo', /c[oó]digo|program|funci[oó]n|javascript|python|html|css|sql|bug|error de|script/i], ['mate', /ecuaci|matem|calcul|derivad|integral|\d+\s*[x×*+\/-]\s*\d+/i], ['estudiar', /explica|estudi|examen|tarea|aprend|resum/i], ['correo', /correo|email|e-mail/i], ['marketing', /marketing|publicidad|anuncio|vender|ventas|campa[ñn]a/i], ['redes', /instagram|tiktok|reel|post|redes/i], ['idiomas', /traduc|ingl[eé]s|franc[eé]s|idioma/i], ['negocios', /negocio|emprend|empresa|cliente/i], ['ideas', /idea|nombre para|lluvia de/i], ['escribir', /escrib|texto|carta|historia|poema|redact/i]];
+function guessTopic(t){ const f = TOPIC_RX.find(([k, rx]) => TOPIC[k] && rx.test(t)); return f ? f[0] : null; }
+function altFor(mid, text){
+  const tk = guessTopic(text || '');
+  const ok = m => m && m.id !== mid && connected(m.id) && !SZ.isBad(m.id);
+  const alt = (tk ? recommendTop(tk, 12) : []).find(ok) || (mid !== APODEX && szOn() ? info(APODEX) : null) || [bestUsable(true), bestUsable(false)].find(ok);
+  return { tk, alt };
+}
+async function rescue(mid, err){
+  try{ SZ.BOT.problem && SZ.BOT.problem('error'); }catch(e){}
+  if (!SZ.BOT || !SZ.BOT.offer || (err && err.aborted) || G) return;
+  const q = [...chatArr()].reverse().find(m => m.role === 'user'); if (!q || typeof q.content !== 'string') return;
+  const { tk, alt } = altFor(mid, q.content); if (!alt) return;
+  let ready = q.content;
+  if (szOn()) try{ ready = (await agentPlan(q.content)).pedido; }catch(e){}
+  SZ.BOT.offer(info(mid).name + ' falló 😕 ' + (tk ? 'Querías ayuda con ' + TOPIC[tk].l.toLowerCase() + ', y ' : '') + alt.name + ' es parecida y está funcionando ahora. Aquí te dejo tu prompt listo (lo mejoré un poquito). Perdona las interrupciones en tu Flow.', 'disculpa', 'Ir con ' + alt.name, () => { pickModel(alt.id, null); inp.value = ready; autoGrow(); updateHint(); inp.focus(); });
+}
+/* frustración: palabras de enojo o pedir «Otra vez» seguido → «esa IA no tiene el flow» */
+const FRUST = /no sirve|no entiendes|no entendiste|mal(a|isima)? respuesta|est[uú]pid|in[uú]til|que mal|otra vez no|no es eso|te equivocas|equivocad|horrible|p[eé]sim|ya te dije|😡|🤬|😤/i;
+let frustN = 0, frustAt = 0;
+function frustration(text, regen){
+  if (G || mode !== 'solo') return;
+  const angry = regen || FRUST.test(text || '') || /!{3,}/.test(text || '') || (text && text.length > 12 && text === text.toUpperCase() && /[A-ZÁÉÍÓÚ]{6}/.test(text));
+  if (!angry) return;
+  frustN = Date.now() - frustAt < 300000 ? frustN + 1 : 1; frustAt = Date.now();
+  if (frustN < (regen ? 2 : 1)) return;
+  frustN = 0; try{ SZ.BOT.problem && SZ.BOT.problem('frust'); }catch(e){}
+  const mid = selId(), q = [...chatArr()].reverse().find(m => m.role === 'user');
+  const { alt } = altFor(mid, (q && typeof q.content === 'string' ? q.content : '') + ' ' + (text || '')); if (!alt) return;
+  SZ.BOT.offer('Mmm… parece que ' + info(mid).name + ' no tiene el flow para esto. ' + alt.name + ' tiene más flow 😎 ¿Probamos con ella?', 'guino', 'Cambiar a ' + alt.name, () => { pickModel(alt.id, null); toast('Ahora hablas con ' + alt.name + '. Vuelve a enviar tu mensaje o escribe uno nuevo.'); inp.focus(); });
+}
+async function runSolo(onFail, o = {}){
+  const mid = selId(), chat = chatArr(), g = gen, vis = info(mid).vision, saver = st().sx.saver;
+  const slowT = setTimeout(() => { if (busy[mid] === 'think' && SZ.BOT.react) SZ.BOT.react('slow'); }, 14000);
+  const sent = apiMsgs(chat, vis), naive = apiMsgs(chat, vis, { naive:true }), ck = hashStr(mid + '|' + saver + '|' + JSON.stringify(sent));
+  const canCache = !sent.some(m => Array.isArray(m.content));
+  if (works[mid]) works[mid].stop();
+  works[mid] = SZ.workView({ model:info(mid).name, inTok:msgCost(sent) });
+  const W = works[mid];
+  busy[mid] = 'think'; renderMsgs(); renderNow();
+  let el = null, rv = null;
+  const here = () => g === gen && mode === 'solo' && mid === selId();
+  const mount = () => {
+    if (el || !here()) return;
+    busy[mid] = 'write'; renderNow();
+    const t = $('.think-wrap', lane); if (t) t.remove();
+    const e = $('.empty', lane); if (e) e.remove();
+    $$('.m.last', lane).forEach(x => x.classList.remove('last'));
+    el = botEl(mid); el.classList.add('writing'); el.insertBefore(W.el, $('.body', el)); lane.appendChild(el); stick = true;
+    const body = $('.body', el), tk = $('.tk', el);
+    rv = SZ.mkReveal(body, (s, n) => { tk.textContent = fmt(Math.ceil(s / 5.5)); el.style.setProperty('--p', n ? (s / n).toFixed(3) : 0); follow(); });
+  };
+  try{
+    let r = !o.fresh && canCache ? cacheGet(ck) : null;
+    if (r){ r = Object.assign({}, r, { ms:0, cached:true }); st().sx.saved += r.prompt + r.completion; st().sx.hits += 1; save(); mount(); if (rv) rv.push(r.text); }
+    else {
+      const ctl = new AbortController(); ctls.add(ctl);
+      try{ r = await SZ.askStream(OR, sent, { model:mid, maxTokens: saver ? 700 : 0, signal:ctl.signal, onReason:t => W.reason(t) }, txt => { mount(); W.write(txt); if (rv) rv.push(txt); }); }finally{ ctls.delete(ctl); }
+      addUsage(r.prov || SZ.provOf(mid), r.prompt, r.completion, true, { est:r.est, free:/:free$/.test(mid) || r.prov === 'synthz', rid:r.rid });
+      if (!r.aborted && !r.swapped) SZ.markGood(mid);
+      SZ.TEL.msgs++; SZ.TEL.ai = (r.prov || SZ.provOf(mid)).slice(0, 12);
+      st().sx.saved += Math.max(0, msgCost(naive) - msgCost(sent)); save();
+      if (canCache && !r.aborted) cachePut(ck, r);
+    }
+    if (g !== gen){ if (rv) rv.skip(); return; }
+    const tail = r.aborted ? ' · detenido' : r.cut ? ' · se cortó la conexión' : r.finish === 'length' ? ' · se cortó porque era muy larga (toca «Continuar»)' : '';
+    const who = r.swapped ? ' · se acabó tu saldo de Puter este mes; respondió ' + (r.real || 'otra IA') : mid === 'sz:auto' && r.real ? ' · respondió ' + r.real : '';
+    W.write(r.text); W.finish({ ms:r.ms, real:r.real || '' });
+    const work = { ms:Math.round(r.ms || 0), words:W.state.words, real:r.real || '', steps:W.state.steps.map(([a, b]) => [Math.round(a), b]), reason:(r.reasoning || '').slice(0, 4000) || undefined };
+    const msg = { role:'assistant', content:r.text, work, meta:metaOf(r) + tail + who + (r.via ? ' · vía ' + r.via + ' (prueba de SynthZ)' : ''), model:mid, cont: !!(r.cut || r.finish === 'length') || undefined };
+    chat.push(msg); touchThread(); save();
+    if (here()){
+      mount(); rv.push(r.text);
+      await rv.end();
+      el.classList.remove('writing'); el.style.removeProperty('--p'); el._raw = r.text; el._ck = ckey(); el._ci = chat.length - 1; el.dataset.ci = el._ci;
+      $('.body', el).innerHTML = md(r.text);
+      finishBot(el, msg.meta, true, msg.cont); follow();
+      if (SZ.BOT.react && !r.aborted && !G) SZ.BOT.react('done', { cool:180000 });
+    }
+  }catch(err){
+    if (rv) rv.skip();
+    if (g === gen && !(err && err.aborted)) setTimeout(() => rescue(mid, err), 900);
+    W.finish({ error:!(err && err.aborted), aborted:err && err.aborted });
+    if (el) el.remove();
+    if (err && err.gone) hideBadModel(mid, err);
+    if (g === gen && onFail) onFail(err);
+  }finally{ clearTimeout(slowT); if (g === gen){ delete busy[mid]; renderNow(); if (!el){ const t = $('.think-wrap', lane); if (t) t.remove(); } } }
+}
+/* una IA que falló por culpa del modelo (ya no existe o no tiene servidores) se esconde y se cambia por otra que sí funcione */
+function hideBadModel(id, err){
+  SZ.markBad(id);
+  const name = info(id).name;
+  setCatalog(cat.list.filter(m => m.id !== id), cat.t, cat.status);
+  if (st().pinned === id) delete st().pinned;
+  if (st().cmp.includes(id)) st().cmp = st().cmp.filter(x => x !== id);
+  save();
+  const b = bestUsable(true) || bestUsable(false);
+  if (b && b.id !== id && selId() === id){ pickModel(b.id, null); if (err) err.message = name + ' no está funcionando ahora mismo, así que la escondí de la lista. Te cambié a ' + b.name + ': vuelve a enviar tu mensaje.'; }
+  else if (err) err.message = name + ' no está funcionando ahora mismo, así que la escondí de la lista. Elige otra IA y vuelve a enviar.';
+  renderList({ keep:true });
+}
+SZ.badReady.then(set => { if (!set.size || !cat.list.length) return; const before = cat.list.length; setCatalog(cat.list.filter(m => !SZ.isBad(m.id)), cat.t, cat.status); if (cat.list.length !== before){ renderList({ keep:true }); fixModel(true); } });
+async function regen(){
+  const chat = chatArr();
+  try{ frustration('', true); }catch(e){}
+  if (mode !== 'solo' || Object.keys(busy).length || !chat.length || chat[chat.length - 1].role !== 'assistant') return;
+  /* si la respuesta era favorita, se queda: la nueva llega debajo (tu pregunta se repite) */
+  if (chat[chat.length - 1].star){
+    const q = [...chat].reverse().find(m => m.role === 'user'); if (!q) return;
+    const again = { role:'user', content:q.content, again:true }; if (q.files) again.files = q.files;
+    chat.push(again); touchThread(); save(); renderMsgs(); toast('Tu favorita se queda guardada ★ Te traigo otra respuesta debajo.');
+    await runSolo(err => { const i = chat.lastIndexOf(again); if (i > -1) chat.splice(i, 1); save(); renderMsgs(); showErr(err, { regen:true }); }, { fresh:true });
+    return;
+  }
+  const last = chat.pop(); save();
+  await runSolo(err => { chat.push(last); save(); renderMsgs(); showErr(err, { regen:true }); }, { fresh:true });
+}
+
