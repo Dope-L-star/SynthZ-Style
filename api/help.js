@@ -14,7 +14,7 @@ const RANK = { owner:'Prime', admin:'ZFlow', staff:'Symmetrix', user:'Synther' }
 const ipOf = req => (req.headers.get('x-forwarded-for') || 'x').split(',')[0].trim();
 const err = (s, m, code) => Object.assign(new Error(m), { status:s, code });
 const SYSTEM = 'Eres SynthonIA, la ayudante de SynthZ y SynthFlow. Eres amable, breve y clara. Responde en el idioma de la pregunta (normalmente español de Colombia), en menos de 110 palabras, sin inventar funciones. '
-  + 'Datos de SynthZ: SynthFlow es el chat. Se conecta con Puter (gratis, un clic, sin llave), OpenRouter (llave gratis propia, modelos «free») o Groq (llave propia opcional, muy rápida). '
+  + 'Datos de SynthZ: SynthFlow es el chat. La IA de SynthZ ya viene activada y gratis para todos (hasta 20.000 SynXCoin\'s al día por persona), con modelos gratis de Groq, Mistral, Cloudflare y OpenRouter que pone el equipo. Si alguien quiere más, puede conectar su cuenta de Puter (gratis, un clic): usa sus créditos personales y no cuenta en el tope. Nadie necesita pegar llaves. '
   + 'Arriba o junto a la caja de escribir se elige la IA y se puede comparar hasta 4 IA (cada una gasta por su cuenta: comparar, no unir). '
   + 'SynXCoin\'s son la medida de consumo (1 = 1 token); SynthZ nunca cobra. La Guía (botón «Guía») enseña todo paso a paso, con 5 mensajes de prueba. '
   + 'Los chats se guardan en el dispositivo, en la cuenta de SynthZ y opcionalmente en Google Drive (⋯ › Google Drive). Ajustes tiene el modo Rendimiento. '
@@ -56,12 +56,29 @@ export default route({
       await limit('hp-ip:' + ipOf(req), 40, 86400);
       const hist = (Array.isArray(b.hist) ? b.hist : []).filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string').slice(-6).map(m => ({ role:m.role, content:m.content.slice(0, 600) }));
       try{
-        const r = await trialComplete([{ role:'system', content:SYSTEM }, ...hist, { role:'user', content:q }], 320);
+        const r = await trialComplete([{ role:'system', content:SYSTEM }, ...hist, { role:'user', content:q }], 320, (me ? me.sub : sha('ip:' + ipOf(req)).slice(0, 16)));
         return json({ text:r.text, left:Math.max(0, ASK_DAY - n) });
       }catch(e){ await redis('DECR', k); throw e; }        /* si no respondió, esa pregunta no te cuenta */
     }
 
+    /* «Cuéntanos qué mejorar» (beta): cualquiera puede escribir, con o sin cuenta */
+    if (a === 'feedback'){
+      const me0 = await auth(req, true).catch(() => null);
+      await limit('fb:' + ipOf(req), 8, 3600);
+      const text = str(b.text, 1000); if (text.length < 3) return fail(400, 'Cuéntanos un poquito más.');
+      const cat = ['idea', 'error', 'confuso', 'otro'].includes(b.cat) ? b.cat : 'otro';
+      const r = { id:rid(10), t:Date.now(), cat, text, page:str(b.page, 60), status:'nuevo', who:me0 ? '@' + (me0.username || me0.name || 'synther') : 'Invitado', rank:me0 ? RANK[roleOf(me0)] : 'Invitado', sub:me0 ? me0.sub : '' };
+      await pipe([['HSET', 'fbh', r.id, JSON.stringify(r)], ['LPUSH', 'fb', r.id], ['LTRIM', 'fb', '0', '299']]);
+      return json({ ok:true });
+    }
     const me = await auth(req);
+    if (a === 'fbset'){
+      if (!isTeam(me)) return fail(403, 'Solo el equipo.');
+      const id = typeof b.id === 'string' && /^[\w-]{8,30}$/.test(b.id) ? b.id : '', st = ['nuevo', 'visto', 'resuelto'].includes(b.status) ? b.status : '';
+      const raw = id && st ? await redis('HGET', 'fbh', id) : null; if (!raw) return fail(404, 'Ese comentario ya no existe.');
+      const r = JSON.parse(raw); r.status = st; r.by = who(me).name; await redis('HSET', 'fbh', id, JSON.stringify(r));
+      return json({ ok:true, item:r });
+    }
     if (a === 'open'){
       const text = str(b.text, 1000); if (text.length < 3) return fail(400, 'Cuéntale al equipo en qué te ayudamos.');
       const cur = await redis('GET', 'hq:u:' + me.sub), old = cur ? await getJ('hq:' + cur) : null;
@@ -73,6 +90,19 @@ export default route({
       const r = { id:rid(10), sub:me.sub, user:who(me), text, page:str(b.page, 80), t:Date.now(), status:'open', by:null, msgs:[{ from:'user', name:who(me).name, text, t:Date.now() }] };
       await setJ('hq:' + r.id, r, KEEP);
       await pipe([['SET', 'hq:u:' + me.sub, r.id, 'EX', String(KEEP)], ['LPUSH', 'hq:list', r.id], ['LTRIM', 'hq:list', '0', '199']]);
+      return json({ item:pub(r) });
+    }
+    /* el equipo le escribe primero a alguien que vio con dificultades (solo cuentas, nunca invitados) */
+    if (a === 'reach'){
+      if (!isTeam(me)) return fail(403, 'Solo el equipo puede escribir primero.');
+      const sub = typeof b.sub === 'string' && /^p[\w-]{4,30}$/.test(b.sub) ? b.sub : '', text = str(b.text, 1000);
+      if (!sub || text.length < 2) return fail(400, 'Falta a quién y qué escribir.');
+      const u = await getJ('u:' + sub); if (!u) return fail(404, 'Esa cuenta ya no existe.');
+      const w = who(me), cur = await redis('GET', 'hq:u:' + sub), old = cur ? await getJ('hq:' + cur) : null;
+      const r = old && old.status !== 'done' ? old : { id:rid(10), sub, user:{ sub, name:String(u.name || u.username || 'Synther').slice(0, 40), username:u.username || '', rank:RANK[roleOf(u)] }, text:'(el equipo te escribió primero)', page:'', t:Date.now(), status:'taken', by:null, msgs:[] };
+      r.msgs.push({ from:'team', name:w.name, rank:w.rank, text, t:Date.now() }); r.status = 'taken'; r.by = { name:w.name, rank:w.rank, t:Date.now() };
+      await setJ('hq:' + r.id, r, KEEP);
+      if (!old || old.status === 'done') await pipe([['SET', 'hq:u:' + sub, r.id, 'EX', String(KEEP)], ['LPUSH', 'hq:list', r.id], ['LTRIM', 'hq:list', '0', '199']]);
       return json({ item:pub(r) });
     }
     const id = typeof b.id === 'string' && /^[\w-]{8,30}$/.test(b.id) ? b.id : '';

@@ -104,7 +104,7 @@ export default route({
     }
 
     if (mode === 'google'){
-      if (!hasGoogle()) return fail(400, 'Entrar con Google no está activado en este SynthZ.');
+      if (!(await hasGoogle())) return fail(400, 'Entrar con Google no está activado en este SynthZ.');
       await limit('auth:' + ip, 20, 600);
       const g = await verifyGoogle(b.credential);
       const sub = 'g' + g.sub, email = cleanEmail(g.email);

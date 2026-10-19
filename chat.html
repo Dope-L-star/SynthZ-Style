@@ -923,8 +923,8 @@ html.noanim .pdot2{animation:none}
 .rbot{display:flex;flex-direction:column;gap:2px}
 .rgrp{display:flex;flex-direction:column;gap:2px}
 /* SynXCoin's en la barrita: solo cuando la barrita está abierta o tus chats escondidos */
-.rcoin{max-height:0;opacity:0;overflow:hidden;pointer-events:none;transform:translateY(10px) scale(.96);transition:max-height .55s cubic-bezier(.22,1,.36,1),opacity .35s ease,transform .55s cubic-bezier(.22,1,.36,1)}
-.rail.open .rcoin,.shell.nochats .rcoin{max-height:46px;opacity:1;pointer-events:auto;transform:none;transition-delay:.18s}
+/* SynXCoin's en la barrita: cerrada se ve el icono con el número de hoy (abajo); abierta, el detalle */
+.rcoin{overflow:hidden}
 .rcoin .sxc{font-size:20px;flex:none;margin:0 -1px}
 .rcoin b{font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
 .rcoin .rl{display:inline-flex;gap:6px;align-items:baseline}
@@ -1163,6 +1163,8 @@ body.fresh .hello .topics{max-width:800px}
 .paypill.tr i{background:#e6b65f;box-shadow:0 0 10px #e6b65f}
 .paypill.or{border-color:rgba(184,196,255,.4);background:rgba(184,196,255,.07);color:#d6dcff}
 .paypill.or i{background:#b8c4ff;box-shadow:0 0 10px #b8c4ff}
+.paypill.sz{border-color:rgba(230,182,95,.4);background:rgba(230,182,95,.07);color:#f3dcae}
+.paypill.sz i{background:#e6b65f;box-shadow:0 0 10px #e6b65f;animation:szlive 2.4s ease-in-out infinite}
 .paypill.off{border-color:rgba(255,143,122,.4);background:rgba(255,143,122,.07);color:#ffc6b9}
 .paypill.off i{background:#ff8f7a;box-shadow:0 0 10px #ff8f7a}
 .paypill:hover{filter:brightness(1.1)}
@@ -1213,7 +1215,7 @@ html.noanim .hex,html.noanim .paypill{animation:none}
 .mpay{flex:none;font-style:normal;font-family:var(--sans);font-size:11px;line-height:1;padding:4px 9px;border-radius:999px;border:1px solid rgba(143,211,199,.45);color:#9fe0d4;white-space:nowrap}
 .mpay.tr{border-color:rgba(230,182,95,.55);color:#f0d8a8}
 .mpay.or{border-color:rgba(184,196,255,.5);color:#c9d1ff}
-.mpay.lock{border-style:dashed;opacity:.85}
+.mpay.lock{border-style:dashed;opacity:.85;border-color:rgba(255,255,255,.24);color:var(--mute);background:none}
 #side .mi-ex{margin-top:4px}
 #side .mi-ex::before{content:none}
 .mi-a{display:flex;align-items:center;gap:8px}
@@ -1597,6 +1599,7 @@ html.noanim .szgp .gp-in,html.noanim .gp-ia,html.noanim .gd-card,html.noanim .gd
       <span class="rsp"></span>
       <div class="rgrp rbot">
         <button class="rbtn rcoin" type="button" id="railCoin" data-tip="SynXCoin's de hoy" style="--i:4"></button>
+        <a class="rbtn rpulse" href="pulso.html" id="railPulse" data-tip="Pulso del equipo" style="--i:4" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l2.5-6 4 12 3-8 1.5 2H22"/></svg><span class="rl">Pulso del equipo</span></a>
         <button class="rbtn" type="button" id="cfgBtn" data-tip="Ajustes y rendimiento" style="--i:5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg><span class="rl">Ajustes y rendimiento</span></button>
         <button class="rbtn rme" type="button" id="accBtn" aria-label="Tu cuenta" data-tip="Tu cuenta" style="--i:6"></button>
         <button class="rguide" type="button" id="helpBtn" aria-label="Guía"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/></svg><span>Guía</span></button>
@@ -1636,7 +1639,7 @@ html.noanim .szgp .gp-in,html.noanim .gp-ia,html.noanim .gd-card,html.noanim .gd
     <footer class="composer" id="composer">
       <div class="tray" id="tray"></div>
       <div class="trialbar" id="trialBar" hidden></div>
-      <div class="lockc" id="lockCard" hidden role="region" aria-label="Conecta una IA"><span class="lk-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="3"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><path d="M12 15v2"/></svg></span><div class="lk-t"><b id="lockT">Primero, conecta una IA</b><small id="lockS">Para escribir necesitas tu cuenta de Puter (gratis, con un clic) o tu llave de OpenRouter o de Groq. Así siempre sabes quién paga.</small></div><div class="lk-b"><button type="button" class="btn sm flow" data-lk="pu">Conectar Puter · gratis</button><button type="button" class="btn sm ghost" data-lk="or">Usar mi llave</button><button type="button" class="lnk" data-lk="guide">Ver la Guía</button></div></div>
+      <div class="lockc" id="lockCard" hidden role="region" aria-label="Conecta una IA"><span class="lk-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="3"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><path d="M12 15v2"/></svg></span><div class="lk-t"><b id="lockT">La IA de SynthZ está descansando</b><small id="lockS">Vuelve en un momento. Mientras tanto, conecta tu Puter (gratis, con un clic) y sigue chateando.</small></div><div class="lk-b"><button type="button" class="btn sm flow" data-lk="pu">Conectar Puter · gratis</button><button type="button" class="lnk" data-lk="guide">Ver la Guía</button></div></div>
       <div class="comp-in">
         <div class="attw">
           <button class="attach" id="attachBtn" type="button" aria-label="Adjuntar" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.9-8.9a3.7 3.7 0 0 1 5.2 5.2l-8.9 8.9a1.8 1.8 0 0 1-2.6-2.6l8.1-8.1"/></svg></button>
@@ -1682,7 +1685,7 @@ html.noanim .szgp .gp-in,html.noanim .gp-ia,html.noanim .gd-card,html.noanim .gd
     <details class="pmore" id="pMore"><summary>Más filtros<span class="pmx"> · contexto, visión, gratis, nuevas, orden</span></summary>
       <div class="filters" id="filters"></div>
       <div class="pmin">
-      <div class="seg prov" id="provSeg" role="tablist" aria-label="Proveedor"><span class="pill"></span><button role="tab" data-p="all" aria-selected="true">Todos</button><button role="tab" data-p="pu" aria-selected="false"><i class="pdot" data-pd="pu"></i><span class="pu-logo"><img src="https://developer.puter.com/favicons/ms-icon-144x144.png" alt="" referrerpolicy="no-referrer" onerror="this.remove()"></span>Puter</button><button role="tab" data-p="or" aria-selected="false"><i class="pdot" data-pd="or"></i>OpenRouter</button><button role="tab" data-p="gq" aria-selected="false"><i class="pdot" data-pd="gq"></i>Groq</button></div>
+      <div class="seg prov" id="provSeg" role="tablist" aria-label="Proveedor"><span class="pill"></span><button role="tab" data-p="all" aria-selected="true">Todos</button><button role="tab" data-p="sz" aria-selected="false"><i class="pdot" data-pd="sz"></i><span class="sz-logo" aria-hidden="true"></span>SynthZ</button><button role="tab" data-p="pu" aria-selected="false"><i class="pdot" data-pd="pu"></i><span class="pu-logo"><img src="https://developer.puter.com/favicons/ms-icon-144x144.png" alt="" referrerpolicy="no-referrer" onerror="this.remove()"></span>Puter</button><button role="tab" data-p="or" aria-selected="false" hidden><i class="pdot" data-pd="or"></i>OpenRouter</button><button role="tab" data-p="gq" aria-selected="false" hidden><i class="pdot" data-pd="gq"></i>Groq</button></div>
       <div class="sortrow"><span class="slbl" style="margin:0"><b id="liveN">0</b> IA</span><div class="live" id="live" data-s="loading"><span class="live-dot"></span><b id="liveLbl">Conectando…</b><span id="liveAgo"></span><span class="sp"></span><button class="refresh" id="refreshBtn" aria-label="Actualizar la lista en vivo" title="Actualizar ahora"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg></button></div><div class="seg mini" id="sortSeg" role="tablist" aria-label="Ordenar"><span class="pill"></span>
         <button role="tab" data-s="new" aria-selected="true">Recientes</button>
         <button role="tab" data-s="ctx" aria-selected="false">Contexto</button>
@@ -1711,7 +1714,7 @@ $('#corner').innerHTML = '<svg viewBox="0 0 24 24">' + SZ.ICONS.claude('#d9805f'
 /* ---------- preferencias de la lista (se recuerdan) ---------- */
 const UI_KEY = 'synthz:ui';
 const ui = { free:true, fav:false, reason:false, vision:false, long:false, sort:'new', prov:'all' };
-try{ const u = JSON.parse(localStorage.getItem(UI_KEY)) || {}; ['free', 'fav', 'reason', 'vision', 'long', 'forme', 'code', 'write', 'fast', 'math', 'newm'].forEach(k => { if (typeof u[k] === 'boolean') ui[k] = u[k]; }); if (['new', 'ctx', 'az'].includes(u.sort)) ui.sort = u.sort; if (['all', 'pu', 'or', 'gq'].includes(u.prov)) ui.prov = u.prov; }catch(e){}
+try{ const u = JSON.parse(localStorage.getItem(UI_KEY)) || {}; ['free', 'fav', 'reason', 'vision', 'long', 'forme', 'code', 'write', 'fast', 'math', 'newm'].forEach(k => { if (typeof u[k] === 'boolean') ui[k] = u[k]; }); if (['new', 'ctx', 'az'].includes(u.sort)) ui.sort = u.sort; if (['all', 'sz', 'pu', 'or', 'gq'].includes(u.prov)) ui.prov = u.prov; }catch(e){}
 const saveUI = () => { try{ localStorage.setItem(UI_KEY, JSON.stringify(ui)); }catch(e){} };
 
 let mode = params.get('mode') === 'cmp' ? 'cmp' : 'solo';
@@ -1729,6 +1732,8 @@ let cat = { t:0, list:[], status:'loading' };
 const idx = new Map(), newIds = new Set();
 function setCatalog(list, t, status){ list = (list || []).filter(m => !SZ.isBad(m.id)); cat = { t, list, status }; idx.clear(); list.forEach(m => idx.set(m.id, m)); }
 function stub(id){
+  if (id === 'sz:auto') return Object.assign({}, SZ.SZ_AUTO, { stub:true });
+  if (/^sz:/.test(id)){ const mid = id.split(':').slice(2).join(':'); return { id, name:mid.replace(/^[^/]+\//, ''), vendor:'synthz', vlabel:'IA de SynthZ', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'', stub:true }; }
   const v = id.split('/')[0] || 'otro', nm = (id.split('/').slice(1).join('/') || id).replace(/:free$/, '');
   return { id, name:nm, vendor:v, vlabel:vendorLabel(v), ctx:0, free:/:free$/.test(id), created:0, vision:false, reasoning:false, tools:false, desc:'', stub:true };
 }
@@ -1737,16 +1742,19 @@ const TRIAL_ID = 'tr:prueba';
 const TRIAL_INFO = { id:TRIAL_ID, name:'Prueba de SynthZ', vendor:'synthz', vlabel:'Prueba guiada', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'' };
 let trialOn = false;
 const info = id => id === TRIAL_ID ? TRIAL_INFO : idx.get(id) || stub(id);
-function fallbackList(){ return [...new Set([...(st().models.openrouter || []), ...OR.models])].map(stub); }
+function fallbackList(){ return [...new Set(['sz:auto', ...(st().models.openrouter || []).filter(x => !orOn() ? /^(sz|pu):/.test(x) : true)])].map(stub); }
 const cached = SZ.loadCatalog();
 if (cached) setCatalog(cached.list, cached.t, 'cached'); else setCatalog([], 0, 'loading');
 
-const APODEX = 'or:openrouter/free';   /* «Free Models Router» de OpenRouter: elige solo un modelo gratis que esté disponible */
+const APODEX = 'sz:auto';   /* «SynthZ Auto»: la IA de SynthZ elige sola el mejor modelo gratis que esté libre (beta 2) */
 const selId = () => trialOn ? TRIAL_ID : (st().model.openrouter || APODEX);
 const kfmt = n => !n ? '' : n >= 1e6 ? (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : n >= 1000 ? Math.round(n / 1000) + 'k' : String(n);
 const isNew = m => newIds.has(m.id) || (m.created && Date.now() / 1000 - m.created < 14 * 86400);
 const ago = t => { if (!t) return ''; const s = Math.max(0, Math.round((Date.now() - t) / 1000)); return s < 5 ? 'ahora' : s < 60 ? 'hace ' + s + ' s' : s < 3600 ? 'hace ' + Math.round(s / 60) + ' min' : 'hace ' + Math.round(s / 3600) + ' h'; };
-const av = (m, cls) => '<span class="av' + (cls ? ' ' + cls : '') + '" style="--vc:' + vendorColor(m.vendor) + '">' + esc((m.vlabel || '?').charAt(0).toUpperCase()) + '<i class="n"></i></span>';
+/* cada IA con su icono real en vidrio líquido (si no hay, su inicial) */
+const av = (m, cls) => '<span class="av gav' + (cls ? ' ' + cls : '') + '" style="--vc:' + vendorColor(m.vendor) + '">' + SZ.glassIcon(m) + '<i class="n"></i></span>';
+const brandVars = m => { const b = SZ.brandOf(m); return b ? '--b1:' + b[2] + ';--b2:' + b[3] + ';--c:' + b[2] : '--b1:' + vendorColor(m.vendor) + ';--b2:#ffffff;--c:' + vendorColor(m.vendor); };
+const works = {};          /* lo que está haciendo cada IA mientras responde */
 const hl = (text, q) => { if (!q) return esc(text); const i = text.toLowerCase().indexOf(q); return i < 0 ? esc(text) : esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + q.length)) + '</mark>' + esc(text.slice(i + q.length)); };
 function tags(m, full){
   let h = m.free ? '<i class="tg free">gratis</i>' : (m.stub ? '' : '<i class="tg paid">de pago</i>');
@@ -1784,7 +1792,7 @@ function itemHtml(m, i, q, anim){
   const n = on ? st().cmp.indexOf(m.id) + 1 : '', add = pickMode === 'add', inCmp = add && (st().cmp.includes(m.id) || (mode === 'solo' && m.id === selId()));
   const tk = ptopic || (!ptopic && q ? topicFor(q) : null), rec = tk && recommendTop(tk, 6).some(x => x.id === m.id);
   const pay = payOf(m.id), ok = connected(m.id), ck = pickSel.has(m.id);
-  const badge = '<i class="mpay ' + pay[0] + (ok ? '' : ' lock') + '">' + esc(ok ? pay[2] : (/^pu:/.test(m.id) ? 'Conecta tu Puter' : 'Necesita tu llave de OpenRouter')) + '</i>';
+  const badge = '<i class="mpay ' + pay[0] + (ok ? '' : ' lock') + '">' + esc(ok ? pay[2] : (/^pu:/.test(m.id) ? 'Conecta tu Puter' : /^sz:/.test(m.id) ? 'Descansando' : 'Necesita tu llave')) + '</i>';
   const why = (rec ? '<b class="pti">Para ' + esc(TOPIC[tk].l) + '</b> · ' : forMe().has(m.id) && ptab === 'forme' ? '<b class="pti">Para ti</b> · ' : '') + esc(expert(m).line);
   const act = inCmp ? '<span class="mya">ya está</span>' : '<button type="button" class="btn sm' + (ok ? '' : ' ghost') + ' muse" data-use>' + (add ? (ok ? 'Sumar' : 'Conectar') : sel ? 'En uso' : ok ? 'Usar' : 'Conectar') + '</button>';
   return '<div class="mi' + (sel ? ' sel' : '') + (on ? ' on' : '') + (fav ? ' fav' : '') + (ck ? ' ck' : '') + (inCmp ? ' cmpd' : '') + (busy[m.id] ? ' busy' : '') + (anim ? ' in' : '') + '" role="option" tabindex="' + (sel || (mode === 'cmp' && i === 0) ? 0 : -1) + '" data-hover data-id="' + esc(m.id) + '" aria-selected="' + (sel || on) + '" style="--vc:' + vendorColor(m.vendor) + ';--i:' + i + '">' +
@@ -1793,7 +1801,14 @@ function itemHtml(m, i, q, anim){
     '<div class="mi-a"><button class="star" type="button" aria-label="' + (fav ? 'Quitar de favoritos' : 'Añadir a favoritos') + '" aria-pressed="' + fav + '">' + STAR + '</button>' +
     (add ? '' : '<label class="ckb"><input type="checkbox" data-ck' + (ck ? ' checked' : '') + '><span>Comparar</span></label>') + act + '</div></div>';
 }
-function paintProv(){ $$('.pdot[data-pd]').forEach(d => d.classList.toggle('on', d.dataset.pd === 'pu' ? puterOn() : d.dataset.pd === 'gq' ? gqOn() : orOn())); const gb = $('#provSeg [data-p="gq"]'); if (gb) gb.classList.toggle('lock', !gqOn()); const ob = $('#provSeg [data-p="or"]'); if (ob){ ob.classList.toggle('lock', !orOn()); ob.title = orOn() ? '' : 'Bloqueado: necesitas una llave de OpenRouter'; } }
+function paintProv(){
+  $$('.pdot[data-pd]').forEach(d => d.classList.toggle('on', d.dataset.pd === 'sz' ? szOn() : d.dataset.pd === 'pu' ? puterOn() : d.dataset.pd === 'gq' ? gqOn() : orOn()));
+  /* beta 2: OpenRouter y Groq solo se ven si ya tenías tu llave de antes; nadie más las necesita */
+  const gb = $('#provSeg [data-p="gq"]'), ob = $('#provSeg [data-p="or"]'), was = [gb && gb.hidden, ob && ob.hidden].join();
+  if (gb) gb.hidden = !gqOn(); if (ob) ob.hidden = !orOn();
+  if ((ui.prov === 'gq' && !gqOn()) || (ui.prov === 'or' && !orOn())){ ui.prov = 'all'; saveUI(); $$('#provSeg button').forEach(x => x.setAttribute('aria-selected', String(x.dataset.p === 'all'))); }
+  if (was !== [gb && gb.hidden, ob && ob.hidden].join()) requestAnimationFrame(() => placePill($('#provSeg')));
+}
 function renderList(o = {}){
   try{ paintProv(); }catch(e){}
   const q = query.trim().toLowerCase(), keep = listEl.scrollTop;
@@ -1810,13 +1825,14 @@ function renderList(o = {}){
     return;
   }
   const warn = cat.status === 'offline' || cat.status === 'cached' ? '<div class="mwarn">' + (cat.status === 'offline' ? 'Sin conexión: muestro tus modelos conocidos.' : 'Sin conexión: muestro la última lista guardada (' + ago(cat.t) + ').') + '</div>' : '';
-  const grp = p => p === 'gq' ? '<div class="mgrp"><b>Groq</b><span class="on">tu llave</span><small>Muy rápida · usa tu propia llave de Groq (gratis con límites)</small></div>' : '<div class="mgrp"><b>' + (p === 'pu' ? SZ.puterLogo() + 'Puter' : 'OpenRouter') + '</b>' + (p === 'pu' ? (puterOn() ? '<span class="on">conectada</span>' : '<span>sin conectar</span>') : (orOn() ? '<span class="on">' + (st().keys.openrouter ? 'conectada' : 'del equipo') + '</span>' : '<span>sin llave</span>')) + '<small>' + (p === 'pu' ? 'Sin llave · créditos gratis que se renuevan cada mes' : 'Con tu llave gratis · 20 mensajes por minuto y 50 al día') + '</small></div>';
-  const gql = l.filter(m => /^gq:/.test(m.id)), pu = l.filter(m => /^pu:/.test(m.id)), orl = l.filter(m => /^or:/.test(m.id)), rows = [];
+  const szq = SZ.SZQ, left = Math.max(0, (szq.limit || 20000) - (szq.used || 0));
+  const grp = p => p === 'sz' ? '<div class="mgrp"><b><span class="sz-logo" aria-hidden="true"></span>IA de SynthZ</b>' + (szOn() ? '<span class="on">activada</span>' : '<span>descansando</span>') + '<small>Gratis para todos · te quedan ' + fmt(left) + ' de ' + fmt(szq.limit || 20000) + ' SynXCoin\'s hoy</small></div>' : p === 'gq' ? '<div class="mgrp"><b>Groq</b><span class="on">tu llave</span><small>Muy rápida · usa tu propia llave de Groq (gratis con límites)</small></div>' : '<div class="mgrp"><b>' + (p === 'pu' ? SZ.puterLogo() + 'Puter' : 'OpenRouter') + '</b>' + (p === 'pu' ? (puterOn() ? '<span class="on">conectada</span>' : '<span>opcional</span>') : (orOn() ? '<span class="on">' + (st().keys.openrouter ? 'conectada' : 'del equipo') + '</span>' : '<span>sin llave</span>')) + '<small>' + (p === 'pu' ? 'Tus créditos personales gratis · se renuevan cada mes y no cuentan en tu tope' : 'Con tu llave de antes · 20 mensajes por minuto y 50 al día') + '</small></div>';
+  const szl = l.filter(m => /^sz:/.test(m.id)), gql = l.filter(m => /^gq:/.test(m.id)), pu = l.filter(m => /^pu:/.test(m.id)), orl = l.filter(m => /^or:/.test(m.id)), rows = [];
   if (warn) rows.push({ t:'w', h:warn });
   if (!st().survey && !q) rows.push({ t:'w', h:'<div class="mwarn pask">✦ <button type="button" class="lnk" data-svy>Cuéntame qué usas</button> y te destaco tus IA</div>' });
   const add = (arr, p) => { if (!arr.length) return; rows.push({ t:'g', h:grp(p) }); arr.forEach(m => rows.push({ t:'m', m })); };
   const lockRow = { t:'l', h:'<div class="olock"><b>OpenRouter</b><span>🔒 BLOQUEADO</span><p>Cientos de IA gratis más, con una llave personal que sacas en 2 minutos.</p><button class="btn sm" type="button" data-org>Cómo desbloquearlo</button></div>' };
-  if (ui.prov === 'all'){ add(gql, 'gq'); add(pu, 'pu'); if (orOn()) add(orl, 'or'); else if (cat.list.some(m => /^or:/.test(m.id))) rows.push(lockRow); } else if (ui.prov === 'or' && !orOn()) rows.push(lockRow); else add(l, ui.prov);
+  if (ui.prov === 'all'){ add(szl, 'sz'); add(pu, 'pu'); add(gql, 'gq'); if (orOn()) add(orl, 'or'); } else add(l, ui.prov);
   vMeasure(itemHtml(l[0], 0, q, false), grp('pu'), warn);
   let y = 0; V.tops = rows.map(r => { const t0 = y; y += rowH(r) + 5; return t0; });
   V.rows = rows; V.q = q; V.anim = !!o.animate; V.from = V.to = -1;
@@ -1906,7 +1922,7 @@ function renderFilters(){
   $('#filters').innerHTML = FILTERS.map(([k, lbl, svg]) => '<button class="fchip' + (k === 'forme' ? ' always' : '') + '" data-k="' + k + '" aria-pressed="' + ui[k] + '"' + (k === 'forme' ? ' title="Siempre activo: tus IA recomendadas van arriba. Tócalo para ajustar."' : '') + '>' + svg + lbl + '</button>').join('');
 }
 let forMeC = null, forMeK = '';
-function forMe(){ const k = (st().survey ? st().survey.t : 0) + ':' + cat.list.length + ':' + (puterOn() ? 1 : 0) + (orOn() ? 1 : 0); if (forMeK !== k){ forMeK = k; forMeC = new Set(SZ.surveyPicks(cat.list.filter(m => connected(m.id)), st().survey, 6)); } return forMeC; }
+function forMe(){ const k = (st().survey ? st().survey.t : 0) + ':' + cat.list.length + ':' + (puterOn() ? 1 : 0) + (orOn() ? 1 : 0) + (szOn() ? 1 : 0); if (forMeK !== k){ forMeK = k; forMeC = new Set(SZ.surveyPicks(cat.list.filter(m => connected(m.id)), st().survey, 6)); } return forMeC; }
 $('#filters').addEventListener('click', e => {
   const b = e.target.closest('.fchip'); if (!b) return;
   if (b.dataset.k === 'forme'){ askSurvey(); return; }   /* siempre activo: tocarlo ajusta tus recomendaciones */
@@ -1924,7 +1940,7 @@ $$('#sortSeg button').forEach(b => {
 });
 $$('#provSeg button').forEach(b => {
   b.setAttribute('aria-selected', String(b.dataset.p === ui.prov));
-  b.addEventListener('click', () => { if (b.dataset.p === 'or' && !orOn()){ openOrGuide(); return; } if (b.dataset.p === 'gq' && !gqOn()){ closeSide(); setTimeout(openConnect, 420); return; } ui.prov = b.dataset.p; saveUI(); $$('#provSeg button').forEach(x => x.setAttribute('aria-selected', String(x === b))); placePill($('#provSeg')); renderList({ animate:true }); });
+  b.addEventListener('click', () => { ui.prov = b.dataset.p; saveUI(); $$('#provSeg button').forEach(x => x.setAttribute('aria-selected', String(x === b))); placePill($('#provSeg')); renderList({ animate:true }); });
 });
 
 /* filtros: arrastrar, ruedita y flechas para ver todos */
@@ -2038,7 +2054,7 @@ function cmpWhyNot(id, base){
   const a = base || st().cmp;
   if (a.includes(id)) return 'ya';
   if (a.length >= CMP_MAX) return 'Puedes comparar hasta 4 IA a la vez.';
-  if (!/^pu:/.test(id) && a.filter(x => !/^pu:/.test(x)).length >= OR_CMP_MAX) return 'De OpenRouter van máximo 2 a la vez: su plan gratis da 50 mensajes al día y cada IA que compares gasta uno.';
+  if (/^or:/.test(id) && a.filter(x => /^or:/.test(x)).length >= OR_CMP_MAX) return 'De OpenRouter van máximo 2 a la vez: su plan gratis da 50 mensajes al día y cada IA que compares gasta uno.';
   return '';
 }
 function pickModel(id, node){
@@ -2068,7 +2084,7 @@ function renderTop(animate){
   try{ renderCPick(); }catch(e){}
   if (mode === 'solo' && document.body.classList.contains('fresh')){
     row.classList.remove('n3', 'n4');
-    const [k, long] = payOf(selId()), left = trialOn ? trialLeft() : 0;
+    const ok0 = connected(selId()), [k1, long1] = payOf(selId()), k = ok0 ? k1 : 'off', long = ok0 ? long1 : /^pu:/.test(selId()) ? 'Puter · sin conectar (toca para conectarlo)' : long1, left = trialOn ? trialLeft() : 0;
     row.innerHTML = '<button type="button" class="paypill ' + k + '" id="payPill" title="Quién paga lo que escribes">' + '<i aria-hidden="true"></i>' + (trialOn ? 'Prueba guiada · te quedan <b>' + left + ' de ' + ((SZ.trialGet() || {}).max || 5) + '</b> · la paga SynthZ' : esc(long)) + CARET + '</button>';
     return;
   }
@@ -2102,11 +2118,12 @@ $('#pickRow').addEventListener('click', e => {
 /* quién paga lo que escribes: siempre a la vista (regla 5) */
 function payOf(id){
   if (id === TRIAL_ID) return ['tr', 'Prueba guiada · la paga SynthZ', 'Prueba · paga SynthZ'];
-  if (/^pu:/.test(id)) return ['pu', 'Puter · gratis con tu cuenta de Puter', 'Gratis con tu Puter'];
+  if (/^sz:/.test(id)){ const q = SZ.SZQ, left = Math.max(0, (q.limit || 20000) - (q.used || 0)); return ['sz', 'IA de SynthZ · activada · gratis · te quedan ' + fmt(left) + ' de ' + fmt(q.limit || 20000) + ' hoy', 'IA de SynthZ · gratis']; }
+  if (/^pu:/.test(id)) return ['pu', 'Puter · tus créditos personales (no cuentan en tu tope)', 'Tus créditos de Puter'];
   if (/^gq:/.test(id)) return st().keys.groq ? ['or', 'Groq · con tu propia llave', 'Tu llave de Groq'] : ['or off', 'Groq · necesita tu llave', 'Falta tu llave'];
   if (st().keys.openrouter) return ['or', 'OpenRouter · con tu propia llave', 'Tu llave de OpenRouter'];
   if (st().useTeam && SZ.ACC.ready) return ['or', 'OpenRouter · lo paga la llave de tu equipo', 'Llave de tu equipo'];
-  return ['or off', 'OpenRouter · necesita tu llave', 'Falta tu llave'];
+  return ['or off', 'OpenRouter · ya no se usa: elige la IA de SynthZ', 'Elige otra IA'];
 }
 function paintPay(){
   let c, l, s, ex = false;
@@ -2176,13 +2193,15 @@ const REGEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
 function chipsHtml(fs){ return '<div class="fcs">' + fs.map(f => '<span class="fc ro">' + (f.thumb ? '<img src="' + esc(f.thumb) + '" alt="">' : '<i class="ic">' + esc((f.name.split('.').pop() || 'file').slice(0, 4)) + '</i>') + '<b>' + esc(f.name) + '</b></span>').join('') + '</div>'; }
 function userEl(text, fs){ const u = document.createElement('div'); u.className = 'm user'; u.innerHTML = '<div class="who">tú ▸</div><div class="bub"></div>'; $('.bub', u).textContent = text; if (fs && fs.length) $('.bub', u).insertAdjacentHTML('beforeend', chipsHtml(fs)); return u; }
 function botEl(mid){
-  const m = info(mid), el = document.createElement('div'); el.className = 'm bot'; el.style.setProperty('--c', vendorColor(m.vendor));
+  const m = info(mid), el = document.createElement('div'); el.className = 'm bot brand'; el.style.cssText = brandVars(m); el.dataset.brand = (SZ.brandOf(m) || [])[1] || '';
   el.innerHTML = '<div class="who">' + av(m, 'xs') + '<b>' + esc(m.name) + '</b><span class="md">' + esc(m.vlabel) + '</span><span class="wr">escribiendo<span class="dots"><i></i><i></i><i></i></span><span class="tk">0</span> SynX</span></div><div class="body"></div>';
   return el;
 }
 function thinkEl(mid){
-  const m = info(mid), el = document.createElement('div'); el.className = 'm bot think-wrap'; el.style.setProperty('--c', vendorColor(m.vendor));
-  el.innerHTML = '<div class="who">' + av(m, 'xs') + '<b>' + esc(m.name) + '</b><span class="md">pensando…</span></div><div class="think"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>';
+  const m = info(mid), el = document.createElement('div'); el.className = 'm bot brand think-wrap'; el.style.cssText = brandVars(m);
+  el.innerHTML = '<div class="who">' + av(m, 'xs') + '<b>' + esc(m.name) + '</b><span class="md">' + esc(m.vlabel || '') + '</span></div>';
+  if (!works[mid]) works[mid] = SZ.workView({ model:m.name });
+  el.appendChild(works[mid].el);
   return el;
 }
 function codeButtons(body){ $$('pre', body).forEach(pre => { if (!$('.cpc', pre)){ const b = document.createElement('button'); b.className = 'cpc'; b.type = 'button'; b.textContent = 'copiar'; pre.appendChild(b); } }); }
@@ -2291,7 +2310,7 @@ function topicPanelHtml(k){
   const T = TOPIC[k]; if (!T) return '';
   const r = recommendTop(k, 3);
   return '<div class="tphead"><h5>Para <em>' + esc(T.l) + '</em> te recomiendo</h5><small>Según el catálogo y el nombre de cada IA · marca 2 o más para compararlas</small></div>'
-    + (r.length ? '<div class="rcards">' + r.map(rcardHtml).join('') + '</div>' : '<p class="cnote" style="text-align:center">' + (cat.list.length ? 'Conecta Puter u OpenRouter y te recomiendo IA para esto.' : 'Cargando la lista de IA…') + '</p>')
+    + (r.length ? '<div class="rcards">' + r.map(rcardHtml).join('') + '</div>' : '<p class="cnote" style="text-align:center">' + (cat.list.length ? 'Conecta tu Puter o espera a que la IA de SynthZ despierte y te recomiendo IA para esto.' : 'Cargando la lista de IA…') + '</p>')
     + '<div class="cmpgo" id="cmpGo" hidden></div>'
     + '<div class="texs">' + T.ex.map((x, i) => '<button type="button" data-tex="' + i + '" style="--i:' + i + '">' + esc(x[0]) + '</button>').join('') + '</div>';
 }
@@ -2350,13 +2369,25 @@ function renderMsgs(){
   const ck0 = ckey();
   chat.forEach((m, i) => {
     if (m.role === 'user'){ const u = userEl(m.content, m.files); u.style.animation = 'none'; lane.appendChild(u); }
-    else { const b = botEl(m.model || selId()); b.style.animation = 'none'; b._raw = m.content; b._ck = ck0; b._ci = i; b.dataset.ci = i; $('.body', b).innerHTML = md(m.content); finishBot(b, m.meta, i === chat.length - 1, m.cont, m.star); lane.appendChild(b); }
+    else { const b = botEl(m.model || selId()); b.style.animation = 'none'; b._raw = m.content; b._ck = ck0; b._ci = i; b.dataset.ci = i; if (m.work) b.insertBefore(SZ.workSaved(m.work), $('.body', b)); $('.body', b).innerHTML = md(m.content); finishBot(b, m.meta, i === chat.length - 1, m.cont, m.star); lane.appendChild(b); }
   });
   if (thinking) lane.appendChild(thinkEl(thinking));
-  jump();
+  if (fresh){ msgsEl.scrollTop = 0; requestAnimationFrame(() => { msgsEl.scrollTop = 0; }); } else jump();
 }
 function showErr(err, o){ if (err && err.aborted) return; showErr2(err, o || {}); }
-function showErr2(err, o){ if (err && err.needLogin) setTimeout(openConnect, 250); if (err && err.switchTo) setTimeout(() => coinModal(err.switchTo === 'or' ? 'pu' : 'or'), 350); const e = document.createElement('div'); e.className = 'm err'; e.textContent = err.message; if (err && err.switchTo){ const b = document.createElement('button'); b.type = 'button'; b.className = 'btn sm swb'; b.textContent = 'Cambiar a ' + (err.switchTo === 'pu' ? 'Puter' : 'OpenRouter'); b.addEventListener('click', () => switchProv(err.switchTo)); e.appendChild(document.createElement('br')); e.appendChild(b); }
+function showErr2(err, o){
+  const t0 = $('.think-wrap', lane); if (t0) t0.remove();               /* nunca se queda «Pensando…» después de un error */
+  try{ SZ.telEv(err && err.limit ? 'limit' : 'error', String((err && (err.sz || err.status)) || '') + ' ' + String(err && err.message || '').slice(0, 90)); }catch(e2){}
+  /* a dónde puedes cambiar de verdad: a la IA de SynthZ si está activa, o a tu Puter si está conectado (nunca a algo que no tienes) */
+  let sw = err && err.switchTo; if (sw === 'or') sw = 'sz';
+  if (sw === 'sz' && (!szOn() || /^sz:/.test(selId()))) sw = puterOn() && !/^pu:/.test(selId()) ? 'pu' : null;
+  if (sw === 'pu' && !puterOn()) sw = szOn() && !/^sz:/.test(selId()) ? 'sz' : null;
+  if (err && err.sz === 'sz_limit' && puterOn()) sw = 'pu';
+  if (err && err.needLogin) setTimeout(openConnect, 250);
+  const e = document.createElement('div'); e.className = 'm err'; e.textContent = err.message;
+  if (sw){ const b = document.createElement('button'); b.type = 'button'; b.className = 'btn sm swb'; b.textContent = sw === 'pu' ? 'Cambiar a mi Puter' : 'Cambiar a la IA de SynthZ'; b.addEventListener('click', () => switchProv(sw)); e.appendChild(document.createElement('br')); e.appendChild(b); }
+  else if (err && err.sz === 'sz_limit' && !puterOn()){ const b = document.createElement('button'); b.type = 'button'; b.className = 'btn sm swb'; b.textContent = 'Conectar mi Puter (gratis)'; b.addEventListener('click', () => openConnect()); e.appendChild(document.createElement('br')); e.appendChild(b); }
+  err = Object.assign(err || {}, { switchTo:sw || null });
   const note = document.createElement('small'); note.className = 'errnote';
   note.textContent = 'SynthFlow no sumó SynXCoin\'s por este intento. ' + (o.regen ? 'La respuesta anterior sigue igual.' : 'Tu mensaje volvió a la caja de texto.') + (err && err.limit ? '' : ' Si reintentas, cuenta como un mensaje nuevo ante el proveedor.');
   e.appendChild(note);
@@ -2474,7 +2505,8 @@ function recommend(k){
 }
 function limitsOf(m){
   const L = [];
-  if (/^pu:/.test(m.id)) L.push('Usa tu crédito gratis de Puter (se renueva cada mes)');
+  if (/^sz:/.test(m.id)) L.push('Gratis con la IA de SynthZ: hasta ' + fmt(SZ.SZQ.limit || 20000) + ' SynXCoin\'s al día por persona');
+  else if (/^pu:/.test(m.id)) L.push('Usa tus créditos personales de Puter (se renuevan cada mes y no cuentan en tu tope)');
   else if (st().useTeam && !st().keys.openrouter) L.push('Usa el OpenRouter de tu equipo, con su límite diario');
   else L.push(m.free ? 'Gratis en OpenRouter: 20 mensajes por minuto y 50 al día' : 'Modelo de pago: gasta crédito de tu llave de OpenRouter');
   L.push(m.vision ? 'Acepta imágenes y PDF' : /^pu:/.test(m.id) ? 'El catálogo de Puter no dice si ve imágenes; los PDF y textos se leen como texto' : 'No ve imágenes; los PDF y textos se leen como texto');
@@ -2497,7 +2529,7 @@ function intentHtml(){
 function chooseIntent(k){
   const r = recommend(k);
   if (r.none){
-    st().intent = { k, id:selId(), none: r.none === 'conn' ? 'Conecta Puter u OpenRouter para que pueda recomendarte uno.' : 'No tengo datos suficientes en el catálogo para recomendarte un modelo para «' + INTENT_NAME[k] + '». Sigues con ' + info(selId()).name + '; puedes cambiarlo en la lista.' };
+    st().intent = { k, id:selId(), none: r.none === 'conn' ? 'Conecta tu Puter para que pueda recomendarte uno.' : 'No tengo datos suficientes en el catálogo para recomendarte un modelo para «' + INTENT_NAME[k] + '». Sigues con ' + info(selId()).name + '; puedes cambiarlo en la lista.' };
     save(); renderMsgs(); if (r.none === 'conn') openConnect(); return;
   }
   st().intent = { k, id:r.m.id };
@@ -2676,10 +2708,13 @@ async function send(){
   if (!text && !ready.length) return;
   if (Object.keys(busy).length){ toast('Espera a que termine de responder, o detenla con el botón ■.'); return; }
   if (files.some(f => f.state === 'load')){ toast('Espera a que terminen de cargar los archivos.'); return; }
-  if (trialOn && trialLeft() <= 0){ toast('Se acabaron tus mensajes de prueba. Conecta Puter (gratis) u OpenRouter para seguir.'); const tb = $('#trialBar'); tb.classList.remove('pulse'); void tb.offsetWidth; tb.classList.add('pulse'); return; }
+  if (trialOn && trialLeft() <= 0){ toast('Se acabaron tus mensajes de prueba. Sigue con la IA de SynthZ o conecta tu Puter.'); const tb = $('#trialBar'); tb.classList.remove('pulse'); void tb.offsetWidth; tb.classList.add('pulse'); return; }
   if (trialOn && files.length){ toast('La prueba guiada es solo de texto. Conecta una IA para enviar archivos.'); return; }
   if (!budgetOk()) return;
+  const th0 = ckey(), m0 = selId(), at0 = Date.now(), needed = needsConn();
   if (!(await ensureConn())) return;
+  /* si la ventanita de Puter tardó o cambiaste de chat o de IA mientras tanto, no envío solo: tu texto sigue en la caja */
+  if (needed && (ckey() !== th0 || selId() !== m0 || Date.now() - at0 > 15000 || inp.value.trim() !== text)){ toast('¡Listo! Revisa tu mensaje y toca enviar.'); inp.focus(); return; }
   if (ready.some(f => f.kind === 'img') && !info(selId()).vision){ toast('Este modelo no ve imágenes. Activa el filtro "Visión" y elige otro.'); openSide(); return; }
   const chat = chatArr(), sent = files.splice(0).filter(f => f.state === 'ok');
   inp.value = ''; autoGrow(); updateHint(); renderTray();
@@ -2695,6 +2730,9 @@ async function runSolo(onFail, o = {}){
   const mid = selId(), chat = chatArr(), g = gen, vis = info(mid).vision, saver = st().sx.saver;
   const sent = apiMsgs(chat, vis), naive = apiMsgs(chat, vis, { naive:true }), ck = hashStr(mid + '|' + saver + '|' + JSON.stringify(sent));
   const canCache = !sent.some(m => Array.isArray(m.content));
+  if (works[mid]) works[mid].stop();
+  works[mid] = SZ.workView({ model:info(mid).name, inTok:msgCost(sent) });
+  const W = works[mid];
   busy[mid] = 'think'; renderMsgs(); renderNow();
   let el = null, rv = null;
   const here = () => g === gen && mode === 'solo' && mid === selId();
@@ -2704,7 +2742,7 @@ async function runSolo(onFail, o = {}){
     const t = $('.think-wrap', lane); if (t) t.remove();
     const e = $('.empty', lane); if (e) e.remove();
     $$('.m.last', lane).forEach(x => x.classList.remove('last'));
-    el = botEl(mid); el.classList.add('writing'); lane.appendChild(el); stick = true;
+    el = botEl(mid); el.classList.add('writing'); el.insertBefore(W.el, $('.body', el)); lane.appendChild(el); stick = true;
     const body = $('.body', el), tk = $('.tk', el);
     rv = SZ.mkReveal(body, (s, n) => { tk.textContent = fmt(Math.ceil(s / 4)); el.style.setProperty('--p', n ? (s / n).toFixed(3) : 0); follow(); });
   };
@@ -2713,15 +2751,19 @@ async function runSolo(onFail, o = {}){
     if (r){ r = Object.assign({}, r, { ms:0, cached:true }); st().sx.saved += r.prompt + r.completion; st().sx.hits += 1; save(); mount(); if (rv) rv.push(r.text); }
     else {
       const ctl = new AbortController(); ctls.add(ctl);
-      try{ r = await SZ.askStream(OR, sent, { model:mid, maxTokens: saver ? 700 : 0, signal:ctl.signal }, txt => { mount(); if (rv) rv.push(txt); }); }finally{ ctls.delete(ctl); }
-      addUsage(SZ.provOf(mid), r.prompt, r.completion, true, { est:r.est, free:/:free$/.test(mid), rid:r.rid });
-      if (!r.aborted) SZ.markGood(mid);
+      try{ r = await SZ.askStream(OR, sent, { model:mid, maxTokens: saver ? 700 : 0, signal:ctl.signal, onReason:t => W.reason(t) }, txt => { mount(); W.write(txt); if (rv) rv.push(txt); }); }finally{ ctls.delete(ctl); }
+      addUsage(r.prov || SZ.provOf(mid), r.prompt, r.completion, true, { est:r.est, free:/:free$/.test(mid) || r.prov === 'synthz', rid:r.rid });
+      if (!r.aborted && !r.swapped) SZ.markGood(mid);
+      SZ.TEL.msgs++; SZ.TEL.ai = (r.prov || SZ.provOf(mid)).slice(0, 12);
       st().sx.saved += Math.max(0, msgCost(naive) - msgCost(sent)); save();
       if (canCache && !r.aborted) cachePut(ck, r);
     }
     if (g !== gen){ if (rv) rv.skip(); return; }
     const tail = r.aborted ? ' · detenido' : r.cut ? ' · se cortó la conexión' : r.finish === 'length' ? ' · llegó al límite de largo' : '';
-    const msg = { role:'assistant', content:r.text, meta:metaOf(r) + tail + (r.via ? ' · vía ' + r.via + ' (prueba de SynthZ)' : ''), model:mid, cont: !!(r.cut || r.finish === 'length') || undefined };
+    const who = r.swapped ? ' · IA de SynthZ' + (r.real ? ' (' + r.real + ')' : '') + ' · tus créditos de Puter se acabaron' : /^sz:/.test(mid) && r.real ? ' · ' + (mid === 'sz:auto' ? 'respondió ' : '') + r.real + ' · IA de SynthZ, gratis' : '';
+    W.write(r.text); W.finish({ ms:r.ms, real:r.real || (r.swapped ? 'IA de SynthZ' : '') });
+    const work = { ms:Math.round(r.ms || 0), words:W.state.words, real:r.real || '', steps:W.state.steps.map(([a, b]) => [Math.round(a), b]), reason:(r.reasoning || '').slice(0, 4000) || undefined };
+    const msg = { role:'assistant', content:r.text, work, meta:metaOf(r) + tail + who + (r.via ? ' · vía ' + r.via + ' (prueba de SynthZ)' : ''), model:mid, cont: !!(r.cut || r.finish === 'length') || undefined };
     chat.push(msg); touchThread(); save();
     if (here()){
       mount(); rv.push(r.text);
@@ -2732,10 +2774,11 @@ async function runSolo(onFail, o = {}){
     }
   }catch(err){
     if (rv) rv.skip();
+    W.finish({ error:!(err && err.aborted), aborted:err && err.aborted });
     if (el) el.remove();
     if (err && err.gone) hideBadModel(mid, err);
     if (g === gen && onFail) onFail(err);
-  }finally{ if (g === gen){ delete busy[mid]; renderNow(); } }
+  }finally{ if (g === gen){ delete busy[mid]; renderNow(); if (!el){ const t = $('.think-wrap', lane); if (t) t.remove(); } } }
 }
 /* una IA que falló por culpa del modelo (ya no existe o no tiene servidores) se esconde y se cambia por otra que sí funcione */
 function hideBadModel(id, err){
@@ -2754,6 +2797,14 @@ SZ.badReady.then(set => { if (!set.size || !cat.list.length) return; const befor
 async function regen(){
   const chat = chatArr();
   if (mode !== 'solo' || Object.keys(busy).length || !chat.length || chat[chat.length - 1].role !== 'assistant') return;
+  /* si la respuesta era favorita, se queda: la nueva llega debajo (tu pregunta se repite) */
+  if (chat[chat.length - 1].star){
+    const q = [...chat].reverse().find(m => m.role === 'user'); if (!q) return;
+    const again = { role:'user', content:q.content, again:true }; if (q.files) again.files = q.files;
+    chat.push(again); touchThread(); save(); renderMsgs(); toast('Tu favorita se queda guardada ★ Te traigo otra respuesta debajo.');
+    await runSolo(err => { const i = chat.lastIndexOf(again); if (i > -1) chat.splice(i, 1); save(); renderMsgs(); showErr(err, { regen:true }); }, { fresh:true });
+    return;
+  }
   const last = chat.pop(); save();
   await runSolo(err => { chat.push(last); save(); renderMsgs(); showErr(err, { regen:true }); }, { fresh:true });
 }
@@ -2782,7 +2833,7 @@ function newCmpRun(text){
 function cardEl(C, mid){
   const m = info(mid), card = document.createElement('div');
   C.n++; card._order = C.n; card._mid = mid;
-  card.className = 'cmp-card live'; card.style.setProperty('--c', vendorColor(m.vendor));
+  card.className = 'cmp-card live'; if (!C.blind) card.style.cssText = brandVars(m); else card.style.setProperty('--c', vendorColor(m.vendor));
   card.innerHTML = '<div class="who">' + (C.blind ? '<span class="av xs" style="--vc:#c9566c">?</span><b>Modelo ' + 'ABCDEFGH'[C.n - 1] + '</b>' : av(m, 'xs') + '<b>' + esc(m.name) + '</b>') + '<span class="stat">escribiendo…</span></div><div class="body"></div><div class="meta"></div>';
   if (!C.blind) card.dataset.mid = mid;
   C.cards.set(mid, card);
@@ -2801,7 +2852,8 @@ function cmpJob(mid, C){
   const m = info(mid), tok = {}, live = () => C.run === cmpRun && cmpLast === C;
   jobOwn[mid] = tok; busy[mid] = 'think'; renderNow();
   if (C.vote){ C.vote.remove(); C.vote = null; }
-  const pill = document.createElement('span'); pill.innerHTML = (C.blind ? '<span class="av xs" style="--vc:#c9566c">?</span>Una IA' : av(m, 'xs') + esc(m.name)) + ' está pensando <span class="dots"><i></i><i></i><i></i></span>'; C.wait.appendChild(pill);
+  const pill = document.createElement('span'); pill.style.cssText = C.blind ? '' : brandVars(m); pill.innerHTML = (C.blind ? '<span class="av xs" style="--vc:#c9566c">?</span>Una IA' : av(m, 'xs') + esc(m.name)) + ' está pensando <span class="pxw">' + SZ.pixelGrid() + '</span>'; C.wait.appendChild(pill);
+  const pxr = SZ.pixelRun($('.pxw', pill), C.n + Math.floor(Math.random() * 10));
   let card = null, rv = null;
   const mount = () => {
     if (card || !live()) return;
@@ -2812,14 +2864,15 @@ function cmpJob(mid, C){
   };
   const ck = hashStr('cmp|' + mid + '|' + C.text), hit = cacheGet(ck);
   const ctl = new AbortController(); ctls.add(ctl);
+  const stopPx = () => { try{ pxr.stop(); }catch(e){} };
   const p = hit ? Promise.resolve(Object.assign({}, hit, { ms:0, cached:true })) : SZ.askStream(OR, [{ role:'user', content:C.text }], { model:mid, signal:ctl.signal, maxTokens:800 }, txt => { if (!live()) return; mount(); if (rv) rv.push(txt); });
-  return p.finally(() => ctls.delete(ctl)).then(async r => {
+  return p.finally(() => { ctls.delete(ctl); stopPx(); }).then(async r => {
     if (r.cached){ st().sx.hits += 1; st().sx.saved += (r.prompt || 0) + (r.completion || 0); save(); }
-    else { addUsage(SZ.provOf(mid), r.prompt, r.completion, true, { est:r.est, free:/:free$/.test(mid), rid:r.rid }); if (!r.aborted){ cachePut(ck, r); SZ.markGood(mid); } }
+    else { addUsage(r.prov || SZ.provOf(mid), r.prompt, r.completion, true, { est:r.est, free:/:free$/.test(mid) || r.prov === 'synthz', rid:r.rid }); SZ.TEL.msgs++; if (!r.aborted){ cachePut(ck, r); if (!r.swapped) SZ.markGood(mid); } }
     if (!live()) return;
     mount(); if (!card) return;
     rv.push(r.text); await rv.end();
-    finishCard(C, card, r.text, metaOf(r) + (r.cached ? ' · de la caché, gratis' : '') + (r.aborted ? ' · detenido' : ''));
+    finishCard(C, card, r.text, metaOf(r) + (r.cached ? ' · de la caché, gratis' : '') + (r.aborted ? ' · detenido' : '') + (r.swapped ? ' · IA de SynthZ (tus créditos de Puter se acabaron)' : /^sz:/.test(mid) && r.real && mid === 'sz:auto' ? ' · respondió ' + r.real : ''));
     C.done.push({ card, mid, ms:r.ms, ttft:r.ttft || r.ms });
   }).catch(err => {
     if (err && err.gone){ SZ.markBad(mid); setCatalog(cat.list.filter(m => m.id !== mid), cat.t, cat.status); err.message = info(mid).name + ' no está funcionando ahora mismo: la escondí de la lista. Quítala y suma otra.'; }
@@ -3062,45 +3115,38 @@ function newChat(){
 document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('a[href="index.html"]'); if (!a || e.defaultPrevented || e.button || e.ctrlKey || e.metaKey || e.shiftKey) return; e.preventDefault(); SZ.portalBack('index.html'); });
 addEventListener('pageshow', e => { if (e.persisted){ root.classList.remove('bye'); const pp = document.getElementById('portal'); if (pp) pp.remove(); SZ.S.busy(false); } });
 SZ.hooks.usage = () => { renderFoot(); coinWatch(); };
+SZ.hooks.md = () => { if (!Object.keys(busy).length && mode === 'solo' && chatArr().length) renderMsgs(); };
 
 /* ---------- tutorial, mejor IA gratis y menú contextual ---------- */
-const APODEX_NAME = 'el mejor gratis de OpenRouter';
+const APODEX_NAME = 'SynthZ Auto (la IA de SynthZ elige sola)';
 const TOUR = [
-  { t:'Bienvenido a SynthFlow', p:'Chatea gratis con cientos de IAs de Puter y OpenRouter, cada una con su propio historial. Te lo muestro en un minuto.' },
-  { t:'Conecta tus credenciales ahora', p:'Conecta una o las dos. Puter no pide llave: un clic y listo. OpenRouter usa tu llave gratis (si no tienes, te enseño a sacarla).', x:'conn' },
-  { t:'¿Dónde quieres empezar?', p:'Elige un proveedor y te dejo en su pestaña con su mejor IA. Si no eliges ninguno, empiezas con ' + APODEX_NAME + '.', x:'pick' },
-  { t:'Tus SynXCoin\'s', p:'Cada respuesta gasta SynXCoin\'s (1 SynXCoin = 1 token). Abajo a la izquierda ves los de hoy, y el botón Ahorro te ayuda a gastar menos.' },
+  { t:'Bienvenido a SynthFlow', p:'Chatea gratis con muchas IA, cada una con su propio historial. La IA de SynthZ ya viene activada para ti: no necesitas llaves, tarjetas ni configurar nada.' },
+  { t:'¿Quieres más? Tu Puter (opcional)', p:'Puter es una cuenta gratis que te da créditos personales cada mes para modelos como GPT, Claude o Gemini. Se conecta con un clic y no cuenta en tu tope diario. Si se te acaban, sigues con la IA de SynthZ sin hacer nada.', x:'conn' },
+  { t:'¿Dónde quieres empezar?', p:'Elige y te dejo en su pestaña con su mejor IA. Si no eliges, empiezas con ' + APODEX_NAME + '.', x:'pick' },
+  { t:'Tus SynXCoin\'s', p:'Cada respuesta gasta SynXCoin\'s (1 SynXCoin = 1 token). Con la IA de SynthZ tienes hasta 20.000 al día gratis; abajo ves cuántos llevas y el botón Ahorro te ayuda a gastar menos.' },
   { t:'Más trucos', p:'Adjunta imágenes, PDF o código con el clip. En "Comparar" le preguntas lo mismo a hasta 4 IAs. El botón «?» de arriba abre la guía rápida cuando quieras.' },
   { t:'Todo listo', p:'', x:'done' }
 ];
 const TCOL = ['#8fb0ff', '#7fd6b8', '#c9566c', '#f2b36b', '#ff8f7a', '#c9566c'];
 let tourI = 0, tourEl = null, tourPick = null;
-function pickTarget(){ const m = tourPick === 'pu' ? bestOf('pu') : tourPick === 'or' ? bestOf('or') : null; return m ? m.id : APODEX; }
+function pickTarget(){ const m = tourPick === 'pu' ? bestOf('pu') : tourPick === 'sz' ? bestOf('sz') : null; return m ? m.id : APODEX; }
 function tourBox(box, kind){
   if (kind === 'conn'){
-    const hasP = puterOn(), hasK = !!st().keys.openrouter;
-    box.innerHTML = '<div class="tconn"><div class="trow"><b><i class="pdot' + (hasP ? ' on' : '') + '"></i> ' + SZ.puterLogo() + ' Puter</b><span>Sin llave · un clic</span>' + (hasP ? '<i class="ok">✓ Conectada</i>' : '<button class="btn sm" data-tpu type="button">Conectar</button><button class="lnk" data-tpt type="button">Sin cuenta de Puter</button>') + '</div>'
-      + '<div class="trow"><b><i class="pdot' + (hasK ? ' on' : '') + '"></i> OpenRouter</b>' + (hasK ? '<span>Llave guardada</span><i class="ok">✓ Conectada</i>' : '<input type="text" data-sec="1" data-tkey placeholder="Pega tu llave (sk-or-…)" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other" spellcheck="false"><button class="btn sm" data-tor type="button">Conectar</button>') + '</div>'
-      + '<a class="lnk" href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer">Conseguir llave gratis de OpenRouter</a></div>';
+    const hasP = puterOn(), on = szOn();
+    box.innerHTML = '<div class="tconn"><div class="trow"><b><i class="pdot' + (on ? ' on' : '') + '"></i> <span class="sz-logo" aria-hidden="true"></span> IA de SynthZ</b><span>' + (on ? 'Activada · gratis' : 'Descansando un momento') + '</span>' + (on ? '<i class="ok">✓ Lista</i>' : '') + '</div>'
+      + '<div class="trow"><b><i class="pdot' + (hasP ? ' on' : '') + '"></i> ' + SZ.puterLogo() + ' Puter</b><span>Opcional · un clic</span>' + (hasP ? '<i class="ok">✓ Conectada</i>' : '<button class="btn sm" data-tpu type="button">Conectar</button><button class="lnk" data-tpt type="button">Sin cuenta de Puter</button>') + '</div></div>';
     const pu = $('[data-tpu]', box);
     if (pu) pu.addEventListener('click', () => { pu.textContent = 'Conectando…'; puterSignIn().then(() => { afterConnect('¡Puter conectado!'); tourBox(box, 'conn'); }).catch(e => { pu.textContent = 'Conectar'; if (!(e && e.shown)) toast('No se completó el inicio de sesión de Puter.'); }); });
     const pt = $('[data-tpt]', box);
     if (pt) pt.addEventListener('click', () => { pt.textContent = '…'; puterSignIn({ attempt_temp_user_creation:true }).then(() => { afterConnect('¡Puter conectado!'); tourBox(box, 'conn'); }).catch(e => { pt.textContent = 'Sin cuenta de Puter'; if (!(e && e.shown)) toast('No se completó el inicio de sesión de Puter.'); }); });
-    const or = $('[data-tor]', box);
-    if (or) or.addEventListener('click', async () => {
-      const k = $('[data-tkey]', box).value.trim(); if (!k){ toast('Pega tu llave de OpenRouter.'); return; }
-      const sel = st().model.openrouter; st().keys.openrouter = k; or.textContent = 'Verificando…';
-      try{ await SZ.verify(OR); st().model.openrouter = sel; save(); afterConnect('OpenRouter conectada.'); tourBox(box, 'conn'); }
-      catch(err){ delete st().keys.openrouter; st().model.openrouter = sel; save(); or.textContent = 'Conectar'; toast((err && err.message) || 'No pude verificar la llave.'); }
-    });
   } else if (kind === 'pick'){
-    const bp = bestOf('pu'), bo = bestOf('or');
+    const bp = bestOf('pu'), bo = bestOf('sz');
     const card = (k, title, sub, model) => '<button type="button" class="tpick' + (tourPick === k ? ' on' : '') + '" data-k="' + k + '"><b>' + title + '</b><span>' + sub + '</span><em>' + esc(model) + '</em></button>';
-    box.innerHTML = '<div class="tpicks">' + card('pu', 'Puter', 'Sin llave', bp ? bp.name : 'GPT 5.6 Luna') + card('or', 'OpenRouter', 'Con tu llave', bo ? bo.name : APODEX_NAME) + card('none', 'Ninguno', 'Por defecto', APODEX_NAME) + '</div>';
+    box.innerHTML = '<div class="tpicks">' + card('sz', 'IA de SynthZ', 'Gratis · ya activada', bo ? bo.name : 'SynthZ Auto') + card('pu', 'Puter', 'Tus créditos · un clic', bp ? bp.name : 'GPT 5.6 Luna') + card('none', 'Ninguno', 'Por defecto', 'SynthZ Auto') + '</div>';
     $$('.tpick', box).forEach(b => b.addEventListener('click', () => { tourPick = b.dataset.k; tourBox(box, 'pick'); }));
   } else if (kind === 'done'){
-    const id = pickTarget(), where = tourPick === 'pu' ? 'Puter' : tourPick === 'or' ? 'OpenRouter' : 'Todos';
-    box.innerHTML = '<div class="tsum">Empiezas con <b>' + esc(info(id).name) + '</b> en la pestaña <b>' + where + '</b>.' + (connected(id) ? '' : ' Te pediré conectar ' + (/^pu:/.test(id) ? 'Puter' : 'OpenRouter') + ' cuando escribas tu primer mensaje.') + '</div>';
+    const id = pickTarget(), where = tourPick === 'pu' ? 'Puter' : tourPick === 'sz' ? 'SynthZ' : 'Todos';
+    box.innerHTML = '<div class="tsum">Empiezas con <b>' + esc(info(id).name) + '</b> en la pestaña <b>' + where + '</b>.' + (connected(id) ? '' : /^pu:/.test(id) ? ' Te pediré conectar Puter cuando escribas tu primer mensaje.' : '') + '</div>';
   } else box.innerHTML = '';
 }
 function tourStep(anim, dir){
@@ -3109,14 +3155,14 @@ function tourStep(anim, dir){
     $('h3', b).textContent = d.t; $('p', b).textContent = d.p; $('p', b).style.display = d.p ? '' : 'none';
     tourBox($('.tx', b), d.x);
     $('.tn', c).textContent = '0' + (tourI + 1) + ' / 0' + TOUR.length;
-    $('#tNext').textContent = last ? 'Empezar' : d.x === 'conn' ? (puterOn() || st().keys.openrouter ? 'Siguiente' : 'Ahora no, siguiente') : 'Siguiente';
+    $('#tNext').textContent = last ? 'Empezar' : d.x === 'conn' ? (puterOn() ? 'Siguiente' : 'Ahora no, siguiente') : 'Siguiente';
     $('#tBack').style.visibility = tourI ? 'visible' : 'hidden';
     tourEl.style.setProperty('--tc', TCOL[tourI]); $$('.tdots i', c).forEach((x, i) => x.classList.toggle('on', i === tourI)); $('#tSkip').style.visibility = last ? 'hidden' : 'visible';
   };
   if (!anim){ set(); return; }
   SZ.swapDir(b, dir || 1, set);
 }
-function openHelp(){ SZ.helpGuide({ extra:[['Ver la Guía Asistida', () => runGuide()], ['Conectar Puter u OpenRouter', openTour], ['Abrir mis SynXCoin\'s', () => coinModal('panel')]] }); }
+function openHelp(){ SZ.helpGuide({ extra:[['Ver la Guía Asistida', () => runGuide()], ['Conectar mi Puter (opcional)', openTour], ['Abrir mis SynXCoin\'s', () => coinModal('panel')]] }); }
 $('#helpBtn').addEventListener('click', () => openGuide());
 $('#guideTop').addEventListener('click', () => openGuide());
 function openTour(){
@@ -3139,7 +3185,7 @@ function closeTour(go){
   if (mode !== 'solo') setMode('solo');
   const id = pickTarget();
   st().pinned = id; pickModel(id, null);
-  ui.prov = tourPick === 'pu' ? 'pu' : tourPick === 'or' ? 'or' : 'all'; saveUI();
+  ui.prov = tourPick === 'pu' ? 'pu' : tourPick === 'sz' ? 'sz' : 'all'; saveUI();
   $$('#provSeg button').forEach(x => x.setAttribute('aria-selected', String(x.dataset.p === ui.prov))); placePill($('#provSeg')); renderList({ animate:true });
   toast('Empiezas con ' + info(id).name + '.');
   burst(innerWidth / 2, innerHeight / 2, ['#8fb0ff', '#c9566c', '#ff8f7a', '#7fd6b8'], 22);
@@ -3210,7 +3256,7 @@ function gPanel(html, cls, say, mood, dir){
 }
 /* la barra de la guía se aparta si tapa lo que SynthonIA está señalando */
 function gDodge(t){ const h = $('#szgHud'); if (!h || !t || !t.getBoundingClientRect) return; const r = t.getBoundingClientRect(); h.classList.toggle('low', r.top < 96); }
-function gPanelClose(dir){ const p = $('#szgPanel'); if (!p) return; p.id = ''; p.classList.remove('on', 'rev'); p.classList.add('bye'); if (dir < 0) p.classList.add('back'); setTimeout(() => p.remove(), 520); }
+function gPanelClose(dir){ if (H.wander) H.wander(null); const p = $('#szgPanel'); if (!p) return; p.id = ''; p.classList.remove('on', 'rev'); p.classList.add('bye'); if (dir < 0) p.classList.add('back'); setTimeout(() => p.remove(), 520); }
 /* lo primero que se vea de una lista de opciones (la pantalla cambia entre el inicio limpio y el chat) */
 const gAny = (...L) => { for (const x of L){ const n = gT(x, x); if (n) return n; } return null; };
 const gT = (desk, mob) => { const s = isMobile() ? mob : desk; const n = s && $(s); return n && n.getClientRects().length ? n : null; };
@@ -3238,7 +3284,8 @@ async function runGuide(){
     H.show({ x:innerWidth - 60, y:innerHeight - 70 });
     await gWait(80);
     await H.moveTo({ x:innerWidth / 2, y:innerHeight * .26 }, { shape:'arrow' });
-    let r = await H.talk('¡Hola! Soy SynthonIA. Te enseño SynthFlow en unos 2 minutos: eliges tus temas, te muestro las IA que mejor los hacen, comparamos 2 y pruebas con 5 mensajes gratis.', { mood:'feliz', buttons:[{ label:'¡Vamos!' }, { label:'Saltar', ghost:true }] });
+    H.wave(2);
+    let r = await H.talk('¡Hola! Soy SynthonIA. Te enseño SynthFlow en unos 2 minutos: eliges tus temas, te muestro las IA que mejor los hacen, comparamos 2 y chateas de verdad con la IA de SynthZ, gratis.', { mood:'feliz', buttons:[{ label:'¡Vamos!' }, { label:'Saltar', ghost:true }] });
     if (r === 1){ endGuide(false); return; }
     gNeed();
 
@@ -3260,7 +3307,8 @@ async function runGuide(){
     const go1 = new Promise(res => { $('[data-gnext]', P).addEventListener('click', res, { once:true }); const iv = setInterval(() => { if (!G || G.skip){ clearInterval(iv); res(); } }, 300); });
     await gWait(450);
     const firstChip = $('[data-gt]', P);
-    if (firstChip) H.moveTo(firstChip, { shape:'point' });
+    /* señala un momento y luego flota por fuera del panel: no se queda tapando los temas */
+    if (firstChip) H.moveTo(firstChip, { shape:'point' }).then(() => SZ.sleepRaw(1100)).then(() => { if (G && !G.skip && P.isConnected) H.wander(P); });
     await go1;
     gNeed();
     G.topics = $$('[data-gt][aria-pressed="true"]', P).map(b => b.dataset.gt);
@@ -3273,11 +3321,11 @@ async function runGuide(){
       const T = TOPIC[k], L = recommendTop(k, 3);
       return '<div class="gp-row"><b><span aria-hidden="true">' + T.e + '</span> ' + esc(T.l) + '</b><div class="gp-ias">' + (L.length ? L.map((m, i) => '<span class="gp-ia" style="--vc:' + vendorColor(m.vendor) + ';--i:' + i + '">' + av(m, 'xs') + '<span><em>' + esc(m.name) + '</em><small>' + esc(payOf(m.id)[2]) + '</small></span></span>').join('') : '<span class="gp-ia none">La lista de IA está cargando; aparecerá en «Temas».</span>') + '</div></div>';
     }).join('');
-    const P2 = gPanel('<h3>Tus IA recomendadas</h3><p>En el mundo hay más de mil IA y cada una es experta en algo. SynthFlow te conecta gratis con cientos (de Puter y OpenRouter) y puedes usar varias: una para escribir, otra para código…</p>' + rows + '<div class="gp-act"><button type="button" class="lnk gp-back" data-gback>← Cambiar temas</button><span style="flex:1"></span><button type="button" class="btn sm flow" data-gnext>Ver dónde está todo →</button></div>', 'recs', 'Estas son las mejores para lo que te gusta. Cada una dice quién paga: tu Puter, tu llave o la prueba de SynthZ.', 'guino', 1);
+    const P2 = gPanel('<h3>Tus IA recomendadas</h3><p>En el mundo hay más de mil IA y cada una es experta en algo. La IA de SynthZ ya trae varias gratis para todos (y si conectas tu Puter, muchas más) y puedes usar varias: una para escribir, otra para código…</p>' + rows + '<div class="gp-act"><button type="button" class="lnk gp-back" data-gback>← Cambiar temas</button><span style="flex:1"></span><button type="button" class="btn sm flow" data-gnext>Ver dónde está todo →</button></div>', 'recs', 'Estas son las mejores para lo que te gusta. Cada una dice quién pone el consumo: la IA de SynthZ (gratis) o tu Puter.', 'guino', 1);
     const go2 = new Promise(res => { $('[data-gnext]', P2).addEventListener('click', () => res('next'), { once:true }); $('[data-gback]', P2).addEventListener('click', () => res('back'), { once:true }); const iv = setInterval(() => { if (!G || G.skip){ clearInterval(iv); res('next'); } }, 300); });
     await gWait(500);
     const ia1 = $('.gp-ia', P2);
-    if (ia1) H.moveTo(ia1, { shape:'point' });
+    if (ia1) H.moveTo(ia1, { shape:'point' }).then(() => SZ.sleepRaw(1300)).then(() => { if (G && !G.skip && P2.isConnected) H.wander(P2); });
     const how = await go2;
     gNeed();
     if (how === 'back'){ gdir = -1; continue; }
@@ -3290,7 +3338,7 @@ async function runGuide(){
     await gWait(350);
     await gPoint(gAny('#cPick', '#curChip'), 'Aquí eliges con qué IA hablas. Tócalo y se abre su ventana, con temas, buscador y filtros.');
     await gPoint(gAny('#cCmp', '#pickRow [data-add]'), 'Aquí sumas otra IA: hasta 4 a la vez. Todas responden la misma pregunta y las comparas. Ojo: cada una gasta lo suyo.');
-    await gPoint(gAny('#payPill', '#payL', '#payM'), 'Aquí siempre ves quién paga lo que escribes: la prueba de SynthZ, tu Puter o tu propia llave.', { pad:6 });
+    await gPoint(gAny('#payPill', '#payL', '#payM'), 'Aquí siempre ves quién pone el consumo de lo que escribes: la IA de SynthZ (gratis, hasta 20.000 SynXCoin\'s al día) o tus créditos de Puter.', { pad:6 });
     await gPoint(gT('#rail [data-r="chats"]', '#tabbar [data-tab="chats"]'), 'Tus chats y tus mensajes favoritos quedan aquí, en cualquier dispositivo si entras con tu cuenta.', { side:true });
     await gPoint(gT('.tchip[data-topic]', '.tchip[data-topic]'), 'Toca un tema cuando quieras y te recomiendo IA expertas en eso.');
     await gPoint(gT('#guideTop', '#guideTop') || gT('#helpBtn', '#helpBtn'), 'Y si te pierdes, la Guía siempre está aquí. Puedes verla Asistida o en Lectura.', { mood:'guino' });
@@ -3322,15 +3370,17 @@ async function runGuide(){
     await new Promise(res => { nb.addEventListener('click', res, { once:true }); const iv = setInterval(() => { if (!G || G.skip){ clearInterval(iv); res(); } }, 300); });
     gNeed(); gPanelClose(); H.quiet();
 
-    /* 5 · prueba real con 5 mensajes que paga SynthZ (solo para aprender) */
-    gHud(5, 'Tu prueba');
-    let ok = trialOn && trialLeft() > 0;
+    /* 5 · chatear de verdad: la IA de SynthZ ya está activada (si no lo está, la prueba de 5 mensajes de la guía) */
+    gHud(5, 'Tu primer chat');
+    const useSz = szOn() && !trialOn;
+    let ok = useSz || (trialOn && trialLeft() > 0);
+    if (useSz){ const pk = recommendTop(k0, 8).find(m => /^sz:/.test(m.id)) || info(APODEX); if (selId() !== pk.id) pickModel(pk.id, null); }
     if (!ok){ H.talk('Preparando tus 5 mensajes de prueba…', { mood:'pensando' }); ok = await enterTrial(); }
     gNeed();
     if (!ok){
-      await H.talk(connected(selId()) ? 'La prueba de SynthZ no está disponible ahora, pero ya tienes una IA conectada: practica con ella.' : 'La prueba de SynthZ no está disponible ahora mismo. Al final te muestro cómo conectar Puter, que es gratis y con un clic.', { mood:'disculpa', buttons:[{ label:'Siguiente' }] });
+      await H.talk(connected(selId()) ? 'La prueba no está disponible ahora, pero ya tienes una IA conectada: practica con ella.' : 'La IA de SynthZ está descansando un momento. Ahora te muestro tu Puter, que es gratis y con un clic.', { mood:'disculpa', buttons:[{ label:'Siguiente' }] });
     } else {
-      await H.talk('¡Listo! Tienes ' + trialLeft() + ' mensajes de prueba gratis, solo para aprender. Te escribo uno de ejemplo sobre «' + TOPIC[k0].l + '».', { mood:'celebrando', auto:2600, buttons:[{ label:'Siguiente' }] });
+      await H.talk(useSz ? 'La IA de SynthZ ya está activada para ti: es gratis, hasta ' + fmt(SZ.SZQ.limit || 20000) + ' SynXCoin\'s al día. Te escribo un mensaje de ejemplo sobre «' + TOPIC[k0].l + '».' : '¡Listo! Tienes ' + trialLeft() + ' mensajes de prueba gratis, solo para aprender. Te escribo uno de ejemplo sobre «' + TOPIC[k0].l + '».', { mood:'celebrando', auto:3200, buttons:[{ label:'Siguiente' }] });
       gNeed(); H.quiet();
       const myN = $$('.m.user', lane).length, errN = $$('.m.err', lane).length, left0 = trialLeft();
       await H.type(inp, GUIDE_PROMPTS[k0] || q); autoGrow(); updateHint(); gNeed();
@@ -3342,31 +3392,33 @@ async function runGuide(){
         H.talk('¡Eso! Mira cómo llega la respuesta en vivo…', { mood:'pensando' });
         await new Promise(res => { const t0 = Date.now(); const iv = setInterval(() => { if (!G || G.skip || (!Object.keys(busy).length && Date.now() - t0 > 600) || Date.now() - t0 > 60000){ clearInterval(iv); res(); } }, 250); });
         gNeed();
-        const last = $$('.m.bot', lane).pop(), failed = $$('.m.err', lane).length > errN || trialLeft() >= left0;
+        const last = $$('.m.bot', lane).pop(), failed = $$('.m.err', lane).length > errN || (!useSz && trialLeft() >= left0);
         if (failed){
           const em = $$('.m.err', lane).pop();
           if (em) await H.moveTo(em, { shape:'arrow', fx:.1, fy:.2 });
-          await H.talk('Uy, esta vez la prueba no respondió (no gastaste nada). Al final te muestro cómo conectar Puter, que es gratis, para seguir practicando.', { near:em || inp, mood:'disculpa', buttons:[{ label:'Siguiente' }], auto:9000 });
+          await H.talk('Uy, esta vez no respondió (no gastaste nada). Ahora te muestro tu Puter, que es gratis, para tener siempre otra opción.', { near:em || inp, mood:'disculpa', buttons:[{ label:'Siguiente' }], auto:9000 });
         } else {
         if (last) await H.moveTo(last, { shape:'arrow', fx:.15, fy:.2 });
         SZ.SND.done();
-        await H.talk('¡Lo lograste! Te quedan ' + trialLeft() + ' mensajes de prueba para seguir practicando. Abajo dice quién la paga: SynthZ.', { near:last || inp, mood:'celebrando', buttons:[{ label:'Siguiente' }], auto:9000 });
+        await H.talk(useSz ? '¡Lo lograste! Abajo dice quién pone el consumo: la IA de SynthZ, gratis. Puedes seguir chateando cuanto quieras (hasta tu tope del día).' : '¡Lo lograste! Te quedan ' + trialLeft() + ' mensajes de prueba para seguir practicando. Abajo dice quién la paga: SynthZ.', { near:last || inp, mood:'celebrando', buttons:[{ label:'Siguiente' }], auto:9000 });
         }
       } else await H.talk('Puedes enviarlo después: el mensaje te espera en la caja.', { mood:'guino', buttons:[{ label:'Siguiente' }] });
     }
     gNeed();
 
-    /* 6 · conectar (solo en SynthFlow, después de la guía) */
-    gHud(6, 'Conectar');
-    if (puterOn() && orOn()){
-      await H.talk('Ya tienes Puter y OpenRouter conectados: puedes usar cientos de IA sin límite de prueba.', { mood:'encantada', buttons:[{ label:'Terminar' }] });
-    } else {
-      await H.talk('Para seguir sin límite, conecta tus propias IA. Puter es gratis y con un clic; OpenRouter usa una llave gratis.', { mood:'feliz', buttons:[{ label:'Mostrarme' }, { label:'Después', ghost:true }] }).then(async r2 => {
-        gNeed(); if (r2 === 1) return;
-        H.quiet(); openConnect(); await gWait(650);
-        const b = $('#cPU') || $('#cKey');
-        if (b){ await H.moveTo(b, { shape:'point' }); await H.talk(b.id === 'cPU' ? 'Toca aquí para conectar Puter. Se abre una ventanita para entrar y listo.' : 'Pega aquí tu llave de OpenRouter y toca «Conectar».', { near:b, mood:'senalando', buttons:[{ label:'Terminar guía' }] }); }
-      });
+    /* 6 · ¿qué es Puter? (opcional): más IA con tus créditos personales */
+    gHud(6, 'Tu Puter');
+    H.quiet();
+    const P6 = gPanel('<h3>¿Qué es Puter?</h3><div class="gp-pu"><div class="gp-pc" style="--i:0"><span class="gp-pi">' + SZ.puterLogo() + '</span><b>Una cuenta gratis</b><small>Entras con un clic en una ventanita. Sin tarjetas ni llaves.</small></div><div class="gp-pc" style="--i:1"><span class="gp-pi">✨</span><b>Tus créditos personales</b><small>Cada mes te da créditos para modelos como GPT, Claude o Gemini. No cuentan en tu tope de SynthZ.</small></div><div class="gp-pc" style="--i:2"><span class="gp-pi"><span class="sz-logo" aria-hidden="true"></span></span><b>Nunca te quedas sin IA</b><small>Si se te acaban, sigues solo con la IA de SynthZ y te aviso: «Se te acabaron tus créditos personales».</small></div></div><div class="gp-act"><button type="button" class="lnk" data-glater>Después</button><span style="flex:1"></span>' + (puterOn() ? '<span class="gp-ok">✓ Ya tienes tu Puter conectado</span><button type="button" class="btn sm flow" data-gnext>Siguiente →</button>' : '<button type="button" class="btn sm flow" data-gnext>Conectar mi Puter</button>') + '</div>', 'puter', puterOn() ? 'Ya tienes tu Puter conectado: puedes usar sus IA cuando quieras, además de la IA de SynthZ.' : 'La IA de SynthZ ya te funciona. Si algún día quieres más, conecta tu Puter: es opcional.', puterOn() ? 'encantada' : 'guino', 1);
+    await gWait(420);
+    H.wander && H.wander(P6);
+    const r6 = await new Promise(res => { $('[data-gnext]', P6).addEventListener('click', () => res('go'), { once:true }); $('[data-glater]', P6).addEventListener('click', () => res('later'), { once:true }); const iv = setInterval(() => { if (!G || G.skip){ clearInterval(iv); res('later'); } }, 300); });
+    H.wander && H.wander(null);
+    gNeed(); gPanelClose(); H.quiet();
+    if (r6 === 'go' && !puterOn()){
+      openConnect(); await gWait(650);
+      const b = $('#cPU');
+      if (b){ await H.moveTo(b, { shape:'point' }); await H.talk('Toca aquí para conectar Puter. Se abre una ventanita para entrar y listo.', { near:b, mood:'senalando', buttons:[{ label:'Siguiente' }] }); }
     }
     gNeed();
 
@@ -3511,11 +3563,10 @@ SZ.ctxMenu(() => [
   { label:'Guía (Asistida o Lectura)', fn:() => openGuide() },
   { label:'Guía rápida (leer)', fn:() => openHelp() },
   { label:'Ver tutorial de conexión', fn:openTour },
-  { label:'Conectar IA (OpenRouter / Puter)', fn:() => openConnect() },
+  { label:'Mi IA (SynthZ y Puter)', fn:() => openConnect() },
   { label:'Mis SynXCoin\'s', fn:() => coinModal('panel') },
   { label:'Mi cuenta', fn:() => accModal() },
   { label:'Elegir mis IA (encuesta)', fn:() => SZ.surveyModal(ok => { if (ok){ forMeK = ''; applySurvey(true); renderList({ keep:true }); } }) },
-  { label:'Desbloquear OpenRouter', fn:() => openOrGuide() },
   { label:'Mis chats', fn:() => thOpen() },
   { label:'Chat nuevo', fn:() => newChat() },
   { label:'Mi ranking (batalla ciega)', fn:() => rankModal() },
@@ -3523,13 +3574,17 @@ SZ.ctxMenu(() => [
   { label:'Ayuda con bloqueadores', fn:() => showBlockHelp(window.__puterBlocked ? 'script' : 'popup') },
   { label:'Volver a SynthZ', fn:() => $('#backLink').click() }]);
 
-/* ---------- conexión: OpenRouter y/o Puter, sin salir del chat ---------- */
+/* ---------- conexión: la IA de SynthZ (ya activada para todos) y, si quieres más, tu Puter ---------- */
 let connEl = null;
 function puterOn(){ return !!(window.puter && puter.auth && puter.auth.isSignedIn()); }
 function orOn(){ return !!(st().keys.openrouter || (st().useTeam && SZ.ACC.ready)); }
 function openOrGuide(){ SZ.orGuide(() => { afterConnect('¡OpenRouter desbloqueado!'); paintProv(); renderList({ keep:true }); updateHint(); }); }
 function gqOn(){ return !!st().keys.groq; }
-function connected(id){ return /^tr:/.test(String(id)) ? trialOn && trialLeft() > 0 : /^pu:/.test(String(id)) ? puterOn() : /^gq:/.test(String(id)) ? gqOn() : orOn(); }
+/* la IA de SynthZ: activada salvo que el servidor diga que no tiene llaves (mientras carga, se asume que sí) */
+function szOn(){ return SZ.SZQ.on !== false; }
+function connected(id){ return /^tr:/.test(String(id)) ? trialOn && trialLeft() > 0 : /^sz:/.test(String(id)) ? szOn() : /^pu:/.test(String(id)) ? puterOn() : /^gq:/.test(String(id)) ? gqOn() : orOn(); }
+let szqT = 0; addEventListener('synthz-szq', () => { clearTimeout(szqT); szqT = setTimeout(() => { try{ paintPay(); paintProv(); paintLock(); renderFoot(); if (!Object.keys(busy).length) renderTop(); }catch(e){} }, 120); });
+addEventListener('synthz-puter-out', () => { try{ paintPay(); }catch(e){} });
 const trialLeft = () => { const t = SZ.trialGet(); return t && t.token ? +t.left || 0 : 0; };
 /* entrar y salir de la prueba guiada */
 async function enterTrial(){
@@ -3547,18 +3602,18 @@ function renderTrialBar(){
   if (!trialOn || trialLeft() > 0){ bar.hidden = true; return; }
   const max = (SZ.trialGet() || {}).max || 5;
   bar.hidden = false;
-  bar.innerHTML = '<span class="tb-ico" aria-hidden="true">✨</span><span><b>Se acabaron tus ' + max + ' mensajes de prueba.</b> Para seguir, conecta Puter (gratis, con un clic) u OpenRouter.</span><button type="button" class="btn sm" data-tx="conn">Conectar</button><button type="button" class="lnk" data-tx="exit">Salir</button>';
+  bar.innerHTML = '<span class="tb-ico" aria-hidden="true">✨</span><span><b>Se acabaron tus ' + max + ' mensajes de prueba.</b> Para seguir, conecta tu Puter (gratis, con un clic).</span><button type="button" class="btn sm" data-tx="conn">Conectar</button><button type="button" class="lnk" data-tx="exit">Salir</button>';
 }
 $('#trialBar').addEventListener('click', e => { const b = e.target.closest('[data-tx]'); if (!b) return; if (b.dataset.tx === 'conn'){ exitTrial(true); openConnect(); } else exitTrial(); });
 addEventListener('synthz-trial', () => { if (trialOn){ renderTrialBar(); renderNow(); } });
 window.SynthFlowTrial = { enter:enterTrial, exit:exitTrial, on:() => trialOn };
 
-/* ---------- bloqueo: si no hay Puter ni OpenRouter (ni prueba activa), no se escribe ni se ven IA ---------- */
+/* ---------- bloqueo: solo si la IA de SynthZ está apagada y no hay Puter (ni prueba activa) ---------- */
 let lockReady = !!(window.__puterOK || window.__puterBlocked), lockWas = null, lockAt = 0;
 addEventListener('puter-ready', () => { lockReady = true; paintLock(); });
 addEventListener('puter-blocked', () => { lockReady = true; paintLock(); });
 setTimeout(() => { lockReady = true; paintLock(); }, 2600);
-function isLocked(){ return lockReady && !G && !(trialOn && trialLeft() > 0) && !puterOn() && !orOn() && !gqOn(); }
+function isLocked(){ return lockReady && !G && !szOn() && !(trialOn && trialLeft() > 0) && !puterOn() && !orOn() && !gqOn(); }
 function paintLock(){
   const L = isLocked();
   if (L === lockWas) return;
@@ -3566,11 +3621,13 @@ function paintLock(){
   document.body.classList.toggle('locked', L);
   const c = $('#lockCard'); if (c) c.hidden = !L;
   inp.readOnly = L; inp.setAttribute('aria-disabled', String(L));
-  inp.placeholder = L ? (isMobile() ? 'Conecta una IA…' : 'Conecta una IA para escribir…') : 'Escribe tu mensaje…';
+  inp.placeholder = L ? (isMobile() ? 'Conecta tu Puter…' : 'Conecta tu Puter para escribir…') : 'Escribe tu mensaje…';
+  SZ.TEL.locked = L;
   if (L){
     const done = trialOn && trialLeft() <= 0;
-    $('#lockT').textContent = done ? 'Se acabaron tus mensajes de prueba' : 'Primero, conecta una IA';
-    $('#lockS').textContent = done ? 'Para seguir chateando conecta tu cuenta de Puter (gratis, con un clic) o tu llave de OpenRouter.' : 'Para escribir necesitas tu cuenta de Puter (gratis, con un clic) o tu llave de OpenRouter o de Groq. Así siempre sabes quién paga.';
+    $('#lockT').textContent = done ? 'Se acabaron tus mensajes de prueba' : 'La IA de SynthZ está descansando';
+    $('#lockS').textContent = done ? 'Para seguir chateando conecta tu cuenta de Puter (gratis, con un clic).' : 'Vuelve en un momento. Mientras tanto, conecta tu Puter (gratis, con un clic) y sigue chateando.';
+    SZ.telEv('noai', 'sin IA: la de SynthZ está apagada y no hay Puter');
     if (side.classList.contains('open')) closeSide();
   } else { wHide(); }
   try{ renderTop(); }catch(e){}
@@ -3587,8 +3644,7 @@ $('#lockCard').addEventListener('click', async e => {
   if (k === 'pu'){
     try{ await puterSignIn(); afterConnect('¡Puter conectado!'); paintLock(); }
     catch(err){ if (!(err && err.shown)) toast('No se completó el inicio de sesión de Puter.'); }
-  } else if (k === 'or') openConnect();
-  else openGuide();
+  } else openGuide();
 });
 inp.addEventListener('pointerdown', () => { if (isLocked()) lockNudge(); });
 inp.addEventListener('keydown', e => { if (isLocked() && e.key.length === 1){ lockNudge(); } });
@@ -3620,10 +3676,10 @@ document.addEventListener('pointermove', e => {
   if (d > 1.7 * (innerWidth + innerHeight) && turns >= 6){ CF.pts = []; confuse(6); }
 }, { passive:true });
 const W_FAQ = [
-  ['¿Por qué no puedo escribir?', 'Porque todavía no hay ninguna IA conectada, y sin una no hay quién te responda. Conecta Puter (gratis, un clic) o pega tu llave de OpenRouter y la caja se desbloquea al instante.'],
-  ['¿Qué es Puter?', 'Una cuenta gratis que te da acceso a muchas IA sin llaves ni tarjetas. Inicias sesión en una ventanita y listo: el consumo va por cuenta de tu Puter, no de SynthZ.'],
-  ['¿Me cobran algo?', 'No. SynthZ nunca te cobra solo. Con Puter usas sus créditos gratis; con OpenRouter, tu propia llave (también hay modelos gratis). Siempre te muestro quién paga.'],
-  ['¿Qué hay en la Guía?', 'Te muestro todo paso a paso con mi manita: temas, IA recomendadas para ti, cómo comparar dos y hasta 5 mensajes de prueba gratis.']
+  ['¿Por qué no puedo escribir?', 'Porque la IA de SynthZ está descansando un momento y no tienes tu Puter conectado. Conecta Puter (gratis, un clic) y la caja se desbloquea al instante.'],
+  ['¿Qué es Puter?', 'Una cuenta gratis que te da créditos personales cada mes para muchas IA, sin llaves ni tarjetas. Inicias sesión en una ventanita y listo. Es opcional: la IA de SynthZ ya es gratis para todos.'],
+  ['¿Me cobran algo?', 'No. SynthZ nunca te cobra. La IA de SynthZ es gratis (hasta 20.000 SynXCoin\'s al día) y con Puter usas tus créditos gratis. Siempre te muestro quién pone el consumo.'],
+  ['¿Qué hay en la Guía?', 'Te muestro todo paso a paso con mi manita: temas, IA recomendadas para ti, cómo comparar dos y tu primer chat de verdad.']
 ];
 let wTok = 0;
 const zz = ms => new Promise(r => setTimeout(r, ms));
@@ -3695,12 +3751,12 @@ async function puterSignIn(opts){
   try{ return await puter.auth.signIn(opts || {}); }
   catch(e){ if (e && (e.error === 'popup_blocked' || e.code === 'popup_blocked')){ showBlockHelp('popup'); throw Object.assign(new Error('popup'), { shown:true }); } throw e; }
 }
-function mScore(m){ const b = (m.id.match(/(\d{2,3})b/i) || [])[1]; return (b ? +b : 20) + (m.reasoning ? 25 : 0) + Math.min(m.ctx, 262144) / 8000 + (/gpt-oss|deepseek|qwen|llama-3\.3|gemini|kimi|glm/i.test(m.id) ? 15 : 0) + (/^pu:/.test(m.id) && /gpt-5|gemini-3|claude|deepseek/i.test(m.id) ? 40 : 0) - (/nano|lite|mini/i.test(m.id) ? 10 : 0) + (/gpt-5\.6-luna$/i.test(m.id) ? 30 : 0) + (/^or:openrouter\/free$/.test(m.id) ? 20 : 0) + (/^gq:/.test(m.id) && gqOn() ? 60 : 0) - (SZ.isBad(m.id) ? 999 : 0); }
-function bestOf(prefix){ const l = cat.list.filter(m => m.id.startsWith(prefix + ':') && (m.free || prefix === 'pu')); if (prefix === 'or'){ const ap = l.find(m => m.id === APODEX); if (ap) return ap; } return l.length ? l.slice().sort((a, b) => mScore(b) - mScore(a))[0] : null; }
+function mScore(m){ const b = (m.id.match(/(\d{2,3})b/i) || [])[1]; return (b ? +b : 20) + (m.reasoning ? 25 : 0) + Math.min(m.ctx, 262144) / 8000 + (/gpt-oss|deepseek|qwen|llama-3\.3|gemini|kimi|glm/i.test(m.id) ? 15 : 0) + (/^pu:/.test(m.id) && /gpt-5|gemini-3|claude|deepseek/i.test(m.id) ? 40 : 0) - (/nano|lite|mini/i.test(m.id) ? 10 : 0) + (/gpt-5\.6-luna$/i.test(m.id) ? 30 : 0) + (/^or:openrouter\/free$/.test(m.id) ? 20 : 0) + (/^gq:/.test(m.id) && gqOn() ? 60 : 0) + (m.id === 'sz:auto' ? 140 : /^sz:/.test(m.id) ? 10 : 0) - (/allam/i.test(m.id) ? 999 : 0) - (SZ.isBad(m.id) ? 999 : 0); }
+function bestOf(prefix){ const l = cat.list.filter(m => m.id.startsWith(prefix + ':') && (m.free || prefix === 'pu')); if (prefix === 'sz' || prefix === 'or'){ const ap = l.find(m => m.id === APODEX); if (ap) return ap; } return l.length ? l.slice().sort((a, b) => mScore(b) - mScore(a))[0] : null; }
 function switchProv(prefix){
   if (mode !== 'solo') setMode('solo');
   const b = bestOf(prefix);
-  if (!b){ toast('No encontré modelos de ' + (prefix === 'pu' ? 'Puter' : 'OpenRouter') + ' ahora mismo.'); return; }
+  if (!b){ toast('No encontré modelos de ' + (prefix === 'pu' ? 'Puter' : prefix === 'sz' ? 'la IA de SynthZ' : 'ese proveedor') + ' ahora mismo.'); return; }
   pickModel(b.id, null); toast('Cambié a ' + b.name + '.');
   if (!connected(b.id)) openConnect();
 }
@@ -3741,57 +3797,32 @@ async function ensureConn(){
   if (fixModel(false) && !needsConn()) return true;
   const ids = mode === 'cmp' ? st().cmp : [selId()];
   if (window.puter && ids.every(id => connected(id) || /^pu:/.test(id))){
-    try{ await puterSignIn(); afterConnect('¡Puter conectado!'); return !needsConn(); }
-    catch(e){ if (!(e && e.shown)) toast('No se completó el inicio de sesión de Puter.'); return false; }
+    const slow = setTimeout(() => toast('Abriendo Puter… inicia sesión en la ventanita. Tu mensaje te espera en la caja.'), 900);
+    try{ await puterSignIn(); clearTimeout(slow); afterConnect('¡Puter conectado!'); return !needsConn(); }
+    catch(e){ clearTimeout(slow); if (!(e && e.shown)) toast('No se completó el inicio de sesión de Puter.'); return false; }
   }
   openConnect(); return false;
 }
 document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-conn]')){ e.preventDefault(); openConnect(); } });
 function openConnect(){
   if (connEl) return;
-  const hasK = !!st().keys.openrouter, hasP = puterOn();
+  const hasP = puterOn(), on = szOn(), q = SZ.SZQ, left = Math.max(0, (q.limit || 20000) - (q.used || 0)), legacy = !!(st().keys.openrouter || st().keys.groq);
   connEl = document.createElement('div'); connEl.id = 'conn';
-  connEl.innerHTML = '<div class="tcard"><div class="word" id="cWord"></div><div class="tn">CONEXIÓN</div><div class="tb"><h3>Conecta tus IA</h3><p>Usa una o las dos. Puter no necesita llave: un clic y listo. OpenRouter usa tu llave gratis.</p></div>'
-    + '<div class="cbox"><span>Cuenta de Puter</span>' + (hasP ? '<i class="ok">✓ Conectada</i>' : '<button class="btn sm" id="cPU" type="button">Conectar con Puter</button>') + '</div>'
-    + '<p class="cnote">Puter abre una ventanita para iniciar sesión: si tu navegador bloquea ventanas emergentes, permítelas para este sitio (te muestro cómo si pasa). Sus créditos gratis se renuevan cada mes.</p>'
-    + '<div class="cbox"><input id="cKey" type="text" data-sec="1" placeholder="' + (hasK ? 'OpenRouter conectada ✓ (pega otra para cambiarla)' : 'Llave de OpenRouter (sk-or-…)') + '" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other" spellcheck="false"><button class="btn sm" id="cOR" type="button">' + (hasK ? 'Cambiar' : 'Conectar') + '</button></div>'
-    + '<div class="cbox"><a class="lnk" href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer">Conseguir llave gratis de OpenRouter</a></div>'
-    + '<p class="cnote">OpenRouter gratis: 20 mensajes por minuto y 50 al día (1.000 si compraste 10 créditos o más). Si dice que la privacidad bloquea los modelos gratis, entra a <a class="lnk" href="https://openrouter.ai/settings/privacy" target="_blank" rel="noopener noreferrer">openrouter.ai/settings/privacy</a> y permite los modelos gratis.</p>'
-    + '<div class="cbox"><span>Groq <small class="opt">opcional · tiene prioridad</small></span>' + (st().keys.groq ? '<i class="ok">✓ Conectada</i><button class="lnk" id="cGQx" type="button">Quitar</button>' : '') + '</div>'
-    + '<div class="cbox"><input id="cGQ" type="text" data-sec="1" placeholder="' + (st().keys.groq ? 'Pega otra llave de Groq para cambiarla' : 'Llave de Groq (gsk_…)') + '" autocomplete="off" spellcheck="false"><button class="btn sm" id="cGQb" type="button">' + (st().keys.groq ? 'Cambiar' : 'Conectar') + '</button></div>'
-    + '<p class="cnote">Groq es muy rápida y gratis con límites. Tu llave queda solo en este navegador y va directo a Groq. <a class="lnk" href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer">Conseguir llave gratis de Groq</a></p>'
+  connEl.innerHTML = '<div class="tcard"><div class="word" id="cWord"></div><div class="tn">TU IA</div><div class="tb"><h3>' + (on ? 'La IA de SynthZ ya está activada' : 'La IA de SynthZ está descansando') + '</h3><p>' + (on ? 'Es gratis para todos y funciona sola: no necesitas llaves ni configurar nada.' : 'Vuelve en un momento. Mientras tanto puedes usar tu Puter.') + '</p></div>'
+    + '<div class="cbox szrow"><span><span class="sz-logo" aria-hidden="true"></span>IA de SynthZ</span>' + (on ? '<i class="ok">✓ Activada</i>' : '<i class="off">Descansando</i>') + '</div>'
+    + '<div class="cmeter"><span><i style="transform:scaleX(' + Math.min(1, left / (q.limit || 20000)).toFixed(3) + ')"></i></span><small>Hoy te quedan <b>' + fmt(left) + '</b> de ' + fmt(q.limit || 20000) + ' SynXCoin\'s gratis · se renuevan cada día</small></div>'
+    + '<div class="cbox"><span>' + SZ.puterLogo() + 'Tu Puter <small class="opt">opcional</small></span>' + (hasP ? '<i class="ok">✓ Conectado</i>' : '<button class="btn sm" id="cPU" type="button">Conectar con Puter</button>') + '</div>'
+    + '<p class="cnote"><b>¿Quieres más?</b> Puter es una cuenta gratis que te da créditos personales cada mes para modelos como GPT, Claude o Gemini, y no cuentan en tu tope de SynthZ. Si se te acaban, sigues con la IA de SynthZ sin hacer nada. Puter abre una ventanita para entrar: si tu navegador la bloquea, te muestro cómo permitirla.</p>'
+    + (legacy ? '<div class="cbox"><span>Llaves guardadas de antes <small class="opt">' + [st().keys.openrouter ? 'OpenRouter' : '', st().keys.groq ? 'Groq' : ''].filter(Boolean).join(' y ') + '</small></span><button class="lnk" id="cLegx" type="button">Quitar de este navegador</button></div>' : '')
     + '<div class="tbtn" style="margin-top:18px"><button class="lnk" id="cClose" type="button">Cerrar</button></div></div>';
   document.body.appendChild(connEl); $('#cWord').innerHTML = zWord('Synth');
   requestAnimationFrame(() => connEl.classList.add('on'));
   $('.tcard', connEl).animate([{ transform:'scale(.9) translateY(24px)', opacity:0, filter:'blur(10px)' }, { transform:'none', opacity:1, filter:'blur(0)' }], { duration:700, easing:'cubic-bezier(.22,1,.36,1)' });
   const close = () => { if (!connEl) return; const el = connEl; connEl = null; el.classList.remove('on'); setTimeout(() => el.remove(), 520); };
+  connEl._close = close;
   $('#cClose').addEventListener('click', close);
   connEl.addEventListener('pointerdown', e => { if (e.target === connEl) close(); });
-  $('#cKey').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); $('#cOR').click(); } });
-  $('#cOR').addEventListener('click', async e => {
-    const btn = e.currentTarget, k = $('#cKey').value.trim();
-    if (!k){ toast('Pega tu llave de OpenRouter.'); return; }
-    const old = st().keys.openrouter, sel = st().model.openrouter; st().keys.openrouter = k; btn.textContent = 'Verificando…';
-    try{ await SZ.verify(OR); st().model.openrouter = sel; save(); close(); afterConnect('OpenRouter conectada.'); }
-    catch(err){ st().keys.openrouter = old; st().model.openrouter = sel; save(); btn.textContent = hasK ? 'Cambiar' : 'Conectar'; toast((err && err.message) || 'No pude verificar la llave.'); }
-  });
-  /* Groq (opcional): se verifica pidiendo su lista de modelos, que no gasta nada */
-  $('#cGQ').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); $('#cGQb').click(); } });
-  $('#cGQb').addEventListener('click', async e => {
-    const btn = e.currentTarget, k = $('#cGQ').value.trim();
-    if (!/^gsk_[\w-]{20,}$/.test(k)){ toast('Esa no parece una llave de Groq: empieza con «gsk_».'); return; }
-    btn.textContent = 'Verificando…'; btn.disabled = true;
-    try{
-      const r = await fetch(SZ.GROQ_P.url + '/models', { headers:{ Authorization:'Bearer ' + k } });
-      if (r.status === 401 || r.status === 403) throw new Error('Groq dice que esa llave no es válida. Cópiala otra vez desde console.groq.com/keys.');
-      if (!r.ok) throw new Error('Groq no respondió (' + r.status + '). Intenta en un momento.');
-      st().keys.groq = k; save(); close(); afterConnect('¡Groq conectada! Ya aparece primero en tu lista.');
-      ui.prov = 'all'; saveUI();
-      /* Groq tiene prioridad: cuando llega su lista, si no elegiste a mano otra IA (o usabas OpenRouter), te paso a la mejor de Groq */
-      const t0 = Date.now(); (function wait(){ const b = bestOf('gq'); if (b){ const cur = selId(); if (!st().pinned || /^or:/.test(cur)){ pickModel(b.id, null); toast('Ahora usas ' + b.name + ' con tu llave de Groq.'); } return; } if (Date.now() - t0 < 8000) setTimeout(() => { if (!loading) refresh(true); wait(); }, 500); })();
-    }catch(err){ btn.disabled = false; btn.textContent = st().keys.groq ? 'Cambiar' : 'Conectar'; toast(err.message && !/fetch/i.test(err.message) ? err.message : 'No pude hablar con Groq. Revisa tu conexión.'); }
-  });
-  const gx = $('#cGQx'); if (gx) gx.addEventListener('click', () => { delete st().keys.groq; if (/^gq:/.test(st().model.openrouter || '')) delete st().model.openrouter; save(); close(); toast('Quitaste tu llave de Groq.'); refresh(true); paintLock(); });
+  const lx = $('#cLegx'); if (lx) lx.addEventListener('click', async () => { if (!(await SZ.szConfirm('¿Quitar tus llaves de antes?', 'Se borran solo de este navegador. Ya no las necesitas: la IA de SynthZ es gratis para todos.', 'Quitar', true))) return; delete st().keys.openrouter; delete st().keys.groq; if (/^(or|gq):/.test(st().model.openrouter || '')) st().model.openrouter = APODEX; save(); close(); toast('Listo: quitaste tus llaves de este navegador.'); refresh(true); paintProv(); paintLock(); });
   const pu = $('#cPU');
   if (pu) pu.addEventListener('click', () => {
     if (!window.puter){ showBlockHelp('script'); return; }
@@ -3821,11 +3852,11 @@ function showBlockHelp(kind){
   const bi = (ico, n) => '<span class="bi' + (n ? ' hl' : '') + '">' + ico + (n ? '<i class="nb">' + n + '</i>' : '') + '</span>';
   const icons = pop ? bi(ICO.pop, br === 'Firefox' || br === 'Safari' ? 0 : 1) + bi(ICO.ext, br === 'Firefox' || br === 'Safari' ? 0 : 2) : (brave ? bi(ICO.shield, 1) + bi(ICO.ext, 0) : bi(ICO.ext, 1));
   blkEl = document.createElement('div'); blkEl.id = 'blk';
-  blkEl.innerHTML = '<div class="tcard" role="dialog" aria-modal="true"><div class="word" id="bWord"></div><div class="tn">AVISO · ' + esc(br.toUpperCase()) + '</div><div class="tb"><h3>' + (pop ? 'Tu navegador bloqueó la ventana de Puter' : 'Un bloqueador está frenando a Puter') + '</h3><p>' + (pop ? 'Puter abre una ventanita para iniciar sesión, y ' + esc(br) + ' la bloqueó. Así la permites:' : 'Una extensión bloqueadora no deja cargar Puter. OpenRouter sigue funcionando. Así lo arreglas:') + '</p></div>'
+  blkEl.innerHTML = '<div class="tcard" role="dialog" aria-modal="true"><div class="word" id="bWord"></div><div class="tn">AVISO · ' + esc(br.toUpperCase()) + '</div><div class="tb"><h3>' + (pop ? 'Tu navegador bloqueó la ventana de Puter' : 'Un bloqueador está frenando a Puter') + '</h3><p>' + (pop ? 'Puter abre una ventanita para iniciar sesión, y ' + esc(br) + ' la bloqueó. Así la permites:' : 'Una extensión bloqueadora no deja cargar Puter. La IA de SynthZ sigue funcionando. Así lo arreglas:') + '</p></div>'
     + '<div class="bbar" aria-hidden="true"><span class="dots"><i></i><i></i><i></i></span><span class="url">' + ICO.lock + esc(location.host || 'tu-sitio') + '</span>' + icons + '</div>'
     + '<ol class="bsteps">' + steps.map(s => '<li>' + s + '</li>').join('') + '</ol>'
     + (pop ? '<div class="bforce" id="bForce"><b>¿Quieres forzarlo?</b> Intentaré iniciar sesión con otro método de Puter. Puede que tampoco funcione si el bloqueo es muy estricto.<div class="tbtn"><button class="lnk" id="bNo" type="button">No</button><button class="btn sm" id="bYes" type="button">Sí, forzar</button></div></div>' : '')
-    + '<div class="tbtn" style="margin-top:16px"><button class="lnk" id="bClose" type="button">' + (pop ? 'Cerrar' : 'Usar OpenRouter') + '</button>' + (pop ? '<button class="lnk" id="bAsk" type="button">Forzar</button>' : '') + '<button class="btn sm" id="bGo" type="button">' + (pop ? 'Reintentar' : 'Recargar') + '</button></div></div>';
+    + '<div class="tbtn" style="margin-top:16px"><button class="lnk" id="bClose" type="button">' + (pop ? 'Cerrar' : 'Seguir con la IA de SynthZ') + '</button>' + (pop ? '<button class="lnk" id="bAsk" type="button">Forzar</button>' : '') + '<button class="btn sm" id="bGo" type="button">' + (pop ? 'Reintentar' : 'Recargar') + '</button></div></div>';
   document.body.appendChild(blkEl); $('#bWord').innerHTML = zWord('Synth');
   requestAnimationFrame(() => blkEl.classList.add('on'));
   $('.tcard', blkEl).animate([{ transform:'scale(.9) translateY(24px)', opacity:0, filter:'blur(10px)' }, { transform:'none', opacity:1, filter:'blur(0)' }], { duration:700, easing:'cubic-bezier(.22,1,.36,1)' });
@@ -3874,8 +3905,8 @@ function coinModal(kind){
   const s = st().sx, used = todayUsed(), d = s.daily;
   const T = {
     budget:['Se acabaron tus SynXCoin\'s de hoy', 'Usaste ' + coins(used) + ' de tu límite diario de ' + coins(d) + '. El contador se reinicia mañana.'],
-    pu:['Se acabaron los SynXCoin\'s de Puter', 'Tus créditos gratis de Puter se renuevan cada mes. Mientras tanto puedes seguir con OpenRouter.'],
-    or:['Llegaste al límite de OpenRouter', 'Los modelos gratis de OpenRouter permiten 20 mensajes por minuto y 50 al día. Espera un poco o sigue con Puter.'],
+    pu:['Se te acabaron tus créditos personales', 'Tus créditos gratis de Puter se renuevan cada mes. Mientras tanto sigues con la IA de SynthZ, gratis.'],
+    or:['Llegaste al tope de hoy', 'La IA de SynthZ se renueva mañana. Si quieres seguir ya, conecta tu Puter.'],
     panel:['Tus SynXCoin\'s', '1 SynXCoin equivale a 1 token: lo que las IA leen y escriben.']
   }[kind];
   const PRE = [0, 20000, 50000, 100000, 250000];
@@ -3883,7 +3914,7 @@ function coinModal(kind){
   sxEl.innerHTML = '<div class="tcard" role="dialog" aria-modal="true"><div class="word" id="sxWord"></div><div class="tn">SYNXCOIN\'S</div><div class="tb"><h3>' + T[0] + '</h3><p>' + T[1] + '</p></div>'
     + (kind === 'panel' || kind === 'budget' ? '<div class="sxbig">' + SXC + (SZ.todayEst() ? '≈ ' : '') + fmt(used) + '<small>hoy' + (d ? ' de ' + fmt(d) : '') + '</small></div>' : '')
     + (kind === 'panel' ? SZ.splitHtml()
-      + '<div class="sxlbl">DISPONIBLE · SEGÚN CADA PROVEEDOR</div><div id="sxBal"><div class="bl-load">Consultando a Puter y OpenRouter…</div></div>'
+      + '<div class="sxlbl">DISPONIBLE · SEGÚN CADA PROVEEDOR</div><div id="sxBal"><div class="bl-load">Consultando la IA de SynthZ y tu Puter…</div></div>'
       + '<div class="sxstats"><div><b>' + fmt(s.hits) + '</b><span>respuestas gratis desde la caché</span></div><div><b>≈ ' + fmt(s.saved) + '</b><span>ahorrados con el modo ahorro</span></div><div><b>' + fmt(Object.values(st().usage).reduce((a, u) => a + (u.requests || 0), 0)) + '</b><span>respuestas en total</span></div></div>'
       + SZ.syncNote()
       + '<div class="sxlbl">TU LÍMITE PERSONAL POR DÍA</div><p class="cnote" style="margin:0 0 6px">Es tuyo, no del proveedor: SynthFlow te avisa y frena cuando lo pasas.</p><div class="sxrow" id="sxPre">' + PRE.map(v => '<button type="button" data-v="' + v + '" aria-pressed="' + (v === d) + '">' + (v ? fmt(v) : 'Sin límite') + '</button>').join('') + '</div>'
@@ -3891,14 +3922,16 @@ function coinModal(kind){
       + '<p class="cnote">Siempre ahorras: los archivos solo se reenvían en su último mensaje, y si repites una pregunta al mismo modelo la respuesta sale de la caché gratis.</p>' : '')
     + '<div class="tbtn" style="margin-top:18px"><button class="lnk" id="sxClose" type="button">Cerrar</button>'
     + (kind === 'budget' ? '<button class="lnk" id="sxLimit" type="button">Cambiar límite</button><button class="btn sm" id="sxGo" type="button">Seguir por hoy</button>'
-      : kind === 'pu' ? '<button class="btn sm" id="sxGo" type="button">Usar OpenRouter</button>'
-      : kind === 'or' ? '<button class="btn sm" id="sxGo" type="button">Usar Puter</button>' : '') + '</div></div>';
+      : kind === 'pu' && szOn() ? '<button class="btn sm" id="sxGo" type="button">Usar la IA de SynthZ</button>'
+      : kind === 'or' ? '<button class="btn sm" id="sxGo" type="button">' + (puterOn() ? 'Usar mi Puter' : 'Conectar mi Puter') + '</button>' : '') + '</div></div>';
   document.body.appendChild(sxEl); $('#sxWord').innerHTML = zWord('Synth');
   const bal = $('#sxBal', sxEl);
   if (bal){
     const tm = st().useTeam && TEAMS.teams.find(x => x.id === st().useTeam);
     const extra = tm ? '<div class="bl-row"><span class="bl-ico">EQ</span><div><b>Equipo «' + esc(tm.name) + '»</b><span>Hoy llevas <em>' + fmt(tm.myUse) + '</em>' + (tm.daily ? ' de ' + fmt(tm.daily) + ' SynXCoin\'s' : ' SynXCoin\'s (sin límite)') + (tm.freeOnly ? ' · solo modelos gratis' : '') + '</span><small>Lo cuenta el servidor de SynthZ · se reinicia cada día</small></div></div>' : '';
-    SZ.providerBalance(true).then(b => { if (bal.isConnected) bal.innerHTML = SZ.balanceHtml(b, extra); });
+    const q = SZ.SZQ, left = Math.max(0, (q.limit || 20000) - (q.used || 0));
+    const szRow = '<div class="bl-row"><span class="bl-ico sz"><span class="sz-logo" aria-hidden="true"></span></span><div><b>IA de SynthZ</b><span>' + (szOn() ? 'Te quedan <em>' + fmt(left) + '</em> de ' + fmt(q.limit || 20000) + ' SynXCoin\'s hoy' : 'Descansando un momento') + '</span><small>Gratis para todos · lo cuenta el servidor de SynthZ · se renueva cada día</small></div></div>';
+    SZ.providerBalance(true).then(b => { if (bal.isConnected) bal.innerHTML = szRow + SZ.balanceHtml(b, extra); });
   }
   requestAnimationFrame(() => sxEl.classList.add('on'));
   $('.tcard', sxEl).animate([{ transform:'scale(.9) translateY(24px)', opacity:0, filter:'blur(10px)' }, { transform:'none', opacity:1, filter:'blur(0)' }], { duration:700, easing:'cubic-bezier(.22,1,.36,1)' });
@@ -3906,7 +3939,7 @@ function coinModal(kind){
   $('#sxClose').addEventListener('click', close);
   sxEl.addEventListener('pointerdown', e => { if (e.target === sxEl) close(); });
   const go = $('#sxGo');
-  if (go) go.addEventListener('click', () => { close(); if (kind === 'budget'){ st().sx.over = today(); save(); toast('Listo, sin límite por hoy.'); } else switchProv(kind === 'pu' ? 'or' : 'pu'); });
+  if (go) go.addEventListener('click', () => { close(); if (kind === 'budget'){ st().sx.over = today(); save(); toast('Listo, sin límite por hoy.'); } else if (kind === 'or' && !puterOn()) openConnect(); else switchProv(kind === 'pu' ? 'sz' : 'pu'); });
   const lim = $('#sxLimit'); if (lim) lim.addEventListener('click', () => { close(); setTimeout(() => coinModal('panel'), 480); });
   const pre = $('#sxPre');
   if (pre) pre.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; st().sx.daily = +b.dataset.v; st().sx.over = ''; save(); $$('button', pre).forEach(x => x.setAttribute('aria-pressed', String(x === b))); renderFoot(); toast(+b.dataset.v ? 'Límite diario: ' + coins(+b.dataset.v) + '.' : 'Sin límite diario.'); });
@@ -4187,20 +4220,14 @@ function spaceHtml(){
   return '<div class="aspace' + (k > .9 ? ' warn' : '') + '"><div><b>Tu nube</b><span>' + mb(s.used) + ' de ' + mb(s.max) + ' MB</span></div><span class="tmbar"><i style="transform:scaleX(' + k.toFixed(3) + ')"></i></span>'
     + (SZ.ACC.full ? '<small>Está llena: tus chats nuevos se guardan solo en este dispositivo hasta que borres conversaciones viejas.</small>' : '') + '</div>';
 }
-/* prueba guiada: estado de cada IA y llaves (Prime y ZFlow las cambian; Symmetrix solo mira) */
-function trialAdminHtml(d, canEdit, res){
-  const TAG = { ok:'✅ ', auth:'🔒 ', plan:'💳 ', limit:'⏳ ', model:'⚠️ ', down:'⚠️ ', err:'⚠️ ' };
-  const st2 = p => { const h = (res && res.find(x => x.id === p.id)) || p.health; return !p.key ? ['off', 'sin llave'] : p.down ? ['warn', 'en pausa: ' + p.down] : h ? [h.ok ? 'ok' : h.kind === 'limit' ? 'warn' : 'off', (TAG[h.kind] || '') + h.state] : ['wait', 'sin probar']; };
-  return '<div class="sxlbl">PRUEBA GUIADA · LA PAGA SYNTHZ</div><div class="tmc"><p class="cnote" style="margin:0 0 8px">' + d.max + ' mensajes por persona, solo dentro de la guía. Hoy: <b>' + d.today + '</b> de ' + d.dayCap + ' en total.</p>'
-    + d.providers.map(p => { const [k, s] = st2(p); return '<div class="trow2"><i class="pdot2 ' + k + '" aria-hidden="true"></i><b>' + esc(p.name) + '</b><span>' + esc(s) + (p.model ? ' · ' + esc(p.model) : '') + '</span><small>' + (p.key ? esc(p.key) + (p.source === 'vercel' ? ' · Vercel' : ' · panel') : '') + ' · hoy ' + p.used + '/' + p.cap + '</small>' + (() => { const h = (res && res.find(x => x.id === p.id)) || p.health; return h && !h.ok && h.detail ? '<small class="tdet">' + esc(p.name) + ' dijo: «' + esc(h.detail) + '»</small>' : ''; })() + '</div>'; }).join('')
-    + (canEdit ? '<details class="tkeys"><summary>Pegar o cambiar llaves</summary><div class="tinv"><input type="text" data-sec="1" data-tk2="groq" placeholder="Llave de Groq (gsk_…)" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other"></div><div class="tinv"><input type="text" data-sec="1" data-tk2="mistral" placeholder="Llave de Mistral" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other"></div><div class="tinv"><input type="text" data-sec="1" data-tk2="cloudflare" placeholder="Token de Cloudflare" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other"></div><p class="cnote">Se guardan cifradas en el servidor y nunca vuelven al navegador. Deja vacío lo que no quieras cambiar.</p></details>'
-      + '<div class="tbtn" style="margin-top:8px"><span></span><button class="lnk" type="button" data-tr="check">Probar conexión</button><button class="btn sm" type="button" data-tr="save">Guardar y probar</button></div>' : '')
-    + '</div><div class="sxlbl" style="margin-top:14px">GOOGLE DRIVE PARA LOS CHATS</div><div class="tmc"><div class="trow2"><i class="pdot2 ' + (d.drive && d.drive.clientId ? 'ok' : 'off') + '" aria-hidden="true"></i><b>Drive</b><span>' + (d.drive && d.drive.clientId ? 'activado · ' + esc(d.drive.clientId.slice(0, 14)) + '…' + (d.drive.source === 'vercel' ? ' · Vercel' : ' · panel') : 'sin activar (usa el de «Entrar con Google» si existe)') + '</span></div>'
-    + (canEdit ? '<details class="tkeys"><summary>Activar o cambiar Drive</summary><p class="cnote">1) En Google Cloud, en el mismo proyecto de «Entrar con Google», activa la <b>Google Drive API</b>. 2) En la pantalla de consentimiento agrega el permiso <code>drive.appdata</code>. 3) Pega aquí el «ID de cliente» (es público, no es una contraseña). No hay cobros.</p><div class="tinv"><input type="text" data-dcid placeholder="123456-abc….apps.googleusercontent.com" autocomplete="off" spellcheck="false"></div><div class="tbtn" style="margin-top:8px"><span></span><button class="btn sm" type="button" data-tr="drive">Guardar</button></div></details>' : '')
-    + '</div>';
+/* IA de SynthZ: resumen para el equipo; las llaves, el estado y la ayuda viven en el Pulso (pulso.html) */
+function trialAdminHtml(d){
+  const ks = d.keys || [], ok = ks.filter(k => !k.down).length, mine = ks.filter(k => k.mine).length;
+  return '<div class="sxlbl">IA DE SYNTHZ · PARA TODOS</div><div class="tmc"><div class="trow2"><i class="pdot2 ' + (ok ? 'ok' : ks.length ? 'warn' : 'off') + '" aria-hidden="true"></i><b>' + ok + ' de ' + ks.length + ' llaves activas</b><span>' + ((d.models && d.models.n) || 0) + ' modelos gratis · tope de ' + fmt(d.dayLimit || 20000) + ' SynXCoin\'s por persona al día' + (mine ? ' · ' + mine + ' son tuyas' : '') + '</span></div>'
+    + '<p class="cnote" style="margin:8px 0">Tus llaves (Groq, Mistral, Cloudflare y OpenRouter), el estado de la página, quién está en línea y quién necesita ayuda están en el Pulso.</p><div class="tbtn"><span></span><a class="btn sm flow" href="pulso.html">Abrir el Pulso →</a></div></div>';
 }
-function loadTrialAdmin(box, canEdit, res){
-  SZ.api('trial').then(d => { if (box.isConnected){ box.innerHTML = trialAdminHtml(d, canEdit, res); SZ.smoothDetails && SZ.smoothDetails(box); } }).catch(e => { if (box.isConnected) box.innerHTML = '<p class="cnote">No pude cargar la prueba guiada: ' + esc(e.message) + '</p>'; });
+function loadTrialAdmin(box){
+  SZ.api('trial').then(d => { if (box.isConnected) box.innerHTML = trialAdminHtml(d); }).catch(e => { if (box.isConnected) box.innerHTML = '<p class="cnote">No pude cargar la IA de SynthZ: ' + esc(e.message) + '</p>'; });
 }
 function accModal(){
   if (accEl) return;
@@ -4210,13 +4237,13 @@ function accModal(){
     + (signed
       ? '<div class="acard"><div class="pfban" style="background:' + SZ.grad(pf.banner || pf.color) + '"></div><div class="pfme">' + SZ.myAvatar('xl') + '<div><b>' + esc(SZ.accName()) + '</b>' + (pf.pronouns ? '<i>' + esc(pf.pronouns) + '</i>' : '') + '<span>' + '<em class="rolep r-' + esc(u.role || 'user') + '">' + esc(SZ.ROLE_NAME[u.role || 'user'] || u.role) + '</em> ' + esc(SZ.accHandle(u)) + ' · ' + (A.full ? 'nube llena' : A.err ? 'sin sincronizar' : A.t ? 'sincronizado ' + ago(A.t) : 'sincronizando…') + '</span></div></div>' + (pf.status ? '<p class="pfs">' + esc(pf.status) + '</p>' : '') + (pf.bio ? '<p class="pfb">' + esc(pf.bio) + '</p>' : '') + '</div>'
         + '<div class="aact"><button class="btn sm" type="button" id="aEdit">Editar perfil</button><button class="btn sm ghost" type="button" id="aSurvey">Mis IA ideales</button>' + (u.kind === 'pass' || u.username ? '<button class="btn sm ghost" type="button" id="aSec">Seguridad</button>' : '') + '</div>'
-        + '<div class="sxstats"><div><b>' + fmt(n) + '</b><span>chats en la nube</span></div><div><b>' + fmt(SZ.totalAll()) + '</b><span>SynXCoin\'s en total</span></div><div><b>' + fmt(st().fav.length) + '</b><span>favoritos</span></div></div>'
-        + '<div class="sxsave"><p>Guardar mi llave de OpenRouter en mi cuenta (cifrada) para no volver a pegarla en otro dispositivo.</p><button class="sxsw" id="aKey" type="button" aria-pressed="' + !!st().syncKey + '" aria-label="Guardar mi llave en mi cuenta"></button></div>'
+        + '<div class="sxstats"><div><b>' + fmt(n) + '</b><span>chats en la nube</span></div><div><b>' + fmt(SZ.totalAll()) + '</b><span>SynXCoin\'s en total</span></div><div><b>' + fmt(Object.values(st().chats).reduce((a, c) => a + (Array.isArray(c) ? c.filter(m => m && m.star).length : 0), 0)) + '</b><span>mensajes favoritos</span></div></div>'
+        + (st().keys.openrouter ? '<div class="sxsave"><p>Guardar mi llave de OpenRouter (de antes) en mi cuenta, cifrada, para no volver a pegarla en otro dispositivo.</p><button class="sxsw" id="aKey" type="button" aria-pressed="' + !!st().syncKey + '" aria-label="Guardar mi llave en mi cuenta"></button></div>' : '')
         + spaceHtml()
         + (u.claimable ? '<div class="sxsave"><p>Esta cuenta está reservada para el equipo de SynthZ. Actívala con tu código de configuración.</p><button class="btn sm" id="aClaim" type="button">Activar mi rango</button></div>' : '')
-        + (['owner', 'admin', 'staff'].includes(u.role) ? '<div id="aTrial"><div class="tmload">Cargando la prueba guiada…</div></div>' : '')
+        + (['owner', 'admin', 'staff'].includes(u.role) ? '<div id="aTrial"><div class="tmload">Cargando la IA de SynthZ…</div></div>' : '')
         + '<div id="aTeams"><div class="tmload">Cargando equipos…</div></div>'
-      : '<div class="word" id="aWord"></div><div class="tn">TU CUENTA</div><div class="tb"><h3>Entra a SynthFlow</h3><p>Con tu cuenta tus chats, favoritos y SynXCoin\'s te siguen a cualquier dispositivo, personalizas tu perfil y puedes compartir OpenRouter con tu equipo sin mostrar tu llave. Solo necesitas un usuario y una contraseña. Puter sigue siendo solo para conectar sus IA.</p><div id="aAuth"></div></div>')
+      : '<div class="word" id="aWord"></div><div class="tn">TU CUENTA</div><div class="tb"><h3>Entra a SynthFlow</h3><p>Con tu cuenta tus chats, favoritos y SynXCoin\'s te siguen a cualquier dispositivo, personalizas tu perfil y puedes hablar con el equipo de SynthZ. Solo necesitas un usuario y una contraseña (o tu cuenta de Google). Puter sigue siendo solo para sus IA.</p><div id="aAuth"></div></div>')
     + '<div class="tbtn" style="margin-top:18px"><button class="lnk" id="aClose" type="button">Cerrar</button>'
     + (signed ? '<button class="lnk" id="aSync" type="button">Sincronizar</button><button class="lnk" id="aDel" type="button">Borrar cuenta</button><button class="btn sm ghost" id="aOut" type="button">Cerrar sesión</button>' : '') + '</div>'
     + (signed ? '<div class="aout2"><button class="lnk" id="aOutAll" type="button">Cerrar sesión en todos mis dispositivos</button></div>' : '') + '</div>';
@@ -4267,19 +4294,7 @@ function accModal(){
     try{ const r = await SZ.accClaim(v); toast('¡Listo! Tu rango: ' + (SZ.ROLE_NAME[r] || r) + '.'); reopen(); }catch(er){ toast(er.message); }
   });
   const tr = $('#aTrial');
-  if (tr){
-    const canEdit = ['owner', 'admin'].includes(u.role);
-    loadTrialAdmin(tr, canEdit);
-    tr.addEventListener('click', async e => {
-      const b = e.target.closest('[data-tr]'); if (!b) return;
-      if (b.dataset.tr === 'drive'){ const v = ($('[data-dcid]', tr).value || '').trim(); b.disabled = true; try{ await SZ.api('trial', { method:'POST', body:{ action:'drive', clientId:v } }); SZ.ACC.avail = null; toast(v ? 'Google Drive activado para todos los Synthers.' : 'Quitaste el ID de Drive del panel.'); loadTrialAdmin(tr, canEdit); }catch(er){ b.disabled = false; toast(er.message); } return; }
-      const body = { action:b.dataset.tr === 'save' ? 'keys' : 'check' };
-      if (b.dataset.tr === 'save') $$('[data-tk2]', tr).forEach(i => { if (i.value.trim()) body[i.dataset.tk2] = i.value.trim(); });
-      const l = b.textContent; b.disabled = true; b.textContent = 'Probando…';
-      try{ const d = await SZ.api('trial', { method:'POST', body }); toast(d.providers.filter(p => p.ok).length + ' de ' + d.providers.length + ' IA de la prueba funcionan.'); loadTrialAdmin(tr, canEdit, d.providers); }
-      catch(er){ b.disabled = false; b.textContent = l; toast(er.message); }
-    });
-  }
+  if (tr) loadTrialAdmin(tr);
   const tb = $('#aTeams');
   loadTeams().then(() => { if (!tb.isConnected) return; tb.innerHTML = teamsHtml(); teamsBind(tb, reopen); });
 }
@@ -4299,7 +4314,10 @@ if (params.get('acc') === '1') setTimeout(accModal, 2600);
 /* ---------- arranque ---------- */
 const wantModel = params.get('model');
 if (wantModel && /^(pu|or):[\w.\/:@-]{2,120}$/.test(wantModel)){ st().model.openrouter = wantModel; save(); }
-{ const s0 = st().model.openrouter; if (s0 && !/^(pu|or):/.test(s0)){ st().model.openrouter = 'or:' + s0; save(); } st().cmp = st().cmp.map(x => /^(pu|or):/.test(x) ? x : 'or:' + x); }
+{ const PRE = /^(pu|or|gq|sz|tr):/, s0 = st().model.openrouter; if (s0 && !PRE.test(s0)){ st().model.openrouter = 'or:' + s0; save(); } st().cmp = st().cmp.map(x => PRE.test(x) ? x : 'or:' + x);
+  /* beta 2: quien usaba OpenRouter o Groq sin llave pasa a la IA de SynthZ (sus chats siguen en «Mis chats») */
+  const s1 = st().model.openrouter || ''; if ((/^or:/.test(s1) && !(st().keys.openrouter || st().useTeam)) || (/^gq:/.test(s1) && !gqOn()) || !s1){ st().model.openrouter = APODEX; delete st().pinned; save(); }
+  const c1 = st().cmp.filter(x => !(/^or:/.test(x) && !(st().keys.openrouter || st().useTeam)) && !(/^gq:/.test(x) && !gqOn())); if (c1.length !== st().cmp.length){ st().cmp = c1; save(); } }
 { const cc = st().chats; if (Array.isArray(cc.openrouter)){ if (cc.openrouter.length && !(cc[ckey()] || []).length) cc[ckey()] = cc.openrouter; delete cc.openrouter; save(); } }
 root.style.setProperty('--c', mode === 'cmp' ? '#b8c4ff' : vendorColor(info(selId()).vendor));
 if (mode === 'cmp' && st().cmp.length < 2) mode = 'solo';

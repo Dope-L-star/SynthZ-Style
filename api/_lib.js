@@ -21,7 +21,15 @@ const CERTS = process.env.GOOGLE_CERTS_URL || 'https://www.googleapis.com/oauth2
 /* lo único obligatorio es la base de datos; Google y SYNTHZ_SECRET son opcionales */
 export const missing = () => [!R_URL && 'KV_REST_API_URL', !R_TOK && 'KV_REST_API_TOKEN'].filter(Boolean);
 export const ready = () => missing().length === 0;
-export const hasGoogle = () => !!CLIENT_ID;
+/* el «ID de cliente» de Google puede venir de Vercel o pegarse en el panel del equipo (es público, no es un secreto) */
+let gcid = { v:'', t:0 };
+export async function googleCid(){
+  if (CLIENT_ID) return CLIENT_ID;
+  if (Date.now() - gcid.t < 60e3) return gcid.v;
+  let v = ''; try{ const c = await getJ('cfg:google'); v = c && typeof c.clientId === 'string' ? c.clientId : ''; }catch(e){}
+  gcid = { v, t:Date.now() }; return v;
+}
+export const hasGoogle = async () => !!(await googleCid());
 export const secretFromEnv = () => !!SECRET;
 
 /* ---------- respuestas ---------- */
@@ -173,7 +181,7 @@ export async function verifyGoogle(token){
   const ok = crypto.verify('RSA-SHA256', Buffer.from(p[0] + '.' + p[1]), crypto.createPublicKey({ key:k, format:'jwk' }), Buffer.from(p[2], 'base64url'));
   if (!ok) throw bad();
   if (!['accounts.google.com', 'https://accounts.google.com'].includes(claims.iss)) throw bad();
-  if (claims.aud !== CLIENT_ID) throw bad();
+  if (!claims.aud || claims.aud !== (await googleCid())) throw bad();
   if (!claims.exp || claims.exp * 1000 < Date.now()) throw bad('Tu inicio de sesión expiró. Intenta de nuevo.');
   if (!claims.sub) throw bad();
   return claims;

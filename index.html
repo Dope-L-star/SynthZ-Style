@@ -259,6 +259,15 @@ footer{text-align:center;color:var(--mute);font-size:13.5px;padding:70px 24px 90
 
 /* ---------- intro: la Z se pinta de arriba-derecha a abajo-izquierda ---------- */
 #intro{position:fixed;inset:0;z-index:200;display:grid;place-items:center;cursor:default}
+#vintro{position:fixed;inset:0;z-index:9900;display:grid;place-items:center;background:#000;opacity:0;transition:opacity .7s ease}
+#vintro.on{opacity:1}#vintro.out{opacity:0;transform:scale(1.04);filter:blur(6px);transition:opacity .85s ease,transform .9s cubic-bezier(.22,1,.36,1),filter .85s ease}
+#vintro video{width:min(100vw,177.8vh);height:auto;max-height:100vh;object-fit:contain;mix-blend-mode:screen}
+#vintro .vi-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,rgba(201,86,108,.14),transparent 60%)}
+#vintro .vi-skip{position:absolute;right:max(18px,env(safe-area-inset-right));bottom:max(22px,env(safe-area-inset-bottom));display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);backdrop-filter:blur(14px) saturate(1.5);-webkit-backdrop-filter:blur(14px) saturate(1.5);color:#ecebe7;font-size:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+#vintro .vi-skip kbd{font:11px var(--mono);padding:2px 6px;border-radius:6px;background:rgba(255,255,255,.1);color:var(--mute)}
+@media (pointer:coarse){#vintro .vi-skip kbd{display:none}}
+#vintro .vi-bar{position:absolute;left:0;right:0;bottom:0;height:2px;background:rgba(255,255,255,.06)}
+#vintro .vi-bar i{display:block;height:100%;transform-origin:left;transform:scaleX(0);background:linear-gradient(90deg,#8fb0ff,#c9566c,#e6b65f)}
 #intro .bg{position:absolute;inset:0;background:var(--bg);transition:opacity .9s var(--ease)}
 #intro.out .bg{opacity:0}
 .int-wrap{position:relative;display:flex;flex-direction:column;align-items:center}
@@ -603,15 +612,19 @@ body.railup .navlinks a{opacity:0;filter:blur(6px);pointer-events:none}
   #progress{left:var(--rw)}
 }
 @media (max-width:760px){ .rail{display:none} }
+@media (min-width:761px){ #nav #helpBtn,#nav #cfgBtn,#nav #accBtn{display:none} }
+@media (max-width:560px){ #nav #accBtn{display:none} }
+/* con la barrita abierta, el logo se corre con ella (no se esconde debajo) */
+#nav .logo{transition:transform .62s cubic-bezier(.22,1,.36,1)}
+body.railup #nav .logo{transform:translateX(calc(var(--rx) - var(--rw) + 4px))}
+/* el aviso «Abrir la barra» sale debajo del botón, sin tapar el logo */
+.rail:not(.open) .rtog[data-tip]:hover::after{left:0;top:calc(100% + 10px);translate:0 0}
 html.noglass .rin,html.noglass .rail.open .rin,html.noglass .navfly{background:#14151b !important;backdrop-filter:none !important}
 html.noanim .rin,html.noanim .rl{transition-duration:.01s !important;transition-delay:0s !important}
 html.js:not(.landed) .rail{opacity:0;translate:-20px 0}
-/* beta 2: arriba solo quedan los SynXCoin's; cuenta, ajustes y guía viven en la barrita (en el celular, en el menú ☰) */
-#nav .navr #helpBtn,#nav .navr #cfgBtn,#nav .navr #accBtn{display:none}
-@media (max-width:760px){#nav .navr #navMenu{display:grid}}
 .rail{transition:opacity .9s cubic-bezier(.22,1,.36,1),translate 1s cubic-bezier(.22,1,.36,1)}
 </style>
-<meta name="description" content="SynthZ: tu espacio para explorar la IA. Pregunta, crea, programa y compara modelos desde un solo lugar, gratis con Puter u OpenRouter.">
+<meta name="description" content="SynthZ: tu espacio para explorar la IA. Pregunta, crea, programa y compara modelos desde un solo lugar, gratis con la IA de SynthZ.">
 <meta name="theme-color" content="#0b0c10">
 <meta property="og:title" content="SynthZ · Sintonía con la IA. Tu futuro a la mano.">
 <meta property="og:description" content="Chatea gratis con cientos de IA, compáralas a ciegas y comparte con tu equipo.">
@@ -661,6 +674,7 @@ html.js:not(.landed) .rail{opacity:0;translate:-20px 0}
     <span class="rsp"></span>
     <div class="rgrp">
       <button class="rbtn" type="button" id="railCfg" data-tip="Ajustes y rendimiento" style="--i:3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg><span class="rl">Ajustes y rendimiento</span></button>
+      <a class="rbtn rpulse" href="pulso.html" id="railPulse" data-tip="Pulso del equipo" style="--i:3" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l2.5-6 4 12 3-8 1.5 2H22"/></svg><span class="rl">Pulso del equipo</span></a>
       <button class="rbtn rme out" type="button" id="railMe" data-tip="Entrar a tu cuenta" style="--i:4"></button>
       <button class="rguide" type="button" id="railHelp" aria-label="Guía"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/></svg><span>Guía</span></button>
     </div>
@@ -677,20 +691,20 @@ html.js:not(.landed) .rail{opacity:0;translate:-20px 0}
     <a href="#consumo" data-sec="consumo">Consumo</a>
   </div>
   <div class="navr"><div class="pill-total"><svg class="sxc" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="url(#sxg)"/><path d="M14.7 9.3c-.5-.8-1.5-1.4-2.8-1.4-1.6 0-2.7.8-2.7 2 0 2.7 5.7 1.4 5.7 4.1 0 1.3-1.2 2.2-2.9 2.2-1.3 0-2.5-.6-3-1.6" transform="translate(-1.4 -1.3)" fill="none" stroke="#0b0c10" stroke-width="1.8" stroke-linecap="round"/><path d="M14.7 14.6l2.4 2.4M17.1 14.6l-2.4 2.4" stroke="#0b0c10" stroke-width="1.35" stroke-linecap="round"/></svg> <span id="navTotal">0</span> SynXCoin's</div><button class="cfgb helpb" id="helpBtn" type="button" aria-label="Ayuda: guía rápida" title="Guía rápida">?</button><button class="cfgb" id="cfgBtn" type="button" aria-label="Configuración" title="Configuración"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></button><button class="accb out" id="accBtn" type="button" aria-label="Tu cuenta">Entrar</button><button class="cfgb navmenu" id="navMenu" type="button" aria-label="Abrir el menú" aria-expanded="false" aria-controls="navDrop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
-  <div class="navdrop" id="navDrop" hidden><a href="chat.html">SynthFlow</a><a href="#conectar">Conectar</a><a href="#consumo">Consumo</a><button type="button" data-nd="help">Guía</button><button type="button" data-nd="cfg">Configuración</button><button type="button" data-nd="acc">Mi cuenta</button></div>
+  <div class="navdrop" id="navDrop" hidden><a href="chat.html">SynthFlow</a><a href="#conectar">Conectar</a><a href="#consumo">Consumo</a><button type="button" data-nd="acc">Mi cuenta</button><button type="button" data-nd="help">Guía</button><button type="button" data-nd="cfg">Configuración</button></div>
 </nav>
 
 <main>
 <header class="hero" id="top">
   <div class="hero-inner">
     <h1 id="h1">Sintonía con la IA.<br>Tu futuro a la mano.</h1>
-    <p class="sub" id="heroSub">Pregunta, crea, programa y compara modelos de inteligencia artificial desde un solo lugar. Gratis, con Puter u OpenRouter.</p>
+    <p class="sub" id="heroSub">Pregunta, crea, programa y compara modelos de inteligencia artificial desde un solo lugar. Gratis con la IA de SynthZ, y con tu Puter si quieres más.</p>
     <div class="cta hero-fade">
       <a class="btn" href="chat.html" id="startBtn">Empezar a chatear</a>
       <a class="btn ghost" href="#conectar">Conectar mis IA</a>
     </div>
     <div class="chips hero-fade" id="chips"></div>
-    <p class="hero-meta hero-fade">Llevas <b id="heroTotal">0</b> SynXCoin's y <b id="heroConn">0</b> de 2 IA conectadas.</p>
+    <p class="hero-meta hero-fade">Llevas <b id="heroTotal">0</b> SynXCoin's · la IA de SynthZ está <b id="heroConn">activada</b>.</p>
   </div>
   <span class="hint" aria-hidden="true"></span>
 </header>
@@ -711,9 +725,9 @@ html.js:not(.landed) .rail{opacity:0;translate:-20px 0}
     <article class="how-card">
       <span class="how-n">01</span>
       <h3 data-type data-cps="18">Conecta</h3>
-      <p data-type data-cps="110">Conecta Puter con un clic o pega tu llave gratis de OpenRouter.</p>
+      <p data-type data-cps="110">La IA de SynthZ ya viene activada. Si quieres más, tu Puter con un clic.</p>
       <div class="viz">
-        <div class="krow" style="--c:#c9566c;--i:3"><span data-ico="openrouter"></span><b>OpenRouter</b><div class="kkey"><div class="kfill"></div></div><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div>
+        <div class="krow" style="--c:#c9566c;--i:3"><span data-ico="synthz"></span><b>IA de SynthZ</b><div class="kkey"><div class="kfill"></div></div><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div>
       </div>
     </article>
     <article class="how-card">
@@ -723,7 +737,7 @@ html.js:not(.landed) .rail{opacity:0;translate:-20px 0}
       <div class="viz">
         <div class="ubub">Explícame qué es un token en una frase</div>
         <div class="two">
-          <div class="mini"><div class="who"><span data-ico="openrouter"></span>OpenRouter</div><div class="ln" style="--w:88%;--s:.1s"></div><div class="ln" style="--w:96%;--s:.3s"></div><div class="ln" style="--w:66%;--s:.5s"></div><small>1,4 s</small></div>
+          <div class="mini"><div class="who"><span data-ico="synthz"></span>IA de SynthZ</div><div class="ln" style="--w:88%;--s:.1s"></div><div class="ln" style="--w:96%;--s:.3s"></div><div class="ln" style="--w:66%;--s:.5s"></div><small>1,4 s</small></div>
         </div>
       </div>
     </article>
@@ -733,7 +747,7 @@ html.js:not(.landed) .rail{opacity:0;translate:-20px 0}
       <p data-type data-cps="110">Mira cuántos SynXCoin's gastas en cada una.</p>
       <div class="viz">
         <div class="sbig"><span id="sceneNum">0</span><small>SynXCoin's usados</small></div>
-        <div class="sb" style="--c:#c9566c;--m:.9;--i:3"><span data-ico="openrouter"></span><b>OpenRouter</b><div class="bar"><i></i></div></div>
+        <div class="sb" style="--c:#c9566c;--m:.9;--i:3"><span data-ico="synthz"></span><b>IA de SynthZ</b><div class="bar"><i></i></div></div>
       </div>
     </article>
   </div>
@@ -741,12 +755,12 @@ html.js:not(.landed) .rail{opacity:0;translate:-20px 0}
 
 <section id="conectar">
   <div class="head">
-    <h2 data-type data-cps="24" id="hCon">Conecta tus IA</h2>
-    <p data-type data-cps="120" data-after="#hCon">Puter se conecta con un clic, sin llave. OpenRouter te da una llave gratis en un minuto, sin tarjeta: pégala una vez y queda guardada en este navegador.</p>
+    <h2 data-type data-cps="24" id="hCon">Tu IA ya está lista</h2>
+    <p data-type data-cps="120" data-after="#hCon">La IA de SynthZ viene activada y es gratis para todos: no necesitas llaves ni tarjetas. Si quieres más, conecta tu Puter con un clic y usa tus créditos personales.</p>
   </div>
   <div class="grid" id="cards" data-stagger></div>
     <div class="grid hide" id="ext" data-stagger></div>
-  <p class="note" data-reveal>Tu llave se guarda en este navegador y solo viaja a OpenRouter. Si activas «Guardar mi llave en mi cuenta», se guarda cifrada en tu cuenta de SynthZ. Si la compartes con tu equipo, ellos la usan desde el servidor sin poder verla.</p>
+  <p class="note" data-reveal>Nadie te pide llaves: las de la IA de SynthZ las pone el equipo y nunca salen del servidor. SynthZ nunca cobra: solo usa modelos gratis, con un tope de 20.000 SynXCoin's al día por persona (lo de tu Puter no cuenta).</p>
 </section>
 
 <section id="chat">
@@ -849,9 +863,16 @@ function observeAll(){
 /* ---------- tarjetas de conexión ---------- */
 const eyeSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
 function setStatus(card, text, cls){ const s = $('[data-st]', card); s.textContent = text; s.className = 'status ' + (cls || ''); }
+function szCard(){
+  const q = SZ.SZQ, on = q.on !== false, left = Math.max(0, (q.limit || 20000) - (q.used || 0));
+  return '<article class="card" data-id="synthz" style="--c:#e6b65f"><div class="card-top">' + ico(byId('synthz')) + '<h3>IA de SynthZ</h3><span class="status ' + (on ? 'ok' : '') + '" data-st>' + (on ? 'Activada' : 'Descansando') + '</span></div><p class="desc">Gratis para todos, sin llaves ni cuenta: modelos gratis de Groq, Mistral, Cloudflare y OpenRouter que pone el equipo de SynthZ. Si una se satura, pasa sola a otra.</p>'
+    + '<div class="cmeter"><span><i style="transform:scaleX(' + Math.min(1, left / (q.limit || 20000)).toFixed(3) + ')"></i></span><small>Hoy te quedan <b>' + fmt(left) + '</b> de ' + fmt(q.limit || 20000) + ' SynXCoin\'s</small></div><div class="actions"><button class="btn sm" data-szgo type="button">Abrir SynthFlow</button></div></article>';
+}
+function paintSzCard(){ const c = $('#cards [data-id="synthz"]'); if (!c) return; c.outerHTML = szCard(); const b = $('#cards [data-szgo]'); if (b) b.addEventListener('click', () => { launchAI = 'synthz'; openChat(); }); }
+addEventListener('synthz-szq', () => { paintSzCard(); updateTotals(); renderLaunch(); });
 function renderCards(){
   const wrap = $('#cards');
-  wrap.innerHTML = API.map(p => `
+  wrap.innerHTML = szCard() + API.filter(p => st().keys[p.id]).map(p => `
     <article class="card" data-id="${p.id}" style="--c:${p.c}">
       <div class="card-top">${ico(p)}<h3 data-type data-cps="20">${p.name}</h3><span class="status" data-st>Sin llave</span></div>
       <p class="desc" data-type data-cps="130">${p.desc}</p>
@@ -862,7 +883,9 @@ function renderCards(){
         <a class="lnk" href="${p.keyUrl}" target="_blank" rel="noopener noreferrer">Conseguir llave gratis</a>
       </div>
     </article>`).join('');
+  const szb = $('[data-szgo]', wrap); if (szb) szb.addEventListener('click', () => { launchAI = 'synthz'; openChat(); });
   $$('.card', wrap).forEach(card => {
+    if (card.dataset.id === 'synthz') return;
     const p = byId(card.dataset.id), inp = $('[data-key]', card);
     inp.value = st().keys[p.id] || '';
     setStatus(card, st().keys[p.id] ? 'Guardada' : 'Sin llave');
@@ -921,7 +944,7 @@ function renderCards(){
 }
 
 /* ---------- lanzador: abre el chat en otra página con una expansión suave ---------- */
-let launchAI = 'openrouter', leaving = false;
+let launchAI = 'synthz', leaving = false;
 function placePill(seg){
   const a = $('[aria-selected="true"]', seg), pill = $('.pill', seg);
   if (!a || !pill) return;
@@ -930,7 +953,7 @@ function placePill(seg){
 function renderLaunch(){
   const seg = $('#launchSeg');
   $$('button', seg).forEach(b => b.remove());
-  const items = API.map(p => ({ id:p.id, label:p.name, p }));
+  const items = [{ id:'synthz', label:'IA de SynthZ', p:byId('synthz') }];
   items.forEach(it => {
     const b = document.createElement('button');
     b.setAttribute('role', 'tab'); b.dataset.id = it.id;
@@ -945,7 +968,7 @@ function renderLaunch(){
   if (launchAI === 'cmp'){
     const n = API.filter(x => st().keys[x.id]).length;
     hint.textContent = n ? 'Tu pregunta le llega a ' + n + (n === 1 ? ' IA conectada.' : ' IAs conectadas.') : 'Aún no hay IAs conectadas.';
-  } else hint.textContent = (st().keys[launchAI] || (window.puter && puter.auth && puter.auth.isSignedIn())) ? 'Lista para chatear.' : 'Conecta Puter o tu llave de OpenRouter para empezar.';
+  } else hint.textContent = SZ.SZQ.on !== false ? 'Lista para chatear, gratis.' : (window.puter && puter.auth && puter.auth.isSignedIn()) ? 'Lista para chatear con tu Puter.' : 'La IA de SynthZ está descansando: conecta tu Puter para empezar.';
   $('#launch').style.setProperty('--lc', p ? p.c + '2e' : 'rgba(184,196,255,.2)');
 }
 function expandTo(card, href, color){ return SZ.portalOut(href); }
@@ -1014,7 +1037,7 @@ function updateTotals(){
   const t = ALL.reduce((a, p) => a + total(p.id), 0);
   $('#navTotal').textContent = fmt(t);
   countTo($('#heroTotal'), t);
-  $('#heroConn').textContent = API.filter(p => st().keys[p.id]).length + (window.puter && puter.auth && puter.auth.isSignedIn() ? 1 : 0);
+  $('#heroConn').textContent = SZ.SZQ.on === false ? 'descansando' : 'activada' + (window.puter && puter.auth && puter.auth.isSignedIn() ? ' (y tu Puter)' : '');
 }
 function renderUsage(){
   const t = ALL.reduce((a, p) => a + total(p.id), 0), max = Math.max(1, ...ALL.map(p => total(p.id)));
@@ -1135,12 +1158,35 @@ function finishIntro(){
   root.classList.add('ready', 'landed'); root.classList.remove('lock');
   update(); pulseThenHero();
 }
-async function intro(){
+/* ---------- intro en video: la Z de vidrio líquido se forma (sin sonido, con «Saltar») ---------- */
+function videoIntro(){
+  return new Promise(done => {
+    const nc = navigator.connection || {}, slow = nc.saveData || /(^|-)2g/.test(nc.effectiveType || '');
+    if (slow || matchMedia('(prefers-reduced-motion: reduce)').matches || !document.createElement('video').canPlayType){ done(false); return; }
+    const o = document.createElement('div'); o.id = 'vintro';
+    o.innerHTML = '<video muted playsinline preload="auto" poster="media/intro-z.jpg" aria-hidden="true"><source src="media/intro-z.webm" type="video/webm"><source src="media/intro-z.mp4" type="video/mp4"></video><div class="vi-glow" aria-hidden="true"></div><button type="button" class="vi-skip">Saltar <kbd>Esc</kbd></button><div class="vi-bar" aria-hidden="true"><i></i></div>';
+    document.body.appendChild(o);
+    const v = $('video', o), bar = $('.vi-bar i', o); let end = false, t0 = 0;
+    const finish = (skipped) => { if (end) return; end = true; removeEventListener('keydown', key, true); o.classList.add('out'); setTimeout(() => o.remove(), 900); done(!skipped); };
+    const key = e => { if (e.key === 'Escape' || e.key === 'Enter' || e.code === 'Space'){ e.preventDefault(); finish(true); } };
+    addEventListener('keydown', key, true);
+    $('.vi-skip', o).addEventListener('click', () => finish(true));
+    if (!FIRST) v.currentTime = 2.6;              /* quien ya vino ve solo el final: la Z formándose */
+    v.addEventListener('timeupdate', () => { if (v.duration) bar.style.transform = 'scaleX(' + (v.currentTime / v.duration).toFixed(3) + ')'; });
+    v.addEventListener('ended', () => finish(false));
+    v.addEventListener('error', () => finish(true));
+    requestAnimationFrame(() => o.classList.add('on'));
+    const p = v.play(); if (p && p.catch) p.catch(() => finish(true));
+    setTimeout(() => { if (!end && v.currentTime < .05) finish(true); }, 2500);   /* si no arrancó, no se espera */
+    setTimeout(() => finish(false), 11000);
+  });
+}
+async function intro(o = {}){
   SZ.S.busy(true);
   const ov = $('#intro'), row = $('#intRow'), txt = $('#intText'), caret = $('#intCaret'), bolt = $('#bolt');
   const outline = $('#zOutline'), gloss = $('#zGloss'), skipEl = $('#intSkip'), holdBar = $('#intHold');
   const stp = { a:$('#pw1'), b:$('#pw2'), h1:$('#pw3a'), h2:$('#pw3b'), h3:$('#pw3c') };
-  let skip = false;
+  let skip = !!o.fast;
   const sleep = ms => sleepRaw(skip ? 0 : ms);
   if (matchMedia('(pointer: coarse)').matches) $('span', skipEl).textContent = 'Mantén presionado 1,5 s para saltar';
   const anim = (dur, fn) => new Promise(res => {
@@ -1196,7 +1242,7 @@ async function intro(){
   caret.classList.remove('blink'); caret.style.width = '0'; caret.style.margin = '0';
   /* 4. vuela hasta la barra de arriba */
   skipEl.style.opacity = '0';
-  /* beta 2: la primera vez lo primero es el tutorial, no el inicio de sesión */
+  /* primera vez: primero el tutorial (después se ofrece entrar o crear cuenta) */
   const wel = null, tw = null;
   if (tw){ tw.style.visibility = 'hidden'; ov.style.zIndex = '9800'; }
   const a = row.getBoundingClientRect(), b = (tw || $('#navWord')).getBoundingClientRect();
@@ -1240,11 +1286,11 @@ function showBlockHelp(kind){
   const bi = (ico, n) => '<span class="bi' + (n ? ' hl' : '') + '">' + ico + (n ? '<i class="nb">' + n + '</i>' : '') + '</span>';
   const icons = pop ? bi(ICO.pop, br === 'Firefox' || br === 'Safari' ? 0 : 1) + bi(ICO.ext, br === 'Firefox' || br === 'Safari' ? 0 : 2) : (brave ? bi(ICO.shield, 1) + bi(ICO.ext, 0) : bi(ICO.ext, 1));
   blkEl = document.createElement('div'); blkEl.id = 'blk';
-  blkEl.innerHTML = '<div class="tcard" role="dialog" aria-modal="true"><div class="word" id="bWord"></div><div class="tn">AVISO · ' + esc(br.toUpperCase()) + '</div><div class="tb"><h3>' + (pop ? 'Tu navegador bloqueó la ventana de Puter' : 'Un bloqueador está frenando a Puter') + '</h3><p>' + (pop ? 'Puter abre una ventanita para iniciar sesión, y ' + esc(br) + ' la bloqueó. Así la permites:' : 'Una extensión bloqueadora no deja cargar Puter. OpenRouter sigue funcionando. Así lo arreglas:') + '</p></div>'
+  blkEl.innerHTML = '<div class="tcard" role="dialog" aria-modal="true"><div class="word" id="bWord"></div><div class="tn">AVISO · ' + esc(br.toUpperCase()) + '</div><div class="tb"><h3>' + (pop ? 'Tu navegador bloqueó la ventana de Puter' : 'Un bloqueador está frenando a Puter') + '</h3><p>' + (pop ? 'Puter abre una ventanita para iniciar sesión, y ' + esc(br) + ' la bloqueó. Así la permites:' : 'Una extensión bloqueadora no deja cargar Puter. La IA de SynthZ sigue funcionando. Así lo arreglas:') + '</p></div>'
     + '<div class="bbar" aria-hidden="true"><span class="dots"><i></i><i></i><i></i></span><span class="url">' + ICO.lock + esc(location.host || 'tu-sitio') + '</span>' + icons + '</div>'
     + '<ol class="bsteps">' + steps.map(s => '<li>' + s + '</li>').join('') + '</ol>'
     + (pop ? '<div class="bforce" id="bForce"><b>¿Quieres forzarlo?</b> Intentaré iniciar sesión con otro método de Puter. Puede que tampoco funcione si el bloqueo es muy estricto.<div class="tbtn"><button class="lnk" id="bNo" type="button">No</button><button class="btn sm" id="bYes" type="button">Sí, forzar</button></div></div>' : '')
-    + '<div class="tbtn" style="margin-top:16px"><button class="lnk" id="bClose" type="button">' + (pop ? 'Cerrar' : 'Usar OpenRouter') + '</button>' + (pop ? '<button class="lnk" id="bAsk" type="button">Forzar</button>' : '') + '<button class="btn sm" id="bGo" type="button">' + (pop ? 'Reintentar' : 'Recargar') + '</button></div></div>';
+    + '<div class="tbtn" style="margin-top:16px"><button class="lnk" id="bClose" type="button">' + (pop ? 'Cerrar' : 'Seguir con la IA de SynthZ') + '</button>' + (pop ? '<button class="lnk" id="bAsk" type="button">Forzar</button>' : '') + '<button class="btn sm" id="bGo" type="button">' + (pop ? 'Reintentar' : 'Recargar') + '</button></div></div>';
   document.body.appendChild(blkEl); $('#bWord').innerHTML = zWord('Synth');
   requestAnimationFrame(() => blkEl.classList.add('on'));
   $('.tcard', blkEl).animate([{ transform:'scale(.9) translateY(24px)', opacity:0, filter:'blur(10px)' }, { transform:'none', opacity:1, filter:'blur(0)' }], { duration:700, easing:'cubic-bezier(.22,1,.36,1)' });
@@ -1292,20 +1338,26 @@ $('#helpBtn').addEventListener('click', openGuide);
   document.addEventListener('click', e => { if (!nd.hidden && !e.target.closest('#navDrop')) setOpen(false); });
   addEventListener('keydown', e => { if (e.key === 'Escape' && !nd.hidden){ setOpen(false); nb.focus(); } });
 }
-/* primera vez: el tutorial sale primero. Tiene «Saltar», y entrar a la cuenta queda para después (barrita ▸ Entrar) */
-function firstRun(){ pageTour(); }
-function pageTour(){
+/* primera vez: primero el tutorial; entrar o crear cuenta viene después (o con «Ahora no») */
+function firstRun(){
+  SZ.guideChooser({ lead:'¡Bienvenido a SynthZ! Antes de nada te muestro cómo funciona. Asistida: SynthonIA te lo enseña en SynthFlow con su manita. Lectura: un recorrido corto por esta página.',
+    asistida:() => SZ.portalOut('chat.html?guia=1'),
+    lectura:() => pageTour(() => setTimeout(() => { if (!SZ.ACC.ready) authModal(true, () => updateTotals()); }, 500)),
+    later:() => setTimeout(() => { if (!SZ.ACC.ready) authModal(true, () => updateTotals()); }, 300) });
+}
+function pageTour(onEnd){
   if ($('#ptour')) return;
   let pick = SZ.CFG.perf;
   const vis = sel => { const e = sel && document.querySelector(sel); return !sel || !!(e && e.offsetWidth && e.getClientRects().length); };
+  const first = (...L) => L.find(x => vis(x)) || L[L.length - 1];
   const steps = [
     { s:'.logo', t:'Este es SynthZ', p:'Tu mesa de IA gratis. Toca el logo cuando quieras volver arriba.' },
     { s:'.navlinks', t:'El menú', p:'Salta a Conectar, a SynthFlow o a tu Consumo en un toque.' },
     { s:'.pill-total', t:'Tus SynXCoin\'s', p:'Aquí ves cuántos llevas. 1 SynXCoin = 1 token: lo que las IA leen y escriben.' },
-    { s:'#railMe', t:'Tu cuenta', p:'Aquí, en la barrita, entras a tu cuenta de SynthZ cuando quieras: guardas tus chats en la nube y personalizas tu perfil. No es obligatorio.' },
-    { s:'#railCfg', t:'Configuración', p:'¿Prefieres lo visual o el rendimiento? Elige y mira abajo cómo se verá. Puedes cambiarlo cuando quieras desde la barrita.', x:'cfg' },
+    { s:first('#railMe', '#accBtn', '#navMenu'), t:'Tu cuenta', p:'Entra a tu cuenta de SynthZ: guardas tus chats en la nube, personalizas tu perfil y hablas con el equipo si necesitas ayuda.' },
+    { s:first('#railCfg', '#cfgBtn', '#navMenu'), t:'Configuración', p:'¿Prefieres lo visual o el rendimiento? Elige y mira abajo cómo se verá. Puedes cambiarlo cuando quieras desde este botón.', x:'cfg' },
     { s:'#como', t:'Cómo funciona', p:'Tres pasos: conectas, hablas y mides. Baja despacio y mira cómo se animan.' },
-    { s:'#conectar', t:'Conecta tus IA', p:'Puter se conecta con un clic, sin llave. OpenRouter usa tu llave gratis. Puedes usar las dos.' },
+    { s:'#conectar', t:'Tu IA ya está lista', p:'La IA de SynthZ viene activada y gratis para todos. Si quieres más, conecta tu Puter con un clic (opcional).' },
     { s:'#chat', t:'Pregunta desde aquí', p:'Escribe tu pregunta y te llevo a SynthFlow por el portal de la Z.' },
     { s:'#consumo', t:'Tu consumo', p:'Tus SynXCoin\'s por día y por IA, para que nada te tome por sorpresa.' },
     { s:null, t:'¡Todo listo!', p:'Ya conoces SynthZ. En SynthFlow te espera una guía corta para elegir tu primera IA.' }
@@ -1362,6 +1414,7 @@ function pageTour(){
     o.animate([{ opacity:1 }, { opacity:0 }], { duration:350 }).onfinish = () => o.remove();
     markVisited();
     if (pick !== SZ.CFG.perf) SZ.applyCfg(Object.assign({}, SZ.CFG, SZ.cfgPreset(pick), { perf:pick }));
+    if (typeof onEnd === 'function') try{ onEnd(); }catch(e){}
   };
   $('[data-skip]', card).addEventListener('click', end);
   $('[data-back]', card).addEventListener('click', () => { if (i > 0){ i--; show(); } });
@@ -1373,10 +1426,11 @@ function pageTour(){
 /* ---------- arranque ---------- */
 function boot(){
   renderCards(); puterCard(); renderLaunch(); renderUsage(); updateTotals(); measure(); SZ.mirrorType($('#launchInp'));
+  SZ.szCatalog().catch(() => {});        /* estado de la IA de SynthZ y lo que llevas hoy */
 /* tarjeta de Puter + botón de cuenta */
 function puterCard(){
   const wrap = $('#cards'); if (!wrap || $('[data-id="puter"]', wrap)) return;
-  wrap.insertAdjacentHTML('beforeend', '<article class="card" data-id="puter" style="--c:#6fd3d6"><div class="card-top">' + SZ.puterLogo('lg') + '<h3>Puter</h3><span class="status" data-st>Sin conectar</span></div><p class="desc">Sin llave: inicia sesión una vez y usa cientos de modelos. Sus créditos gratis se renuevan cada mes. Es solo para conectar sus IA: tu cuenta de SynthZ es aparte.</p><div class="actions"><button class="btn sm" data-pu type="button">Conectar con Puter</button></div></article>');
+  wrap.insertAdjacentHTML('beforeend', '<article class="card" data-id="puter" style="--c:#6fd3d6"><div class="card-top">' + SZ.puterLogo('lg') + '<h3>Puter</h3><span class="status" data-st>Sin conectar</span></div><p class="desc">Opcional: inicia sesión una vez y usa tus créditos personales (gratis, se renuevan cada mes) en modelos como GPT, Claude o Gemini. No cuentan en tu tope de SynthZ, y si se acaban sigues con la IA de SynthZ.</p><div class="actions"><button class="btn sm" data-pu type="button">Conectar con Puter</button></div></article>');
   const card = $('[data-id="puter"]', wrap), b = $('[data-pu]', card);
   const paint = () => { const on = !!(window.puter && puter.auth && puter.auth.isSignedIn()); setStatus(card, on ? 'Conectada' : 'Sin conectar', on ? 'ok' : ''); b.textContent = on ? 'Abrir SynthFlow' : 'Conectar con Puter'; };
   paint(); addEventListener('puter-ready', paint);
@@ -1417,8 +1471,8 @@ try{ backIn = sessionStorage.getItem('synthz:back') || ''; sessionStorage.remove
 if (backIn){ seen = !FIRST; requestAnimationFrame(() => requestAnimationFrame(() => { root.classList.add('backout'); setTimeout(() => root.classList.remove('backin', 'backout'), 950); })); }
 if (seen) finishIntro();
 else {
-  const failsafe = setTimeout(finishIntro, 14000);
-  intro().catch(finishIntro).finally(() => clearTimeout(failsafe));
+  const failsafe = setTimeout(finishIntro, 26000);
+  videoIntro().then(played => intro({ fast:played })).catch(finishIntro).finally(() => clearTimeout(failsafe));
 }
 
 /* ---------- v15: barrita lateral · al abrirla, las palabras del menú de arriba caen en ella (con vidrio) ---------- */
