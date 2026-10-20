@@ -1,0 +1,76 @@
+Voy a conectar el repositorio para leer INFORME.md, PENDIENTES.md y el estilo de chat.html antes de construir la UI de A.L.I.A.S.
+
+Ya tengo el repo clonado; ahora reviso las variables de color y el tema de core.css/chat.css para copiar el estilo antes de escribir los archivos de A.L.I.A.S.
+
+Reviso el estilo (variables `--gold/--wine`, tipografías Geist/Instrument Serif, tokens del chat) y ahora escribo las piezas de A.L.I.A.S.
+
+Ya están el JS y el HTML; escribo ahora `alias.css` (vidrio dorado/vino, claro/oscuro, reduced-motion, móvil).
+
+Ahora valido la sintaxis y hago una prueba rápida con un navegador simulado (plan → ejecutar → error → resultado).
+
+Es un fallo de mi guion de prueba (tras reordenar, el paso 2 corre primero y falla); lo ajusto.
+
+Entrego los 6 archivos de la lista. Están escritos en el repo (rama `nueva-version`, sin commit) y probé el flujo completo en Chromium con un `window.ALIAS` simulado. Ahí funcionaron el plan, reordenar, el error con reintento, la aprobación paso a paso, el resultado con fuentes y descarga, y "nuevo".
+
+Los textos de mi prueba eran un `textos.json` de relleno, así que no se ha visto la UI con los textos reales. En la consola solo salieron fallos de red de las fuentes de Google y un 404 que no identifiqué; no son del código.
+
+=== ARCHIVO: alias.html ===
+(escrito en `/home/claude/dope-l-star/synthz-style/alias.html`, primera línea `<!-- Hecho por: CONSTRUCTOR -->`)
+
+=== ARCHIVO: alias.css ===
+(escrito en `/home/claude/dope-l-star/synthz-style/alias.css`)
+
+=== ARCHIVO: src/alias/00-estado.js ===
+=== ARCHIVO: src/alias/10-vista.js ===
+=== ARCHIVO: src/alias/20-controles.js ===
+=== ARCHIVO: src/alias/30-resultado.js ===
+(los cuatro escritos en `/home/claude/dope-l-star/synthz-style/src/alias/`, todos con `/* Hecho por: CONSTRUCTOR */` en la primera línea)
+
+## Ids y clases que otro código debe conocer
+
+**Globales**
+- `window.AliasUI`: `t(clave, vars)`, `lang`, `S` (estado), `draw()`, `boot`. También expone `window.t` y `window.ALIAS_LANG`.
+- Evento `alias:lang` (con `detail.lang`) al cambiar el idioma.
+- `localStorage`: `synthz:alias:lang` (`es`|`en`) y `synthz:alias:scheme` (`light`|`dark`).
+- Hace falta `window.ALIAS` con `plan` y `runStep`. Si no existe, la UI muestra `err_sin_motor`.
+
+**Ids**
+- Estructura: `aliasLive` (aria-live), `main`, `schemeBtn`.
+- Inicio: `vHome`, `goalForm`, `goalInput`, `goBtn`, `homeMsg`, `tplList`.
+- Plan: `vPlan`, `planTitle`, `planGoal`, `editHint`, `progress`, `progTxt`, `stepList`.
+- Controles: `ctl`, `ctlMsg`, `bRun`, `bApprove`, `bResume`, `bPause`, `bCancel`, `redoNote`.
+- Error y límite: `errBox`, `errStep`, `errMsg`, `bErrRetry`, `bErrSkip`, `bErrStop`, `limitBox`, `bLimitBack`.
+- Resultado: `vResult`, `resTitle`, `resText`, `resNote`, `resFiles`, `resSrcWrap`, `resSources`, `resStepsWrap`, `resSteps`, `bCopy`, `bNew`.
+
+**Clases y atributos**
+- `.step[data-id][data-status=pending|running|done|error|skipped]`.
+- `.sdot`, `.sout`, `.rtext`, `.langs button[data-lang]`.
+- `.tpl[data-tpl=inv|pres|est|cod]`.
+- Botones de paso con `data-act=up|down|ren|del|redo`.
+- `html[data-scheme=light|dark]` y `html.ready`.
+
+**Claves que `textos.json` debe tener (es y en)**
+- Sueltas: `aprobar_q borrado btn_aprobar btn_bajar btn_borrar btn_cancelar btn_continuar btn_ejecutar btn_pausar btn_rehacer btn_renombrar btn_subir cancelado confirm_cancel en_curso err_generico err_limite err_limite_d err_otra err_parar err_plan err_red err_seguir err_sin_motor err_titulo err_vacio error_n goal_btn goal_hint goal_label goal_ph hecho_n home_nota home_sub home_titulo idioma idioma_en idioma_es listo marca_sub modo_auto modo_auto_d modo_manual modo_manual_d modo_titulo movido paso_n pasos_lista_aria pausado pausando plan_edit_hint plan_listo plan_obj plan_titulo planeando progreso_n rehacer_nota reintento_pista rename_label renombrado res_archivo res_copiado res_copiar res_fuentes res_nuevo res_pasos res_saltados res_titulo res_vacio saltar titulo tema_claro tema_oscuro ver_salida`
+- Por familia: `st_pending st_running st_done st_error st_skipped`, `tool_search tool_file tool_memory tool_image tool_think`, `tpl_titulo`, y `tpl_{inv,pres,est,cod}_{t,d,g}`.
+- La plantilla `tpl_*_g` puede llevar una parte `[entre corchetes]`: al pulsarla, esa parte queda seleccionada para escribir encima.
+- Variables: `{n} {m} {total} {title} {pos} {name}`.
+
+## SUPUESTOS
+1. El idioma se lee de `src/alias/textos.json` con `fetch`. Si una clave no existe en el idioma elegido usa la de `es`, y si tampoco existe muestra la clave.
+2. Los pasos y las respuestas se dibujan siempre como texto (nunca `innerHTML`); solo se enlazan URLs http(s). Si el archivo llega como `.pptx`, `.zip` o `.pdf`, la UI asume que `file.text` viene en base64; el resto se descarga como texto.
+3. "Probarlo de otra forma" repite el paso añadiendo la pista `reintento_pista` al `input`. El modo (manual/automático) se puede cambiar durante la ejecución, y "Rehacer" borra ese paso y los siguientes.
+
+## AVISOS
+- **`src/build.json`** necesita la línea `"alias.js": "src/alias"`. Sin ella `alias.html` no encuentra `alias.js`. `alias.css` es un archivo suelto, no lo arma el build.
+- **`src/alias/textos.json`** debe existir con las claves de arriba antes de salir.
+- **`vercel.json`** y **`sw.js`** quizá necesiten la ruta `/alias` y la caché de `alias.*` y `textos.json`; no los toqué.
+- `alias.html` no carga `core.js`, así que no tiene el cursor, el portal ni los temas de color de SynthFlow, solo `--gold`/`--wine` y claro/oscuro propios. Si se quiere el mismo fondo animado, hay que decidirlo fuera de mi lista.
+- `alias.html` carga el icono desde `icon.svg` en la raíz; no verifiqué que ese archivo exista para esta página.
+
+Voy a confirmar que solo estén mis 6 archivos sin seguimiento y a hacer commit local en `nueva-version`.
+
+Hice el commit local `a6818dd` en `nueva-version` con mis archivos de A.L.I.A.S., pero el push falló y los cambios no están en GitHub.
+
+El repo está conectado solo en modo lectura, y el proxy rechazó la subida con un 403. No pedí acceso de escritura porque tu regla era no pedir ni usar claves y tocar solo mis archivos. El commit no incluye nada más.
+
+Si quieres que lo suba, dime y pido acceso de escritura al repo. También puedes tomar los archivos de esa carpeta e integrarlos tú. Sigue pendiente lo que anoté en los AVISOS: la línea de `alias.js` en `src/build.json` y la creación de `textos.json`.

@@ -1,0 +1,574 @@
+=== ARCHIVO: src/alias/textos.json ===
+```json
+// Hecho por: ESCRIBA
+{
+  "es": {
+    "panel.titulo": "A.L.I.A.S.",
+    "panel.subtitulo": "Un objetivo, paso a paso",
+    "panel.quien": "A.L.I.A.S. es otro agente. No es el chat, ni SuperiorSynth, ni SynthonIA.",
+    "aviso.alcance": "No es un navegador completo y no publica apps. En el plan gratis busca, resume con fuentes y prepara archivos para que los descargues.",
+    "aviso.cupo": "Gratis: {n} misiones al día",
+    "aviso.quedan": "Te quedan {n} hoy.",
+    "aviso.agotado": "Hoy ya usaste las misiones gratis. Vuelven mañana.",
+    "aviso.sinCobro": "El plan gratis no cobra nada.",
+    "aviso.pausa": "En pausa no corre el siguiente paso.",
+    "aviso.aprobar": "Si das el visto bueno, sigue el siguiente paso.",
+    "aviso.rehacer": "Rehacer vuelve a hacer solo este paso.",
+    "ph.label": "Tu objetivo",
+    "ph.objetivo": "Un resumen con fuentes, una presentación corta, un plan de estudio o un código pequeño",
+    "btn.plan": "Armar el plan",
+    "btn.pausar": "Pausar",
+    "btn.seguir": "Seguir",
+    "btn.aprobar": "Aprobar y seguir",
+    "btn.rehacer": "Rehacer este paso",
+    "btn.nueva": "Nueva misión",
+    "btn.descartar": "Descartar plan",
+    "btn.copiar": "Copiar",
+    "btn.descargar": "Descargar",
+    "btn.fuentesVer": "Ver fuentes",
+    "btn.fuentesOcultar": "Ocultar fuentes",
+    "btn.ejemplos": "Ver ejemplos",
+    "btn.usarEjemplo": "Usar este ejemplo",
+    "btn.cerrar": "Cerrar",
+    "btn.reintentar": "Intentar de nuevo",
+    "estado.ocio": "Sin misión",
+    "estado.planeando": "Armando el plan…",
+    "estado.enCurso": "Trabajando en este paso…",
+    "estado.pausado": "En pausa",
+    "estado.esperando": "Esperando tu visto bueno",
+    "estado.hecho": "Misión lista",
+    "estado.error": "Este paso no salió",
+    "estado.pasoListo": "Paso listo",
+    "paso.espera": "En espera",
+    "paso.ahora": "Ahora",
+    "paso.listo": "Listo",
+    "paso.fallo": "No salió",
+    "paso.contador": "Paso {n} de {total}",
+    "vacio.titulo": "Una misión, con los pasos a la vista",
+    "vacio.cuerpo": "Escribe un objetivo. Verás el plan antes de avanzar. Puedes pausar, aprobar o rehacer.",
+    "tool.search": "Buscar",
+    "tool.file": "Archivo",
+    "tool.memory": "Memoria",
+    "tool.image": "Imagen",
+    "tool.think": "Pensar",
+    "tool.search.ayuda": "Busca en la web y guarda el título y el enlace.",
+    "tool.file.ayuda": "Prepara un texto, un código o una presentación para descargar.",
+    "tool.memory.ayuda": "Usa lo que esta cuenta ya tiene guardado. No inventa recuerdos.",
+    "tool.image.ayuda": "Si el paso lo pide, prepara una imagen sencilla.",
+    "tool.think.ayuda": "Ordena lo que ya salió en los pasos anteriores.",
+    "resultado.fuentes": "Fuentes",
+    "resultado.sinFuentes": "Este paso no trajo fuentes de internet.",
+    "resultado.archivo": "Archivo listo: {nombre}",
+    "resultado.copiado": "Copiado.",
+    "resultado.sinArchivo": "Este paso no generó un archivo.",
+    "archivo.texto": "Texto",
+    "archivo.codigo": "Código",
+    "archivo.presentacion": "Presentación",
+    "imagen.nota": "Es una imagen de apoyo, no un estudio de video.",
+    "memoria.vacia": "Todavía no hay nada guardado para usar aquí.",
+    "memoria.uso": "Solo usaré lo que esta cuenta ya guardó.",
+    "error.red": "No hubo conexión. Revisa tu red e inténtalo de nuevo.",
+    "error.vacio": "Escribe qué quieres lograr. Con una frase basta.",
+    "error.paso": "Este paso no salió. Puedes rehacerlo o seguir.",
+    "error.sesion": "Entra a tu cuenta para empezar una misión.",
+    "error.generico": "Algo no salió bien. Inténtalo otra vez en un momento.",
+    "error.archivo": "No pude armar el archivo. El texto queda aquí para copiarlo.",
+    "error.fuentes": "No encontré fuentes. No voy a inventar enlaces.",
+    "error.pasos": "Un plan necesita entre 3 y 7 pasos. Pide uno nuevo.",
+    "srv.sesion": "Entra a tu cuenta para usar A.L.I.A.S.",
+    "srv.objetivoVacio": "Falta el objetivo.",
+    "srv.objetivoLargo": "El objetivo es demasiado largo. Acórtalo.",
+    "srv.planRoto": "No pude leer ese plan. Pide uno nuevo.",
+    "srv.pasoAjeno": "Ese paso no está en el plan.",
+    "srv.pasoFallo": "Este paso no se pudo completar.",
+    "srv.idioma": "El idioma tiene que ser español o inglés.",
+    "srv.accion": "No reconocí esa acción.",
+    "srv.generico": "No pude completar eso. Inténtalo de nuevo.",
+    "srv.limite": "límite",
+    "plantilla.titulo": "Ejemplos para empezar",
+    "plantilla.ayuda": "Puedes cambiar el texto antes de armar el plan.",
+    "a11y.objetivo": "Objetivo de la misión",
+    "a11y.pasos": "Lista de pasos",
+    "a11y.cerrar": "Cerrar A.L.I.A.S."
+  },
+  "en": {
+    "panel.titulo": "A.L.I.A.S.",
+    "panel.subtitulo": "One goal, step by step",
+    "panel.quien": "A.L.I.A.S. is a separate agent. It is not the chat, SuperiorSynth, or SynthonIA.",
+    "aviso.alcance": "This is not a full browser, and it does not publish apps. On the free plan it searches, summarizes with sources, and prepares files for you to download.",
+    "aviso.cupo": "Free: {n} missions a day",
+    "aviso.quedan": "You have {n} left today.",
+    "aviso.agotado": "You've used today's free missions. They come back tomorrow.",
+    "aviso.sinCobro": "The free plan does not charge you.",
+    "aviso.pausa": "While this is paused, the next step does not run.",
+    "aviso.aprobar": "If you approve, the next step starts.",
+    "aviso.rehacer": "Redo runs only this step again.",
+    "ph.label": "Your goal",
+    "ph.objetivo": "A summary with sources, a short slide deck, a study plan, or a small piece of code",
+    "btn.plan": "Make the plan",
+    "btn.pausar": "Pause",
+    "btn.seguir": "Continue",
+    "btn.aprobar": "Approve and continue",
+    "btn.rehacer": "Redo this step",
+    "btn.nueva": "New mission",
+    "btn.descartar": "Discard plan",
+    "btn.copiar": "Copy",
+    "btn.descargar": "Download",
+    "btn.fuentesVer": "Show sources",
+    "btn.fuentesOcultar": "Hide sources",
+    "btn.ejemplos": "See examples",
+    "btn.usarEjemplo": "Use this example",
+    "btn.cerrar": "Close",
+    "btn.reintentar": "Try again",
+    "estado.ocio": "No mission yet",
+    "estado.planeando": "Making the plan…",
+    "estado.enCurso": "Working on this step…",
+    "estado.pausado": "Paused",
+    "estado.esperando": "Waiting for your OK",
+    "estado.hecho": "Mission complete",
+    "estado.error": "This step didn't work",
+    "estado.pasoListo": "Step done",
+    "paso.espera": "Waiting",
+    "paso.ahora": "Now",
+    "paso.listo": "Done",
+    "paso.fallo": "Didn't work",
+    "paso.contador": "Step {n} of {total}",
+    "vacio.titulo": "A mission, with the steps in view",
+    "vacio.cuerpo": "Write a goal. You'll see the plan before it moves on. You can pause, approve, or redo.",
+    "tool.search": "Search",
+    "tool.file": "File",
+    "tool.memory": "Memory",
+    "tool.image": "Image",
+    "tool.think": "Think",
+    "tool.search.ayuda": "Searches the web and keeps the title and the link.",
+    "tool.file.ayuda": "Prepares text, code, or slides for download.",
+    "tool.memory.ayuda": "Uses what this account already saved. It does not invent memories.",
+    "tool.image.ayuda": "When the step asks for it, prepares a simple image.",
+    "tool.think.ayuda": "Makes sense of what earlier steps already found.",
+    "resultado.fuentes": "Sources",
+    "resultado.sinFuentes": "This step didn't bring web sources.",
+    "resultado.archivo": "File ready: {nombre}",
+    "resultado.copiado": "Copied.",
+    "resultado.sinArchivo": "This step didn't produce a file.",
+    "archivo.texto": "Text",
+    "archivo.codigo": "Code",
+    "archivo.presentacion": "Slides",
+    "imagen.nota": "It's a supporting image, not a video studio.",
+    "memoria.vacia": "There's nothing saved to use here yet.",
+    "memoria.uso": "I'll only use what this account already saved.",
+    "error.red": "Couldn't connect. Check your network and try again.",
+    "error.vacio": "Say what you want done. One sentence is enough.",
+    "error.paso": "This step didn't work. You can redo it or move on.",
+    "error.sesion": "Sign in to start a mission.",
+    "error.generico": "Something went wrong. Try again in a moment.",
+    "error.archivo": "I couldn't build the file. The text is still here to copy.",
+    "error.fuentes": "I didn't find sources. I won't make up links.",
+    "error.pasos": "A plan needs 3 to 7 steps. Ask for a new one.",
+    "srv.sesion": "Sign in to use A.L.I.A.S.",
+    "srv.objetivoVacio": "The goal is missing.",
+    "srv.objetivoLargo": "That goal is too long. Shorten it.",
+    "srv.planRoto": "I couldn't read that plan. Ask for a new one.",
+    "srv.pasoAjeno": "That step isn't in the plan.",
+    "srv.pasoFallo": "This step couldn't be completed.",
+    "srv.idioma": "The language has to be Spanish or English.",
+    "srv.accion": "I didn't recognize that action.",
+    "srv.generico": "I couldn't finish that. Try again.",
+    "srv.limite": "límite",
+    "plantilla.titulo": "Examples to start with",
+    "plantilla.ayuda": "You can change the wording before making the plan.",
+    "a11y.objetivo": "Mission goal",
+    "a11y.pasos": "Step list",
+    "a11y.cerrar": "Close A.L.I.A.S."
+  }
+}
+```
+
+=== ARCHIVO: src/alias/plantillas.json ===
+```json
+// Hecho por: ESCRIBA
+{
+  "plantillas": [
+    {
+      "id": "investigacion",
+      "icono": "🔍",
+      "nombre": {
+        "es": "Investigación con fuentes",
+        "en": "Research with sources"
+      },
+      "objetivoEjemplo": {
+        "es": "Resume cómo se recicla el plástico en Colombia y cita las fuentes.",
+        "en": "Summarize how plastic recycling works in Colombia and cite the sources."
+      },
+      "textoAyuda": {
+        "es": "Busca de verdad y deja los enlaces. Útil para una tarea o una duda concreta.",
+        "en": "It really searches and keeps the links. Useful for homework or a specific question."
+      },
+      "pasosSugeridos": [
+        {
+          "id": 1,
+          "tool": "search",
+          "title": {
+            "es": "Buscar fuentes",
+            "en": "Find sources"
+          },
+          "input": {
+            "es": "Buscar explicaciones claras sobre el reciclaje de plástico en Colombia, con sitios que se puedan citar.",
+            "en": "Find clear explanations of plastic recycling in Colombia, from sites worth citing."
+          }
+        },
+        {
+          "id": 2,
+          "tool": "search",
+          "title": {
+            "es": "Contrastar",
+            "en": "Cross-check"
+          },
+          "input": {
+            "es": "Buscar una segunda fuente que confirme o matice lo anterior. Anotar título y enlace.",
+            "en": "Find a second source that confirms or qualifies the first. Note the title and the link."
+          }
+        },
+        {
+          "id": 3,
+          "tool": "think",
+          "title": {
+            "es": "Quedarme con lo común",
+            "en": "Keep what agrees"
+          },
+          "input": {
+            "es": "Separar lo que las fuentes coinciden en decir y lo que no queda claro. No inventar datos.",
+            "en": "Separate what the sources agree on from what is still unclear. Do not invent facts."
+          }
+        },
+        {
+          "id": 4,
+          "tool": "file",
+          "title": {
+            "es": "Entregar el resumen",
+            "en": "Deliver the summary"
+          },
+          "input": {
+            "es": "Escribir un resumen corto en texto, con las fuentes al final (título y enlace).",
+            "en": "Write a short text summary, with the sources at the end (title and link)."
+          }
+        }
+      ]
+    },
+    {
+      "id": "presentacion",
+      "icono": "📊",
+      "nombre": {
+        "es": "Presentación",
+        "en": "Slide deck"
+      },
+      "objetivoEjemplo": {
+        "es": "Arma una presentación corta, para clase, sobre el agua en Bogotá.",
+        "en": "Make a short class presentation about water in Bogotá."
+      },
+      "textoAyuda": {
+        "es": "Pocas diapositivas, en un archivo para descargar. No diseña video ni la publica.",
+        "en": "A few slides, in a file you can download. It does not design a video or publish anything."
+      },
+      "pasosSugeridos": [
+        {
+          "id": 1,
+          "tool": "search",
+          "title": {
+            "es": "Juntar datos",
+            "en": "Gather facts"
+          },
+          "input": {
+            "es": "Buscar datos básicos y entendibles sobre el agua en Bogotá. Guardar título y enlace.",
+            "en": "Find basic, easy-to-follow facts about water in Bogotá. Keep the title and the link."
+          }
+        },
+        {
+          "id": 2,
+          "tool": "think",
+          "title": {
+            "es": "Elegir 5 láminas",
+            "en": "Pick 5 slides"
+          },
+          "input": {
+            "es": "Proponer título y 5 láminas: una idea por lámina, con frases cortas.",
+            "en": "Propose a title and 5 slides: one idea per slide, in short lines."
+          }
+        },
+        {
+          "id": 3,
+          "tool": "file",
+          "title": {
+            "es": "Armar el archivo",
+            "en": "Build the file"
+          },
+          "input": {
+            "es": "Crear un PPTX con esas láminas. Texto grande y poco. Nombre: presentacion.pptx.",
+            "en": "Create a PPTX with those slides. Large type, not much text. File name: presentacion.pptx."
+          }
+        },
+        {
+          "id": 4,
+          "tool": "think",
+          "title": {
+            "es": "Probarlo en voz alta",
+            "en": "Say it out loud"
+          },
+          "input": {
+            "es": "Revisar que cada lámina se pueda decir en una o dos frases. Señalar qué sobra.",
+            "en": "Check that each slide can be said in one or two sentences. Point out what to cut."
+          }
+        }
+      ]
+    },
+    {
+      "id": "estudio",
+      "icono": "📚",
+      "nombre": {
+        "es": "Plan de estudio",
+        "en": "Study plan"
+      },
+      "objetivoEjemplo": {
+        "es": "Haz un plan de 5 días para repasar fracciones, con pausas.",
+        "en": "Make a 5-day plan to review fractions, with breaks."
+      },
+      "textoAyuda": {
+        "es": "Días cortos y realistas. Puedes pausar o rehacer un día.",
+        "en": "Short, realistic days. You can pause or redo a day."
+      },
+      "pasosSugeridos": [
+        {
+          "id": 1,
+          "tool": "memory",
+          "title": {
+            "es": "Ver si ya hay una meta",
+            "en": "Check for a saved goal"
+          },
+          "input": {
+            "es": "Mirar si esta cuenta ya guardó un nivel o una meta sobre fracciones. Si no hay nada, seguir sin inventar.",
+            "en": "See if this account already saved a level or a goal about fractions. If nothing is there, go on without inventing one."
+          }
+        },
+        {
+          "id": 2,
+          "tool": "think",
+          "title": {
+            "es": "Partir en 5 días",
+            "en": "Split into 5 days"
+          },
+          "input": {
+            "es": "Armar 5 días de repaso corto, con una pausa. Un solo tema por día.",
+            "en": "Lay out 5 short review days, including a break. One topic per day."
+          }
+        },
+        {
+          "id": 3,
+          "tool": "file",
+          "title": {
+            "es": "Escribir el plan",
+            "en": "Write the plan"
+          },
+          "input": {
+            "es": "Guardar el plan como texto (plan-estudio.txt): día, qué hacer y cuánto tiempo.",
+            "en": "Save the plan as text (plan-estudio.txt): the day, what to do, and how long."
+          }
+        },
+        {
+          "id": 4,
+          "tool": "think",
+          "title": {
+            "es": "Si se salta un día",
+            "en": "If a day gets skipped"
+          },
+          "input": {
+            "es": "Decir cómo retomar sin empezar de cero si un día no se cumple.",
+            "en": "Say how to pick it back up, without starting over, if a day is missed."
+          }
+        }
+      ]
+    },
+    {
+      "id": "codigo",
+      "icono": "💻",
+      "nombre": {
+        "es": "Código",
+        "en": "Code"
+      },
+      "objetivoEjemplo": {
+        "es": "Escribe una función en JavaScript que saque el promedio de una lista de notas.",
+        "en": "Write a JavaScript function that averages a list of grades."
+      },
+      "textoAyuda": {
+        "es": "Un ejemplo pequeño y cómo probarlo. No publica ninguna app.",
+        "en": "A small example, plus how to try it. It does not publish an app."
+      },
+      "pasosSugeridos": [
+        {
+          "id": 1,
+          "tool": "think",
+          "title": {
+            "es": "Entrada y salida",
+            "en": "Input and output"
+          },
+          "input": {
+            "es": "Definir qué entra (lista de notas) y qué sale (el promedio). Decir qué hacer si la lista está vacía.",
+            "en": "Define the input (a list of grades) and the output (the average). Say what to do if the list is empty."
+          }
+        },
+        {
+          "id": 2,
+          "tool": "think",
+          "title": {
+            "es": "Un ejemplo mínimo",
+            "en": "A tiny example"
+          },
+          "input": {
+            "es": "Elegir tres notas de ejemplo y calcular el promedio esperado a mano.",
+            "en": "Pick three sample grades and calculate the expected average by hand."
+          }
+        },
+        {
+          "id": 3,
+          "tool": "file",
+          "title": {
+            "es": "Escribir la función",
+            "en": "Write the function"
+          },
+          "input": {
+            "es": "Escribir la función en JavaScript en promedio.js, con el ejemplo al final del archivo.",
+            "en": "Write the function in JavaScript in promedio.js, with the example at the end of the file."
+          }
+        },
+        {
+          "id": 4,
+          "tool": "think",
+          "title": {
+            "es": "Cómo probarla",
+            "en": "How to try it"
+          },
+          "input": {
+            "es": "Explicar en pocas líneas cómo ejecutar el archivo y qué resultado se debería ver.",
+            "en": "In a few lines, explain how to run the file and what result you should see."
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+=== ARCHIVO: ALIAS.md ===
+```markdown
+<!-- Hecho por: ESCRIBA -->
+
+# A.L.I.A.S.
+
+Sistema de lógica e inteligencia aumentada. En la interfaz el nombre se queda **A.L.I.A.S.** Agente aparte dentro de SynthFlow (Colombia). No es el chat, no es SuperiorSynth y no es SynthonIA.
+
+## English summary
+
+A.L.I.A.S. takes one goal, splits it into 3–7 visible steps, and runs them one at a time with tools: search (with sources), file (text, code, or PPTX), memory, image, and think. You can pause, approve, or redo a step. Copy lives in `src/alias/textos.json` (`es` and `en`, same keys). The client calls `t('clave')`. Templates live in `src/alias/plantillas.json`. Free plan, plain language: it is not a full browser and it does not publish apps. Another language later is a new object with the same keys, not a code change.
+
+## Visión
+
+La persona escribe un objetivo. A.L.I.A.S. muestra el plan y lo cumple de a un paso. El resultado se puede leer, copiar o descargar: un resumen con enlaces, un texto, un código, una presentación corta o una imagen de apoyo.
+
+El plan de hoy es el gratis (Chispa). No cobra. No dice «ilimitado» ni «la mejor IA».
+
+## Principios
+
+1. **Transparente.** El plan y el paso actual siempre se ven. No hay un «trabajando…» sin decir qué hace.
+2. **La persona manda.** Puede pausar, aprobar el paso o rehacerlo.
+3. **Resultados reales.** Si busca, deja título y URL. Si no hay fuentes, lo dice y no inventa enlaces.
+4. **Dos idiomas.** Español por defecto e inglés desde el día 1. Mismas claves.
+5. **Honesto.** No promete un navegador completo ni publicar apps.
+
+## Textos
+
+- Diccionario único: `src/alias/textos.json`, forma `{ es:{…}, en:{…} }`. No se duplica en este archivo.
+- `t('clave')` lee el idioma activo y, si falta la clave, cae a `es`.
+- Huecos que rellena el código, no el JSON: `{n}`, `{total}`, `{nombre}`.
+- Cupo visible: `aviso.cupo` → «Gratis: {n} misiones al día». Agotado: `aviso.agotado`.
+- Alcance visible: `aviso.alcance`.
+- La primera línea de cada JSON es el comentario de autor. Hay que quitarla antes de `JSON.parse`.
+- Un idioma nuevo = otro objeto junto a `es` y `en`, con las mismas claves.
+
+## Contrato
+
+`POST /api/alias`. JSON. Siempre `lang`: `"es"` o `"en"`. Los textos de la respuesta van en ese idioma. La sesión es la de `api/chat.js`: `Authorization: Bearer`, `auth(req)` en `api/_lib.js`, usuario `me.sub`.
+
+**1. Plan**
+
+`{ "action":"plan", "lang":"es", "goal":"texto" }`
+
+`{ "ok":true, "plan":{ "id":"…", "goal":"…", "steps":[ { "id":1, "title":"…", "tool":"search", "input":"…" } ] } }`
+
+De 3 a 7 pasos. `tool`: `search` | `file` | `memory` | `image` | `think`.
+
+**2. Paso**
+
+`{ "action":"step", "lang":"es", "plan":{ }, "stepId":1, "prev":[ ] }`
+
+`{ "ok":true, "step":{ "id":1, "status":"done", "output":"…", "sources":[ { "title":"…", "url":"…" } ], "file":null, "error":null } }`
+
+`status`: `done` | `error`. `file`: `{ "name", "mime", "text" }` o `null`. `sources` puede ir vacío.
+
+**Errores:** `{ "ok":false, "error":"mensaje en el idioma de lang" }`.
+
+**Límite diario:** `{ "ok":false, "error":"límite", "limit":true }`. La palabra `límite` no se traduce (`srv.limite` es igual en `es` y en `en`). La frase amable la pone el cliente con `aviso.agotado`.
+
+**Cliente**
+
+```js
+window.ALIAS = {
+  plan(goal) {},
+  runStep(plan, id, prev) {},
+  tools: { search() {}, file() {}, memory() {}, image() {} }
+};
+```
+
+`think` no está en `tools`: lo resuelve el servidor dentro del paso.
+
+## Fases
+
+1. **Plan visible.** Objetivo → 3 a 7 pasos. Aún no corre herramientas. Se puede descartar y pedir otro.
+2. **Paso a paso.** `search` y `think`, con fuentes. Pausar, aprobar, rehacer. Cupo diario del plan gratis.
+3. **Archivos y memoria.** Texto, código y PPTX (`file`). Memoria solo de lo ya guardado en la cuenta (`memory`).
+4. **Imágenes.** `image`, una imagen de apoyo por misión cuando exista. Sigue sin navegador completo y sin publicar apps.
+
+Esta entrega cubre textos, plantillas y este contrato. Las fases 2 a 4 esperan `api/alias` y la ventana.
+
+## Cómo se prueba (sin claves)
+
+1. Tras quitar la primera línea, `textos.json` parsea y `es` y `en` tienen las mismas claves, ninguna vacía.
+2. `plantillas.json`: 4 plantillas (`investigacion`, `presentacion`, `estudio`, `codigo`). Cada una tiene `id`, `icono`, `nombre`, `objetivoEjemplo`, `textoAyuda` y de 3 a 6 `pasosSugeridos`. Cada paso tiene `tool` válida, `title` e `input` en `es` y `en`.
+3. Cuando exista la API, con la misma sesión del chat: `plan` devuelve 3–7 pasos en el `lang` pedido; `step` devuelve `output` en ese idioma; si buscó, `sources` trae título y URL. Sin sesión: `ok:false` y `srv.sesion`. Pasado el cupo: `limit:true` y `error` igual a `límite`.
+4. En la página, los rótulos salen de `t('clave')`. Existen `window.ALIAS.plan` y `runStep`.
+
+## Qué no hace aún
+
+- No abre un navegador completo ni entra a cuentas, bancos o páginas con login.
+- No publica apps ni las sube a una tienda.
+- No es SuperiorSynth ni SynthonIA. No sustituye el chat.
+- No cobra y no enciende los planes de pago (Syntonia, Timeless, Orquesta).
+- No guarda el archivo en el servidor para siempre: se copia o se descarga.
+- No asegura que cada enlace siga vivo.
+- `api/alias` y la ventana no están en la rama `nueva-version`. Este documento no los implementa.
+
+## Archivos de esta entrega
+
+| Archivo | Qué es |
+| --- | --- |
+| `src/alias/textos.json` | Interfaz, estados, errores y frases del servidor |
+| `src/alias/plantillas.json` | Cuatro misiones de ejemplo |
+| `ALIAS.md` | Visión, principios, contrato y fases |
+```
+
+AVISOS
+- En `nueva-version` no existe `api/alias.js`. No lo creé.
+- `build.mjs` solo une piezas `NN-` de `src/build.json`. Estos JSON no entran ahí. Quien los cargue debe saltar la primera línea (`// Hecho por: ESCRIBA`) antes de `JSON.parse`.
+- `limit()` en `api/_lib.js` lanza un texto fijo en español («Vas muy rápido…»), fuera del diccionario. El cupo de `api/chat.js` es de equipo (SynXCoin), no el de misiones de A.L.I.A.S. No mezclar los mensajes.
+
+SUPUESTOS
+- El número de misiones no está en el contrato: `aviso.cupo` usa `{n}` y lo rellena quien implemente el cupo.
+- En el límite, `error` queda la palabra exacta `límite` en los dos idiomas; la frase amable es `aviso.agotado`. El resto de errores sí cambia con `lang`.
+- Las fases 2 a 4 son un orden propuesto: `PENDIENTES.md` no define A.L.I.A.S. Los textos viven solo en `textos.json`, no repetidos en `plantillas.json`.
