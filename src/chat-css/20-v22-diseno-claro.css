@@ -5,7 +5,7 @@ pre,code,kbd,.cvp-code,.cnv pre,.rccode,.hk-code,.og code,.fc .ic{font-family:va
 /* ---- la caja para escribir: todo adentro, como en Claude ---- */
 .composer{padding:8px clamp(12px,4vw,48px) 18px}
 .composer .comp-in{width:min(100%,780px);margin:0 auto;display:grid!important;grid-template-columns:auto 1fr auto;grid-template-areas:"c c c" "f f f" "a p s";align-items:center;gap:6px 8px;padding:10px 10px 10px 12px;border-radius:24px;border:1px solid rgba(255,255,255,.12);background:rgba(30,29,36,.72);backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3);box-shadow:0 18px 50px -28px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.05);transition:border-color .3s,box-shadow .3s}
-.composer .comp-in:focus-within{border-color:rgba(230,182,95,.38)}
+.composer .comp-in:focus-within{border-color:rgba(var(--gold-rgb),.38)}
 .composer .comp-in>.field{grid-area:f;border:0!important;background:none!important;box-shadow:none!important;border-radius:0!important}
 .composer .comp-in textarea{padding:4px 6px!important;font-size:16px!important;min-height:26px;max-height:220px}
 .composer.big .comp-in textarea{min-height:56px}
@@ -17,16 +17,16 @@ pre,code,kbd,.cvp-code,.cnv pre,.rccode,.hk-code,.og code,.fc .ic{font-family:va
 .composer .attach svg{width:18px;height:18px}
 #imgBtn,#webBtn{display:none!important}
 .amenu .only-small{display:flex!important}
-.amenu [aria-checked="true"]{background:rgba(230,182,95,.1)}
-.amenu .mck{font-style:normal;color:#e6b65f;margin-left:auto;width:14px}
+.amenu [aria-checked="true"]{background:rgba(var(--gold-rgb),.1)}
+.amenu .mck{font-style:normal;color:var(--gold);margin-left:auto;width:14px}
 .cpk{min-height:36px!important;padding:0 10px 0 6px!important;border-radius:12px!important;font-size:13.5px!important;background:rgba(255,255,255,.03)!important}
 .cpk2{min-height:36px!important;border-radius:12px!important;font-size:13.5px!important;padding:0 12px!important}
 .agpill{min-height:36px;border-radius:12px}
 .onchips{grid-area:c;display:flex;flex-wrap:wrap;gap:6px}
 .onchips:empty{display:none}
-.onchip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px 4px 10px;border-radius:999px;font-size:12.5px;color:#f3dcae;background:rgba(230,182,95,.1);border:1px solid rgba(230,182,95,.3);animation:chipin .4s cubic-bezier(.22,1,.36,1) both}
+.onchip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px 4px 10px;border-radius:999px;font-size:12.5px;color:#f3dcae;background:rgba(var(--gold-rgb),.1);border:1px solid rgba(var(--gold-rgb),.3);animation:chipin .4s cubic-bezier(.22,1,.36,1) both}
 .onchip svg{width:12px;height:12px;opacity:.7}
-.onchip:hover{background:rgba(230,182,95,.18)}
+.onchip:hover{background:rgba(var(--gold-rgb),.18)}
 /* debajo de la caja: solo tu límite, discreto */
 .hintline{width:min(100%,780px)!important;justify-content:center!important;margin-top:8px!important;font-size:12px!important}
 .hintline .kbdh,.hintline .saver[aria-pressed="false"],.hintline .saver{display:none!important}
@@ -57,7 +57,7 @@ pre,code,kbd,.cvp-code,.cnv pre,.rccode,.hk-code,.og code,.fc .ic{font-family:va
 .m.bot .acts .act:hover{background:rgba(255,255,255,.08)!important;color:var(--text)}
 .m.bot .acts .act svg{width:16px!important;height:16px!important}
 .m.bot .acts .act span{display:none}
-.m.bot .acts .act[data-a="star"][aria-pressed="true"]{color:#e6b65f}
+.m.bot .acts .act[data-a="star"][aria-pressed="true"]{color:var(--gold)}
 .m.bot .acts .act[data-a="cont"]{font-size:12.5px!important;width:auto;padding:0 10px!important}
 
 /* ---- arriba: menos botones ---- */

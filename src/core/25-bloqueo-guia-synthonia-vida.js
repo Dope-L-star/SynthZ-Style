@@ -56,7 +56,7 @@ addEventListener('pointerdown', e => {
     'SynthFlow puede poner varias IA a responder la misma pregunta al mismo tiempo. Así ves cuál lo explica mejor.',
     'Si tocas «Otra vez» en una respuesta, la IA lo intenta de nuevo con otras palabras.',
     'Tus chats se guardan en tu dispositivo, y si entras con tu cuenta también te siguen a tu celular.',
-    'Con el modo agente, una IA mejora lo que escribes y se lo pasa a la IA que más sabe de ese tema.',
+    'Con SuperiorSynth, una IA mejora lo que escribes y se lo pasa a la IA que más sabe de ese tema.',
     'La «Automática» elige sola una IA que esté funcionando bien en ese momento.',
     'Puedes adjuntar fotos y PDF: algunas IA los leen y te los explican.',
     'Los pulpos tienen tres corazones y sangre azul. 🐙',

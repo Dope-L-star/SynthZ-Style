@@ -62,7 +62,7 @@ function paintLock(){
   try{ renderTop(); }catch(e){}
 }
 setInterval(paintLock, 1500);
-{ paintAgent(); $$('.agentb-x').forEach(ab => { ab.addEventListener('click', () => { st().agent = !agentOn(); save(); paintAgent(); toast(agentOn() ? 'Modo agente encendido: antes de enviar, una IA mejora tu pedido y elige la IA que más sabe de eso.' : 'Modo agente apagado: tu mensaje va tal cual.'); }); }); }
+{ paintAgent(); $$('.agentb-x').forEach(ab => { ab.addEventListener('click', () => { st().agent = !agentOn(); save(); paintAgent(); toast(agentOn() ? 'SuperiorSynth encendido: antes de enviar, mejora tu pedido y elige la IA que más sabe de eso.' : 'SuperiorSynth apagado: tu mensaje va tal cual.'); }); }); }
 function lockNudge(){
   try{ SZ.BOT.problem && SZ.BOT.problem('lock'); }catch(e){}
   const c = $('#lockCard'); if (!c || c.hidden) return;

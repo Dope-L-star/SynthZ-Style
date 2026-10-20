@@ -1,0 +1,51 @@
+/* ===== v2.3 · estilo Simple de SynthFlow: solo tus chats, la caja de escribir y las respuestas.
+   Tranquilo y plano, con su propia paleta cálida (los temas de color no aplican aquí) ===== */
+html.simple{--sbg:#252422;--sside:#1d1c1a;--scard:#2f2e2b;--sline:rgba(255,255,255,.085);--stext:#f2efe8;--ssoft:#c8c4b8;--smute:#9a968b;--sacc:#d9a066;--sacc-rgb:217,160,102;
+  --gold:#d9a066;--gold-rgb:217,160,102;--wine:#c07a5a;--wine-rgb:192,122,90;--text:var(--stext);--soft:var(--ssoft);--mute:var(--smute);--line:var(--sline)}
+html.simple,html.simple body,html.simple .shell,html.simple .main,html.simple .msgs{background:var(--sbg) !important}
+html.simple .aurora,html.simple .grain,html.simple #glow,html.simple .corner,html.simple #szBot,html.simple #betaBot,html.simple #szBotB,html.simple .guideb,html.simple #hexR,html.simple .tpanel,html.simple .rguide{display:none !important}
+html.simple *{text-shadow:none !important}
+/* barra y lista de chats */
+html.simple .rin,html.simple .rail.open .rin,html.simple .chats{background:var(--sside) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;border-color:var(--sline) !important;box-shadow:none !important}
+html.simple .rail .rbtn[aria-pressed="true"],html.simple .rail .rbtn:hover{background:rgba(255,255,255,.06) !important}
+html.simple .rail .rbtn::before,html.simple .rail .rbtn::after{display:none !important}
+html.simple .cnew{background:transparent !important;border:1px solid var(--sline) !important;box-shadow:none !important}
+html.simple .thlist .th,html.simple .thlist [data-k]{border-radius:10px}
+/* arriba */
+html.simple .top{background:transparent !important;border:0 !important;box-shadow:none !important}
+html.simple .mchip,html.simple .paypill,html.simple .addb,html.simple .moreb,html.simple .sstop{background:transparent !important;border-color:var(--sline) !important;box-shadow:none !important}
+html.simple .mchip b,html.simple .sstop .sst-t b{font-family:var(--sans,inherit) !important;font-size:15px !important;font-weight:600;background:none !important;-webkit-text-fill-color:var(--stext);color:var(--stext)}
+/* saludo */
+html.simple .hello{gap:18px}
+html.simple .greet{font-family:var(--serif,Georgia,serif);font-weight:400;font-size:clamp(30px,4.2vw,42px) !important;letter-spacing:-.01em;color:var(--stext)}
+html.simple .greet *{background:none !important;-webkit-text-fill-color:currentColor !important;color:inherit !important;animation:none !important;filter:none !important}
+html.simple .aghello .agbadge{background:transparent;border-color:var(--sline);color:var(--ssoft)}
+/* la caja de escribir */
+html.simple .composer{background:transparent !important}
+html.simple .comp-in{background:var(--scard) !important;border:1px solid var(--sline) !important;border-radius:20px !important;box-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 10px 30px -18px rgba(0,0,0,.6) !important}
+html.simple .comp-in::before,html.simple .comp-in::after{display:none !important}
+html.simple .comp-in:focus-within{border-color:rgba(255,255,255,.16) !important}
+html.simple #inp{font-size:16px;color:var(--stext)}
+html.simple .send{background:var(--sacc) !important;color:#1f1a14 !important;border-radius:11px !important;box-shadow:none !important}
+html.simple .send.stop{background:var(--stext) !important}
+html.simple .attach,html.simple .cpk,html.simple .cpk2{background:transparent !important;border-color:var(--sline) !important;box-shadow:none !important}
+html.simple .mir .nw{animation:none !important;color:inherit !important}
+html.simple .hintline{opacity:.75}
+/* los mensajes */
+html.simple .m.user .bub{background:rgba(0,0,0,.28) !important;border:1px solid var(--sline) !important;border-radius:18px !important;box-shadow:none !important;color:var(--stext)}
+html.simple .m.bot .body{font-size:16px;line-height:1.68;color:var(--stext)}
+html.simple .m.bot .who{opacity:.8}
+html.simple .m.bot .who .av,html.simple .m.bot .who img{filter:saturate(.75)}
+html.simple .m.bot .acts button{color:var(--smute)}
+html.simple .m.bot .acts button:hover{color:var(--stext);background:rgba(255,255,255,.06)}
+html.simple .body code{background:rgba(255,255,255,.07)}
+html.simple .body pre{background:#1a1917 !important;border:1px solid var(--sline) !important}
+html.simple .body a{color:var(--sacc)}
+html.simple .agsum .ag-row,html.simple .agkeep,html.simple .agrun{background:transparent !important;border-color:var(--sline) !important}
+/* celular */
+@media (max-width:899px){
+  html.simple .tabbar{background:var(--sside) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;border-color:var(--sline) !important}
+  html.simple .tabbar button[aria-pressed="true"]{background:rgba(255,255,255,.06) !important}
+}
+/* ventanas y menús, también planos */
+html.simple .tcard,html.simple .ctxm,html.simple .amenu{background:#2a2927 !important;border-color:var(--sline) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important}

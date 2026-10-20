@@ -1,16 +1,16 @@
 /* ---------- SynthonIA, la ayudante ---------- */
-#szBot{position:fixed;right:22px;bottom:22px;z-index:9600;width:60px;height:60px;padding:0;border-radius:50%;border:1px solid rgba(230,182,95,.45);background:radial-gradient(circle at 50% 30%,rgba(230,182,95,.18),rgba(24,18,20,.94) 70%);box-shadow:0 18px 44px -14px rgba(0,0,0,.85),0 0 0 0 rgba(230,182,95,.35);display:grid;place-items:center;cursor:pointer;touch-action:none;opacity:0;transform:translateY(24px) scale(.6);transition:opacity .45s ease,transform .7s cubic-bezier(.34,1.56,.64,1),box-shadow .3s ease}
+#szBot{position:fixed;right:22px;bottom:22px;z-index:9600;width:60px;height:60px;padding:0;border-radius:50%;border:1px solid rgba(var(--gold-rgb),.45);background:radial-gradient(circle at 50% 30%,rgba(var(--gold-rgb),.18),rgba(24,18,20,.94) 70%);box-shadow:0 18px 44px -14px rgba(0,0,0,.85),0 0 0 0 rgba(var(--gold-rgb),.35);display:grid;place-items:center;cursor:pointer;touch-action:none;opacity:0;transform:translateY(24px) scale(.6);transition:opacity .45s ease,transform .7s cubic-bezier(.34,1.56,.64,1),box-shadow .3s ease}
 #szBot.on{opacity:1;transform:none}
-#szBot:hover{box-shadow:0 18px 44px -14px rgba(0,0,0,.85),0 0 0 6px rgba(230,182,95,.12)}
+#szBot:hover{box-shadow:0 18px 44px -14px rgba(0,0,0,.85),0 0 0 6px rgba(var(--gold-rgb),.12)}
 #szBot.drag{transition:none;cursor:grabbing;transform:scale(1.06)}
 #szBot .bf{display:grid;place-items:center;animation:wbbob 3.4s ease-in-out infinite}
-#szBot .bdot{position:absolute;top:-2px;right:-2px;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:999px;background:#c9566c;color:#fff;font:600 11px/20px var(--sans,system-ui);font-style:normal;text-align:center;box-shadow:0 0 0 3px #0b0c10;animation:bdotP 1.6s ease-in-out infinite}
+#szBot .bdot{position:absolute;top:-2px;right:-2px;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:999px;background:var(--wine);color:#fff;font:600 11px/20px var(--sans,system-ui);font-style:normal;text-align:center;box-shadow:0 0 0 3px #0b0c10;animation:bdotP 1.6s ease-in-out infinite}
 #szBot .bdot:empty{min-width:12px;height:12px;padding:0;top:2px;right:2px}
 #szBot.inhead{position:absolute;right:auto;bottom:auto;width:40px;height:40px;margin:0;flex:none;z-index:3}
 #szBot.inhead .szface{width:30px;height:30px}
 @keyframes bdotP{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
 html.guiding #szBot,html.bflowing #szBot,body.szworrying #szBot,html.leaving #szBot{opacity:0 !important;pointer-events:none}
-#szBotB{position:fixed;z-index:9650;box-sizing:border-box;padding:11px 14px;border-radius:16px;border:1px solid rgba(230,182,95,.35);background:rgba(20,17,20,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);color:#ecebe7;font-size:13.5px;line-height:1.45;box-shadow:0 18px 50px -16px rgba(0,0,0,.85);opacity:0;transform:translateY(8px) scale(.94);transition:opacity .35s ease,transform .5s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+#szBotB{position:fixed;z-index:9650;box-sizing:border-box;padding:11px 14px;border-radius:16px;border:1px solid rgba(var(--gold-rgb),.35);background:rgba(20,17,20,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);color:#ecebe7;font-size:13.5px;line-height:1.45;box-shadow:0 18px 50px -16px rgba(0,0,0,.85);opacity:0;transform:translateY(8px) scale(.94);transition:opacity .35s ease,transform .5s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
 #szBotB.on{opacity:1;transform:none}
 #szBotP{position:fixed;z-index:9620;display:flex;flex-direction:column;box-sizing:border-box;border-radius:24px;border:1px solid rgba(255,255,255,.13);background:rgba(18,17,22,.88);backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);box-shadow:0 40px 110px -30px rgba(0,0,0,.9);color:#ecebe7;opacity:0;transform:translateY(16px) scale(.96);transform-origin:90% 100%;filter:blur(6px);pointer-events:none;transition:opacity .35s ease,transform .55s cubic-bezier(.22,1,.36,1),filter .35s ease;overflow:hidden}
 #szBotP.on{opacity:1;transform:none;filter:none;pointer-events:auto}
@@ -26,52 +26,52 @@ html.guiding #szBot,html.bflowing #szBot,body.szworrying #szBot,html.leaving #sz
 #szBotP .btabs[hidden]{display:none}
 #szBotP .btabs button{flex:1;min-height:34px;border-radius:999px;border:1px solid rgba(255,255,255,.1);background:none;color:#a3a6b1;font:inherit;font-size:13px;cursor:pointer}
 #szBotP .btabs button[aria-selected="true"]{background:rgba(255,255,255,.08);color:#ecebe7}
-#szBotP .btabs em{font-style:normal;margin-left:4px;padding:0 6px;border-radius:999px;background:#c9566c;color:#fff;font-size:11px}
+#szBotP .btabs em{font-style:normal;margin-left:4px;padding:0 6px;border-radius:999px;background:var(--wine);color:#fff;font-size:11px}
 #szBotP .btabs em:empty{display:none}
 #szBotP .bl{flex:1;min-height:0;overflow:auto;padding:12px 14px;display:flex;flex-direction:column;gap:10px;overscroll-behavior:contain}
 #szBotP .bm{display:flex;gap:8px;align-items:flex-start;animation:bmIn .45s cubic-bezier(.22,1,.36,1) both}
 #szBotP .bm p{margin:0;white-space:pre-wrap;font-size:14px;line-height:1.5}
-#szBotP .bm.a>div{padding:9px 12px;border-radius:4px 16px 16px 16px;background:rgba(230,182,95,.08);border:1px solid rgba(230,182,95,.2);max-width:88%}
+#szBotP .bm.a>div{padding:9px 12px;border-radius:4px 16px 16px 16px;background:rgba(var(--gold-rgb),.08);border:1px solid rgba(var(--gold-rgb),.2);max-width:88%}
 #szBotP .bm.a .btn{margin-top:8px}
 #szBotP .bm.u{justify-content:flex-end}
 #szBotP .bm.u p{padding:9px 12px;border-radius:16px 4px 16px 16px;background:rgba(236,235,231,.92);color:#0b0c10;max-width:85%}
 #szBotP .bm.t{flex-direction:column;gap:4px;padding:10px 12px;border-radius:16px;background:rgba(143,176,255,.08);border:1px solid rgba(143,176,255,.22)}
 #szBotP .bm.t b{font-weight:600;font-size:13px}
 #szBotP .rk{align-self:flex-start;padding:2px 9px;border-radius:999px;font:600 10.5px var(--mono,monospace);letter-spacing:.06em;text-transform:uppercase;background:rgba(255,255,255,.08);color:#ecebe7}
-#szBotP .rk.r-prime{background:linear-gradient(90deg,#c9566c,#e6b65f);color:#0b0c10}
+#szBotP .rk.r-prime{background:linear-gradient(90deg,var(--wine),var(--gold));color:#0b0c10}
 #szBotP .rk.r-zflow{background:linear-gradient(90deg,#8fb0ff,#b8c4ff);color:#0b0c10}
 #szBotP .rk.r-symmetrix{background:linear-gradient(90deg,#7fd6b8,#8fd3e8);color:#0b0c10}
 #szBotP .dots{display:flex;gap:4px;padding:4px 0}
-#szBotP .dots i{width:6px;height:6px;border-radius:50%;background:#e6b65f;animation:bdots 1s ease-in-out infinite}
+#szBotP .dots i{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:bdots 1s ease-in-out infinite}
 #szBotP .dots i:nth-child(2){animation-delay:.15s}#szBotP .dots i:nth-child(3){animation-delay:.3s}
 @keyframes bdots{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
 @keyframes bmIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 #szBotP .bq{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 8px}
 #szBotP .bq:empty{display:none}
 #szBotP .bq button{min-height:32px;padding:0 11px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#c3c5ce;font:inherit;font-size:12.5px;cursor:pointer;transition:background .25s,border-color .25s,color .25s}
-#szBotP .bq button:hover{background:rgba(230,182,95,.1);border-color:rgba(230,182,95,.35);color:#ecebe7}
+#szBotP .bq button:hover{background:rgba(var(--gold-rgb),.1);border-color:rgba(var(--gold-rgb),.35);color:#ecebe7}
 #szBotP .bin{display:flex;gap:8px;padding:10px 12px;border-top:1px solid rgba(255,255,255,.08)}
 #szBotP .bin[hidden]{display:none}
 #szBotP .bin input{flex:1;min-width:0;min-height:42px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.3);color:#ecebe7;font:inherit;font-size:14px;outline:0}
-#szBotP .bin input:focus{border-color:rgba(230,182,95,.5)}
+#szBotP .bin input:focus{border-color:rgba(var(--gold-rgb),.5)}
 #szBotP .bs{flex:none;width:42px;height:42px;border:0;border-radius:50%;background:#ecebe7;color:#0b0c10;display:grid;place-items:center;cursor:pointer}
 #szBotP .bs svg{width:17px;height:17px}
 #szBotP .bfoot{display:flex;justify-content:space-between;gap:10px;padding:0 16px 12px;font-size:12.5px}
 #szBotP .bctx{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px;color:#a3a6b1;padding-bottom:4px;border-bottom:1px dashed rgba(255,255,255,.1)}
 #szBotP .bctx span{flex:1;min-width:0}
 #szBotP .bi{display:flex;flex-direction:column;gap:3px;text-align:left;padding:10px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:#ecebe7;font:inherit;cursor:pointer}
-#szBotP .bi.urg{border-color:rgba(201,86,108,.5);background:rgba(201,86,108,.08)}
+#szBotP .bi.urg{border-color:rgba(var(--wine-rgb),.5);background:rgba(var(--wine-rgb),.08)}
 #szBotP .bi span{font-size:13px;color:#c3c5ce}
 #szBotP .bi small{font:11px var(--mono,monospace);color:#8d909c}
 #szBotP .bempty{margin:auto;color:#8d909c;font-size:13.5px}
 html.noglass #szBotP,html.noglass #szBotB{background:#16141a;backdrop-filter:none;-webkit-backdrop-filter:none}
 @media (max-width:760px){#szBot:not(.inhead){right:14px;bottom:calc(84px + env(safe-area-inset-bottom))}}
 /* ===== beta 2: IA de SynthZ (compartida y gratis) ===== */
-.sz-logo{display:inline-block;width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:6px;border-radius:5px;background:#15121c url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-6 -6 60 60'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%238fb0ff'/%3E%3Cstop offset='.55' stop-color='%23c9566c'/%3E%3Cstop offset='1' stop-color='%23e6b65f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M13 4H44V12L18 36H49L39 40H45L35 44H4V36L30 12H-1L9 8H3Z' fill='url(%23g)'/%3E%3C/svg%3E") center/88% no-repeat;box-shadow:0 0 0 1px rgba(230,182,95,.28)}
+.sz-logo{display:inline-block;width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:6px;border-radius:5px;background:#15121c url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-6 -6 60 60'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%238fb0ff'/%3E%3Cstop offset='.55' stop-color='%23c9566c'/%3E%3Cstop offset='1' stop-color='%23e6b65f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M13 4H44V12L18 36H49L39 40H45L35 44H4V36L30 12H-1L9 8H3Z' fill='url(%23g)'/%3E%3C/svg%3E") center/88% no-repeat;box-shadow:0 0 0 1px rgba(var(--gold-rgb),.28)}
 .prov .sz-logo{width:14px;height:14px;margin-right:4px;vertical-align:-2px}
-.mpay.sz{border-color:rgba(230,182,95,.55);color:#f3d79e;background:rgba(230,182,95,.06)}
-.payl.sz,.paym.sz{border-color:rgba(230,182,95,.42);color:#f0d8a8}
-.payl.sz i,.paym.sz i{background:var(--gold,#e6b65f);box-shadow:0 0 8px var(--gold,#e6b65f);animation:szlive 2.4s ease-in-out infinite}
+.mpay.sz{border-color:rgba(var(--gold-rgb),.55);color:#f3d79e;background:rgba(var(--gold-rgb),.06)}
+.payl.sz,.paym.sz{border-color:rgba(var(--gold-rgb),.42);color:#f0d8a8}
+.payl.sz i,.paym.sz i{background:var(--gold,var(--gold));box-shadow:0 0 8px var(--gold,var(--gold));animation:szlive 2.4s ease-in-out infinite}
 @keyframes szlive{50%{opacity:.45;transform:scale(.8)}}
 .bl-ico.sz{background:none;width:24px;height:24px}.bl-ico.sz .sz-logo{width:24px;height:24px;margin:0}
 .cbox.szrow>span{display:flex;align-items:center;font-weight:500}
@@ -80,7 +80,7 @@ html.noglass #szBotP,html.noglass #szBotB{background:#16141a;backdrop-filter:non
 .cbox>span .pu-logo{margin-right:7px}
 .cmeter{margin:10px 0 2px}
 .cmeter>span{display:block;height:6px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden}
-.cmeter>span i{display:block;height:100%;transform-origin:left;background:linear-gradient(90deg,#8fb0ff,#c9566c,#e6b65f);border-radius:inherit;transition:transform .9s cubic-bezier(.22,1,.36,1)}
+.cmeter>span i{display:block;height:100%;transform-origin:left;background:linear-gradient(90deg,#8fb0ff,var(--wine),var(--gold));border-radius:inherit;transition:transform .9s cubic-bezier(.22,1,.36,1)}
 .cmeter small{display:block;margin-top:6px;font-size:12px;color:var(--mute,#9aa0b4)}
 .cmeter small b{color:var(--text,#eef0f6);font-weight:600}
 /* guía: ¿qué es Puter? */

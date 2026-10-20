@@ -1,0 +1,20 @@
+/* v2.3 · Seguridad y acceso: cómo entras a tu cuenta */
+.sacc{display:grid;gap:8px;margin:10px 0 4px}
+.sa-r{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.025)}
+.sa-r.on{border-color:rgba(127,214,184,.35);background:rgba(127,214,184,.05)}
+.sa-i{width:34px;height:34px;flex:none;display:grid;place-items:center;border-radius:10px;background:rgba(255,255,255,.06);font-size:16px}
+.sa-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.sa-t b{font-size:14.5px;font-weight:600}
+.sa-t small{font-size:12.5px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sa-ok{font-style:normal;font-size:12.5px;color:#7fd6b8;white-space:nowrap}
+.sa-no{font-size:12px;color:var(--mute)}
+.sa-g{flex:none;min-height:32px;display:flex;align-items:center}
+.lin .at{padding-left:12px;color:var(--mute)}
+/* v2.3 · Ajustes: colores de SynthFlow */
+.cfgth{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.cfgth button{position:relative;display:flex;flex-direction:column;align-items:center;gap:7px;padding:12px 6px 10px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.025);color:var(--soft);font-size:12.5px;cursor:pointer;transition:border-color .25s,background .25s}
+.cfgth button i{width:34px;height:34px;border-radius:50%;background:conic-gradient(from 200deg,var(--t1),var(--t2),var(--t1));box-shadow:0 0 0 3px rgba(0,0,0,.35),0 6px 18px -6px var(--t1)}
+.cfgth button[aria-pressed="true"]{border-color:var(--t1);background:rgba(255,255,255,.06);color:var(--text)}
+.cfgth button[aria-pressed="true"]::after{content:"✓";position:absolute;top:6px;right:8px;font-size:11px;color:var(--t1)}
+.cfgth button:disabled{opacity:.5;cursor:not-allowed}
+.cfgth button em{position:absolute;top:6px;right:6px;font-style:normal;font-size:9.5px;padding:2px 6px;border-radius:99px;background:rgba(255,255,255,.08);color:var(--mute);letter-spacing:.03em}

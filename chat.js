@@ -31,7 +31,7 @@ const idx = new Map(), newIds = new Set();
 function setCatalog(list, t, status){ list = (list || []).filter(m => !SZ.isBad(m.id)); cat = { t, list, status }; idx.clear(); list.forEach(m => idx.set(m.id, m)); }
 function stub(id){
   if (id === 'imagen') return { id, name:'Creador de imágenes', vendor:'synthz', vlabel:'Imágenes', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'', stub:true };
-  if (id === 'agente') return { id, name:'Modo agente', vendor:'synthz', vlabel:'Elige la IA por ti', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'', stub:true };
+  if (id === 'agente') return { id, name:'SuperiorSynth', vendor:'synthz', vlabel:'Elige la IA por ti', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'', stub:true };
   if (id === 'sz:auto') return Object.assign({}, SZ.SZ_AUTO, { stub:true });
   if (/^sz:/.test(id)){ const mid = id.split(':').slice(2).join(':'); return { id, name:mid.replace(/^[^/]+\//, ''), vendor:'synthz', vlabel:'Gratis', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'', stub:true }; }
   const v = id.split('/')[0] || 'otro', nm = (id.split('/').slice(1).join('/') || id).replace(/:free$/, '');
@@ -394,9 +394,16 @@ function retype(el, text, o){ el.textContent = text; el._chars = null; el.remove
 const PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
 const CARET = '<svg class="cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
 const XS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+/* v2.3 · con SuperiorSynth encendido, arriba a la izquierda va su sello (en el celular, solo su logo) */
+const ssTopHtml = () => '<button type="button" class="sstop" id="ssTop" aria-haspopup="menu" data-menu-owner aria-label="SuperiorSynth elige la IA por ti. Toca para opciones">' + ssIco('lg') + '<span class="sst-t"><b>SuperiorSynth</b><small>elige la IA por ti</small></span>' + CARET + '</button>';
 function renderTop(animate){
   const row = $('#pickRow');
   try{ renderCPick(); }catch(e){}
+  if (mode === 'solo' && agentOn()){
+    row.classList.remove('n3', 'n4');
+    row.innerHTML = ssTopHtml() + (document.body.classList.contains('fresh') ? '' : '<span class="paym" id="payM"></span>');
+    paintPay(); return;
+  }
   if (mode === 'solo' && document.body.classList.contains('fresh')){
     row.classList.remove('n3', 'n4');
     const ok0 = connected(selId()), [k1, long1] = payOf(selId()), k = ok0 ? k1 : 'off', long = ok0 ? long1 : /^pu:/.test(selId()) ? 'Puter · sin conectar (toca para conectarlo)' : long1, left = trialOn ? trialLeft() : 0;
@@ -425,6 +432,7 @@ $('#cPick').addEventListener('click', e => { if (side.classList.contains('open')
 $('#cCmp').addEventListener('click', e => openSide('add', e.currentTarget));
 $('#pickRow').addEventListener('click', e => {
   if (e.target.closest('#payPill')){ if (needsConn()) openConnect(); else coinModal('panel'); return; }
+  const ss = e.target.closest('#ssTop'); if (ss){ const r = ss.getBoundingClientRect(); SZ.menuOpen([{ head:'SuperiorSynth' }, { label:'Elegir yo la IA', ico:'chats', fn:() => { cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(true); } }, { label:'¿Qué hace SuperiorSynth?', ico:'help', fn:() => toast('Tú escribes; SuperiorSynth entiende tu pedido, lo mejora y elige la IA que más sabe de eso. Al final decides si te quedas con esa IA.') }], r.left, r.bottom + 6, 'sstm'); return; }
   const rm = e.target.closest('[data-rm]'); if (rm){ removeCmp(rm.dataset.rm, rm.closest('.mchip')); return; }
   const ad = e.target.closest('[data-add]'); if (ad){ if ($('#side').classList.contains('open') && pickMode === 'add') closeSide(); else openSide('add', ad); return; }
   const bt = e.target.closest('#btTog'); if (bt){ st().battle = !st().battle; save(); bt.setAttribute('aria-pressed', String(!!st().battle)); toast(st().battle ? 'A ciegas: no verás qué IA es hasta que votes (desde la próxima pregunta).' : 'Modo sorpresa apagado: ya ves el nombre de cada IA.'); return; }
@@ -444,7 +452,13 @@ function paintPay(){
   else { const id = selId(), p = payOf(id); c = p[0]; l = p[1]; s = p[2]; if (!connected(id)){ c = 'off'; l = /^pu:/.test(id) ? 'Puter · sin conectar' : l; s = /^pu:/.test(id) ? 'Puter sin conectar' : s; } }
   const P = $('#payL'), M = $('#payM');
   if (P){ P.className = 'payl ' + c; P.innerHTML = '<i aria-hidden="true"></i>' + esc(l) + (ex ? '<button type="button" class="lnk" data-tx="exit">Salir</button>' : ''); }
-  if (M){ M.className = 'paym ' + c; M.innerHTML = '<i aria-hidden="true"></i>' + esc(s); }
+  if (M){
+    const bar = !document.body.classList.contains('fresh') && mode !== 'cmp' && !trialOn && (c === 'sz' || agentOn());
+    if (bar){ const k = Math.max(0, 1 - SZ.limPct()), pc = Math.round(k * 100), lv = SZ.limLvl();
+      M.className = 'paym tlim ' + lv; M.setAttribute('role', 'img'); M.setAttribute('aria-label', 'Tu límite gratis de hoy: te queda ' + pc + ' %');
+      M.innerHTML = '<span class="tl-l">Hoy</span><i class="tl-t"><b style="transform:scaleX(' + k.toFixed(3) + ')"></b></i><em>' + pc + ' %</em>'; }
+    else { M.className = 'paym ' + c; M.removeAttribute('role'); M.removeAttribute('aria-label'); M.innerHTML = '<i aria-hidden="true"></i>' + esc(s); }
+  }
 }
 $('#payL').addEventListener('click', e => { if (e.target.closest('[data-tx="exit"]')) exitTrial(); });
 function paintAccent(){
@@ -777,7 +791,7 @@ function emptyEl(){
     e.classList.add('aghello');
     e.innerHTML = '<p class="agbadge">' + AG_ICO + 'Modo SuperiorSynth activado</p><h1 class="greet">' + greetHtml(['¿Qué quieres ', 'FlowIA’r', '?']) + '</h1>'
       + (ex ? '<div class="hexs hexr" id="hexR" aria-label="Ideas para empezar">' + exRowHtml() + '</div>' : '')
-      + '<p class="hsub2">Cuéntame qué necesitas. El agente entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso.</p><div class="hcomp"></div>';
+      + '<p class="hsub2">Cuéntame qué necesitas. SuperiorSynth entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso.</p><div class="hcomp"></div>';
     return e;
   }
   let h = '<h1 class="greet">' + greetHtml(GREET[greetI] || GREET[0]) + '</h1>'
@@ -1194,7 +1208,7 @@ imgBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 function setImgMode(on){
   if (on && !SZ.ACC.ready){ toast('Para crear imágenes entra a tu cuenta (es gratis).'); SZ.guestGate({ mode:'signup' }); return; }
   imgMode = !!on; imgBtn.setAttribute('aria-pressed', String(imgMode)); document.body.classList.toggle('imaging', imgMode);
-  inp.placeholder = imgMode ? 'Describe la imagen que quieres crear…' : (agentOn() ? 'Modo agente: cuéntame qué necesitas…' : 'Escribe tu mensaje…');
+  inp.placeholder = imgMode ? 'Describe la imagen que quieres crear…' : (agentOn() ? 'SuperiorSynth: cuéntame qué necesitas…' : 'Escribe tu mensaje…');
   if (imgMode){ const q = SZ.SZQ.img; toast('Crear imagen: describe lo que quieres ver.' + (q && q.max ? ' Hoy te quedan ' + Math.max(0, q.max - q.used) + '.' : '')); inp.focus(); }
 }
 imgBtn.addEventListener('click', () => setImgMode(!imgMode));
@@ -1441,7 +1455,7 @@ function memModal(){ SZ.cfgModal('mem'); }
 let agentBusy = false;
 const agentOn = () => !!st().agent && !trialOn;
 $('#agPill').addEventListener('click', () => { if (isMobile()) closeChatsSheet && closeChatsSheet(); cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(false); });
-function paintAgent(){ $$('.agentb, #railAgent').forEach(b => { b.setAttribute('aria-pressed', String(agentOn())); b.classList.toggle('on', agentOn()); }); document.body.classList.toggle('agenting', agentOn()); inp.placeholder = agentOn() ? 'Modo agente: cuéntame qué necesitas…' : (isLocked() ? inp.placeholder : 'Escribe tu mensaje...'); }
+function paintAgent(){ $$('.agentb, #railAgent').forEach(b => { b.setAttribute('aria-pressed', String(agentOn())); b.classList.toggle('on', agentOn()); }); document.body.classList.toggle('agenting', agentOn()); inp.placeholder = agentOn() ? 'SuperiorSynth: cuéntame qué necesitas…' : (isLocked() ? inp.placeholder : 'Escribe tu mensaje...'); }
 function setAgent(on){
   if (!!st().agent === !!on){ paintAgent(); return; }
   if (mode !== 'solo'){ stopNow(); cmpRun++; cmpLast = null; mode = 'solo'; }
@@ -1450,11 +1464,25 @@ function setAgent(on){
   toast(on ? 'Modo SuperiorSynth activado: tú escribes y SuperiorSynth elige la IA que más sabe de eso.' : 'Modo SuperiorSynth apagado: ahora eliges tú la IA.');
 }
 const AG_STEPS = ['Entendiendo tu pedido', 'Mejorando tu pedido para que la IA lo entienda mejor', 'Eligiendo la IA que más sabe de esto', 'Pasándole tu pedido a la IA'];
-const AG_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>';
+/* v2.3 · SuperiorSynth: su ícono propio, animado (una estrella que late con un satélite que la orbita) */
+function ssIco(cls){
+  const run = !SZ.reduce && !root.classList.contains('noanim');
+  /* la órbita pasa por detrás de la estrella (arco de arriba) y por delante (arco de abajo): se siente en 3D */
+  return '<svg class="ssi' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(-24 12 12)">'
+    + '<path class="ssi-o" d="M1.3 12a10.7 3.7 0 0 1 21.4 0" fill="none" stroke="url(#ssG)" stroke-width="1.35" stroke-linecap="round" opacity=".55"/></g>'
+    + '<path class="ssi-s" d="M12 2.6l2.05 7.35L21.4 12l-7.35 2.05L12 21.4l-2.05-7.35L2.6 12l7.35-2.05z" fill="url(#ssG)"/>'
+    + '<g transform="rotate(-24 12 12)"><path class="ssi-o" d="M22.7 12a10.7 3.7 0 0 1-21.4 0" fill="none" stroke="url(#ssG)" stroke-width="1.35" stroke-linecap="round"/>'
+    + '<circle class="ssi-d" r="1.6" fill="#fff4dc"' + (run ? '><animateMotion dur="3.6s" repeatCount="indefinite" path="M1.3 12a10.7 3.7 0 1 0 21.4 0a10.7 3.7 0 1 0-21.4 0"/></circle>' : ' cx="22.7" cy="12"/>') + '</g>'
+    + '<path class="ssi-k" d="M19.6 2.2l.5 1.4 1.4.5-1.4.5-.5 1.4-.5-1.4-1.4-.5 1.4-.5z" fill="#ffe7b8"/></svg>';
+}
+if (!document.getElementById('ssDefs')) document.body.insertAdjacentHTML('afterbegin', '<svg id="ssDefs" width="0" height="0" style="position:absolute;width:0;height:0" aria-hidden="true" focusable="false"><defs><linearGradient id="ssG" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff1d2"/><stop offset=".45" stop-color="#e6b65f"/><stop offset="1" stop-color="#c9566c"/></linearGradient></defs></svg>');
+const ssMount = () => $$('.ssmount').forEach(m => { if (!m.firstChild) m.innerHTML = ssIco(); });
+ssMount();
+const AG_ICO = ssIco();
 /* lo que hace el agente, en vivo: su loguito de píxeles y los pasos que se van marcando */
 function agentCard(){
   const el = document.createElement('div'); el.className = 'agrun';
-  el.innerHTML = '<div class="ag-h"><span class="pxw">' + SZ.pixelGrid() + '</span><span class="ag-t"><b>Modo agente</b><small>Trabajando en tu pedido…</small></span></div><ol class="ag-s">' + AG_STEPS.map((t, i) => '<li data-i="' + i + '"><i aria-hidden="true"></i><span>' + t + '</span></li>').join('') + '</ol>';
+  el.innerHTML = '<div class="ag-h"><span class="pxw">' + SZ.pixelGrid() + '</span><span class="ag-t"><b>SuperiorSynth</b><small>Trabajando en tu pedido…</small></span></div><ol class="ag-s">' + AG_STEPS.map((t, i) => '<li data-i="' + i + '"><i aria-hidden="true"></i><span>' + t + '</span></li>').join('') + '</ol>';
   const px = SZ.pixelRun($('.pxw', el));
   return {
     el,
@@ -1465,7 +1493,7 @@ function agentCard(){
 /* lo que queda guardado debajo de tu mensaje: «El agente eligió …» con el pedido mejorado para ver */
 function agentSumEl(a){
   const el = document.createElement('div'); el.className = 'agsum';
-  el.innerHTML = '<button type="button" class="ag-row" aria-expanded="false"><span class="ag-ic">' + AG_ICO + '</span><span class="ag-tx">El agente eligió <b></b><em></em></span>' + (a.ask ? '<svg class="ag-c" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>' : '') + '</button>' + (a.ask ? '<div class="ag-d" hidden><small>Tu pedido mejorado (esto le llegó a la IA)</small><p></p></div>' : '');
+  el.innerHTML = '<button type="button" class="ag-row" aria-expanded="false"><span class="ag-ic">' + AG_ICO + '</span><span class="ag-tx">SuperiorSynth eligió <b></b><em></em></span>' + (a.ask ? '<svg class="ag-c" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>' : '') + '</button>' + (a.ask ? '<div class="ag-d" hidden><small>Tu pedido mejorado (esto le llegó a la IA)</small><p></p></div>' : '');
   $('.ag-tx b', el).textContent = a.name || 'una IA'; $('.ag-tx em', el).textContent = a.tl ? ', que sabe de ' + a.tl : '';
   if (a.ask){ $('.ag-d p', el).textContent = a.ask; const row = $('.ag-row', el), d = $('.ag-d', el); row.addEventListener('click', () => { const on = d.hidden; d.hidden = !on; row.setAttribute('aria-expanded', String(on)); el.classList.toggle('open', on); }); }
   return el;
@@ -1490,12 +1518,12 @@ function agentPick(tema){
 function agentChoice(pick){
   $$('.agkeep', lane).forEach(x => x.remove());
   const nm = info(pick).name, d = document.createElement('div'); d.className = 'agkeep';
-  d.innerHTML = '<span>¿Te quedas con <b></b> o sigues en modo agente?</span><div class="agk-b"><button type="button" class="btn sm" data-ak="keep"></button><button type="button" class="btn sm ghost" data-ak="go">Seguir en modo agente</button></div><small>Si sigues en modo agente, en tu próximo mensaje vuelvo a elegir la IA que más sepa de eso.</small>';
+  d.innerHTML = '<span>¿Te quedas con <b></b> o sigues con SuperiorSynth?</span><div class="agk-b"><button type="button" class="btn sm" data-ak="keep"></button><button type="button" class="btn sm ghost" data-ak="go">Seguir con SuperiorSynth</button></div><small>Si sigues con SuperiorSynth, en tu próximo mensaje vuelvo a elegir la IA que más sepa de eso.</small>';
   $('span b', d).textContent = nm; $('[data-ak="keep"]', d).textContent = 'Quedarme con ' + nm;
   lane.appendChild(d); follow();
   d.addEventListener('click', e => {
     const b = e.target.closest('[data-ak]'); if (!b) return; d.remove();
-    if (b.dataset.ak === 'go'){ toast('Sigues en modo agente: en tu próximo mensaje vuelvo a elegir la IA.'); return; }
+    if (b.dataset.ak === 'go'){ toast('Sigues con SuperiorSynth: en tu próximo mensaje vuelvo a elegir la IA.'); return; }
     /* la conversación sigue igual, ahora con esa IA y sin el agente */
     const k0 = ckey(), msgs = (st().chats[k0] || []).slice(), tid = 't' + Date.now().toString(36), k1 = 'openrouter::' + pick + '::' + tid;
     st().chats[k1] = msgs; delete st().chats[k0]; st().del = [...(st().del || []), k0].slice(-300);
@@ -1503,7 +1531,7 @@ function agentChoice(pick){
     (st().thread || (st().thread = {}))[pick] = tid; st().model.openrouter = pick; st().pinned = pick; st().agent = false;
     if (cView === 'agents'){ cView = 'chats'; RS.view = 'chats'; saveRS(); }
     save(); paintAgent(); gen++; applyRail(); paintSel(); renderTop(true); paintAccent(); renderMsgs(); updateHint(); renderChats(false);
-    toast('Listo: sigues con ' + nm + '. El modo agente quedó apagado; lo vuelves a activar en la barra.');
+    toast('Listo: sigues con ' + nm + '. SuperiorSynth quedó apagado; lo vuelves a activar arriba de tus chats.');
   });
 }
 async function agentPlan(text){
@@ -1530,7 +1558,7 @@ async function send(){
   if (agentOn() && mode === 'solo' && text && !files.length){
     if (agentBusy) return;
     /* el agente ve que pides una imagen: la crea el creador de imágenes */
-    if (IMG_RX.test(text) && SZ.ACC.ready){ toast('El agente vio que quieres una imagen: la crea el creador de imágenes.'); return createImage(text); }
+    if (IMG_RX.test(text) && SZ.ACC.ready){ toast('SuperiorSynth vio que quieres una imagen: la crea el creador de imágenes.'); return createImage(text); }
     agentBusy = true; inp.readOnly = true; sendBtn.disabled = true;
     try{ localStorage.setItem('synthz:sent', String(sentN() + 1)); }catch(e){}
     try{ frustration(text, false); }catch(e){}
@@ -1936,7 +1964,7 @@ function sideFlip(open){
 function placeSide(){}
 function openSide(kind, anchor){
   if (isLocked()){ lockNudge(); toast('Primero conecta Puter: es gratis y con un clic.'); return; }
-  if (agentOn() && mode === 'solo' && kind !== 'add'){ toast('En modo agente la IA la elige el agente. Si quieres elegirla tú, apaga el modo agente.'); return; }
+  if (agentOn() && mode === 'solo' && kind !== 'add'){ toast('Con SuperiorSynth la IA la elige él. Si quieres elegirla tú, vuelve a «Chats».'); return; }
   pickMode = kind === 'add' || mode === 'cmp' ? 'add' : 'set';
   $('#pTitle').textContent = pickMode === 'add' ? 'Suma otra IA a la mesa' : '¿Con quién fluyes hoy?';
   const a = anchor && anchor.isConnected ? anchor : $('#curChip') || $('#cPick') || $('#pickRow');
@@ -2016,7 +2044,7 @@ $('#rail').addEventListener('click', e => {
   const r = b.dataset.r;
   if (r === 'new'){ newChat(); return; }
   if (r === 'search'){ showChats('chats', true); return; }
-  if (r === 'agents' && cView === 'agents'){ cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(true); toast('Saliste del modo agente.'); return; }
+  if (r === 'agents' && cView === 'agents'){ cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(true); toast('Saliste de SuperiorSynth.'); return; }
   if ((r === 'chats' || r === 'favs') && RS.chats && cView === r && !RS.open){ RS.chats = false; saveRS(); applyRail(); return; }
   showChats(r);
 });
@@ -2417,17 +2445,17 @@ const TOPIC_STEPS = {
     const ex = gT('#hexR', '#hexR'); if (ex) await gPoint(ex, 'Si no sabes qué pedir, toca una de estas ideas: se escribe sola y tú decides cuándo enviarla.');
   },
   ia:async () => {
-    if (agentOn()){ await gPoint(gT('#agPill', '#agPill'), 'Ahora estás en modo agente: él elige la IA por ti. Si quieres elegirla tú, toca «Apagar».'); return; }
+    if (agentOn()){ await gPoint(gT('#ssTop', '#ssTop'), 'Ahora estás con SuperiorSynth: él elige la IA por ti. Si quieres elegirla tú, toca aquí y «Elegir yo la IA».'); return; }
     await gPoint(gAny('#cPick', '#curChip'), 'Aquí eliges con qué IA hablas. Tócalo y se abre su ventana con temas, buscador y filtros.');
     const tc = gT('.tchip[data-topic]', '.tchip[data-topic]'); if (tc) await gPoint(tc, 'Cada tema te recomienda las IA que mejor lo hacen. Por ejemplo, «Código» te muestra las expertas en programar.');
   },
   comparar:async () => {
-    if (agentOn()){ await gPoint(null, 'Comparar se usa sin el modo agente: apágalo y verás el botón «Comparar con otra IA» abajo.'); return; }
+    if (agentOn()){ await gPoint(null, 'Comparar se usa sin SuperiorSynth: vuelve a «Chats» y verás el botón «Comparar con otra IA» abajo.'); return; }
     await gPoint(gAny('#cCmp', '#pickRow [data-add]'), 'Aquí sumas otra IA, hasta 4. Todas responden la misma pregunta y aparecen lado a lado, en el orden en que llegan. Ojo: cada una gasta lo suyo.');
   },
   agente:async () => {
-    await gPoint(gT('#railAgent', '#tabbar [data-tab="chats"]'), isMobile() ? 'El modo agente está en «Chats», en la pestaña «Agente».' : 'Este es el modo agente, debajo de «Mis chats».');
-    await gPoint(null, 'En modo agente no eliges IA: tú escribes, el agente entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso. Al final decides si te quedas con esa IA o sigues en modo agente.', { mood:'guino' });
+    await gPoint(gT('#cSeg [data-v="agents"]', '#tabbar [data-tab="chats"]'), isMobile() ? 'SuperiorSynth está en «Chats», en la pestaña «SuperiorSynth».' : 'Este es SuperiorSynth, junto a «Chats», arriba de tus chats.');
+    await gPoint(null, 'Con SuperiorSynth no eliges IA: tú escribes, él entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso. Al final decides si te quedas con esa IA o sigues con SuperiorSynth.', { mood:'guino' });
   },
   archivos:async () => {
     await gPoint(gT('#attachBtn', '#attachBtn'), 'Con el «+» le das a la IA fotos, PDF o archivos de texto. Ahí mismo creas imágenes, buscas en internet o pides respuestas cortas.');
@@ -2673,7 +2701,7 @@ function paintLock(){
   try{ renderTop(); }catch(e){}
 }
 setInterval(paintLock, 1500);
-{ paintAgent(); $$('.agentb-x').forEach(ab => { ab.addEventListener('click', () => { st().agent = !agentOn(); save(); paintAgent(); toast(agentOn() ? 'Modo agente encendido: antes de enviar, una IA mejora tu pedido y elige la IA que más sabe de eso.' : 'Modo agente apagado: tu mensaje va tal cual.'); }); }); }
+{ paintAgent(); $$('.agentb-x').forEach(ab => { ab.addEventListener('click', () => { st().agent = !agentOn(); save(); paintAgent(); toast(agentOn() ? 'SuperiorSynth encendido: antes de enviar, mejora tu pedido y elige la IA que más sabe de eso.' : 'SuperiorSynth apagado: tu mensaje va tal cual.'); }); }); }
 function lockNudge(){
   try{ SZ.BOT.problem && SZ.BOT.problem('lock'); }catch(e){}
   const c = $('#lockCard'); if (!c || c.hidden) return;
@@ -3076,7 +3104,7 @@ function renderChats(anim){
   const AG = st().agentT || {};
   const isAg = x => !!AG[x.k] || x.model === AGK;
   const L = allThreads().filter(x => cView === 'agents' ? isAg(x) : !isAg(x)).map(x => { if (!q) return x; const hitT = (x.title + ' ' + info(x.model).name).toLowerCase().includes(q); let sn = ''; if (!hitT){ const m = (st().chats[x.k] || []).find(mm => (mm.content || '').toLowerCase().includes(q)); if (!m) return null; sn = snipOf(m.content, q); } return Object.assign({}, x, { sn }); }).filter(Boolean);
-  if (!L.length){ box.innerHTML = '<div class="thnone">' + (q ? 'Nada coincide en tus chats.' : cView === 'agents' ? 'Aún no tienes chats con el agente.' : 'Aún no tienes chats.') + '<em>' + (q ? 'Busco en los títulos y dentro de cada mensaje.' : cView === 'agents' ? 'Escribe lo que necesitas: una IA mejora tu pedido y se lo pasa a la IA que más sabe de eso.' : 'Escribe tu primer mensaje y aparecerá aquí.') + '</em></div>'; return; }
+  if (!L.length){ box.innerHTML = '<div class="thnone">' + (q ? 'Nada coincide en tus chats.' : cView === 'agents' ? 'Aún no tienes chats con SuperiorSynth.' : 'Aún no tienes chats.') + '<em>' + (q ? 'Busco en los títulos y dentro de cada mensaje.' : cView === 'agents' ? 'Escribe lo que necesitas: una IA mejora tu pedido y se lo pasa a la IA que más sabe de eso.' : 'Escribe tu primer mensaje y aparecerá aquí.') + '</em></div>'; return; }
   let h = '', g0 = '', n = 0;
   const hlq = t => q ? hl(t, q) : esc(t);
   L.forEach(x => {
@@ -3262,7 +3290,7 @@ function accModal(){
   accEl.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="Tu cuenta">'
     + (signed
       ? '<div class="acard"><div class="pfban" style="background:' + SZ.grad(pf.banner || pf.color) + '"></div><div class="pfme">' + SZ.myAvatar('xl') + '<div><b>' + esc(SZ.accName()) + '</b>' + (pf.pronouns ? '<i>' + esc(pf.pronouns) + '</i>' : '') + '<span>' + '<em class="rolep r-' + esc(u.role || 'user') + '">' + esc(SZ.ROLE_NAME[u.role || 'user'] || u.role) + '</em> ' + esc(SZ.accHandle(u)) + ' · ' + (A.full ? 'tu cuenta está llena' : A.err ? 'sin guardar en tu cuenta' : A.t ? 'guardado ' + ago(A.t) : 'guardando…') + '</span></div></div>' + (pf.status ? '<p class="pfs">' + esc(pf.status) + '</p>' : '') + (pf.bio ? '<p class="pfb">' + esc(pf.bio) + '</p>' : '') + '</div>'
-        + '<div class="aact"><button class="btn sm" type="button" id="aEdit">Editar perfil</button><button class="btn sm ghost" type="button" id="aSurvey">Mis IA ideales</button>' + (u.kind === 'pass' || u.username ? '<button class="btn sm ghost" type="button" id="aSec">Seguridad</button>' : '') + '</div>'
+        + '<div class="aact"><button class="btn sm" type="button" id="aEdit">Editar perfil</button><button class="btn sm ghost" type="button" id="aSurvey">Mis IA ideales</button>' + '<button class="btn sm ghost" type="button" id="aSec">Seguridad y acceso</button>' + '</div>'
         + '<div class="sxstats"><div><b>' + fmt(n) + '</b><span>chats en la nube</span></div><div><b>' + fmt(Object.values(st().usage || {}).reduce((a, u) => a + (u.requests || 0), 0)) + '</b><span>respuestas en total</span></div><div><b>' + fmt(Object.values(st().chats).reduce((a, c) => a + (Array.isArray(c) ? c.filter(m => m && m.star).length : 0), 0)) + '</b><span>mensajes favoritos</span></div></div>'
         + (false ? '<div class="sxsave"><p>Guardar mi llave de OpenRouter (de antes) en mi cuenta, cifrada, para no volver a pegarla en otro dispositivo.</p><button class="sxsw" id="aKey" type="button" aria-pressed="' + !!st().syncKey + '" aria-label="Guardar mi llave en mi cuenta"></button></div>' : '')
         + spaceHtml()
@@ -3343,6 +3371,7 @@ SZ.cfgLinks.push(
   ['Conectar Puter u otra IA', () => openConnect(), 'Tu versión pro de las IAs más usadas, gratis'],
   ['Google Drive', () => driveModal(), 'Guarda una copia de tus chats en tu Drive'],
   ['Tu ranking (a ciegas)', () => rankModal(), 'Las IAs que más te gustan según tus votos']);
+if (!SZ.appStandalone()) SZ.cfgLinks.push(['Descargar la app SynthFlow', () => SZ.appPromo(true), 'Se instala desde aquí: pantalla completa y a un toque']);
 /* «Respuestas cortas» desde Ajustes también pinta su botón */
 addEventListener('synthz-saver', () => { $$('#sxSw, #saverBtn').forEach(x => x.setAttribute('aria-pressed', String(!!st().sx.saver))); updateHint(); });
 /* el «+» trae todo: archivos, crear imagen, buscar en internet y respuestas cortas */
@@ -3377,6 +3406,25 @@ addEventListener('synthz-saver', () => { $$('#sxSw, #saverBtn').forEach(x => x.s
   host.addEventListener('click', e => { const b = e.target.closest('[data-off]'); if (!b) return; const k = b.dataset.off; if (k === 'img') setImgMode(false); else if (k === 'web') setWeb(false); else setSaver(false); paint(); });
   new MutationObserver(paint).observe(document.body, { attributes:true, attributeFilter:['class'] });
   addEventListener('synthz-saver', paint); $('#saverBtn') && $('#saverBtn').addEventListener('click', () => setTimeout(paint, 0)); paint();
+}
+/* ===== v2.3 · en el celular, la barra puede ir a la izquierda: se abre con ☰ y se cierra al elegir ===== */
+{
+  const nb = $('#navBtn'), tb = $('#tabbar');
+  let scrim = null;
+  const isOpen = () => root.classList.contains('navopen');
+  const setNav = on => {
+    if (!root.classList.contains('navleft')) on = false;
+    root.classList.toggle('navopen', on); nb.setAttribute('aria-expanded', String(on));
+    if (on){ if (!scrim){ scrim = document.createElement('div'); scrim.className = 'navscrim'; scrim.addEventListener('click', () => setNav(false)); document.body.appendChild(scrim); } requestAnimationFrame(() => scrim.classList.add('on')); const f = $('button', tb); if (f) f.focus({ preventScroll:true }); }
+    else if (scrim){ const s = scrim; scrim = null; s.classList.remove('on'); setTimeout(() => s.remove(), 320); }
+  };
+  nb.addEventListener('click', () => setNav(!isOpen()));
+  tb.addEventListener('click', e => { if (isOpen() && e.target.closest('[data-tab]')) setTimeout(() => setNav(false), 60); });
+  addEventListener('keydown', e => { if (e.key === 'Escape' && isOpen()){ setNav(false); nb.focus(); } });
+  addEventListener('resize', () => { if (!isMobile()) setNav(false); });
+  /* arriba del menú: el nombre de SynthFlow, para que se sienta un cajón de verdad */
+  if (!$('.tb-head', tb)) tb.insertAdjacentHTML('afterbegin', '<div class="tb-head" aria-hidden="true"><span class="tbw"></span></div>');
+  const w = $('.tbw', tb); if (w) w.innerHTML = SZ.zWord('Synth');
 }
 /* ---------- arranque ---------- */
 const wantModel = params.get('model');

@@ -67,7 +67,9 @@ async function signedIn(d){
   const h = location.hash || ''; if (!/access_token=|error_description=/.test(h)) return;
   const p = new URLSearchParams(h.slice(1)); try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){}
   if (p.get('access_token')){ ACC.joining = true; root.classList.add('joining'); }
-  if (p.get('error_description')){ setTimeout(() => toast('No se pudo entrar con Google: ' + p.get('error_description')), 800); return; }
+  let linking = false; try{ linking = sessionStorage.getItem('synthz:link') === '1'; sessionStorage.removeItem('synthz:link'); }catch(e){}
+  if (p.get('error_description')){ ACC.joining = false; root.classList.remove('joining'); setTimeout(() => toast('No se pudo ' + (linking ? 'vincular' : 'entrar con') + ' Google: ' + p.get('error_description')), 800); return; }
+  if (linking && SESS){ ACC.joining = false; root.classList.remove('joining'); setTimeout(() => linkGoogleDone({ token:p.get('access_token') }), 600); return; }
   try{ const d = await api('auth', { method:'POST', body:{ mode:'supabase', token:p.get('access_token') } }); await signedIn(d); askDrive(); }
   catch(e){ ACC.joining = false; root.classList.remove('joining'); setTimeout(() => toast((e && e.message) || 'No pude entrar con Google. Intenta de nuevo.'), 800); }
 })();

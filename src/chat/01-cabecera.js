@@ -4,9 +4,16 @@ function retype(el, text, o){ el.textContent = text; el._chars = null; el.remove
 const PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
 const CARET = '<svg class="cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
 const XS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+/* v2.3 · con SuperiorSynth encendido, arriba a la izquierda va su sello (en el celular, solo su logo) */
+const ssTopHtml = () => '<button type="button" class="sstop" id="ssTop" aria-haspopup="menu" data-menu-owner aria-label="SuperiorSynth elige la IA por ti. Toca para opciones">' + ssIco('lg') + '<span class="sst-t"><b>SuperiorSynth</b><small>elige la IA por ti</small></span>' + CARET + '</button>';
 function renderTop(animate){
   const row = $('#pickRow');
   try{ renderCPick(); }catch(e){}
+  if (mode === 'solo' && agentOn()){
+    row.classList.remove('n3', 'n4');
+    row.innerHTML = ssTopHtml() + (document.body.classList.contains('fresh') ? '' : '<span class="paym" id="payM"></span>');
+    paintPay(); return;
+  }
   if (mode === 'solo' && document.body.classList.contains('fresh')){
     row.classList.remove('n3', 'n4');
     const ok0 = connected(selId()), [k1, long1] = payOf(selId()), k = ok0 ? k1 : 'off', long = ok0 ? long1 : /^pu:/.test(selId()) ? 'Puter · sin conectar (toca para conectarlo)' : long1, left = trialOn ? trialLeft() : 0;
@@ -35,6 +42,7 @@ $('#cPick').addEventListener('click', e => { if (side.classList.contains('open')
 $('#cCmp').addEventListener('click', e => openSide('add', e.currentTarget));
 $('#pickRow').addEventListener('click', e => {
   if (e.target.closest('#payPill')){ if (needsConn()) openConnect(); else coinModal('panel'); return; }
+  const ss = e.target.closest('#ssTop'); if (ss){ const r = ss.getBoundingClientRect(); SZ.menuOpen([{ head:'SuperiorSynth' }, { label:'Elegir yo la IA', ico:'chats', fn:() => { cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(true); } }, { label:'¿Qué hace SuperiorSynth?', ico:'help', fn:() => toast('Tú escribes; SuperiorSynth entiende tu pedido, lo mejora y elige la IA que más sabe de eso. Al final decides si te quedas con esa IA.') }], r.left, r.bottom + 6, 'sstm'); return; }
   const rm = e.target.closest('[data-rm]'); if (rm){ removeCmp(rm.dataset.rm, rm.closest('.mchip')); return; }
   const ad = e.target.closest('[data-add]'); if (ad){ if ($('#side').classList.contains('open') && pickMode === 'add') closeSide(); else openSide('add', ad); return; }
   const bt = e.target.closest('#btTog'); if (bt){ st().battle = !st().battle; save(); bt.setAttribute('aria-pressed', String(!!st().battle)); toast(st().battle ? 'A ciegas: no verás qué IA es hasta que votes (desde la próxima pregunta).' : 'Modo sorpresa apagado: ya ves el nombre de cada IA.'); return; }
@@ -54,7 +62,13 @@ function paintPay(){
   else { const id = selId(), p = payOf(id); c = p[0]; l = p[1]; s = p[2]; if (!connected(id)){ c = 'off'; l = /^pu:/.test(id) ? 'Puter · sin conectar' : l; s = /^pu:/.test(id) ? 'Puter sin conectar' : s; } }
   const P = $('#payL'), M = $('#payM');
   if (P){ P.className = 'payl ' + c; P.innerHTML = '<i aria-hidden="true"></i>' + esc(l) + (ex ? '<button type="button" class="lnk" data-tx="exit">Salir</button>' : ''); }
-  if (M){ M.className = 'paym ' + c; M.innerHTML = '<i aria-hidden="true"></i>' + esc(s); }
+  if (M){
+    const bar = !document.body.classList.contains('fresh') && mode !== 'cmp' && !trialOn && (c === 'sz' || agentOn());
+    if (bar){ const k = Math.max(0, 1 - SZ.limPct()), pc = Math.round(k * 100), lv = SZ.limLvl();
+      M.className = 'paym tlim ' + lv; M.setAttribute('role', 'img'); M.setAttribute('aria-label', 'Tu límite gratis de hoy: te queda ' + pc + ' %');
+      M.innerHTML = '<span class="tl-l">Hoy</span><i class="tl-t"><b style="transform:scaleX(' + k.toFixed(3) + ')"></b></i><em>' + pc + ' %</em>'; }
+    else { M.className = 'paym ' + c; M.removeAttribute('role'); M.removeAttribute('aria-label'); M.innerHTML = '<i aria-hidden="true"></i>' + esc(s); }
+  }
 }
 $('#payL').addEventListener('click', e => { if (e.target.closest('[data-tx="exit"]')) exitTrial(); });
 function paintAccent(){

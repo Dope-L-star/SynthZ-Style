@@ -8,6 +8,8 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const NF = new Intl.NumberFormat('es-CO'), fmt = n => NF.format(Math.round(n || 0));
 /* configuración de la página: visuales SynthZ-Style o rendimiento para PCs modestos */
 const CFG_KEYS = ['cursor', 'smooth', 'favAnim', 'bg', 'glass', 'anim'];
+/* v2.3 · temas de color de SynthFlow: [id, nombre, color 1, bloqueado (llega con Syntonia)] */
+const THEMES = [['synthz', 'SynthZ', '#e6b65f', 0, '#c9566c'], ['oceano', 'Océano', '#7cc9e3', 0, '#5a7bd6'], ['bosque', 'Bosque', '#9bd68f', 0, '#3fa58a'], ['atardecer', 'Atardecer', '#f4a95e', 0, '#e2557a'], ['lavanda', 'Lavanda', '#bfa9f2', 0, '#d46fb0'], ['aurora', 'Aurora', '#9fffd6', 1, '#a46bff'], ['oro', 'Oro negro', '#ffd27a', 1, '#2b2b2b']];
 const cfgPreset = perf => CFG_KEYS.reduce((o, k) => (o[k] = perf !== 'speed', o), {});
 const CFG = (() => {
   let c = {}; try{ c = JSON.parse(localStorage.getItem('synthz:cfg')) || {}; }catch(e){}
@@ -22,7 +24,11 @@ const CFG = (() => {
 })();
 const PERF = CFG.perf === 'speed';
 const reduce = !CFG.anim;
-function cfgClasses(){ const r = document.documentElement; r.classList.toggle('nocur', !CFG.cursor); if (!CFG.cursor) r.classList.remove('cursor-on'); r.classList.toggle('noglass', !CFG.glass); r.classList.toggle('nobg', !CFG.bg); r.classList.toggle('noanim', !CFG.anim); r.classList.remove('perf'); r.classList.toggle('pmode', CFG.perf === 'speed'); }
+function cfgClasses(){ const r = document.documentElement; r.classList.toggle('nocur', !CFG.cursor); if (!CFG.cursor) r.classList.remove('cursor-on'); r.classList.toggle('noglass', !CFG.glass); r.classList.toggle('nobg', !CFG.bg); r.classList.toggle('noanim', !CFG.anim); r.classList.remove('perf'); r.classList.toggle('pmode', CFG.perf === 'speed');
+  /* v2.3 · solo en SynthFlow: estilo Simple, color del tema y barra del celular a la izquierda */
+  const chat = !!document.getElementById('composer') || /chat(\.html)?$/.test(location.pathname), simple = chat && CFG.ui === 'simple';
+  r.classList.toggle('simple', simple); if (simple){ r.classList.add('noglass', 'nobg'); r.classList.remove('cursor-on'); r.classList.add('nocur'); } r.classList.toggle('navleft', chat && CFG.nav === 'left');
+  if (chat && !simple && THEMES.some(t => t[0] === CFG.theme && !t[3])) r.dataset.theme = CFG.theme; else delete r.dataset.theme; }
 cfgClasses();
 function saveCfg(){ try{ localStorage.setItem('synthz:cfg', JSON.stringify(CFG)); }catch(e){} }
 const today = () => new Date().toLocaleDateString('en-CA');

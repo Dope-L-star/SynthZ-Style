@@ -98,7 +98,7 @@ function renderChats(anim){
   const AG = st().agentT || {};
   const isAg = x => !!AG[x.k] || x.model === AGK;
   const L = allThreads().filter(x => cView === 'agents' ? isAg(x) : !isAg(x)).map(x => { if (!q) return x; const hitT = (x.title + ' ' + info(x.model).name).toLowerCase().includes(q); let sn = ''; if (!hitT){ const m = (st().chats[x.k] || []).find(mm => (mm.content || '').toLowerCase().includes(q)); if (!m) return null; sn = snipOf(m.content, q); } return Object.assign({}, x, { sn }); }).filter(Boolean);
-  if (!L.length){ box.innerHTML = '<div class="thnone">' + (q ? 'Nada coincide en tus chats.' : cView === 'agents' ? 'Aún no tienes chats con el agente.' : 'Aún no tienes chats.') + '<em>' + (q ? 'Busco en los títulos y dentro de cada mensaje.' : cView === 'agents' ? 'Escribe lo que necesitas: una IA mejora tu pedido y se lo pasa a la IA que más sabe de eso.' : 'Escribe tu primer mensaje y aparecerá aquí.') + '</em></div>'; return; }
+  if (!L.length){ box.innerHTML = '<div class="thnone">' + (q ? 'Nada coincide en tus chats.' : cView === 'agents' ? 'Aún no tienes chats con SuperiorSynth.' : 'Aún no tienes chats.') + '<em>' + (q ? 'Busco en los títulos y dentro de cada mensaje.' : cView === 'agents' ? 'Escribe lo que necesitas: una IA mejora tu pedido y se lo pasa a la IA que más sabe de eso.' : 'Escribe tu primer mensaje y aparecerá aquí.') + '</em></div>'; return; }
   let h = '', g0 = '', n = 0;
   const hlq = t => q ? hl(t, q) : esc(t);
   L.forEach(x => {

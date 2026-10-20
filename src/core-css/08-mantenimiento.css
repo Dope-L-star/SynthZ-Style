@@ -2,18 +2,18 @@
 #szMaint{position:fixed;inset:0;z-index:2147483000;display:flex;justify-content:center;overflow-y:auto;overscroll-behavior:contain;padding:max(18px,env(safe-area-inset-top)) 16px max(18px,env(safe-area-inset-bottom));background:#08070b;color:#f3ece2;font-family:inherit}
 #szMaint .mt-bg{position:fixed;inset:0;pointer-events:none;overflow:hidden}
 #szMaint .mt-bg i{position:absolute;border-radius:50%;filter:blur(70px);opacity:.42;animation:mtDrift 16s ease-in-out infinite alternate}
-#szMaint .mt-bg i:nth-child(1){width:46vmax;height:46vmax;left:-12vmax;top:-14vmax;background:#c9566c}
-#szMaint .mt-bg i:nth-child(2){width:40vmax;height:40vmax;right:-14vmax;top:18vh;background:#e6b65f;opacity:.26;animation-delay:-5s}
+#szMaint .mt-bg i:nth-child(1){width:46vmax;height:46vmax;left:-12vmax;top:-14vmax;background:var(--wine)}
+#szMaint .mt-bg i:nth-child(2){width:40vmax;height:40vmax;right:-14vmax;top:18vh;background:var(--gold);opacity:.26;animation-delay:-5s}
 #szMaint .mt-bg i:nth-child(3){width:36vmax;height:36vmax;left:20vw;bottom:-20vmax;background:#6f5bd6;opacity:.22;animation-delay:-9s}
 #szMaint .mt-wrap{position:relative;width:min(560px,100%);margin:auto;display:flex;flex-direction:column;align-items:center;gap:16px}
-#szMaint .mt-face{position:relative;width:168px;height:168px;cursor:pointer;-webkit-tap-highlight-color:transparent;animation:mtFloat 3.6s ease-in-out infinite;filter:drop-shadow(0 18px 40px rgba(201,86,108,.35))}
+#szMaint .mt-face{position:relative;width:168px;height:168px;cursor:pointer;-webkit-tap-highlight-color:transparent;animation:mtFloat 3.6s ease-in-out infinite;filter:drop-shadow(0 18px 40px rgba(var(--wine-rgb),.35))}
 #szMaint .mt-face .szface{width:168px;height:168px}
 #szMaint .mt-face::after{content:"";position:absolute;left:22%;right:22%;bottom:-18px;height:14px;border-radius:50%;background:rgba(0,0,0,.55);filter:blur(6px);animation:mtShadow 3.6s ease-in-out infinite;z-index:-1}
 #szMaint.thinking .mt-face{animation:mtFloat 1.6s ease-in-out infinite}
 #szMaint .mt-pt{position:absolute;left:50%;top:45%;font-style:normal;font-size:22px;pointer-events:none;will-change:transform,opacity}
 #szMaint .mt-head{text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
-#szMaint .mt-chip{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:99px;border:1px solid rgba(230,182,95,.35);background:rgba(230,182,95,.08);color:#e6b65f;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
-#szMaint .mt-chip i{width:7px;height:7px;border-radius:50%;background:#e6b65f;box-shadow:0 0 0 0 rgba(230,182,95,.6);animation:mtPing 1.8s ease-out infinite}
+#szMaint .mt-chip{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:99px;border:1px solid rgba(var(--gold-rgb),.35);background:rgba(var(--gold-rgb),.08);color:var(--gold);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+#szMaint .mt-chip i{width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 0 rgba(var(--gold-rgb),.6);animation:mtPing 1.8s ease-out infinite}
 #szMaint h2{margin:4px 0 0;font-family:var(--serif,Georgia,serif);font-weight:500;font-size:clamp(28px,7vw,40px);line-height:1.1;letter-spacing:-.01em}
 #szMaint .mt-text{margin:0;max-width:44ch;color:rgba(243,236,226,.78);font-size:15.5px;line-height:1.5}
 #szMaint .mt-ago{color:rgba(243,236,226,.45);font-size:12.5px}
@@ -22,26 +22,26 @@
 #szMaint .mt-m{max-width:86%;padding:9px 13px;border-radius:16px;font-size:14.5px;line-height:1.45;animation:mtIn .35s cubic-bezier(.22,1,.36,1)}
 #szMaint .mt-m p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
 #szMaint .mt-m.ia{align-self:flex-start;background:rgba(255,255,255,.07);border-bottom-left-radius:6px}
-#szMaint .mt-m.me{align-self:flex-end;background:linear-gradient(135deg,#e6b65f,#d9935a);color:#1b1208;border-bottom-right-radius:6px;font-weight:500}
+#szMaint .mt-m.me{align-self:flex-end;background:linear-gradient(135deg,var(--gold),#d9935a);color:#1b1208;border-bottom-right-radius:6px;font-weight:500}
 #szMaint .mt-sugs{display:flex;gap:6px;flex-wrap:wrap}
 #szMaint .mt-sugs:empty{display:none}
 #szMaint .mt-sug{padding:6px 11px;border-radius:99px;border:1px solid rgba(255,255,255,.14);background:transparent;color:rgba(243,236,226,.85);font:inherit;font-size:13px;cursor:pointer;transition:background .2s,border-color .2s}
-#szMaint .mt-sug:hover{background:rgba(255,255,255,.06);border-color:rgba(230,182,95,.5)}
+#szMaint .mt-sug:hover{background:rgba(255,255,255,.06);border-color:rgba(var(--gold-rgb),.5)}
 #szMaint .mt-form{display:flex;gap:8px;align-items:center}
 #szMaint .mt-in{flex:1;min-width:0;height:46px;padding:0 15px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.35);color:inherit;font:inherit;font-size:16px;outline:none;transition:border-color .2s}
-#szMaint .mt-in:focus{border-color:rgba(230,182,95,.6)}
+#szMaint .mt-in:focus{border-color:rgba(var(--gold-rgb),.6)}
 #szMaint .mt-send{flex:none;width:46px;height:46px;display:grid;place-items:center;border-radius:14px;border:0;background:#f3ece2;color:#120d10;cursor:pointer;transition:transform .15s,opacity .2s}
 #szMaint .mt-send svg{width:20px;height:20px}
 #szMaint .mt-send:active{transform:scale(.94)}
 #szMaint .mt-send:disabled{opacity:.4}
 #szMaint .mt-exit{background:none;border:1px dashed rgba(255,255,255,.25);color:rgba(243,236,226,.7);border-radius:12px;padding:8px 14px;font:inherit;font-size:13px;cursor:pointer}
-#szMaint .mt-exit:hover{border-color:rgba(230,182,95,.6);color:#e6b65f}
+#szMaint .mt-exit:hover{border-color:rgba(var(--gold-rgb),.6);color:var(--gold)}
 html.mt-on,html.mt-on body{overflow:hidden!important}
 html.mt-on #szBot{display:none!important}
 @keyframes mtFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
 @keyframes mtShadow{0%,100%{transform:scaleX(1);opacity:.7}50%{transform:scaleX(.8);opacity:.4}}
 @keyframes mtDrift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(6vw,4vh) scale(1.12)}}
-@keyframes mtPing{0%{box-shadow:0 0 0 0 rgba(230,182,95,.6)}100%{box-shadow:0 0 0 9px rgba(230,182,95,0)}}
+@keyframes mtPing{0%{box-shadow:0 0 0 0 rgba(var(--gold-rgb),.6)}100%{box-shadow:0 0 0 9px rgba(var(--gold-rgb),0)}}
 @keyframes mtIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (max-width:480px){#szMaint .mt-face,#szMaint .mt-face .szface{width:132px;height:132px}#szMaint .mt-wrap{gap:12px}#szMaint .mt-chat{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(22,18,24,.92)}}
 @media (prefers-reduced-motion:reduce){#szMaint *,#szMaint .mt-face{animation:none!important}}

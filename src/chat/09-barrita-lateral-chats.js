@@ -25,7 +25,7 @@ $('#rail').addEventListener('click', e => {
   const r = b.dataset.r;
   if (r === 'new'){ newChat(); return; }
   if (r === 'search'){ showChats('chats', true); return; }
-  if (r === 'agents' && cView === 'agents'){ cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(true); toast('Saliste del modo agente.'); return; }
+  if (r === 'agents' && cView === 'agents'){ cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(true); toast('Saliste de SuperiorSynth.'); return; }
   if ((r === 'chats' || r === 'favs') && RS.chats && cView === r && !RS.open){ RS.chats = false; saveRS(); applyRail(); return; }
   showChats(r);
 });

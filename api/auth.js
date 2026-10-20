@@ -104,11 +104,59 @@ export default route({
       return json({ ok:true, role:seed });
     }
 
+    /* v2.3 · vincular Google a TU cuenta (con sesión). Nunca junta dos cuentas: si ese Google ya tiene su propia cuenta, avisa */
+    if (mode === 'link'){
+      const me = await auth(req);
+      await limit('link:' + me.sub, 12, 3600);
+      let id, email, verified, pic, gname, mapKey;
+      if (b.token){
+        if (!(await sbGoogleOn())) return fail(400, 'Vincular con Google todavía no está activado.');
+        const g = await sbUser(b.token), meta = g.user_metadata || {};
+        id = String(g.id); mapKey = 'sbu:' + id; email = cleanEmail(g.email); verified = !!g.email_confirmed_at && meta.email_verified !== false;
+        pic = meta.avatar_url || meta.picture || ''; gname = meta.full_name || meta.name || '';
+        const other = await redis('GET', mapKey) || await sbFindByUid(id);
+        if (other && other !== me.sub) throw err(409, 'Esa cuenta de Google ya tiene su propia cuenta de SynthZ. Entra con Google y, si quieres, ponle usuario y contraseña desde Seguridad.');
+      } else if (b.credential){
+        if (!(await hasGoogle())) return fail(400, 'Entrar con Google no está activado en este SynthZ.');
+        const g = await verifyGoogle(b.credential);
+        id = String(g.sub); mapKey = 'gl:' + id; email = cleanEmail(g.email); verified = g.email_verified === true; pic = g.picture || ''; gname = g.name || '';
+        const other = await redis('GET', mapKey) || (await getJ('u:g' + id) ? 'g' + id : null);
+        if (other && other !== me.sub) throw err(409, 'Esa cuenta de Google ya tiene su propia cuenta de SynthZ. Entra con Google y, si quieres, ponle usuario y contraseña desde Seguridad.');
+      } else return fail(400, 'Falta la confirmación de Google.');
+      if (email && verified){ const owner = await redis('GET', 'e:' + email); if (owner && owner !== me.sub) throw err(409, 'Ese correo ya está en otra cuenta de SynthZ. Entra con Google y, si quieres, ponle usuario y contraseña desde Seguridad.'); }
+      await redis('SET', mapKey, me.sub);
+      if (email && verified) await redis('SET', 'e:' + email, me.sub);
+      const u = Object.assign({}, me, { email:email || me.email || '', emailOk:!!verified, google:true, picture:me.picture || str(pic, 400), gpic:str(pic, 400), name:me.name || str(gname, 60) }, mapKey.startsWith('sbu:') ? { sbUid:id } : { gsub:id }, (email && verified && emailRole(email)) ? { role:emailRole(email) } : {});
+      await setJ('u:' + me.sub, u); await sbAccount(u);
+      /* si tu foto era la inicial, ahora se ve la de Google */
+      const pf = await getJ('p:' + me.sub); if (u.picture && (!pf || !pf.avatar || pf.avatar.type === 'initial')) await setJ('p:' + me.sub, Object.assign({}, pf || {}, { avatar:{ type:'google' } }));
+      return json({ ok:true, user:u });
+    }
+    if (mode === 'addpass'){
+      const me = await auth(req);
+      await limit('addpass:' + me.sub, 10, 3600);
+      if (await getJ('pw:' + me.sub)) throw err(400, 'Tu cuenta ya tiene usuario y contraseña.');
+      const u = cleanUser(b.user);
+      if (!okUser(u)) throw err(400, 'Tu usuario debe tener de 3 a 20 letras, números, puntos o guiones bajos (sin espacios ni tildes).');
+      if (RESERVED.has(u)) throw err(400, 'Ese usuario está reservado. Prueba con otro.');
+      if (SEED_ROLES[u] && !setupOk(b.setup)) throw reservedErr();
+      if (!okPass(b.pass)) throw err(400, PASS_MSG);
+      if (b.pass.toLowerCase().includes(u)) throw err(400, 'Tu contraseña no puede contener tu usuario.');
+      const got = await redis('SET', 'n:' + u, me.sub, 'NX');
+      if (!got) throw err(409, 'Ese usuario ya existe. Elige otro.');
+      const code = recoveryCode();
+      await setJ('pw:' + me.sub, { h:await hashPass(b.pass), rc:codeHash(code), t:Date.now() });
+      const nu = Object.assign({}, me, { username:u }, SEED_ROLES[u] ? { role:SEED_ROLES[u] } : {});
+      await setJ('u:' + me.sub, nu); await sbAccount(nu);
+      return json({ ok:true, user:nu, recovery:code });
+    }
+
     if (mode === 'google'){
       if (!(await hasGoogle())) return fail(400, 'Entrar con Google no está activado en este SynthZ.');
       await limit('auth:' + ip, 20, 600);
       const g = await verifyGoogle(b.credential);
-      const sub = 'g' + g.sub, email = cleanEmail(g.email);
+      const linked = await redis('GET', 'gl:' + g.sub);              /* v2.3: Google vinculado a una cuenta con usuario y contraseña */
+      const sub = linked || 'g' + g.sub, email = cleanEmail(g.email);
       const prev = await getJ('u:' + sub);
       if (prev && prev.blocked) throw err(403, 'Esta cuenta está suspendida. Escríbele al equipo de SynthZ.');
       /* se conserva lo que ya tenía la cuenta (rango, suspensión, fecha); solo se actualiza lo que viene de Google */

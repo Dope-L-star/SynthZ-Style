@@ -1,22 +1,68 @@
-/* ---------- seguridad: cambiar contraseña y código de recuperación nuevo ---------- */
+/* ---------- v2.3 · seguridad y acceso: cómo entras (usuario y contraseña, Google), vincular y cambiar contraseña ---------- */
+const hasPass = u => !!(u && (u.kind === 'pass' || u.username));
+const hasGoogle = u => !!(u && (u.google || u.kind === 'google' || u.sbUid || u.gsub));
+/* al volver de Google para VINCULAR (no para entrar) */
+async function linkGoogleDone(body){
+  try{ const d = await api('auth', { method:'POST', keep:true, body:Object.assign({ mode:'link' }, body) }); if (d.user) ACC.user = Object.assign({}, ACC.user, d.user); await accStart(); toast('¡Listo! Tu Google quedó vinculado: ya puedes entrar con él o con tu usuario.'); }
+  catch(e){ toast((e && e.message) || 'No pude vincular tu Google. Intenta de nuevo.'); }
+}
 function securityModal(){
   if ($('#secm')) return;
   const o = document.createElement('div'); o.id = 'secm'; o.className = 'szm';
-  o.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="Seguridad"><div class="word">' + zWord('Synth') + '</div><div class="tn">SEGURIDAD · @' + esc((ACC.user && ACC.user.username) || '') + '</div><div class="tb" id="secBox"></div><div class="tbtn" style="margin-top:14px"><button class="lnk" type="button" data-close>Cerrar</button></div></div>';
+  o.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="Seguridad y acceso"><div class="word">' + zWord('Synth') + '</div><div class="tn">SEGURIDAD Y ACCESO</div><div class="tb" id="secBox"></div><div class="tbtn" style="margin-top:14px"><button class="lnk" type="button" data-close>Cerrar</button></div></div>';
   document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('on'));
   const box = $('#secBox', o);
   const close = () => { o.classList.remove('on'); setTimeout(() => o.remove(), 420); };
   $('[data-close]', o).addEventListener('click', close);
   o.addEventListener('pointerdown', e => { if (e.target === o) close(); });
+  const GICO = '<svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
   const paint = () => {
-    box.innerHTML = '<h3>Tu contraseña</h3><form class="lform" novalidate>'
+    const u = ACC.user || {}, P = hasPass(u), G = hasGoogle(u);
+    box.innerHTML = '<h3>Cómo entras</h3><div class="sacc">'
+      + '<div class="sa-r' + (P ? ' on' : '') + '"><span class="sa-i">🔑</span><span class="sa-t"><b>Usuario y contraseña</b><small>' + (P ? '@' + esc(u.username || '') : 'Aún no tienes') + '</small></span>' + (P ? '<em class="sa-ok">✓ Activo</em>' : '<button class="btn sm" type="button" data-k="addp">Agregar</button>') + '</div>'
+      + '<div class="sa-r' + (G ? ' on' : '') + '"><span class="sa-i">' + GICO + '</span><span class="sa-t"><b>Google</b><small>' + (G ? esc(u.email || 'Vinculado') : 'Sin vincular') + '</small></span>' + (G ? '<em class="sa-ok">✓ Vinculado</em>' : (ACC.google ? '<span class="sa-g"><button class="btn sm" type="button" data-k="link">Vincular</button></span>' : '<small class="sa-no">No disponible ahora</small>')) + '</div>'
+      + '</div><p class="cnote">Con las dos formas entras a la <b>misma</b> cuenta, con tus chats y tu perfil. Nunca se juntan dos cuentas distintas.</p><div id="secForm"></div>';
+    const add = $('[data-k="addp"]', box); if (add) add.addEventListener('click', () => addPassForm());
+    const ln = $('[data-k="link"]', box); if (ln) ln.addEventListener('click', () => linkGoogle(ln.parentNode));
+    if (P) passForm();
+  };
+  /* vincular Google: por Supabase (vuelve a esta página) o con el botón de Google */
+  const linkGoogle = async slot => {
+    if (ACC.sbg && ACC.sb && ACC.sb.url){
+      try{ sessionStorage.setItem('synthz:link', '1'); sessionStorage.setItem('synthz:sbback', location.pathname + location.search); }catch(e){}
+      location.href = ACC.sb.url + '/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent(location.origin + location.pathname); return;
+    }
+    try{ await loadGsi(); }catch(e){ toast('No pude cargar Google. Revisa si un bloqueador lo está frenando.'); return; }
+    google.accounts.id.initialize({ client_id:ACC.cid, callback:async r => { await linkGoogleDone({ credential:r.credential }); paint(); }, auto_select:false, cancel_on_tap_outside:true, context:'use', itp_support:true });
+    slot.innerHTML = ''; google.accounts.id.renderButton(slot, { theme:'filled_black', size:'medium', shape:'pill', text:'continue_with', locale:'es' });
+  };
+  const addPassForm = () => {
+    const f0 = $('#secForm', box);
+    f0.innerHTML = '<h3 style="margin-top:14px">Ponle usuario y contraseña</h3><form class="lform" novalidate>'
+      + '<label>Usuario<span class="lin"><span class="at">@</span><input name="user" autocomplete="username" maxlength="20" required></span></label>'
+      + '<label>Contraseña<span class="lin"><input name="pass" type="password" autocomplete="new-password" maxlength="200" required></span></label>'
+      + '<p class="lerr" role="alert"></p><div class="aact"><button class="btn sm" type="submit">Guardar</button></div></form>';
+    const f = $('form', f0), err = $('.lerr', f0); f.elements.user.focus();
+    f.elements.user.addEventListener('input', () => { const v = f.elements.user.value.replace(/^@/, '').toLowerCase().replace(/[^a-z0-9_.]/g, ''); if (v !== f.elements.user.value) f.elements.user.value = v; });
+    f.addEventListener('submit', async e => { e.preventDefault(); err.textContent = '';
+      const user = f.elements.user.value.trim(), pass = f.elements.pass.value;
+      if (user.length < 3){ err.textContent = 'Tu usuario debe tener al menos 3 letras o números.'; return; }
+      if (pass.length < 8){ err.textContent = 'La contraseña debe tener al menos 8 caracteres.'; return; }
+      try{ const d = await api('auth', { method:'POST', keep:true, body:{ mode:'addpass', user, pass } }); ACC.user = Object.assign({}, ACC.user, d.user); accFire('pull');
+        recoveryPanel(box, d.recovery, user, () => { toast('¡Listo! Ya puedes entrar con @' + user + ' o con Google.'); paint(); }, false); }
+      catch(x){ err.textContent = x.message || 'Algo falló.'; }
+    });
+  };
+  const passForm = () => {
+    const f0 = $('#secForm', box);
+    f0.innerHTML = '<h3 style="margin-top:14px">Tu contraseña</h3><form class="lform" novalidate>'
       + '<input name="user" autocomplete="username" value="' + esc((ACC.user && ACC.user.username) || '') + '" hidden>'
       + '<label>Contraseña actual<span class="lin"><input name="old" type="password" autocomplete="current-password" required></span></label>'
       + '<label>Contraseña nueva <small>(déjala vacía si solo quieres un código nuevo)</small><span class="lin"><input name="pass" type="password" autocomplete="new-password" maxlength="200"></span></label>'
       + '<p class="lerr" role="alert"></p>'
       + '<div class="aact"><button class="btn sm" type="submit" data-k="change">Cambiar contraseña</button><button class="btn sm ghost" type="button" data-k="code">Código de recuperación nuevo</button></div>'
       + '<p class="cnote">Al cambiar la contraseña, tu cuenta se cierra en los demás dispositivos. Si pides un código nuevo, el anterior deja de servir.</p></form>';
-    const f = $('form', box), err = $('.lerr', box);
+    const f = $('form', f0), err = $('.lerr', f0);
     const run = async k => {
       err.textContent = '';
       const old = f.elements.old.value, pass = f.elements.pass.value;
@@ -29,7 +75,7 @@ function securityModal(){
       }catch(x){ err.textContent = x.message || 'Algo falló.'; }
     };
     f.addEventListener('submit', e => { e.preventDefault(); run('change'); });
-    $('[data-k="code"]', box).addEventListener('click', () => run('code'));
+    $('[data-k="code"]', f0).addEventListener('click', () => run('code'));
   };
   paint();
 }
@@ -89,6 +135,9 @@ function cfgModal(tab){
     + '<div class="cfgbody">'
     + '<section class="cfgpane" data-pane="page"' + (ia ? ' hidden' : '') + '>'
     + '<div class="cfglbl">Cómo se ve</div><div id="cfgCh"></div>'
+    + '<div class="cfglbl">Estilo de SynthFlow</div><div class="cfgseg" id="cfgUi"><button type="button" data-ui="full" aria-pressed="' + (draft.ui !== 'simple') + '">SynthFlow</button><button type="button" data-ui="simple" aria-pressed="' + (draft.ui === 'simple') + '">Simple</button></div><p class="cnote">Simple: solo tus chats, la caja de escribir y las respuestas, con un diseño tranquilo y sin efectos.</p>'
+    + '<div class="cfglbl">Color de SynthFlow</div><div class="cfgth" id="cfgTh">' + THEMES.map(([id, nm, c1, lock, c2]) => '<button type="button" data-th="' + id + '" aria-pressed="' + ((draft.theme || 'synthz') === id) + '"' + (lock ? ' disabled aria-disabled="true"' : '') + ' style="--t1:' + c1 + ';--t2:' + c2 + '"><i></i><span>' + esc(nm) + '</span>' + (lock ? '<em>Pronto</em>' : '') + '</button>').join('') + '</div><p class="cnote" id="cfgThN"></p>'
+    + '<div class="cfglbl">Barra del celular</div><div class="cfgseg" id="cfgNav"><button type="button" data-nav="bottom" aria-pressed="' + (draft.nav !== 'left') + '">Abajo</button><button type="button" data-nav="left" aria-pressed="' + (draft.nav === 'left') + '">A la izquierda</button></div><p class="cnote">A la izquierda: la barra se esconde y la abres con el botón ☰ de arriba.</p>'
     + '<div class="cfglbl">Detalles</div><div id="cfgRows">' + CFG_PAGE.map(row).join('') + '</div>'
     + '<div class="cfglbl">Intro de la página</div><div class="cfgseg" id="cfgIn">' + IN.map(([v, l]) => '<button type="button" data-in="' + v + '" aria-pressed="' + (draft.intro === v) + '">' + l + '</button>').join('') + '</div><p class="cnote">La animación al entrar al chat siempre se ve.</p>'
     + '</section>'
@@ -105,6 +154,11 @@ function cfgModal(tab){
   memPanel($('#szMem', o));
   $$('.cfgsw[data-k]', o).forEach(b => b.addEventListener('click', () => { draft[b.dataset.k] = !draft[b.dataset.k]; paintRows(); }));
   $$('[data-in]', o).forEach(b => b.addEventListener('click', () => { draft.intro = b.dataset.in; $$('[data-in]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
+  const thNote = () => { const n = $('#cfgThN', o); if (n) n.textContent = draft.ui === 'simple' ? 'El estilo Simple usa sus propios colores: el color se ve en el estilo SynthFlow.' : 'Cambia el dorado y el rosado de SynthFlow. Aurora y Oro negro llegan con Syntonia.'; };
+  thNote();
+  $$('[data-ui]', o).forEach(b => b.addEventListener('click', () => { draft.ui = b.dataset.ui; $$('[data-ui]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); thNote(); }));
+  $$('[data-th]', o).forEach(b => b.addEventListener('click', () => { if (b.disabled) return; draft.theme = b.dataset.th; $$('[data-th]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
+  $$('[data-nav]', o).forEach(b => b.addEventListener('click', () => { draft.nav = b.dataset.nav; $$('[data-nav]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
   const tabs = $('.cfgtabs', o), pill = $('.pill', tabs);
   const show = k => { $$('[role=tab]', tabs).forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === k))); $$('.cfgpane', o).forEach(p => { p.hidden = p.dataset.pane !== k; }); const b = $('[data-tab="' + k + '"]', tabs); if (b && pill){ pill.style.width = b.offsetWidth + 'px'; pill.style.transform = 'translateX(' + (b.offsetLeft - 4) + 'px)'; } $('.cfgbody', o).scrollTop = 0; };
   tabs.addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) show(b.dataset.tab); });

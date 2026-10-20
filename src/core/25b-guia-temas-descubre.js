@@ -5,7 +5,7 @@ const GTOPICS = [
   ['chat', 'Escribir y enviar', 'Dónde escribes y cómo envías.'],
   ['ia', 'Elegir la IA', 'Cambiar de IA y ver para qué sirve cada una.'],
   ['comparar', 'Comparar IAs', 'Varias IA responden lo mismo, lado a lado.'],
-  ['agente', 'Modo agente', 'Escribes y el agente elige la IA por ti.'],
+  ['agente', 'SuperiorSynth', 'Escribes y SuperiorSynth elige la IA por ti.'],
   ['archivos', 'Archivos y vista previa', 'Adjuntar archivos y ver los que te da la IA.'],
   ['extras', 'Internet y memoria', 'Buscar datos de hoy y que la IA te recuerde.'],
   ['chats', 'Mis chats y favoritos', 'Dónde quedan tus conversaciones.'],
@@ -45,14 +45,14 @@ function guideAsk(o = {}){
 /* «¡Descubriste algo nuevo!»: la primera vez que usas algo, SynthonIA te cuenta en una línea para qué sirve */
 const DISC = [
   ['#cCmp, #pickRow [data-add], [data-add-cmp]', 'comparar', 'Comparar IAs', 'Ahora varias IA responden lo mismo y ves cuál lo hace mejor.'],
-  ['#railAgent, #cSeg [data-v="agents"]', 'agente', 'Modo agente', 'Tú escribes; el agente mejora tu pedido y elige la IA que más sabe de eso.'],
+  ['#railAgent, #cSeg [data-v="agents"]', 'agente', 'SuperiorSynth', 'Tú escribes; SuperiorSynth mejora tu pedido y elige la IA que más sabe de eso.'],
   ['.fcard [data-fv]', 'archivos', 'Archivos de la IA', 'Puedes ver el código, su vista previa y descargarlo con su nombre.'],
   ['[data-a="star"]', 'favoritos', 'Favoritos', 'Las respuestas que guardas con la estrella quedan en «Favoritos».'],
   ['#attachBtn', 'adjuntar', 'Adjuntar archivos', 'Le puedes dar a la IA fotos, PDF o archivos de texto para que los lea.'],
   ['.tchip[data-topic]', 'temas', 'Temas', 'Cada tema te recomienda las IA que mejor lo hacen.'],
   ['[data-r="search"], #thQ', 'buscar', 'Buscar en tus chats', 'Busco dentro de todos tus mensajes, no solo en los títulos.'],
   ['[data-a="regen"]', 'otra', 'Otra vez', 'La IA vuelve a responder lo mismo, con otras palabras.'],
-  ['#agPill', 'agente-off', 'Apagar el agente', 'Vuelves a elegir tú la IA.']
+  ['#ssTop', 'agente-off', 'Salir de SuperiorSynth', 'Toca su sello arriba y «Elegir yo la IA».']
 ];
 const DISC_KEY = 'synthz:disc';
 let discSeen = {}; try{ discSeen = JSON.parse(localStorage.getItem(DISC_KEY) || '{}') || {}; }catch(e){}

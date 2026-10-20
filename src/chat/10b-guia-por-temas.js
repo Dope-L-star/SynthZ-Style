@@ -6,17 +6,17 @@ const TOPIC_STEPS = {
     const ex = gT('#hexR', '#hexR'); if (ex) await gPoint(ex, 'Si no sabes qué pedir, toca una de estas ideas: se escribe sola y tú decides cuándo enviarla.');
   },
   ia:async () => {
-    if (agentOn()){ await gPoint(gT('#agPill', '#agPill'), 'Ahora estás en modo agente: él elige la IA por ti. Si quieres elegirla tú, toca «Apagar».'); return; }
+    if (agentOn()){ await gPoint(gT('#ssTop', '#ssTop'), 'Ahora estás con SuperiorSynth: él elige la IA por ti. Si quieres elegirla tú, toca aquí y «Elegir yo la IA».'); return; }
     await gPoint(gAny('#cPick', '#curChip'), 'Aquí eliges con qué IA hablas. Tócalo y se abre su ventana con temas, buscador y filtros.');
     const tc = gT('.tchip[data-topic]', '.tchip[data-topic]'); if (tc) await gPoint(tc, 'Cada tema te recomienda las IA que mejor lo hacen. Por ejemplo, «Código» te muestra las expertas en programar.');
   },
   comparar:async () => {
-    if (agentOn()){ await gPoint(null, 'Comparar se usa sin el modo agente: apágalo y verás el botón «Comparar con otra IA» abajo.'); return; }
+    if (agentOn()){ await gPoint(null, 'Comparar se usa sin SuperiorSynth: vuelve a «Chats» y verás el botón «Comparar con otra IA» abajo.'); return; }
     await gPoint(gAny('#cCmp', '#pickRow [data-add]'), 'Aquí sumas otra IA, hasta 4. Todas responden la misma pregunta y aparecen lado a lado, en el orden en que llegan. Ojo: cada una gasta lo suyo.');
   },
   agente:async () => {
-    await gPoint(gT('#railAgent', '#tabbar [data-tab="chats"]'), isMobile() ? 'El modo agente está en «Chats», en la pestaña «Agente».' : 'Este es el modo agente, debajo de «Mis chats».');
-    await gPoint(null, 'En modo agente no eliges IA: tú escribes, el agente entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso. Al final decides si te quedas con esa IA o sigues en modo agente.', { mood:'guino' });
+    await gPoint(gT('#cSeg [data-v="agents"]', '#tabbar [data-tab="chats"]'), isMobile() ? 'SuperiorSynth está en «Chats», en la pestaña «SuperiorSynth».' : 'Este es SuperiorSynth, junto a «Chats», arriba de tus chats.');
+    await gPoint(null, 'Con SuperiorSynth no eliges IA: tú escribes, él entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso. Al final decides si te quedas con esa IA o sigues con SuperiorSynth.', { mood:'guino' });
   },
   archivos:async () => {
     await gPoint(gT('#attachBtn', '#attachBtn'), 'Con el «+» le das a la IA fotos, PDF o archivos de texto. Ahí mismo creas imágenes, buscas en internet o pides respuestas cortas.');

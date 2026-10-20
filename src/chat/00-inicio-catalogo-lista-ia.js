@@ -31,7 +31,7 @@ const idx = new Map(), newIds = new Set();
 function setCatalog(list, t, status){ list = (list || []).filter(m => !SZ.isBad(m.id)); cat = { t, list, status }; idx.clear(); list.forEach(m => idx.set(m.id, m)); }
 function stub(id){
   if (id === 'imagen') return { id, name:'Creador de imágenes', vendor:'synthz', vlabel:'Imágenes', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'', stub:true };
-  if (id === 'agente') return { id, name:'Modo agente', vendor:'synthz', vlabel:'Elige la IA por ti', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'', stub:true };
+  if (id === 'agente') return { id, name:'SuperiorSynth', vendor:'synthz', vlabel:'Elige la IA por ti', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'', stub:true };
   if (id === 'sz:auto') return Object.assign({}, SZ.SZ_AUTO, { stub:true });
   if (/^sz:/.test(id)){ const mid = id.split(':').slice(2).join(':'); return { id, name:mid.replace(/^[^/]+\//, ''), vendor:'synthz', vlabel:'Gratis', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'', stub:true }; }
   const v = id.split('/')[0] || 'otro', nm = (id.split('/').slice(1).join('/') || id).replace(/:free$/, '');

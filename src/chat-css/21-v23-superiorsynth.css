@@ -1,0 +1,88 @@
+/* ===== v2.3 · SuperiorSynth (antes «modo agente»): ícono animado, pestaña junto a Chats, sello arriba y barrita del límite ===== */
+.ssi{display:block;width:18px;height:18px;flex:none;overflow:visible}
+.ssi.lg{width:24px;height:24px}
+.ssi .ssi-o{stroke-opacity:.8}
+.ssi .ssi-s{transform-box:fill-box;transform-origin:center;animation:ssBeat 4.2s cubic-bezier(.45,0,.25,1) infinite}
+.ssi.lg .ssi-s,.sstop .ssi-s,#railAgent[aria-pressed="true"] .ssi-s{filter:drop-shadow(0 0 2.5px rgba(var(--gold-rgb),.6))}
+.ssi .ssi-k{transform-box:fill-box;transform-origin:center;animation:ssTw 2.6s ease-in-out infinite}
+@keyframes ssBeat{0%,70%,100%{transform:scale(1)}78%{transform:scale(1.18)}86%{transform:scale(.96)}93%{transform:scale(1.06)}}
+@keyframes ssTw{0%,100%{opacity:.25;transform:scale(.6)}50%{opacity:1;transform:scale(1.15)}}
+html.noanim .ssi .ssi-s,html.noanim .ssi .ssi-k{animation:none}
+@media (prefers-reduced-motion:reduce){.ssi .ssi-s,.ssi .ssi-k{animation:none}}
+.ssmount{display:inline-flex;align-items:center;justify-content:center}
+
+/* barra lateral (PC): el botón con su ícono */
+#railAgent .ssmount .ssi{width:21px;height:21px}
+#railAgent[aria-pressed="true"]{color:#f3d79e;background:linear-gradient(135deg,rgba(var(--gold-rgb),.16),rgba(var(--wine-rgb),.12))}
+#railAgent[aria-pressed="true"] .ssi-s{animation-duration:1.8s}
+
+/* «Chats | SuperiorSynth» arriba de tus chats, también en PC */
+#cSeg{position:relative}
+#cSeg button{display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;position:relative;z-index:1}
+#cSeg button .ssmount .ssi{width:16px;height:16px}
+#cSeg button[data-v="agents"][aria-selected="true"]{color:#f3d79e}
+#cAgH{display:none !important}
+@media (min-width:900px){
+  #cSeg,#cSeg[hidden]{display:grid !important;grid-template-columns:1fr 1fr;gap:0;padding:4px;margin:0 0 10px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03)}
+  #cSeg [data-v="favs"]{display:none !important}
+  #cSeg button{padding:8px 6px;border-radius:9px;border:0;background:none;color:var(--mute);font:500 13.5px var(--sans,inherit);cursor:pointer;transition:color .25s}
+  #cSeg button:hover{color:var(--text)}
+  #cSeg button[aria-selected="true"]{color:var(--text)}
+  #cSeg .pill{position:absolute;z-index:0;top:4px;bottom:4px;left:0;border-radius:9px;background:rgba(255,255,255,.08);transition:transform .45s cubic-bezier(.22,1,.36,1),width .45s cubic-bezier(.22,1,.36,1)}
+  body.agenting #cSeg .pill{background:linear-gradient(135deg,rgba(var(--gold-rgb),.2),rgba(var(--wine-rgb),.14))}
+}
+@media (max-width:899px){
+  #cSeg button{font-size:12.5px;gap:5px}
+  #cSeg button[data-v="agents"][aria-selected="true"]{background:linear-gradient(135deg,rgba(var(--gold-rgb),.2),rgba(var(--wine-rgb),.14)) !important}
+}
+
+/* ya no va «El agente elige la IA · Apagar» en la caja de escribir */
+.agpill,body.agenting .agpill{display:none !important}
+
+/* sello de SuperiorSynth arriba a la izquierda */
+.sstop{display:inline-flex;align-items:center;gap:10px;min-height:46px;padding:0 12px 0 10px;border-radius:15px;border:1px solid rgba(var(--gold-rgb),.32);background:linear-gradient(135deg,rgba(var(--gold-rgb),.12),rgba(var(--wine-rgb),.07));color:var(--text);cursor:pointer;transition:border-color .25s,background .25s;animation:ssIn .6s cubic-bezier(.22,1,.36,1)}
+.sstop:hover{border-color:rgba(var(--gold-rgb),.6)}
+.sstop .ssi{width:26px;height:26px}
+.sstop .sst-t{display:flex;flex-direction:column;align-items:flex-start;line-height:1.1}
+.sstop .sst-t b{font:500 19px var(--serif,Georgia,serif);letter-spacing:-.01em;background:linear-gradient(100deg,#fff1d2,var(--gold) 55%,#e58aa0);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sstop .sst-t small{font-size:11.5px;color:var(--mute)}
+.sstop .cv{width:15px;height:15px;color:var(--mute)}
+@keyframes ssIn{from{opacity:0;transform:translateY(-4px) scale(.97)}to{opacity:1;transform:none}}
+@media (max-width:899px){
+  .sstop{width:44px;height:44px;min-height:44px;padding:0;justify-content:center;border-radius:50%}
+  .sstop .sst-t,.sstop .cv{display:none}
+}
+.ctxm.sstm .mhd{color:#f3d79e}
+
+/* barrita del límite de hoy: solo se mira (no se toca) */
+.paym.tlim{display:inline-flex !important;align-items:center;gap:8px;min-height:30px;padding:0 11px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.025);pointer-events:none;user-select:none;-webkit-user-select:none;cursor:default;flex:none}
+.tlim .tl-l{font-size:11.5px;color:var(--mute);letter-spacing:.02em}
+.tlim .tl-t{display:block;position:relative;width:70px;height:5px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}
+.tlim .tl-t b{position:absolute;inset:0;border-radius:inherit;transform-origin:left center;background:linear-gradient(90deg,#5fc7a3,#9fe3c9);transition:transform .8s cubic-bezier(.22,1,.36,1)}
+.tlim.warn .tl-t b{background:linear-gradient(90deg,#e69a4a,#f2b36b)}
+.tlim.full .tl-t b{background:#ff8f7a}
+.tlim em{font-style:normal;font-size:11.5px;color:var(--soft);font-variant-numeric:tabular-nums;min-width:30px;text-align:right}
+@media (min-width:900px){#pickRow .paym.tlim{margin-left:4px}}
+@media (max-width:420px){.tlim .tl-t{width:46px}.tlim .tl-l{display:none}}
+
+/* el sello del centro («Modo SuperiorSynth activado») con el ícono nuevo */
+.aghello .agbadge .ssi{width:16px;height:16px}
+.agsum .ag-ic .ssi,.agrun .ssi{width:16px;height:16px}
+
+/* ===== v2.3 · barra del celular a la izquierda (se abre con ☰) ===== */
+.navbtn,.tabbar .tb-head{display:none}
+@media (max-width:899px){
+  html.noglass .tabbar{backdrop-filter:none;-webkit-backdrop-filter:none;background:#0d0e12}
+  html.navleft .navbtn{display:grid;place-items:center;width:42px;height:42px;flex:none;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);margin-right:2px}
+  html.navleft .navbtn svg{width:21px;height:21px}
+  html.navleft .tabbar{position:fixed;z-index:9600;top:0;left:0;bottom:0;width:min(82vw,300px);display:flex;flex-direction:column;align-items:stretch;gap:4px;padding:calc(14px + env(safe-area-inset-top)) 12px calc(14px + env(safe-area-inset-bottom));border-top:0;border-right:1px solid var(--line);background:#0f0f14;backdrop-filter:none;-webkit-backdrop-filter:none;transform:translateX(-104%);transition:transform .38s cubic-bezier(.22,1,.36,1);box-shadow:20px 0 60px -20px rgba(0,0,0,.8);overflow-y:auto}
+  html.navleft.navopen .tabbar{transform:none}
+  html.navleft .tabbar .tb-head{display:flex;align-items:center;min-height:48px;padding:0 10px 10px;margin-bottom:6px;border-bottom:1px solid var(--line);font-size:26px}
+  html.navleft .tabbar button{flex-direction:row;justify-content:flex-start;gap:14px;min-height:50px;padding:0 14px;border-radius:13px;font-size:15.5px;color:var(--soft)}
+  html.navleft .tabbar button svg{width:22px;height:22px}
+  html.navleft .tabbar button[aria-pressed="true"]{color:var(--text);background:rgba(255,255,255,.07)}
+  html.navleft .tabbar #tabMe{margin-top:auto}
+  html.navleft .composer{padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+  .navscrim{position:fixed;inset:0;z-index:9590;background:rgba(4,4,8,.55);opacity:0;transition:opacity .3s ease}
+  .navscrim.on{opacity:1}
+}

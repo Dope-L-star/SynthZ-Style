@@ -8,6 +8,8 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const NF = new Intl.NumberFormat('es-CO'), fmt = n => NF.format(Math.round(n || 0));
 /* configuración de la página: visuales SynthZ-Style o rendimiento para PCs modestos */
 const CFG_KEYS = ['cursor', 'smooth', 'favAnim', 'bg', 'glass', 'anim'];
+/* v2.3 · temas de color de SynthFlow: [id, nombre, color 1, bloqueado (llega con Syntonia)] */
+const THEMES = [['synthz', 'SynthZ', '#e6b65f', 0, '#c9566c'], ['oceano', 'Océano', '#7cc9e3', 0, '#5a7bd6'], ['bosque', 'Bosque', '#9bd68f', 0, '#3fa58a'], ['atardecer', 'Atardecer', '#f4a95e', 0, '#e2557a'], ['lavanda', 'Lavanda', '#bfa9f2', 0, '#d46fb0'], ['aurora', 'Aurora', '#9fffd6', 1, '#a46bff'], ['oro', 'Oro negro', '#ffd27a', 1, '#2b2b2b']];
 const cfgPreset = perf => CFG_KEYS.reduce((o, k) => (o[k] = perf !== 'speed', o), {});
 const CFG = (() => {
   let c = {}; try{ c = JSON.parse(localStorage.getItem('synthz:cfg')) || {}; }catch(e){}
@@ -22,7 +24,11 @@ const CFG = (() => {
 })();
 const PERF = CFG.perf === 'speed';
 const reduce = !CFG.anim;
-function cfgClasses(){ const r = document.documentElement; r.classList.toggle('nocur', !CFG.cursor); if (!CFG.cursor) r.classList.remove('cursor-on'); r.classList.toggle('noglass', !CFG.glass); r.classList.toggle('nobg', !CFG.bg); r.classList.toggle('noanim', !CFG.anim); r.classList.remove('perf'); r.classList.toggle('pmode', CFG.perf === 'speed'); }
+function cfgClasses(){ const r = document.documentElement; r.classList.toggle('nocur', !CFG.cursor); if (!CFG.cursor) r.classList.remove('cursor-on'); r.classList.toggle('noglass', !CFG.glass); r.classList.toggle('nobg', !CFG.bg); r.classList.toggle('noanim', !CFG.anim); r.classList.remove('perf'); r.classList.toggle('pmode', CFG.perf === 'speed');
+  /* v2.3 · solo en SynthFlow: estilo Simple, color del tema y barra del celular a la izquierda */
+  const chat = !!document.getElementById('composer') || /chat(\.html)?$/.test(location.pathname), simple = chat && CFG.ui === 'simple';
+  r.classList.toggle('simple', simple); if (simple){ r.classList.add('noglass', 'nobg'); r.classList.remove('cursor-on'); r.classList.add('nocur'); } r.classList.toggle('navleft', chat && CFG.nav === 'left');
+  if (chat && !simple && THEMES.some(t => t[0] === CFG.theme && !t[3])) r.dataset.theme = CFG.theme; else delete r.dataset.theme; }
 cfgClasses();
 function saveCfg(){ try{ localStorage.setItem('synthz:cfg', JSON.stringify(CFG)); }catch(e){} }
 const today = () => new Date().toLocaleDateString('en-CA');
@@ -1763,7 +1769,9 @@ async function signedIn(d){
   const h = location.hash || ''; if (!/access_token=|error_description=/.test(h)) return;
   const p = new URLSearchParams(h.slice(1)); try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){}
   if (p.get('access_token')){ ACC.joining = true; root.classList.add('joining'); }
-  if (p.get('error_description')){ setTimeout(() => toast('No se pudo entrar con Google: ' + p.get('error_description')), 800); return; }
+  let linking = false; try{ linking = sessionStorage.getItem('synthz:link') === '1'; sessionStorage.removeItem('synthz:link'); }catch(e){}
+  if (p.get('error_description')){ ACC.joining = false; root.classList.remove('joining'); setTimeout(() => toast('No se pudo ' + (linking ? 'vincular' : 'entrar con') + ' Google: ' + p.get('error_description')), 800); return; }
+  if (linking && SESS){ ACC.joining = false; root.classList.remove('joining'); setTimeout(() => linkGoogleDone({ token:p.get('access_token') }), 600); return; }
   try{ const d = await api('auth', { method:'POST', body:{ mode:'supabase', token:p.get('access_token') } }); await signedIn(d); askDrive(); }
   catch(e){ ACC.joining = false; root.classList.remove('joining'); setTimeout(() => toast((e && e.message) || 'No pude entrar con Google. Intenta de nuevo.'), 800); }
 })();
@@ -1888,25 +1896,71 @@ async function googleBtn(slot, done, onBlocked){
   slot.innerHTML = '';
   google.accounts.id.renderButton(slot, { theme:'filled_black', size:'large', shape:'pill', text:'continue_with', logo_alignment:'left', locale:'es', width:Math.max(220, Math.min(340, (slot.clientWidth || 320) - 4)) });
 }
-/* ---------- seguridad: cambiar contraseña y código de recuperación nuevo ---------- */
+/* ---------- v2.3 · seguridad y acceso: cómo entras (usuario y contraseña, Google), vincular y cambiar contraseña ---------- */
+const hasPass = u => !!(u && (u.kind === 'pass' || u.username));
+const hasGoogle = u => !!(u && (u.google || u.kind === 'google' || u.sbUid || u.gsub));
+/* al volver de Google para VINCULAR (no para entrar) */
+async function linkGoogleDone(body){
+  try{ const d = await api('auth', { method:'POST', keep:true, body:Object.assign({ mode:'link' }, body) }); if (d.user) ACC.user = Object.assign({}, ACC.user, d.user); await accStart(); toast('¡Listo! Tu Google quedó vinculado: ya puedes entrar con él o con tu usuario.'); }
+  catch(e){ toast((e && e.message) || 'No pude vincular tu Google. Intenta de nuevo.'); }
+}
 function securityModal(){
   if ($('#secm')) return;
   const o = document.createElement('div'); o.id = 'secm'; o.className = 'szm';
-  o.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="Seguridad"><div class="word">' + zWord('Synth') + '</div><div class="tn">SEGURIDAD · @' + esc((ACC.user && ACC.user.username) || '') + '</div><div class="tb" id="secBox"></div><div class="tbtn" style="margin-top:14px"><button class="lnk" type="button" data-close>Cerrar</button></div></div>';
+  o.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="Seguridad y acceso"><div class="word">' + zWord('Synth') + '</div><div class="tn">SEGURIDAD Y ACCESO</div><div class="tb" id="secBox"></div><div class="tbtn" style="margin-top:14px"><button class="lnk" type="button" data-close>Cerrar</button></div></div>';
   document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('on'));
   const box = $('#secBox', o);
   const close = () => { o.classList.remove('on'); setTimeout(() => o.remove(), 420); };
   $('[data-close]', o).addEventListener('click', close);
   o.addEventListener('pointerdown', e => { if (e.target === o) close(); });
+  const GICO = '<svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
   const paint = () => {
-    box.innerHTML = '<h3>Tu contraseña</h3><form class="lform" novalidate>'
+    const u = ACC.user || {}, P = hasPass(u), G = hasGoogle(u);
+    box.innerHTML = '<h3>Cómo entras</h3><div class="sacc">'
+      + '<div class="sa-r' + (P ? ' on' : '') + '"><span class="sa-i">🔑</span><span class="sa-t"><b>Usuario y contraseña</b><small>' + (P ? '@' + esc(u.username || '') : 'Aún no tienes') + '</small></span>' + (P ? '<em class="sa-ok">✓ Activo</em>' : '<button class="btn sm" type="button" data-k="addp">Agregar</button>') + '</div>'
+      + '<div class="sa-r' + (G ? ' on' : '') + '"><span class="sa-i">' + GICO + '</span><span class="sa-t"><b>Google</b><small>' + (G ? esc(u.email || 'Vinculado') : 'Sin vincular') + '</small></span>' + (G ? '<em class="sa-ok">✓ Vinculado</em>' : (ACC.google ? '<span class="sa-g"><button class="btn sm" type="button" data-k="link">Vincular</button></span>' : '<small class="sa-no">No disponible ahora</small>')) + '</div>'
+      + '</div><p class="cnote">Con las dos formas entras a la <b>misma</b> cuenta, con tus chats y tu perfil. Nunca se juntan dos cuentas distintas.</p><div id="secForm"></div>';
+    const add = $('[data-k="addp"]', box); if (add) add.addEventListener('click', () => addPassForm());
+    const ln = $('[data-k="link"]', box); if (ln) ln.addEventListener('click', () => linkGoogle(ln.parentNode));
+    if (P) passForm();
+  };
+  /* vincular Google: por Supabase (vuelve a esta página) o con el botón de Google */
+  const linkGoogle = async slot => {
+    if (ACC.sbg && ACC.sb && ACC.sb.url){
+      try{ sessionStorage.setItem('synthz:link', '1'); sessionStorage.setItem('synthz:sbback', location.pathname + location.search); }catch(e){}
+      location.href = ACC.sb.url + '/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent(location.origin + location.pathname); return;
+    }
+    try{ await loadGsi(); }catch(e){ toast('No pude cargar Google. Revisa si un bloqueador lo está frenando.'); return; }
+    google.accounts.id.initialize({ client_id:ACC.cid, callback:async r => { await linkGoogleDone({ credential:r.credential }); paint(); }, auto_select:false, cancel_on_tap_outside:true, context:'use', itp_support:true });
+    slot.innerHTML = ''; google.accounts.id.renderButton(slot, { theme:'filled_black', size:'medium', shape:'pill', text:'continue_with', locale:'es' });
+  };
+  const addPassForm = () => {
+    const f0 = $('#secForm', box);
+    f0.innerHTML = '<h3 style="margin-top:14px">Ponle usuario y contraseña</h3><form class="lform" novalidate>'
+      + '<label>Usuario<span class="lin"><span class="at">@</span><input name="user" autocomplete="username" maxlength="20" required></span></label>'
+      + '<label>Contraseña<span class="lin"><input name="pass" type="password" autocomplete="new-password" maxlength="200" required></span></label>'
+      + '<p class="lerr" role="alert"></p><div class="aact"><button class="btn sm" type="submit">Guardar</button></div></form>';
+    const f = $('form', f0), err = $('.lerr', f0); f.elements.user.focus();
+    f.elements.user.addEventListener('input', () => { const v = f.elements.user.value.replace(/^@/, '').toLowerCase().replace(/[^a-z0-9_.]/g, ''); if (v !== f.elements.user.value) f.elements.user.value = v; });
+    f.addEventListener('submit', async e => { e.preventDefault(); err.textContent = '';
+      const user = f.elements.user.value.trim(), pass = f.elements.pass.value;
+      if (user.length < 3){ err.textContent = 'Tu usuario debe tener al menos 3 letras o números.'; return; }
+      if (pass.length < 8){ err.textContent = 'La contraseña debe tener al menos 8 caracteres.'; return; }
+      try{ const d = await api('auth', { method:'POST', keep:true, body:{ mode:'addpass', user, pass } }); ACC.user = Object.assign({}, ACC.user, d.user); accFire('pull');
+        recoveryPanel(box, d.recovery, user, () => { toast('¡Listo! Ya puedes entrar con @' + user + ' o con Google.'); paint(); }, false); }
+      catch(x){ err.textContent = x.message || 'Algo falló.'; }
+    });
+  };
+  const passForm = () => {
+    const f0 = $('#secForm', box);
+    f0.innerHTML = '<h3 style="margin-top:14px">Tu contraseña</h3><form class="lform" novalidate>'
       + '<input name="user" autocomplete="username" value="' + esc((ACC.user && ACC.user.username) || '') + '" hidden>'
       + '<label>Contraseña actual<span class="lin"><input name="old" type="password" autocomplete="current-password" required></span></label>'
       + '<label>Contraseña nueva <small>(déjala vacía si solo quieres un código nuevo)</small><span class="lin"><input name="pass" type="password" autocomplete="new-password" maxlength="200"></span></label>'
       + '<p class="lerr" role="alert"></p>'
       + '<div class="aact"><button class="btn sm" type="submit" data-k="change">Cambiar contraseña</button><button class="btn sm ghost" type="button" data-k="code">Código de recuperación nuevo</button></div>'
       + '<p class="cnote">Al cambiar la contraseña, tu cuenta se cierra en los demás dispositivos. Si pides un código nuevo, el anterior deja de servir.</p></form>';
-    const f = $('form', box), err = $('.lerr', box);
+    const f = $('form', f0), err = $('.lerr', f0);
     const run = async k => {
       err.textContent = '';
       const old = f.elements.old.value, pass = f.elements.pass.value;
@@ -1919,7 +1973,7 @@ function securityModal(){
       }catch(x){ err.textContent = x.message || 'Algo falló.'; }
     };
     f.addEventListener('submit', e => { e.preventDefault(); run('change'); });
-    $('[data-k="code"]', box).addEventListener('click', () => run('code'));
+    $('[data-k="code"]', f0).addEventListener('click', () => run('code'));
   };
   paint();
 }
@@ -1979,6 +2033,9 @@ function cfgModal(tab){
     + '<div class="cfgbody">'
     + '<section class="cfgpane" data-pane="page"' + (ia ? ' hidden' : '') + '>'
     + '<div class="cfglbl">Cómo se ve</div><div id="cfgCh"></div>'
+    + '<div class="cfglbl">Estilo de SynthFlow</div><div class="cfgseg" id="cfgUi"><button type="button" data-ui="full" aria-pressed="' + (draft.ui !== 'simple') + '">SynthFlow</button><button type="button" data-ui="simple" aria-pressed="' + (draft.ui === 'simple') + '">Simple</button></div><p class="cnote">Simple: solo tus chats, la caja de escribir y las respuestas, con un diseño tranquilo y sin efectos.</p>'
+    + '<div class="cfglbl">Color de SynthFlow</div><div class="cfgth" id="cfgTh">' + THEMES.map(([id, nm, c1, lock, c2]) => '<button type="button" data-th="' + id + '" aria-pressed="' + ((draft.theme || 'synthz') === id) + '"' + (lock ? ' disabled aria-disabled="true"' : '') + ' style="--t1:' + c1 + ';--t2:' + c2 + '"><i></i><span>' + esc(nm) + '</span>' + (lock ? '<em>Pronto</em>' : '') + '</button>').join('') + '</div><p class="cnote" id="cfgThN"></p>'
+    + '<div class="cfglbl">Barra del celular</div><div class="cfgseg" id="cfgNav"><button type="button" data-nav="bottom" aria-pressed="' + (draft.nav !== 'left') + '">Abajo</button><button type="button" data-nav="left" aria-pressed="' + (draft.nav === 'left') + '">A la izquierda</button></div><p class="cnote">A la izquierda: la barra se esconde y la abres con el botón ☰ de arriba.</p>'
     + '<div class="cfglbl">Detalles</div><div id="cfgRows">' + CFG_PAGE.map(row).join('') + '</div>'
     + '<div class="cfglbl">Intro de la página</div><div class="cfgseg" id="cfgIn">' + IN.map(([v, l]) => '<button type="button" data-in="' + v + '" aria-pressed="' + (draft.intro === v) + '">' + l + '</button>').join('') + '</div><p class="cnote">La animación al entrar al chat siempre se ve.</p>'
     + '</section>'
@@ -1995,6 +2052,11 @@ function cfgModal(tab){
   memPanel($('#szMem', o));
   $$('.cfgsw[data-k]', o).forEach(b => b.addEventListener('click', () => { draft[b.dataset.k] = !draft[b.dataset.k]; paintRows(); }));
   $$('[data-in]', o).forEach(b => b.addEventListener('click', () => { draft.intro = b.dataset.in; $$('[data-in]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
+  const thNote = () => { const n = $('#cfgThN', o); if (n) n.textContent = draft.ui === 'simple' ? 'El estilo Simple usa sus propios colores: el color se ve en el estilo SynthFlow.' : 'Cambia el dorado y el rosado de SynthFlow. Aurora y Oro negro llegan con Syntonia.'; };
+  thNote();
+  $$('[data-ui]', o).forEach(b => b.addEventListener('click', () => { draft.ui = b.dataset.ui; $$('[data-ui]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); thNote(); }));
+  $$('[data-th]', o).forEach(b => b.addEventListener('click', () => { if (b.disabled) return; draft.theme = b.dataset.th; $$('[data-th]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
+  $$('[data-nav]', o).forEach(b => b.addEventListener('click', () => { draft.nav = b.dataset.nav; $$('[data-nav]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
   const tabs = $('.cfgtabs', o), pill = $('.pill', tabs);
   const show = k => { $$('[role=tab]', tabs).forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === k))); $$('.cfgpane', o).forEach(p => { p.hidden = p.dataset.pane !== k; }); const b = $('[data-tab="' + k + '"]', tabs); if (b && pill){ pill.style.width = b.offsetWidth + 'px'; pill.style.transform = 'translateX(' + (b.offsetLeft - 4) + 'px)'; } $('.cfgbody', o).scrollTop = 0; };
   tabs.addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) show(b.dataset.tab); });
@@ -2318,7 +2380,7 @@ function helpGuide(opts){
     ['Varias IA a la vez', 'Con «+» sumas otra IA (hasta 4). Todas responden lo mismo y tú eliges la que más te gusta con «Esta tiene más Flow».'],
     ['Archivos', 'Con el «+» agregas un archivo, un PDF o una foto (hasta 6 por mensaje). Todas las IA leen textos y PDF; las fotos solo las entienden las IA que «ven fotos». También puedes arrastrarlos o pegarlos.'],
     ['Modo principiante', 'En Ajustes puedes activar el modo principiante: las IA te responden con palabras sencillas, paso a paso y con ejemplos.'],
-    ['Modo agente', 'En la barra de la izquierda, «Modo agente»: una IA entiende lo que escribiste, lo mejora y se lo pasa a la IA que más sabe de ese tema. Luego decides si te quedas con esa IA. Esos chats se guardan aparte.'],
+    ['SuperiorSynth', 'Arriba de tus chats, «SuperiorSynth»: una IA entiende lo que escribiste, lo mejora y se lo pasa a la IA que más sabe de ese tema. Luego decides si te quedas con esa IA. Esos chats se guardan aparte.'],
     ['Configuración', 'En Ajustes eliges si lo quieres «Más bonito» o «Más rápido», y enciendes o apagas cada detalle: cursor, fondo, vidrio, animaciones, sonidos e intro.']
   ];
   const o = document.createElement('aside'); o.id = 'szHelp'; o.setAttribute('aria-label', 'Guía rápida de SynthZ');
@@ -2932,13 +2994,17 @@ const BOT_FAQ = [
   { k:'limite cuanto queda quedan mensajes barra uso gasto consumo synxcoin coins', a:'Cada día tienes un límite gratis para usar las IAs conectadas. A medianoche se vuelve a llenar. Sin cuenta son 5 mensajes de prueba al día; con tu cuenta gratis tienes mucho más. El anillo se va vaciando mientras chateas: te muestro dónde está.', go:['#railCoin', '#tabCoin', '#navTotal', '.pill-total'], tour:'coins' },
   { k:'pagar cobro cobran gratis precio plata dinero costo tarjeta', a:'SynthZ es gratis y nunca te cobra. Las IAs conectadas son gratis, y Puter también tiene su parte gratis cada mes.' },
   { k:'chats historial conversaciones anteriores guardados donde estan mis', a:'Tus chats están en «Mis chats», en la barrita (en el celular, la pestaña Chats). Se guardan en tu dispositivo y en tu cuenta si entras.', go:['#railChats', '[data-r="chats"]', '[data-tab="chats"]'] },
-  { k:'drive google espacio guardar copia respaldo conectar conecto vincular', a:'En Ajustes › IAs y memoria › Google Drive vinculas tu Drive y guardo una copia de tus chats en una carpeta privada. No puedo ver tus otros archivos.', go:['#moreBtn'] },
+  { k:'drive google espacio guardar copia respaldo conectar conecto', a:'En Ajustes › IAs y memoria › Google Drive vinculas tu Drive y guardo una copia de tus chats en una carpeta privada. No puedo ver tus otros archivos.', go:['#moreBtn'] },
   { k:'adjuntar archivo pdf imagen foto subir documento clip', a:'Con el «+» agregas archivos, PDF o fotos (también puedes arrastrarlos). Para fotos elige una IA que «ve fotos».', go:['#attachBtn'] },
   { k:'cuenta registrar registro entrar iniciar sesion perfil usuario contraseña', a:'Crear tu cuenta es gratis y no pide correo ni tarjeta. Sin cuenta puedes probar con 5 mensajes al día; con cuenta tienes mucho más, y tus chats y favoritos te siguen a cualquier dispositivo. Entra desde tu foto en la barrita.', go:['#accBtn', '[data-tab="me"]'] },
   { k:'ajustes rendimiento lento animaciones configuracion sonido sonidos cursor principiante', a:'En Ajustes puedes poner la página «más rápida», activar el modo principiante o apagar mis sonidos.', go:['#cfgBtn', '[data-tab="cfg"]'] },
   { k:'favorito favoritos estrella guardar mensaje', a:'Con la estrella guardas un mensaje en favoritos. Están en la barrita, en la estrella.', go:['[data-r="fav"]', '#railFav'] },
   { k:'error no responde falla lenta demora', a:'Si una IA falla, te ofrezco una parecida que sí funcione, con tu mensaje listo para reenviar.' },
-  { k:'agente modo agente mejorar prompt', a:'En el modo agente no eliges IA: tú escribes, el agente entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso. Al final decides si te quedas con esa IA o sigues en modo agente. Lo activas en la barra de la izquierda, debajo de «Mis chats».', go:['#railAgent', '#cSeg [data-v="agents"]'] },
+  { k:'agente modo agente superiorsynth superior mejorar prompt', a:'Con SuperiorSynth no eliges IA: tú escribes, él entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso. Al final decides si te quedas con esa IA o sigues con él. Lo activas arriba de tus chats, en «SuperiorSynth», junto a «Chats» (en el celular: pestaña Chats › SuperiorSynth).', go:['#cSeg [data-v="agents"]', '#railAgent', '[data-tab="chats"]'] },
+  { k:'app instalar descargar aplicacion celular pantalla inicio', a:'SynthFlow se instala como app desde aquí mismo, sin tiendas: Ajustes › IAs y memoria › «Descargar la app SynthFlow». En Android toca «Instalar»; en iPhone: Compartir › Agregar a inicio. Queda a pantalla completa y a un toque.', go:['[data-tab="cfg"]', '#cfgBtn'] },
+  { k:'tema temas color colores cambiar simple estilo oscuro barra izquierda', a:'En Ajustes › Página eliges el estilo («SynthFlow» o «Simple», más tranquilo), el color de SynthFlow (Océano, Bosque, Atardecer, Lavanda…) y, en el celular, si la barra va abajo o a la izquierda.', go:['[data-tab="cfg"]', '#cfgBtn'] },
+  { k:'vincular google correo usuario contraseña juntar unir cuentas', a:'En Tu cuenta › «Seguridad y acceso» vinculas tu Google a tu cuenta con usuario, o le pones usuario y contraseña a tu cuenta de Google. Así entras a la misma cuenta de las dos formas.', go:['#accBtn', '[data-tab="me"]'] },
+  { k:'synth synthetism nombre significa synthonia sintonia por que llama', a:'«Synth» viene del synthetism, un arte. Sammuel, el creador, lo lleva a un arte nuevo de hacer páginas: SynthetismZ y SynthetismFlow. Y yo me llamo SynthonIA porque te sintonizo con la IA. ✨', mood:'encantada' },
   /* charla sencilla */
   { k:'hola buenas hey saludos holi buenos dias tardes noches', a:'¡Hola! Soy SynthonIA 😊 ¿En qué te ayudo con SynthZ?', wave:true },
   { k:'como estas andas va todo bien que tal', a:'¡Muy bien, gracias por preguntar! Aquí, lista para ayudarte. ¿Y tú cómo vas?', mood:'encantada' },
@@ -2948,11 +3014,11 @@ const BOT_FAQ = [
   { k:'gracias genial perfecto listo vale chevere bacano', a:'¡Con gusto! Aquí estoy cuando me necesites. ✨', mood:'encantada' },
   { k:'adios chao nos vemos hasta luego', a:'¡Chao! Que tengas un día con mucho Flow. 👋', wave:true }
 ];
-const BOT_QUICK = [[1, '¿Qué son las IAs conectadas?'], [2, '¿Qué es Puter?'], [3, '¿Cómo conecto Puter?'], [4, '¿Cómo cambio de IA?'], [7, '¿Qué es el límite de hoy?'], [20, 'Cuéntame un chiste']];
+const BOT_QUICK = [['ias conectadas que', '¿Qué son las IAs conectadas?'], ['puter que es', '¿Qué es Puter?'], ['puter conectar', '¿Cómo conecto Puter?'], ['cambiar elegir', '¿Cómo cambio de IA?'], ['limite cuanto', '¿Qué es el límite de hoy?'], ['chiste', 'Cuéntame un chiste']].map(([k, t]) => [BOT_FAQ.findIndex(f => f.k.startsWith(k)), t]);
 const fold = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9ñ\s]/g, ' ');
 function botMatch(q){
   const STOP = /^(que|como|donde|cual|para|por|con|una|uno|los|las|del|mis|tus|sus|esta|este|esto|eso|hay|hago|hacer|puedo|quiero|tengo|necesito|sobre|algo|the|and|how|can|what|where|synthflow|synthz|pagina|favor|porfa|ayuda|ayudame)$/;
-  const w = fold(q).split(/\s+/).filter(x => (x.length > 2 || /^(ia|ai)$/.test(x)) && !STOP.test(x)); if (!w.length) return /ayuda|help/i.test(q) ? BOT_FAQ[6] : null;
+  const w = fold(q).split(/\s+/).filter(x => (x.length > 2 || /^(ia|ai)$/.test(x)) && !STOP.test(x)); if (!w.length) return /ayuda|help/i.test(q) ? BOT_FAQ.find(f => f.k.startsWith('guia')) : null;
   let best = null, bs = 0;
   BOT_FAQ.forEach(f => { if (f.need && !w.includes(f.need)) return; const K = fold(f.k).split(/\s+/); let sc = 0; w.forEach(x => { if (K.includes(x)) sc += 1; else if (K.some(k => k.length > 4 && (k.startsWith(x) || x.startsWith(k)))) sc += .6; }); if (sc > bs){ bs = sc; best = f; } });
   return bs >= Math.max(.6, w.length * .45) ? best : null;
@@ -3456,7 +3522,7 @@ addEventListener('pointerdown', e => {
     'SynthFlow puede poner varias IA a responder la misma pregunta al mismo tiempo. Así ves cuál lo explica mejor.',
     'Si tocas «Otra vez» en una respuesta, la IA lo intenta de nuevo con otras palabras.',
     'Tus chats se guardan en tu dispositivo, y si entras con tu cuenta también te siguen a tu celular.',
-    'Con el modo agente, una IA mejora lo que escribes y se lo pasa a la IA que más sabe de ese tema.',
+    'Con SuperiorSynth, una IA mejora lo que escribes y se lo pasa a la IA que más sabe de ese tema.',
     'La «Automática» elige sola una IA que esté funcionando bien en ese momento.',
     'Puedes adjuntar fotos y PDF: algunas IA los leen y te los explican.',
     'Los pulpos tienen tres corazones y sangre azul. 🐙',
@@ -3598,7 +3664,7 @@ const GTOPICS = [
   ['chat', 'Escribir y enviar', 'Dónde escribes y cómo envías.'],
   ['ia', 'Elegir la IA', 'Cambiar de IA y ver para qué sirve cada una.'],
   ['comparar', 'Comparar IAs', 'Varias IA responden lo mismo, lado a lado.'],
-  ['agente', 'Modo agente', 'Escribes y el agente elige la IA por ti.'],
+  ['agente', 'SuperiorSynth', 'Escribes y SuperiorSynth elige la IA por ti.'],
   ['archivos', 'Archivos y vista previa', 'Adjuntar archivos y ver los que te da la IA.'],
   ['extras', 'Internet y memoria', 'Buscar datos de hoy y que la IA te recuerde.'],
   ['chats', 'Mis chats y favoritos', 'Dónde quedan tus conversaciones.'],
@@ -3638,14 +3704,14 @@ function guideAsk(o = {}){
 /* «¡Descubriste algo nuevo!»: la primera vez que usas algo, SynthonIA te cuenta en una línea para qué sirve */
 const DISC = [
   ['#cCmp, #pickRow [data-add], [data-add-cmp]', 'comparar', 'Comparar IAs', 'Ahora varias IA responden lo mismo y ves cuál lo hace mejor.'],
-  ['#railAgent, #cSeg [data-v="agents"]', 'agente', 'Modo agente', 'Tú escribes; el agente mejora tu pedido y elige la IA que más sabe de eso.'],
+  ['#railAgent, #cSeg [data-v="agents"]', 'agente', 'SuperiorSynth', 'Tú escribes; SuperiorSynth mejora tu pedido y elige la IA que más sabe de eso.'],
   ['.fcard [data-fv]', 'archivos', 'Archivos de la IA', 'Puedes ver el código, su vista previa y descargarlo con su nombre.'],
   ['[data-a="star"]', 'favoritos', 'Favoritos', 'Las respuestas que guardas con la estrella quedan en «Favoritos».'],
   ['#attachBtn', 'adjuntar', 'Adjuntar archivos', 'Le puedes dar a la IA fotos, PDF o archivos de texto para que los lea.'],
   ['.tchip[data-topic]', 'temas', 'Temas', 'Cada tema te recomienda las IA que mejor lo hacen.'],
   ['[data-r="search"], #thQ', 'buscar', 'Buscar en tus chats', 'Busco dentro de todos tus mensajes, no solo en los títulos.'],
   ['[data-a="regen"]', 'otra', 'Otra vez', 'La IA vuelve a responder lo mismo, con otras palabras.'],
-  ['#agPill', 'agente-off', 'Apagar el agente', 'Vuelves a elegir tú la IA.']
+  ['#ssTop', 'agente-off', 'Salir de SuperiorSynth', 'Toca su sello arriba y «Elegir yo la IA».']
 ];
 const DISC_KEY = 'synthz:disc';
 let discSeen = {}; try{ discSeen = JSON.parse(localStorage.getItem(DISC_KEY) || '{}') || {}; }catch(e){}
@@ -3743,12 +3809,66 @@ addEventListener('synthz-szq', () => {
     if (!seen) setTimeout(() => { try{ BOTAPI.offer && BOTAPI.offer('Ojo, equipo: hay ' + SZQ.alertN + (SZQ.alertN === 1 ? ' alerta' : ' alertas') + ' de las IAs (un proveedor pidió pago o cambió su plan gratis). Nada se cobró. Revísalo en Pulsem.', 'preocupada', 'Abrir Pulsem', () => { location.href = 'pulsem.html'; }); }catch(e){} }, 4000);
   }
 });
-/* ---------- v2.2 · la app instalable se quitó por ahora (vuelve más adelante, hecha 100 % nuestra).
-   Si alguien la alcanzó a instalar en pruebas, aquí se borra su copia guardada. ---------- */
+/* ---------- v2.3 · SynthFlow como app: se instala desde el navegador (sin tiendas) ----------
+   - El «trabajador» (sw.js) no guarda la página: todo llega siempre fresco de internet. Solo guarda la pantalla de «sin conexión».
+   - En el celular, una vez cada 7 días, sale «Descarga nuestra app SynthFlow» con un video corto.
+   - Android/Chrome: botón «Instalar» de verdad. iPhone: pasos con dibujos (Compartir › Agregar a inicio). */
+const APP = { evt:null, done:false };
+const appStandalone = () => { try{ return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }catch(e){ return false; } };
+const appIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const appPhone = () => { try{ return matchMedia('(pointer:coarse)').matches && Math.min(screen.width, screen.height) <= 820; }catch(e){ return false; } };
 try{
-  if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())).catch(() => {});
-  if (window.caches) caches.keys().then(ks => ks.filter(k => /^synthz-/.test(k)).forEach(k => caches.delete(k))).catch(() => {});
+  if ('serviceWorker' in navigator && location.protocol === 'https:') addEventListener('load', () => navigator.serviceWorker.register('/sw.js', { scope:'/' }).catch(() => {}));
+  if (window.caches) caches.keys().then(ks => ks.filter(k => /^synthz-/.test(k)).forEach(k => caches.delete(k))).catch(() => {});   /* restos de la versión vieja */
 }catch(e){}
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); APP.evt = e; });
+addEventListener('appinstalled', () => { APP.done = true; APP.evt = null; try{ localStorage.setItem('synthz:appok', '1'); }catch(e){} const o = document.getElementById('appPromo'); if (o && o._close) o._close(); toast('¡Listo! SynthFlow quedó en tu pantalla de inicio.'); });
+if (appStandalone()) root.classList.add('isapp');
+
+function appSteps(box){
+  const ios = appIOS();
+  const share = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
+  const dots = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg>';
+  box.innerHTML = '<ol class="ap-steps">' + (ios
+    ? '<li><span class="ap-n">1</span><span>Toca <b>Compartir</b> <i class="ap-k">' + share + '</i> abajo en Safari.</span></li><li><span class="ap-n">2</span><span>Baja y toca <b>Agregar a inicio</b>.</span></li><li><span class="ap-n">3</span><span>Toca <b>Agregar</b>. SynthFlow aparece junto a tus apps.</span></li>'
+    : '<li><span class="ap-n">1</span><span>Toca el menú <i class="ap-k">' + dots + '</i> de tu navegador (arriba a la derecha).</span></li><li><span class="ap-n">2</span><span>Toca <b>Instalar app</b> o <b>Agregar a la pantalla principal</b>.</span></li><li><span class="ap-n">3</span><span>Confirma. SynthFlow aparece junto a tus apps.</span></li>') + '</ol>';
+}
+async function appInstall(fromBox){
+  if (appStandalone()){ toast('Ya estás usando la app SynthFlow.'); return true; }
+  if (APP.evt){
+    const e = APP.evt; APP.evt = null;
+    try{ e.prompt(); const r = await e.userChoice; if (r && r.outcome === 'accepted') return true; toast('Cuando quieras, la instalas desde aquí.'); return false; }catch(x){}
+  }
+  if (fromBox){ appSteps(fromBox); return false; }
+  appPromo(true); return false;
+}
+function appPromo(force){
+  if ($('#appPromo') || appStandalone()) return;
+  if (!force){
+    if (!appPhone()) return;
+    try{ if (localStorage.getItem('synthz:appok')) return; const t = +localStorage.getItem('synthz:apppromo') || 0; if (Date.now() - t < 7 * 864e5) return; }catch(e){ return; }
+    if (document.querySelector('.szm.on, #ptour, #guide, #szMaint, .tcard[role="dialog"]')) return;   /* no interrumpe otra ventana */
+  }
+  try{ localStorage.setItem('synthz:apppromo', String(Date.now())); }catch(e){}
+  const o = document.createElement('div'); o.id = 'appPromo'; o.className = 'appp';
+  const ios = appIOS(), canPrompt = !!APP.evt;
+  o.innerHTML = '<div class="ap-card" role="dialog" aria-modal="true" aria-label="Descarga la app SynthFlow">'
+    + '<div class="ap-vid"><video src="/media/app/synthflow-demo.mp4" poster="/media/app/synthflow-demo.jpg" muted playsinline loop autoplay preload="metadata" aria-label="SynthFlow en acción"></video><span class="ap-badge"><img src="/media/app/sf-192.png" alt="" width="22" height="22">SynthFlow</span></div>'
+    + '<div class="ap-body"><span class="ap-kick">App gratis · sin tiendas</span><h3>Descarga nuestra app <em>SynthFlow</em></h3>'
+    + '<ul class="ap-why"><li><i>⚡</i><span><b>Va más fluida</b>: a pantalla completa, sin pestañas ni barra del navegador.</span></li><li><i>🌊</i><span><b>Más Flow</b>: tus chats y SuperiorSynth a un toque, desde tu pantalla de inicio.</span></li><li><i>🔒</i><span><b>Pesa casi nada</b> y siempre está al día: se instala desde aquí mismo.</span></li></ul>'
+    + '<div class="ap-how"></div>'
+    + '<div class="ap-acts"><button type="button" class="lnk" data-ap="no">Ahora no</button><button type="button" class="btn" data-ap="go">' + (canPrompt ? 'Instalar SynthFlow' : ios ? 'Ver cómo instalarla' : 'Instalar SynthFlow') + '</button></div></div></div>';
+  document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('on'));
+  const v = $('video', o); if (v){ v.play().catch(() => {}); v.addEventListener('error', () => { const w = $('.ap-vid', o); if (w) w.classList.add('novid'); }); }
+  const close = () => { if (!o.isConnected) return; o.classList.remove('on'); setTimeout(() => o.remove(), 420); };
+  o._close = close;
+  o.addEventListener('pointerdown', e => { if (e.target === o) close(); });
+  $('[data-ap="no"]', o).addEventListener('click', close);
+  $('[data-ap="go"]', o).addEventListener('click', async e => { const ok = await appInstall($('.ap-how', o)); if (ok) close(); else if (!APP.evt){ e.currentTarget.textContent = 'Entendido'; e.currentTarget.dataset.ap = 'no'; e.currentTarget.onclick = close; } });
+  addEventListener('keydown', function k(e){ if (e.key === 'Escape'){ close(); removeEventListener('keydown', k); } });
+}
+/* en el celular, un ratico después de entrar (nunca encima de otra ventana) */
+if (!appStandalone() && !/pulsem/.test(location.pathname)) setTimeout(() => { try{ appPromo(false); }catch(e){} }, 24000);
 /* ---------- v2.2 · etiquetas al pasar el mouse: cada botón con ícono dice qué hace (como en Claude) ---------- */
 if (matchMedia('(hover: hover) and (pointer: fine)').matches){
   let tipEl = null, tipT = 0, tipFor = null;
@@ -3990,5 +4110,5 @@ const EV = (() => {
 window.SZ = { root, $, $$, clamp, fmt, reduce, today, sleepRaw, esc, est, Z_PATH, ICONS, ico, zWord, API, MANUAL, ALL, byId,
   get state(){ return state; }, set state(v){ state = v; normalize(); },
   normalize, cleanUsage, cleanChats, cleanStrMap, save, total, addUsage, resetUsage, estAll, todayEst, todayReq, providerBalance, balanceHtml, splitHtml, syncNote, helpGuide, smoothDetails, szPrompt, swapDir, swapDir, face, FACE_GOOD, randomGoodFace, welcomeBack, wasAway, accSignOutAll, accClaim, ROLE_NAME, trialGet, trialSet, trialStart, legacyRow, cleanLedger, mergeLedger, DEV, hooks, toast, hydrateIcons, md, countTo,
-  BRAND, isFlow, flowWord, zMark, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, BRANDS, brandOf, glassIcon, PIXART, pixelRun, pixelGrid, workView, workSaved, mdLoad, MDLIB, SZ_P, SZQ, SZ_AUTO, szqSet, msgsLeft, msgsTotal, limTxt, limShort, limLvl, limPct, limRing, limBar, szCatalog, szHeaders, guestGate, guestFull, isGuestQ, setTurn, puterOut, puterOutNote, TEL, telEv, telBeat, DEVH, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, feedbackModal, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI, EV, lipSync, ballFace, guideAsk, GTOPICS, whatsNew, signedish, cfgLinks, memAddCore, memPanel, menuOpen, menuClose, MICO };
+  BRAND, isFlow, flowWord, zMark, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, BRANDS, brandOf, glassIcon, PIXART, pixelRun, pixelGrid, workView, workSaved, mdLoad, MDLIB, SZ_P, SZQ, SZ_AUTO, szqSet, msgsLeft, msgsTotal, limTxt, limShort, limLvl, limPct, limRing, limBar, szCatalog, szHeaders, guestGate, guestFull, isGuestQ, setTurn, puterOut, puterOutNote, TEL, telEv, telBeat, DEVH, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, feedbackModal, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI, EV, lipSync, ballFace, guideAsk, GTOPICS, whatsNew, signedish, cfgLinks, memAddCore, memPanel, menuOpen, menuClose, MICO, appInstall, appPromo, appStandalone, appPhone };
 })();

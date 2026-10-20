@@ -1,17 +1,28 @@
-# SynthZ v2.3 (Fase 1) — en nueva-version
+# SynthZ v2.3 — en nueva-version (20-oct-2026)
 
-**Hecho**
-- Cuentas de Google del equipo: por correo verificado reciben rango (sammuel.loaiza10@gmail.com y sammuel.loaiza@gmail.com = Prime/owner; sammuer.business@gmail.com = Symmetrix/staff). Se puede cambiar con la variable SYNTHZ_RESERVED_EMAILS (formato correo:rol,correo:rol). Ver `EMAIL_ROLES` en api/_lib.js. La foto de Google ya se guarda al entrar.
-- SynthonIA (api/help.js): ya no dice que Puter es opcional ni "datos de hoy".
-- Aviso de mantenimiento: Pulsem › Ajustes (solo Prime/ZFlow) → api/trial.js acción `maint`, estado público en /api/config (`maint`). Pantalla completa con SynthonIA que charla (usa /api/help, 15 al día por persona) y se pone feliz con palabras lindas. "Entrar igual" solo Prime/ZFlow. Archivos: src/core/27-mantenimiento-synthonia.js, src/core-css/08-mantenimiento.css.
-- Portada: sin selector de guía. Primera vez y botón de ayuda abren directo el recorrido corto; el último paso dice "Inicia sesión para que no tengas límites".
-- Chat: quitada la zona de temas (Escribir, Marketing…); "Modo SuperiorSynth activado"; sin resaltado azul al tocar; barra inferior del celular sin hueco (columnas automáticas).
-- Medidor de lo gratis en Pulsem: cuenta comandos de Redis y llamadas por mes (claves use:c:AAAA-MM y use:r:AAAA-MM), con avisos al 70 y 90 %.
-- Celular: primera visita arranca en modo rápido (sin fondo animado ni vidrio).
+**El nombre:** «Synth» viene del synthetism (un arte). Sammuel lo lleva a un arte nuevo de hacer páginas: SynthetismZ y SynthetismFlow → SynthZ y SynthFlow. SynthonIA: te sintoniza con la IA. Los nombres se quedan; el dominio de SynthFlow será **synthetismflow** (aún no se compra). Revisado el 20-oct-2026 en Vercel: synthetismflow.com libre (US$11,25 al año, igual al renovar), synthetismflow.app libre (US$9,99 y luego US$15), synthetismz.com libre (US$11,25).
 
-**Falta (Fase 1)**: medir velocidad real en celular con números; probar Google admin en producción; el medidor cuenta desde que se publique (empieza en 0).
+**Cuentas y equipo**
+- Rango por correo de Google verificado (`EMAIL_ROLES` en api/_lib.js, o variable `SYNTHZ_RESERVED_EMAILS`): sammuel.loaiza10@gmail.com = Prime (owner), sammuel.loaiza@gmail.com = ZFlow (admin), sammuer.business@gmail.com = Symmetrix (staff).
+- Vincular en los dos sentidos (Tu cuenta › «Seguridad y acceso»): `mode:'link'` (Google → cuenta con usuario; por Supabase o con el botón de Google; clave `gl:<googleSub>` o `sbu:<uid>`) y `mode:'addpass'` (cuenta de Google → usuario y contraseña). Nunca junta dos cuentas distintas (409). Al vincular, si tu foto era la inicial, se pone la de Google.
 
-**Plan siguiente**: ver PENDIENTES.md. Fase 2: SuperiorSynth (ícono, barrita de límite, quitar "Apagar" del chat), vincular cuentas en dos sentidos, barra del celular a la izquierda, versión simple tipo Claude, temas de color (solo SynthFlow), nombres de planes (Chispa / Syntonia / Timeless / Orquesta, sin activar). Fase 3: app instalable desde el navegador (sin tiendas) + video, nuevo nombre para SynthFlow.
+**Mantenimiento** (Pulsem › Ajustes, solo Prime/ZFlow): cubre toda la página con SynthonIA de verdad en el centro (caras, boca que habla, charla propia con tope de 30 al día, frases propias si la IA no responde). Pulsem nunca se cubre; «Entrar igual» solo Prime/ZFlow. Archivos: src/core/25e-mantenimiento-synthonia.js, src/core-css/08-mantenimiento.css; servidor: `cfg:maint`, api/help.js `ctx:'maint'`.
+
+**SynthonIA:** ya no dice que Puter es opcional ni «no tienes que conectar nada» (era una respuesta guardada que ganaba sin preguntarle a la IA). Da los pasos reales. Sabe de la app, los temas, Simple, vincular cuentas y el nombre.
+
+**SuperiorSynth** (antes «modo agente»): ícono animado propio (estrella con órbita en 3D), pestaña junto a «Chats» (también en PC), sello arriba a la izquierda (en celular solo el logo) con menú «Elegir yo la IA», sin «Apagar» en la caja de escribir. Barrita del límite (no se toca) arriba mientras chateas.
+
+**SynthFlow**
+- Ajustes › Página: estilo **SynthFlow / Simple** (Simple = tranquilo y plano, con su propia paleta), **color** (SynthZ, Océano, Bosque, Atardecer, Lavanda; Aurora y Oro negro «Pronto»), **barra del celular** abajo o a la izquierda (☰).
+- Los colores dorado/rosado de la página ahora son variables (`--gold`, `--gold-rgb`, `--wine`, `--wine-rgb`) en src/core-css/00a-v23-colores.css.
+- Portada: sin selector de guía; recorrido corto que termina en «Inicia sesión para que no tengas límites».
+- Quitada la zona de temas (Escribir, Marketing…). Sin resaltado azul al tocar.
+- Celular más liviano: primera visita en modo rápido; a quien ya tenía SynthZ se le apagan una vez el vidrio y el fondo animado; la caja de escribir ya no recalcula estilos en cada letra; sin «golpe de cristal» si no hay vidrio.
+- **App instalable desde el navegador** (sin tiendas): synthflow.webmanifest, íconos en media/app/, sw.js (no guarda la página: solo la pantalla de «sin conexión», offline.html). En el celular, una vez cada 7 días: «Descarga nuestra app SynthFlow» con video (media/app/synthflow-demo.mp4). También en Ajustes › IAs y memoria.
+
+**Pulsem:** medidor de lo gratis del mes (Vercel 100.000 llamadas, Upstash 500.000 comandos) con avisos al 70 y 90 %.
+
+**Pendiente para después:** Pulsem con cara de dashboard típico; comprar dominio (synthetismflow); probar en producción el Google de las 3 cuentas y la instalación en un celular real.
 
 # SynthZ v2.2B — SynthFlow renovado (estilo Claude), arreglos y listo para main
 
