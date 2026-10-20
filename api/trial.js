@@ -9,7 +9,7 @@
    Reglas: cero cobros (solo modelos gratis y topes propios), las llaves nunca salen del servidor. */
 import { route, body, json, fail, auth, redis, pipe, getJ, setJ, rid, limit, today, str, roleOf, sha, sbOn, sbAccount, sbProfile, sbPrefs, sbChats, ipOf } from './_lib.js';
 import { CID_RX } from './config.js';
-import { loadKeys, saveOwnerKeys, status, checkKey, settings, saveSettings, chat, models, ownersRaw, mask, ORDER, PROV } from './_pool.js';
+import { loadKeys, saveOwnerKeys, status, checkKey, settings, saveSettings, chat, models, ownersRaw, mask, ORDER, PROV, KEY_PROVS, provName } from './_pool.js';
 
 export const TRIAL_MAX = 5;
 const RANK = { owner:'Prime', admin:'ZFlow', staff:'Symmetrix' };
@@ -33,8 +33,8 @@ export default route({
     const genv = (process.env.GOOGLE_CLIENT_ID || '').trim(), denv = (process.env.GOOGLE_DRIVE_CLIENT_ID || '').trim();
     return json({ rank:RANK[roleOf(me)], canEdit:boss(me), dayLimit:set.dayLimit,
       keys:st.map(k => Object.assign(k, { mine:!!(k.owner && k.owner.sub === me.sub) })),
-      mine:Object.fromEntries(ORDER.map(p => [p, mine.keys && mine.keys[p] ? 'guardada' : ''])), cfAccount:mine.cfAccount || '',
-      models:{ n:cat.list.length, byProv:ORDER.map(p => ({ id:p, name:PROV[p].name, n:cat.list.filter(m => m.prov === p).length })) },
+      mine:Object.fromEntries(KEY_PROVS.map(p => [p, mine.keys && mine.keys[p] ? 'guardada' : ''])), cfAccount:mine.cfAccount || '',
+      models:{ n:cat.list.length, byProv:ORDER.map(p => ({ id:p, name:PROV[p].name, n:cat.list.filter(m => m.prov === p).length })) }, imgDay:set.imgDay,
       google:{ clientId:genv || (gg && gg.clientId) || '', source:genv ? 'vercel' : gg && gg.clientId ? 'panel' : '' },
       drive:{ clientId:denv || (dv && dv.clientId) || '', source:denv ? 'vercel' : dv && dv.clientId ? 'panel' : '' } });
   },
@@ -47,19 +47,20 @@ export default route({
       await limit('trial-admin:' + me.sub, 30, 600);
       const patch = {};
       if (a === 'keys'){
-        ORDER.forEach(p => { if (typeof b[p] === 'string') patch[p] = str(b[p], 300); }); if (typeof b.cfAccount === 'string') patch.cfAccount = str(b.cfAccount, 64);
+        KEY_PROVS.forEach(p => { if (typeof b[p] === 'string') patch[p] = str(b[p], 300); }); if (typeof b.cfAccount === 'string') patch.cfAccount = str(b.cfAccount, 64);
         await saveOwnerKeys(me, RANK[roleOf(me)], patch);
       }
       /* se prueban solo las que tocaste (al guardar) o la que pediste; «Probar todas» solo Prime y ZFlow */
-      const only = typeof b.id === 'string' ? b.id : '', provs = Object.keys(patch).filter(p => ORDER.includes(p) && patch[p]);
+      const only = typeof b.id === 'string' ? b.id : '', provs = Object.keys(patch).filter(p => KEY_PROVS.includes(p) && patch[p]);
       const keys = (await loadKeys()).filter(k => (boss(me) || (k.owner && k.owner.sub === me.sub)) && (only ? k.id === only : a === 'keys' ? k.owner && k.owner.sub === me.sub && (provs.includes(k.prov) || (patch.cfAccount != null && k.prov === 'cloudflare')) : true));
-      const res = await Promise.all(keys.map(async k => Object.assign({ id:k.id, prov:k.prov, provName:PROV[k.prov].name, key:mask(k.key), owner:k.owner }, await checkKey(k))));
+      const res = await Promise.all(keys.map(async k => Object.assign({ id:k.id, prov:k.prov, provName:provName(k.prov), key:mask(k.key), owner:k.owner }, await checkKey(k))));
       await redis('DEL', 'pool:models');
       return json({ ok:true, keys:res });
     }
     if (a === 'limit'){
       const me = await auth(req); if (!boss(me)) return fail(403, 'Solo Prime y ZFlow pueden cambiar el tope.');
-      return json({ ok:true, dayLimit:(await saveSettings({ dayLimit:b.dayLimit })).dayLimit });
+      const sv = await saveSettings(Object.assign({}, b.dayLimit != null ? { dayLimit:b.dayLimit } : {}, b.imgDay != null ? { imgDay:b.imgDay } : {}));
+      return json({ ok:true, dayLimit:sv.dayLimit, imgDay:sv.imgDay });
     }
     /* copiar todo lo que hay en Redis a Supabase (una vez, o cuando el dueño quiera). Por tandas para no pasar el tiempo de Vercel */
     if (a === 'sbsync'){

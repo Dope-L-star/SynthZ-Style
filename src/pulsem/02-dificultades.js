@@ -36,9 +36,10 @@ function renderKeys(){
 }
 function renderMyKeys(){
   const mine = (T && T.mine) || {};
-  $('#myKeys').innerHTML = PROVS.map(([id, name, url, ph]) => {
+  $('#myKeys').innerHTML = PROVS.map(([id, name, url, ph, note]) => {
     const on = !!mine[id], P0 = SZ.byId(id) || SZ.byId('openrouter');
     return '<div class="mk" data-p="' + id + '"><div class="mh">' + SZ.glassIcon({ id, vendor:id === 'mistral' ? 'mistralai' : id }, 'sm') + '<b>' + name + '</b><em class="' + (on ? 'on' : '') + '">' + (on ? '✓ guardada' : 'sin llave') + '</em></div>'
+      + (note ? '<p class="cnote" style="margin:4px 0 8px">' + esc(note) + '</p>' : '')
       + '<label class="field"><input type="text" data-sec="1" data-k="' + id + '" placeholder="' + esc(on ? 'Pega otra para cambiarla' : ph) + '" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other" spellcheck="false"></label>'
       + (id === 'cloudflare' ? '<label class="field"><input type="text" data-cfa placeholder="Account ID (opcional; lo busco solo si falta)" autocomplete="off" spellcheck="false" value="' + esc((T && T.cfAccount) || '') + '"></label>' : '')
       + '<div class="acts"><button class="btn sm" type="button" data-save="' + id + '">Guardar y probar</button>' + (on ? '<button class="lnk" type="button" data-del="' + id + '">Quitar</button>' : '') + '<a class="lnk" href="' + url + '" target="_blank" rel="noopener noreferrer">Sacar una gratis</a></div></div>';

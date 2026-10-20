@@ -68,7 +68,11 @@ function authModal(first, next, opts){
 }
 function openHelp(){ SZ.helpGuide({ extra:[['Recorrido por la página', () => pageTour()], ['Abrir SynthFlow', () => openChat()]] }); }
 /* Guía: Asistida (SynthonIA en SynthFlow, con la cinemática y 5 mensajes de prueba) o Lectura (aquí mismo) */
-function openGuide(){ SZ.guideChooser({ lead:'Asistida: te llevo al chat y SynthonIA te lo muestra todo con su manita. Lectura: una guía corta para leer aquí mismo.', asistida:() => SZ.portalOut('chat.html?guia=1'), lectura:openHelp }); }
+function openGuide(){
+  SZ.guideAsk({ topics:[['portada', 'Esta página (SynthZ)', 'Lo que hay en la portada.']].concat(SZ.GTOPICS), fullTxt:'Te llevo al chat y te muestro todo, paso a paso (unos 2 minutos).',
+    full:() => SZ.portalOut('chat.html?guia=1'), read:openHelp,
+    pick:list => { const rest = list.filter(k => k !== 'portada'); if (list[0] === 'portada') pageTour(() => { if (rest.length){ try{ sessionStorage.setItem('synthz:gtopics', JSON.stringify(rest)); }catch(e){} SZ.portalOut('chat.html'); } }); else { try{ sessionStorage.setItem('synthz:gtopics', JSON.stringify(rest)); }catch(e){} SZ.portalOut('chat.html'); } } });
+}
 $('#helpBtn').addEventListener('click', openGuide);
 /* menú del celular */
 {

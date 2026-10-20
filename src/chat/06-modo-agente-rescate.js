@@ -32,6 +32,14 @@ function agentSumEl(a){
   if (a.ask){ $('.ag-d p', el).textContent = a.ask; const row = $('.ag-row', el), d = $('.ag-d', el); row.addEventListener('click', () => { const on = d.hidden; d.hidden = !on; row.setAttribute('aria-expanded', String(on)); el.classList.toggle('open', on); }); }
   return el;
 }
+/* v2.0 · tareas MUY simples: una IA rápida que gasta menos, pero buena (nunca la más pequeña si hay otra) */
+const LIGHT = [/flash-lite/i, /mistral-small/i, /gpt-oss-20b/i, /gemma-3-27b/i, /qwen3-8b/i, /gemma-3-12b/i, /llama-3\.1-8b/i];
+const isSimple = (text, plan) => !!(plan && plan.simple) && text.length < 180 && !/```|\n.*\n/.test(text) && !/c[oó]digo|program|ensayo|informe|analiza|compara|plan de|paso a paso/i.test(text);
+function lightPick(){
+  const L = cat.list.filter(m => /^sz:/.test(m.id) && connected(m.id));
+  for (const rx of LIGHT){ const m = L.find(x => rx.test(x.id)); if (m) return m.id; }
+  return null;
+}
 function agentPick(tema){
   const L = tema ? recommendTop(tema, 10).filter(m => connected(m.id)) : [];
   const top = L.find(m => (info(m.id).spend || 1) < 3) || L[0];   /* no gasta tu Puter en las IA que más consumen si hay otra experta */
@@ -62,13 +70,14 @@ function agentChoice(pick){
 }
 async function agentPlan(text){
   const keys = TOPICS.map(t => t[0]).join(', ');
-  const sys = 'Eres el planificador de SynthFlow. Lees el pedido de una persona y lo mejoras para que otra IA lo entienda mejor. Responde SOLO con JSON válido y nada más: {"tema":"<una de: ' + keys + '>","pedido":"<el pedido mejorado, en el mismo idioma de la persona, claro, con el contexto que dio y el formato de respuesta que le sirve; no inventes datos; máximo 120 palabras>"}';
+  const sys = 'Eres el planificador de SynthFlow. Lees el pedido de una persona y lo mejoras para que otra IA lo entienda mejor. Responde SOLO con JSON válido y nada más: {"tema":"<una de: ' + keys + '>","dificultad":"<muy_simple si es un saludo, una pregunta de una línea con respuesta corta, traducir o corregir una frase corta; si no, normal>","pedido":"<el pedido mejorado, en el mismo idioma de la persona, claro, con el contexto que dio y el formato de respuesta que le sirve; no inventes datos; máximo 120 palabras>"}';
   const r = await SZ.askStream(SZ.SZ_P, [{ role:'system', content:sys }, { role:'user', content:text.slice(0, 4000) }], { model:'sz:auto', _noFall:true });
   const m = String((r && r.text) || '').match(/\{[\s\S]*\}/); if (!m) throw new Error('sin plan');
   const j = JSON.parse(m[0]); if (!j || typeof j.pedido !== 'string' || j.pedido.trim().length < 4) throw new Error('sin plan');
-  return { tema:TOPIC[j.tema] ? j.tema : null, pedido:j.pedido.trim().slice(0, 4000) };
+  return { tema:TOPIC[j.tema] ? j.tema : null, simple:j.dificultad === 'muy_simple', pedido:j.pedido.trim().slice(0, 4000) };
 }
 async function send(){
+  if (imgMode && mode === 'solo'){ const t = inp.value.trim(); if (t) createImage(t); return; }
   if (isLocked()){ lockNudge(); return; }
   if (mode === 'cmp') return compare();
   const text = inp.value.trim(), ready = files.filter(f => f.state === 'ok');
@@ -82,6 +91,8 @@ async function send(){
   /* modo agente: no eliges IA; el agente entiende tu pedido, lo mejora, elige la IA experta y te muestra los pasos */
   if (agentOn() && mode === 'solo' && text && !files.length){
     if (agentBusy) return;
+    /* el agente ve que pides una imagen: la crea el creador de imágenes */
+    if (IMG_RX.test(text) && SZ.ACC.ready){ toast('El agente vio que quieres una imagen: la crea el creador de imágenes.'); return createImage(text); }
     agentBusy = true; inp.readOnly = true; sendBtn.disabled = true;
     try{ localStorage.setItem('synthz:sent', String(sentN() + 1)); }catch(e){}
     try{ frustration(text, false); }catch(e){}
@@ -99,15 +110,16 @@ async function send(){
     card.set(1, same ? 'Tu pedido ya era claro: lo paso tal cual' : 'Mejoré tu pedido para que la IA lo entienda mejor');
     await SZ.sleepRaw(550);
     const tl = plan.tema && TOPIC[plan.tema] ? TOPIC[plan.tema].l.toLowerCase() : '';
-    card.set(2, tl ? 'Eligiendo la IA que más sabe de ' + tl : 'Eligiendo la mejor IA para esto');
-    const pick = agentPick(plan.tema);
+    const light = isSimple(text, plan) ? lightPick() : null;
+    card.set(2, light ? 'Es algo sencillo: uso una IA rápida que gasta menos' : tl ? 'Eligiendo la IA que más sabe de ' + tl : 'Eligiendo la mejor IA para esto');
+    const pick = light || agentPick(plan.tema);
     await SZ.sleepRaw(750);
     card.set(3, 'Le paso tu pedido a ' + info(pick).name);
     await SZ.sleepRaw(600); card.stop();
     agentBusy = false; inp.readOnly = false; sendBtn.disabled = false;
     if (g0 !== gen){ card.el.remove(); return; }                /* cambiaste de chat mientras tanto */
     if (!same) msg.ask = plan.pedido;
-    msg.agent = { pick, name:info(pick).name, tl, ask:same ? '' : plan.pedido };
+    msg.agent = { pick, name:info(pick).name, tl:light ? 'cosas sencillas (gasta menos)' : tl, ask:same ? '' : plan.pedido };
     st().model.openrouter = pick; save(); paintSel(); renderTop(false); paintAccent();
     let ok = true;
     await runSolo(err => { ok = false; chat.pop(); save(); renderMsgs(); showErr(err); inp.value = text; autoGrow(); updateHint(); });

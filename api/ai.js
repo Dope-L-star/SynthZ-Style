@@ -2,8 +2,46 @@
    GET                       → { models, provs, limit, used } modelos gratis disponibles y lo que llevas hoy
    POST { messages, model?, maxTokens? } → respuesta en vivo (streaming), con el gasto al final
    Sin cuenta también funciona: se cuenta por dispositivo y por conexión. */
-import { route, body, json, auth, sha, redis, pipe, today, ipOf } from './_lib.js';
-import { models, chat, settings, usedToday, PROV } from './_pool.js';
+import { route, body, json, fail, auth, sha, redis, pipe, today, ipOf, limit, str, roleOf } from './_lib.js';
+import { models, chat, settings, usedToday, PROV, IMG, pickKeys, markPay, clearPay, outage, classify } from './_pool.js';
+
+/* v2.0 · imágenes con Pollinations: solo con cuenta, con su propio límite diario (no gasta Puter ni tu límite de chat).
+   Solo gasta el saldo que ya esté cargado en Pollinations: nunca cobra a una tarjeta. */
+const IMG_GLOBAL = +process.env.SYNTHZ_IMG_GLOBAL || 150;
+async function makeImage(req, me, b){
+  if (!me) throw Object.assign(new Error('Para crear imágenes entra a tu cuenta (es gratis).'), { status:401, code:'img_login' });
+  const set = await settings(), d = today(), team = roleOf(me) !== 'user';
+  const max = team ? Math.max(set.imgDay, 20) : set.imgDay;
+  if (!max) throw Object.assign(new Error('Crear imágenes está pausado por ahora.'), { status:403, code:'img_off' });
+  await limit('img:' + me.sub, 6, 60);
+  const prompt = str(b.prompt, 600); if (prompt.length < 3) throw Object.assign(new Error('Describe la imagen que quieres.'), { status:400, code:'img_empty' });
+  const uk = 'img:' + me.sub + ':' + d, gk = 'img:all:' + d;
+  const [n, g] = (await pipe([['GET', uk], ['GET', gk]])).map(x => +x || 0);
+  if (n >= max) throw Object.assign(new Error('Ya creaste tus ' + max + ' imágenes de hoy. Mañana tienes más.'), { status:429, code:'img_limit' });
+  if (g >= IMG_GLOBAL) throw Object.assign(new Error('Hoy ya se crearon muchas imágenes. Vuelve mañana.'), { status:429, code:'img_busy' });
+  const keys = (await pickKeys('pollinations')).slice(0, 2);
+  if (!keys.length) throw Object.assign(new Error('Crear imágenes todavía no está listo. Vuelve pronto.'), { status:503, code:'img_off' });
+  const W = [512, 768, 1024].includes(+b.w) ? +b.w : 1024, Hh = [512, 768, 1024].includes(+b.h) ? +b.h : 1024;
+  for (const k of keys){
+    let r;
+    try{
+      r = await fetch(IMG.pollinations.base() + '/image/' + encodeURIComponent(prompt) + '?model=flux&width=' + W + '&height=' + Hh + '&nologo=true&private=true&safe=true&seed=' + Math.floor(Math.random() * 1e9),
+        { headers:{ Authorization:'Bearer ' + k.key }, signal:AbortSignal.timeout(60000) });
+    }catch(e){ r = null; }
+    if (r && r.ok && /^image\//.test(r.headers.get('content-type') || '')){
+      const buf = Buffer.from(await r.arrayBuffer());
+      if (buf.length > 6_000_000) continue;
+      await pipe([['INCR', uk], ['EXPIRE', uk, '172800'], ['INCR', gk], ['EXPIRE', gk, '172800'], ['INCR', 'pk:n:' + k.id + ':' + d], ['EXPIRE', 'pk:n:' + k.id + ':' + d, '172800'], ['DEL', 'pk:plan:' + k.id]]);
+      await clearPay(k);
+      return json({ img:'data:' + r.headers.get('content-type').split(';')[0] + ';base64,' + buf.toString('base64'), left:Math.max(0, max - n - 1), max });
+    }
+    const s = r ? r.status : 0, txt = r ? await r.text().catch(() => '') : '';
+    console.error('[synthz] imagen', k.id, s ? classify(s) : 'sin respuesta');
+    if (s === 402 || ((s === 401 || s === 403) && /pollen|balance|credit|pay|tier/i.test(txt))) await markPay(k, s || 402, txt);
+    await redis('SET', 'pk:down:' + k.id, s ? classify(s) : 'sin respuesta', 'EX', s === 402 ? '3600' : '300').catch(() => {});
+  }
+  throw Object.assign(new Error('No pude crear la imagen ahora. Intenta en un rato.'), { status:503, code:'img_down' });
+}
 
 /* sin cuenta: solo unos pocos mensajes al día (por dispositivo y, para que no se salte, también por conexión) */
 const GUEST_MAX = Math.max(1, Math.min(50, +process.env.SYNTHZ_GUEST_MSGS || 5));
@@ -23,10 +61,12 @@ export default route({
   async GET(req){
     const [{ who, ipKey, me }, cat, set] = await Promise.all([whoOf(req), models(false), settings()]);
     const g = me ? null : await guestUsed(who, ipKey);
-    return json({ provs:cat.provs.map(p => ({ id:p, name:PROV[p].name })), models:cat.list.map(m => ({ id:m.id, name:m.name, prov:m.prov, ctx:m.ctx })), limit:set.dayLimit, used:await usedToday(who), guest:g ? { used:Math.max(g.used, Math.min(g.usedIp, GUEST_MAX)), max:GUEST_MAX } : null });
+    const alert = await outage().catch(() => false), alertN = me && roleOf(me) !== 'user' ? +(await redis('SCARD', 'alerts').catch(() => 0)) || 0 : 0;
+    return json({ provs:cat.provs.map(p => ({ id:p, name:PROV[p].name })), models:cat.list.map(m => ({ id:m.id, name:m.name, prov:m.prov, ctx:m.ctx })), limit:set.dayLimit, used:await usedToday(who), guest:g ? { used:Math.max(g.used, Math.min(g.usedIp, GUEST_MAX)), max:GUEST_MAX } : null, alert, alertN, img:me ? { max:roleOf(me) !== 'user' ? Math.max(set.imgDay, 20) : set.imgDay, used:+(await redis('GET', 'img:' + me.sub + ':' + today())) || 0 } : null });
   },
   async POST(req){
     const b = await body(req, 600000), { who, ipKey, me } = await whoOf(req); let guest = null;
+    if (b.action === 'image') return makeImage(req, me, b);
     if (!me){
       const turn = /^[\w-]{4,40}$/.test(String(b.turn || '')) ? String(b.turn) : 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
       const [inDev, inIp, g, n] = await Promise.all([redis('SISMEMBER', gKey(who), turn), redis('SISMEMBER', gKey(ipKey), turn), guestUsed(who, ipKey), redis('GET', 'gt:' + who + ':' + turn)]);

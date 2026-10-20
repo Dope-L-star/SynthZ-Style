@@ -157,6 +157,8 @@ function cleanChats(c){
     if (!Array.isArray(c[k]) || !(byId(k) || /^openrouter::./.test(k))) return;
     out[k] = c[k].filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
       .map(m => ({ role:m.role, content:m.content, meta: typeof m.meta === 'string' ? m.meta : undefined, model: typeof m.model === 'string' ? m.model : undefined,
+        imgId: typeof m.imgId === 'string' && /^i[\w]{4,40}$/.test(m.imgId) ? m.imgId : undefined, imgReq: m.imgReq ? true : undefined, ask: typeof m.ask === 'string' ? m.ask.slice(0, 4000) : undefined,
+        agent: m.agent && typeof m.agent === 'object' ? { pick:String(m.agent.pick || '').slice(0, 160), name:String(m.agent.name || '').slice(0, 80), tl:String(m.agent.tl || '').slice(0, 60), ask:String(m.agent.ask || '').slice(0, 4000) } : undefined,
         cont: m.cont ? true : undefined, star: m.star ? true : undefined, again: m.again ? true : undefined, work: cleanWork(m.work), files: Array.isArray(m.files) ? m.files.slice(0, 8).map(f => ({ name:String((f && f.name) || ''), kind:String((f && f.kind) || ''), text: typeof (f && f.text) === 'string' ? f.text : undefined, thumb: typeof (f && f.thumb) === 'string' ? f.thumb : undefined })) : undefined }));
   });
   return out;
@@ -963,7 +965,7 @@ async function szCatalog(){
   const d = await r.json().catch(() => ({}));
   if (!r.ok){ szqSet({ on:false, t:Date.now() }); return []; }
   const arr = Array.isArray(d.models) ? d.models : [];
-  szqSet({ on:arr.length > 0, used:+d.used || 0, limit:+d.limit || 20000, guest:d.guest && d.guest.max ? { used:+d.guest.used || 0, max:+d.guest.max } : null, n:arr.length, t:Date.now() });
+  szqSet({ on:arr.length > 0, used:+d.used || 0, limit:+d.limit || 20000, guest:d.guest && d.guest.max ? { used:+d.guest.used || 0, max:+d.guest.max } : null, img:d.img || null, alert:!!d.alert, alertN:+d.alertN || 0, n:arr.length, t:Date.now() });
   if (!arr.length) return [];
   const out = arr.filter(m => m && typeof m.id === 'string' && /^sz:/.test(m.id) && !/allam|infron|openrouter\/(free|auto)|models?[-_ ]router/i.test(m.id) && !/free models router|router/i.test(String(m.name || ''))).map(m => {
     const mid = m.id.split(':').slice(2).join(':'), vendor = szVendor(mid, m.prov);
@@ -2751,7 +2753,7 @@ const BOT_FAQ = [
   { k:'puter que es puter creditos personales cuenta', a:'Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic. Es opcional. Al lado de cada IA de Puter verás rayitas: verdes gasta poco, amarillas normal y rojas gasta mucho.', act:'conn', lbl:'Conectar mi Puter' },
   { k:'cambiar elegir escoger ia modelo cual otra seleccionar', a:'Toca el nombre de la IA que estás usando y se abre «¿Con quién fluyes hoy?». Primero eliges para qué la quieres y luego aparecen las IA. Tocas «Usar» y listo.', go:['#cPick', '#curChip', '[data-tab="ia"]'] },
   { k:'comparar comparacion varias dos lado mismo tiempo', a:'Con «Comparar con otra IA» sumas hasta 4. Todas responden lo mismo y aparecen en el orden en que llegan.', go:['#cCmp', '#pickRow [data-add]'] },
-  { k:'guia tutorial aprender enseñar como funciona', a:'La Guía te enseña todo paso a paso: Asistida (yo te llevo con mi manita) o Lectura (a tu ritmo).', go:['#guideTop', '#helpBtn'], act:'guide', lbl:'Abrir la Guía' },
+  { k:'guia tutorial aprender enseñar como funciona', a:'En la Guía rápida te pregunto si la quieres completa o qué quieres ver: eliges uno o varios temas y te los muestro con mi manita, en ese orden.', go:['#guideTop', '#helpBtn'], act:'guide', lbl:'Abrir la Guía' },
   { k:'limite cuanto queda quedan mensajes barra uso gasto consumo synxcoin coins', a:'Cada día tienes un límite gratis para usar las IAs conectadas. A medianoche se vuelve a llenar. Sin cuenta son 5 mensajes de prueba al día; con tu cuenta gratis tienes mucho más. El anillo se va vaciando mientras chateas: te muestro dónde está.', go:['#railCoin', '#tabCoin', '#navTotal', '.pill-total'], tour:'coins' },
   { k:'pagar cobro cobran gratis precio plata dinero costo tarjeta', a:'SynthZ es gratis y nunca te cobra. Las IAs conectadas son gratis, y Puter también tiene su parte gratis cada mes.' },
   { k:'chats historial conversaciones anteriores guardados donde estan mis', a:'Tus chats están en «Mis chats», en la barrita (en el celular, la pestaña Chats). Se guardan en tu dispositivo y en tu cuenta si entras.', go:['#railChats', '[data-r="chats"]', '[data-tab="chats"]'] },
@@ -3413,6 +3415,145 @@ addEventListener('pointerdown', e => {
   }, { passive:true });
 })();
 
+/* ===== v2.0 · Guía rápida con SynthonIA: «¿La quieres completa o qué quieres ver?»
+   Eliges uno o varios temas (en el orden que los toques) y te los muestra con su manita.
+   Además: «¡Descubriste algo nuevo!» la primera vez que usas algo, y «Qué hay de nuevo» contado por ella ===== */
+const GTOPICS = [
+  ['chat', 'Escribir y enviar', 'Dónde escribes y cómo envías.'],
+  ['ia', 'Elegir la IA', 'Cambiar de IA y ver para qué sirve cada una.'],
+  ['comparar', 'Comparar IAs', 'Varias IA responden lo mismo, lado a lado.'],
+  ['agente', 'Modo agente', 'Escribes y el agente elige la IA por ti.'],
+  ['archivos', 'Archivos y vista previa', 'Adjuntar archivos y ver los que te da la IA.'],
+  ['chats', 'Mis chats y favoritos', 'Dónde quedan tus conversaciones.'],
+  ['limite', 'Tu límite gratis', 'Cuánto te queda hoy y cuándo se llena.'],
+  ['cuenta', 'Tu cuenta y Puter', 'Guardar tus chats y la versión pro de las IA.'],
+  ['ajustes', 'Ajustes', 'Más bonito, más rápido, sonidos y más.'],
+  ['synthonia', 'SynthonIA', 'Cómo pedirme ayuda cuando quieras.']
+];
+function guideAsk(o = {}){
+  if ($('#szGq')) return;
+  const L = (o.topics || GTOPICS), picked = [];
+  const w = document.createElement('div'); w.id = 'szGq'; w.className = 'szm';
+  w.innerHTML = '<div class="tcard gq" role="dialog" aria-modal="true" aria-label="Guía rápida">'
+    + '<div class="gq-say"><span class="gq-f">' + face('feliz', 64) + '</span><div><b>SynthonIA</b><p></p></div></div>'
+    + '<button type="button" class="gq-full" data-gq="full"><span>Completa</span><small>' + esc(o.fullTxt || 'Te muestro todo, paso a paso (unos 2 minutos).') + '</small></button>'
+    + '<p class="gq-or">o elige lo que quieres ver <small>(puedes elegir varios; los veremos en el orden en que los toques)</small></p>'
+    + '<div class="gq-chips">' + L.map(t => '<button type="button" class="gq-c" data-t="' + t[0] + '" aria-pressed="false" title="' + esc(t[2]) + '"><i></i>' + esc(t[1]) + '</button>').join('') + '</div>'
+    + '<div class="tbtn gq-b"><button class="lnk" type="button" data-close>Ahora no</button>' + (o.read ? '<button class="lnk" type="button" data-gq="read">Leer a mi ritmo</button>' : '') + '<button class="btn sm flow" type="button" data-gq="go" disabled>Muéstrame lo que elegí</button></div></div>';
+  document.body.appendChild(w); requestAnimationFrame(() => w.classList.add('on'));
+  $('.tcard', w).animate([{ transform:'scale(.92) translateY(20px)', opacity:0, filter:'blur(8px)' }, { transform:'none', opacity:1, filter:'blur(0)' }], { duration:600, easing:'cubic-bezier(.22,1,.36,1)' });
+  const say = '¡Hola! ¿Quieres ver la guía completa o qué quieres aprender?';
+  const p = $('.gq-say p', w); p.textContent = say; SND.blip('feliz');
+  typeIn(p, { cps:46, max:3, onFrame:lipSync([$('.gq-f .szface', w), ballFace()], say) }).catch(() => {});
+  const go = $('[data-gq="go"]', w);
+  const paint = () => { $$('.gq-c', w).forEach(b => { const i = picked.indexOf(b.dataset.t); b.setAttribute('aria-pressed', String(i >= 0)); $('i', b).textContent = i >= 0 ? String(i + 1) : ''; }); go.disabled = !picked.length; go.textContent = picked.length ? 'Muéstrame ' + (picked.length === 1 ? 'eso' : 'estos ' + picked.length) : 'Muéstrame lo que elegí'; };
+  const close = then => { w.classList.remove('on'); setTimeout(() => w.remove(), 420); if (then) setTimeout(then, 280); };
+  w.addEventListener('click', e => {
+    const c = e.target.closest('.gq-c');
+    if (c){ const k = c.dataset.t, i = picked.indexOf(k); if (i >= 0) picked.splice(i, 1); else picked.push(k); SND.tap && SND.tap(); paint(); return; }
+    const b = e.target.closest('[data-gq]');
+    if (b){ const a = b.dataset.gq; if (a === 'full') close(o.full); else if (a === 'read') close(o.read); else if (a === 'go' && picked.length) close(() => o.pick && o.pick(picked.slice())); return; }
+    if (e.target === w || e.target.closest('[data-close]')) close(o.later);
+  });
+  setTimeout(() => { const b = $('.gq-full', w); if (b) b.focus(); }, 80);
+}
+
+/* «¡Descubriste algo nuevo!»: la primera vez que usas algo, SynthonIA te cuenta en una línea para qué sirve */
+const DISC = [
+  ['#cCmp, #pickRow [data-add], [data-add-cmp]', 'comparar', 'Comparar IAs', 'Ahora varias IA responden lo mismo y ves cuál lo hace mejor.'],
+  ['#railAgent, #cSeg [data-v="agents"]', 'agente', 'Modo agente', 'Tú escribes; el agente mejora tu pedido y elige la IA que más sabe de eso.'],
+  ['.fcard [data-fv]', 'archivos', 'Archivos de la IA', 'Puedes ver el código, su vista previa y descargarlo con su nombre.'],
+  ['[data-a="star"]', 'favoritos', 'Favoritos', 'Las respuestas que guardas con la estrella quedan en «Favoritos».'],
+  ['#attachBtn', 'adjuntar', 'Adjuntar archivos', 'Le puedes dar a la IA fotos, PDF o archivos de texto para que los lea.'],
+  ['.tchip[data-topic]', 'temas', 'Temas', 'Cada tema te recomienda las IA que mejor lo hacen.'],
+  ['[data-r="search"], #thQ', 'buscar', 'Buscar en tus chats', 'Busco dentro de todos tus mensajes, no solo en los títulos.'],
+  ['[data-a="regen"]', 'otra', 'Otra vez', 'La IA vuelve a responder lo mismo, con otras palabras.'],
+  ['#agPill', 'agente-off', 'Apagar el agente', 'Vuelves a elegir tú la IA.']
+];
+const DISC_KEY = 'synthz:disc';
+let discSeen = {}; try{ discSeen = JSON.parse(localStorage.getItem(DISC_KEY) || '{}') || {}; }catch(e){}
+let discQ = [], discOn = false;
+function discShow(){
+  if (discOn || !discQ.length) return;
+  if (document.querySelector('#szgHud, #szGq, #szWelcome, #vintro, #intro, #portal, .hackev') || root.classList.contains('guiding')){ setTimeout(discShow, 2500); return; }
+  discOn = true; const [, , name, text] = discQ.shift();
+  const d = document.createElement('div'); d.className = 'szdisc'; d.setAttribute('role', 'status');
+  d.innerHTML = '<span class="dc-f">' + face('sorprendida', 46) + '</span><div><small>¡Descubriste algo nuevo!</small><b></b><p></p></div><button type="button" class="dc-x" aria-label="Cerrar">✕</button>';
+  $('b', d).textContent = name; $('p', d).textContent = text;
+  document.body.appendChild(d); requestAnimationFrame(() => d.classList.add('on')); SND.blip && SND.blip('sorprendida');
+  typeIn($('p', d), { cps:44, max:3, onFrame:lipSync([$('.dc-f .szface', d)], text) }).catch(() => {});
+  const bye = () => { if (!d.isConnected) return; d.classList.remove('on'); setTimeout(() => { d.remove(); discOn = false; setTimeout(discShow, 600); }, 400); };
+  $('.dc-x', d).addEventListener('click', bye); setTimeout(bye, 6500);
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest) return;
+  for (const D of DISC){
+    if (discSeen[D[1]] || !e.target.closest(D[0])) continue;
+    discSeen[D[1]] = Date.now(); try{ localStorage.setItem(DISC_KEY, JSON.stringify(discSeen)); }catch(x){}
+    discQ.push(D); setTimeout(discShow, 900); break;
+  }
+}, true);
+
+/* «Qué hay de nuevo»: SynthonIA te lo cuenta una vez por versión (y está en el menú cuando quieras) */
+const WHATSNEW = { v:'2.0', items:[
+  ['archivos', 'Los archivos que te da la IA se ven como en Claude: con vista previa y para descargar.'],
+  ['chat', 'Ahora puedes crear imágenes: toca el botón del cuadrito junto al clip (con tu cuenta).'],
+  ['chat', 'Cada IA tiene su propia voz: toca «Escuchar» debajo de una respuesta.'],
+  ['agente', 'El modo agente elige la IA que más sabe y, si es algo muy sencillo, una que gasta menos.'],
+  ['synthonia', 'La Guía rápida: me dices qué quieres aprender y te lo muestro. ¡Y ahora muevo la boca!']
+] };
+function whatsNew(force, onShow){
+  let seen = ''; try{ seen = localStorage.getItem('synthz:newv') || ''; }catch(e){}
+  const visited = (() => { try{ return !!localStorage.getItem('synthz:visited'); }catch(e){ return false; } })();
+  if (!force && (seen === WHATSNEW.v || !visited)){ try{ localStorage.setItem('synthz:newv', WHATSNEW.v); }catch(e){} return false; }
+  try{ localStorage.setItem('synthz:newv', WHATSNEW.v); }catch(e){}
+  if ($('#szNew')) return true;
+  const w = document.createElement('div'); w.id = 'szNew'; w.className = 'szm';
+  w.innerHTML = '<div class="tcard gq" role="dialog" aria-modal="true" aria-label="Qué hay de nuevo"><div class="gq-say"><span class="gq-f">' + face('celebrando', 64) + '</span><div><b>SynthonIA · Qué hay de nuevo</b><p></p></div></div>'
+    + '<ul class="nw-l">' + WHATSNEW.items.map((x, i) => '<li style="--i:' + i + '">' + esc(x[1]) + '</li>').join('') + '</ul>'
+    + '<div class="tbtn gq-b"><button class="lnk" type="button" data-close>Luego</button>' + (onShow ? '<button class="btn sm flow" type="button" data-nw="show">Muéstramelo</button>' : '') + '</div></div>';
+  document.body.appendChild(w); requestAnimationFrame(() => w.classList.add('on'));
+  const say = '¡Hay cosas nuevas en ' + BRAND() + '! Te cuento rapidito:';
+  const p = $('.gq-say p', w); p.textContent = say; SND.blip('celebrando');
+  typeIn(p, { cps:44, max:3, onFrame:lipSync([$('.gq-f .szface', w), ballFace()], say) }).catch(() => {});
+  const close = then => { w.classList.remove('on'); setTimeout(() => w.remove(), 420); if (then) setTimeout(then, 280); };
+  w.addEventListener('click', e => { if (e.target.closest('[data-nw="show"]')) return close(() => onShow(WHATSNEW.items.map(x => x[0]).filter((k, i, a) => a.indexOf(k) === i && GTOPICS.some(t => t[0] === k)))); if (e.target === w || e.target.closest('[data-close]')) close(); });
+  return true;
+}
+
+/* ===== v2.0 · MODO ALERTA: si los proveedores dejan de ser gratis (todas las IAs conectadas piden pago),
+   la página lo dice claro y espera; apenas vuelvan, te lleva de nuevo solita ===== */
+let alertEl = null, alertT = 0;
+function alertMode(on){
+  if (on && !alertEl){
+    if (document.querySelector('#vintro, #intro, #portal')){ setTimeout(() => alertMode(!!SZQ.alert), 3000); return; }
+    const pu = (() => { try{ return !!(window.puter && puter.auth && puter.auth.isSignedIn()); }catch(e){ return false; } })();
+    const o = document.createElement('div'); o.id = 'szAlert'; o.setAttribute('role', 'alertdialog'); o.setAttribute('aria-live', 'assertive');
+    o.innerHTML = '<div class="al-in"><span class="al-f">' + face('preocupada', 84) + '</span><b class="al-t">Error: no podemos continuar</b>'
+      + '<p>Las IAs gratis dejaron de responder por un cambio de los servicios que usamos. No es tu culpa y nadie te va a cobrar nada.</p>'
+      + '<p class="al-w"><i></i>En cuanto volvamos a estar en línea, te redirigimos solito. No cierres la página.</p>'
+      + (pu ? '<button type="button" class="btn sm flow" data-al="pu">Mientras tanto, seguir con mi Puter</button>' : '') + '</div>';
+    document.body.appendChild(o); alertEl = o; requestAnimationFrame(() => o.classList.add('on'));
+    const pb = $('[data-al="pu"]', o); if (pb) pb.addEventListener('click', () => { alertDismissed = true; alertMode(false); try{ dispatchEvent(new CustomEvent('synthz-useputer')); }catch(e){} });
+    try{ telEv('noai', 'modo alerta: ninguna IA gratis responde'); }catch(e){}
+    clearInterval(alertT); alertT = setInterval(async () => { try{ await szCatalog(); }catch(e){} if (!SZQ.alert) alertBack(); }, 30000);
+  } else if (!on && alertEl){ const o = alertEl; alertEl = null; clearInterval(alertT); o.classList.remove('on'); setTimeout(() => o.remove(), 500); }
+}
+let alertDismissed = false;
+function alertBack(){
+  if (!alertEl) return; clearInterval(alertT);
+  const o = alertEl; $('.al-f', o).innerHTML = face('celebrando', 84); $('.al-t', o).textContent = '¡Volvimos!'; $$('p, button', o).forEach(x => x.remove());
+  o.querySelector('.al-in').insertAdjacentHTML('beforeend', '<p>Ya todo funciona. Te llevo de vuelta…</p>');
+  setTimeout(() => location.reload(), 1800);
+}
+addEventListener('synthz-szq', () => {
+  if (SZQ.alert && !alertDismissed) alertMode(true); else if (!SZQ.alert && alertEl) alertBack();
+  /* al equipo: SynthonIA avisa una vez por sesión que hay alertas en Pulsem */
+  if (SZQ.alertN > 0 && ACC && ACC.user && ['owner', 'admin', 'staff'].includes(ACC.user.role)){
+    let seen = false; try{ seen = sessionStorage.getItem('synthz:alertn') === String(SZQ.alertN); sessionStorage.setItem('synthz:alertn', String(SZQ.alertN)); }catch(e){}
+    if (!seen) setTimeout(() => { try{ BOTAPI.offer && BOTAPI.offer('Ojo, equipo: hay ' + SZQ.alertN + (SZQ.alertN === 1 ? ' alerta' : ' alertas') + ' de las IAs (un proveedor pidió pago o cambió su plan gratis). Nada se cobró. Revísalo en Pulsem.', 'preocupada', 'Abrir Pulsem', () => { location.href = 'pulsem.html'; }); }catch(e){} }, 4000);
+  }
+});
 /* ===== v1.4 · eventos especiales: a las 50, 100 y 500 visitas la página «se hackea» y das un logro ===== */
 const EV = (() => {
   const K = 'synthz:visits', A = 'synthz:ach';
@@ -3507,5 +3648,5 @@ const EV = (() => {
 window.SZ = { root, $, $$, clamp, fmt, reduce, today, sleepRaw, esc, est, Z_PATH, ICONS, ico, zWord, API, MANUAL, ALL, byId,
   get state(){ return state; }, set state(v){ state = v; normalize(); },
   normalize, cleanUsage, cleanChats, cleanStrMap, save, total, addUsage, resetUsage, estAll, todayEst, todayReq, providerBalance, balanceHtml, splitHtml, syncNote, helpGuide, smoothDetails, szPrompt, swapDir, swapDir, face, FACE_GOOD, randomGoodFace, welcomeBack, wasAway, accSignOutAll, accClaim, ROLE_NAME, trialGet, trialSet, trialStart, legacyRow, cleanLedger, mergeLedger, DEV, hooks, toast, hydrateIcons, md, countTo,
-  BRAND, isFlow, flowWord, zMark, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, BRANDS, brandOf, glassIcon, PIXART, pixelRun, pixelGrid, workView, workSaved, mdLoad, MDLIB, SZ_P, SZQ, SZ_AUTO, szqSet, msgsLeft, msgsTotal, limTxt, limShort, limLvl, limPct, limRing, limBar, szCatalog, szHeaders, guestGate, guestFull, isGuestQ, setTurn, puterOut, puterOutNote, TEL, telEv, telBeat, DEVH, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, feedbackModal, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI, EV, lipSync, ballFace };
+  BRAND, isFlow, flowWord, zMark, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, BRANDS, brandOf, glassIcon, PIXART, pixelRun, pixelGrid, workView, workSaved, mdLoad, MDLIB, SZ_P, SZQ, SZ_AUTO, szqSet, msgsLeft, msgsTotal, limTxt, limShort, limLvl, limPct, limRing, limBar, szCatalog, szHeaders, guestGate, guestFull, isGuestQ, setTurn, puterOut, puterOutNote, TEL, telEv, telBeat, DEVH, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, feedbackModal, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI, EV, lipSync, ballFace, guideAsk, GTOPICS, whatsNew };
 })();

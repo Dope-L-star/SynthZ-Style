@@ -11,7 +11,7 @@ const map = JSON.parse(readFileSync(join(here, 'src/build.json'), 'utf8'));
 const check = process.argv.includes('--check');
 let bad = 0;
 for (const [target, dir] of Object.entries(map)){
-  const parts = readdirSync(join(here, dir)).filter(f => /^\d\d-/.test(f)).sort();
+  const parts = readdirSync(join(here, dir)).filter(f => /^\d\d[a-z]?-/.test(f)).sort();
   const out = parts.map(f => readFileSync(join(here, dir, f), 'utf8')).join('');
   const path = join(here, target);
   let cur = ''; try{ cur = readFileSync(path, 'utf8'); }catch(e){}

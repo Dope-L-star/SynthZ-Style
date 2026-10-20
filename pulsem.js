@@ -2,7 +2,11 @@
 'use strict';
 const { $, $$, esc, fmt, toast, api } = SZ;
 const KIND = { error:['Error de IA', 'bad'], jserror:['La página falló', 'bad'], reload:['Recargó la página', 'warn'], confused:['Se ve perdido/a', 'warn'], noai:['Sin IA', 'bad'], limit:['Llegó al tope del día', 'warn'], puter_out:['Sin créditos de Puter', 'warn'], slow:['Va lento', 'warn'] };
-const PROVS = [['groq', 'Groq', 'https://console.groq.com/keys', 'Llave de Groq (gsk_…)'], ['mistral', 'Mistral', 'https://console.mistral.ai/api-keys', 'Llave de Mistral'], ['cloudflare', 'Cloudflare', 'https://dash.cloudflare.com/profile/api-tokens', 'Token de Cloudflare (Workers AI)'], ['openrouter', 'OpenRouter', 'https://openrouter.ai/keys', 'Llave de OpenRouter (sk-or-…)']];
+const PROVS = [['groq', 'Groq', 'https://console.groq.com/keys', 'Llave de Groq (gsk_…)'], ['mistral', 'Mistral', 'https://console.mistral.ai/api-keys', 'Llave de Mistral'], ['cloudflare', 'Cloudflare', 'https://dash.cloudflare.com/profile/api-tokens', 'Token de Cloudflare (Workers AI)'], ['openrouter', 'OpenRouter', 'https://openrouter.ai/keys', 'Llave de OpenRouter (sk-or-…)'],
+  ['google', 'Google AI Studio', 'https://aistudio.google.com/apikey', 'Llave de Google AI Studio (AIza…)', 'Créala en un proyecto SIN facturación: así Google nunca cobra (si se acaba lo gratis, solo deja de responder). Solo uso Flash, Flash-Lite y Gemma.'],
+  ['ollama', 'Ollama', 'https://ollama.com/settings/keys', 'Llave de Ollama', 'Plan gratis de la nube de Ollama: tiene límites por sesión y por semana. No cobra por uso.'],
+  ['siliconflow', 'SiliconFlow', 'https://cloud.siliconflow.com/account/ak', 'Llave de SiliconFlow (sk-…)', 'Solo uso sus modelos gratis (Qwen3-8B, GLM-4-9B…). Los de pago se rechazan aunque tengas saldo.'],
+  ['pollinations', 'Pollinations (imágenes)', 'https://enter.pollinations.ai', 'Llave de Pollinations (sk_…)', 'Para crear imágenes. Gasta su saldo «pollen» (prepago): nunca cobra a una tarjeta; si se acaba, solo se pausan las imágenes y te aviso.']];
 const PAGES = { chat:'SynthFlow', index:'Inicio', pulso:'Pulsem', pulsem:'Pulsem' };
 const rc = r => String(r || '').toLowerCase();
 const ago = t => { const s = Math.max(0, Math.round((Date.now() - t) / 1000)); return s < 60 ? 'hace ' + s + ' s' : s < 3600 ? 'hace ' + Math.round(s / 60) + ' min' : s < 86400 ? 'hace ' + Math.round(s / 3600) + ' h' : 'hace ' + Math.round(s / 86400) + ' d'; };
@@ -140,9 +144,10 @@ function renderKeys(){
 }
 function renderMyKeys(){
   const mine = (T && T.mine) || {};
-  $('#myKeys').innerHTML = PROVS.map(([id, name, url, ph]) => {
+  $('#myKeys').innerHTML = PROVS.map(([id, name, url, ph, note]) => {
     const on = !!mine[id], P0 = SZ.byId(id) || SZ.byId('openrouter');
     return '<div class="mk" data-p="' + id + '"><div class="mh">' + SZ.glassIcon({ id, vendor:id === 'mistral' ? 'mistralai' : id }, 'sm') + '<b>' + name + '</b><em class="' + (on ? 'on' : '') + '">' + (on ? '✓ guardada' : 'sin llave') + '</em></div>'
+      + (note ? '<p class="cnote" style="margin:4px 0 8px">' + esc(note) + '</p>' : '')
       + '<label class="field"><input type="text" data-sec="1" data-k="' + id + '" placeholder="' + esc(on ? 'Pega otra para cambiarla' : ph) + '" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other" spellcheck="false"></label>'
       + (id === 'cloudflare' ? '<label class="field"><input type="text" data-cfa placeholder="Account ID (opcional; lo busco solo si falta)" autocomplete="off" spellcheck="false" value="' + esc((T && T.cfAccount) || '') + '"></label>' : '')
       + '<div class="acts"><button class="btn sm" type="button" data-save="' + id + '">Guardar y probar</button>' + (on ? '<button class="lnk" type="button" data-del="' + id + '">Quitar</button>' : '') + '<a class="lnk" href="' + url + '" target="_blank" rel="noopener noreferrer">Sacar una gratis</a></div></div>';
@@ -183,6 +188,7 @@ function renderSettings(){
   const can = !!P.canEdit, g = (T && T.google) || {}, dv = (T && T.drive) || {};
   const src = s => s === 'vercel' ? ' · desde Vercel' : s === 'panel' ? ' · desde Pulsem' : '';
   $('#setG').innerHTML = '<div class="set"><b>Tope diario por persona</b><p>Cuánto puede usar cada persona al día con las IAs conectadas (Puter no cuenta). 800 ≈ 1 mensaje. Entre 1.000 y 500.000.</p>' + (can ? '<label class="field"><input type="number" min="1000" max="500000" step="1000" id="sLimit" value="' + (P.dayLimit || 20000) + '"></label><div class="acts" style="margin-top:8px"><button class="btn sm" type="button" data-set="limit">Guardar</button></div>' : '<div class="val">' + fmt(P.dayLimit || 20000) + ' SynXCoin\'s</div>') + '</div>'
+    + '<div class="set"><b>Imágenes al día por persona</b><p>Cuántas imágenes puede crear cada cuenta al día con Pollinations (el equipo tiene al menos 20). 0 = pausadas. No gasta Puter ni el límite del chat.</p>' + (can ? '<label class="field"><input type="number" min="0" max="50" step="1" id="sImg" value="' + (T && T.imgDay != null ? T.imgDay : 3) + '"></label><div class="acts"><button class="mini" type="button" data-set="img">Guardar</button></div>' : '<p><b>' + (T && T.imgDay != null ? T.imgDay : 3) + '</b> al día</p>') + '</div>'
     + '<div class="set"><b>Entrar con Google</b><p>El «ID de cliente» de Google Cloud (es público, no es una contraseña). Sin cobros.</p>' + (can ? '<label class="field"><input type="text" id="sGoogle" placeholder="123456-abc….apps.googleusercontent.com" value="' + esc(g.clientId || '') + '" spellcheck="false"' + (g.source === 'vercel' ? ' disabled' : '') + '></label><div class="acts" style="margin-top:8px"><button class="btn sm" type="button" data-set="google"' + (g.source === 'vercel' ? ' disabled' : '') + '>Guardar</button><small style="color:var(--mute)">' + (g.clientId ? 'activado' + src(g.source) : 'sin activar') + '</small></div>' : '<div class="val">' + (g.clientId ? esc(g.clientId.slice(0, 18)) + '…' + src(g.source) : 'sin activar') + '</div>') + '</div>'
     + '<div class="set"><b>Google Drive</b><p>Opcional: otro ID solo para Drive. Si lo dejas vacío, se usa el de «Entrar con Google». Activa la Drive API y el permiso <code>drive.appdata</code>.</p>' + (can ? '<label class="field"><input type="text" id="sDrive" placeholder="(opcional)" value="' + esc(dv.clientId || '') + '" spellcheck="false"' + (dv.source === 'vercel' ? ' disabled' : '') + '></label><div class="acts" style="margin-top:8px"><button class="btn sm" type="button" data-set="drive"' + (dv.source === 'vercel' ? ' disabled' : '') + '>Guardar</button><small style="color:var(--mute)">' + (dv.clientId ? 'activado' + src(dv.source) : g.clientId ? 'usa el de Google' : 'sin activar') + '</small></div>' : '<div class="val">' + (dv.clientId ? 'activado' + src(dv.source) : 'usa el de Google') + '</div>') + '</div>';
   const sp = P.supa || {};
@@ -195,7 +201,8 @@ $('#setG').addEventListener('click', async e => {
   const b = e.target.closest('[data-set]'); if (!b) return; const k = b.dataset.set, l = b.textContent; b.disabled = true; b.textContent = 'Guardando…';
   try{
     if (k === 'sbsync'){ let cur = 0, n = 0, c = 0; for (let i = 0; i < 200; i++){ const d = await api('trial', { method:'POST', body:{ action:'sbsync', cursor:cur }, keep:true }); n += d.accounts; c += d.chats; b.textContent = 'Copiando… ' + n + ' cuentas'; cur = d.cursor; if (d.done) break; } toast('Listo: copié ' + n + ' cuentas y ' + c + ' chats a Supabase.'); renderSettings(); return; }
-    if (k === 'limit'){ const d = await api('trial', { method:'POST', body:{ action:'limit', dayLimit:+$('#sLimit').value }, keep:true }); P.dayLimit = d.dayLimit; toast('Tope diario: ' + fmt(d.dayLimit) + ' por persona (unos ' + Math.round(d.dayLimit / 800) + ' mensajes).'); }
+    if (k === 'img'){ const d = await api('trial', { method:'POST', body:{ action:'limit', imgDay:+$('#sImg').value }, keep:true }); if (T) T.imgDay = d.imgDay; toast(d.imgDay ? 'Imágenes: ' + d.imgDay + ' al día por persona.' : 'Imágenes pausadas.'); }
+    else if (k === 'limit'){ const d = await api('trial', { method:'POST', body:{ action:'limit', dayLimit:+$('#sLimit').value }, keep:true }); P.dayLimit = d.dayLimit; toast('Tope diario: ' + fmt(d.dayLimit) + ' por persona (unos ' + Math.round(d.dayLimit / 800) + ' mensajes).'); }
     else { const v = ($(k === 'google' ? '#sGoogle' : '#sDrive').value || '').trim(); await api('trial', { method:'POST', body:{ action:k, clientId:v }, keep:true }); toast(v ? (k === 'google' ? 'Entrar con Google quedó activado.' : 'Drive quedó activado.') : 'Quitaste el ID.'); T = await api('trial', { keep:true }).catch(() => T); }
     renderSettings();
   }catch(er){ toast(er.message); b.disabled = false; b.textContent = l; }
@@ -253,7 +260,15 @@ $('#fChips').addEventListener('click', e => { const b = e.target.closest('[data-
 $('#fList').addEventListener('click', async e => { const b = e.target.closest('[data-fs]'); if (!b) return; b.disabled = true; try{ const d = await api('help', { method:'POST', body:{ action:'fbset', id:b.dataset.id, status:b.dataset.fs }, keep:true }); const i = P.feedback.findIndex(x => x.id === d.item.id); if (i > -1) P.feedback[i] = d.item; renderFeedback(); toast('Marcado como ' + d.item.status + '.'); }catch(er){ b.disabled = false; toast(er.message); } });
 
 /* ---------- pintar todo ---------- */
+/* v2.0 · ALERTA: un proveedor pidió pago o quitó lo gratis */
+function renderAlerts(){
+  let b = $('#pAlert'); const L = P.alerts || [];
+  if (!L.length){ if (b) b.remove(); return; }
+  if (!b){ b = document.createElement('div'); b.id = 'pAlert'; b.className = 'card palert'; const m = $('main') || document.body; m.insertBefore(b, m.firstChild); }
+  b.innerHTML = '<b>⚠ Alerta de las IAs</b><p>' + L.map(a => '<strong>' + esc(a.name) + '</strong> pidió pago o cambió su plan gratis' + (a.t ? ' (' + ago(a.t) + ')' : '') + (a.msg ? ': «' + esc(a.msg) + '»' : '')).join('<br>') + '</p><p class="cnote">SynthZ ya pausó esas llaves: nunca se paga nada. Revisa la cuenta del proveedor y pulsa «Probar» en la llave cuando lo arregles; si vuelve a funcionar, la alerta se quita sola.</p>';
+}
 function render(){
+  renderAlerts();
   renderHealth(); renderOnline(); renderTrouble(); renderLoad(); renderKeys(); renderHelp(); renderFeedback();
   if (!booted){ booted = true; renderMyKeys(); renderSettings(); $('#kMine').textContent = P.rank === 'Symmetrix' ? 'Puedes agregar tus llaves y probarlas. Ver todo, sí; cambiar ajustes, solo Prime y ZFlow.' : 'Cada cuenta del equipo agrega las suyas. Todas se juntan y se comparten con todos, sin que nadie las vea.';
     const cards = $$('.card'); cards.forEach((c, i) => setTimeout(() => c.classList.add('in'), SZ.reduce ? 0 : 80 + i * 90)); }

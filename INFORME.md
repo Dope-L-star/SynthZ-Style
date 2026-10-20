@@ -1,3 +1,19 @@
+# SynthZ v2.0B — Guía nueva, más IAs gratis, imágenes, voz y modo alerta
+
+- **Guía rápida:** el botón ahora dice «Guía rápida». SynthonIA pregunta «¿Quieres ver la guía completa o qué quieres aprender?»: eliges uno o varios temas (chat, elegir IA, comparar, agente, archivos, chats, límite, cuenta, ajustes, SynthonIA) y te los muestra en el orden en que los tocaste. En la portada también, con «Esta página».
+- **«¡Descubriste algo nuevo!»:** la primera vez que usas algo (comparar, agente, archivos, favoritos, adjuntar, temas, buscar…) SynthonIA te dice en una línea para qué sirve.
+- **«Qué hay de nuevo»:** SynthonIA lo cuenta una vez por versión (y está en el menú «⋯»).
+- **IAs nuevas (llaves en Pulsem, por cada cuenta del equipo):**
+  - **Google AI Studio:** solo Gemini Flash, Flash-Lite y Gemma. Crea la llave en un proyecto SIN facturación: así Google nunca cobra.
+  - **Ollama (nube):** plan gratis con límites por sesión/semana; no cobra por uso.
+  - **SiliconFlow:** solo su lista de modelos gratis (Qwen3-8B, GLM-4-9B…); los de pago se rechazan aunque haya saldo.
+  - **GitHub Models:** no se agrega (lo cerraron).
+- **Imágenes (Pollinations):** botón junto al clip. Solo con cuenta, 3 al día por persona (cámbialo en Pulsem; el equipo tiene 20). Gasta el saldo «pollen» prepago de Pollinations: nunca cobra a una tarjeta. Ojo: desde julio de 2026 Pollinations ya no regala saldo cada día, solo créditos de bienvenida.
+- **Modo alerta:** si un proveedor pide pago o quita lo gratis, la llave se pausa sola (nunca se paga), Pulsem muestra la alerta en rojo y SynthonIA avisa al equipo. Si TODAS las IAs gratis piden pago, la página dice «Error: no podemos continuar… en cuanto volvamos a estar en línea te redirigimos» y se recarga sola cuando vuelvan.
+- **Agente ahorrador:** para tareas MUY simples (saludos, traducir o corregir una frase) usa una IA rápida que gasta menos (Flash-Lite, Mistral Small…), nunca la más pequeña si hay otra.
+- **Voz:** botón «Escuchar» en cada respuesta; cada familia (GPT, Gemini, Claude, Llama, Mistral, DeepSeek, Qwen…) suena distinto. Usa la voz del navegador: gratis.
+- **Arreglo:** al recargar la página ya no se borra la nota «El agente eligió…» ni las imágenes.
+
 # SynthZ v1.9B — Archivos tipo Claude, más seguridad y SynthonIA que habla
 
 - **Archivos como en Claude:** cada archivo que te da la IA sale como una tarjeta (nombre, tipo y líneas) con «Ver» y «Descargar».

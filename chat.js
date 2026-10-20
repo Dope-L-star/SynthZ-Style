@@ -30,6 +30,7 @@ let cat = { t:0, list:[], status:'loading' };
 const idx = new Map(), newIds = new Set();
 function setCatalog(list, t, status){ list = (list || []).filter(m => !SZ.isBad(m.id)); cat = { t, list, status }; idx.clear(); list.forEach(m => idx.set(m.id, m)); }
 function stub(id){
+  if (id === 'imagen') return { id, name:'Creador de imágenes', vendor:'synthz', vlabel:'Imágenes', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'', stub:true };
   if (id === 'agente') return { id, name:'Modo agente', vendor:'synthz', vlabel:'Elige la IA por ti', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'', stub:true };
   if (id === 'sz:auto') return Object.assign({}, SZ.SZ_AUTO, { stub:true });
   if (/^sz:/.test(id)){ const mid = id.split(':').slice(2).join(':'); return { id, name:mid.replace(/^[^/]+\//, ''), vendor:'synthz', vlabel:'Gratis', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'', stub:true }; }
@@ -629,7 +630,7 @@ function finishBot(el, meta, last, cont, starred){
   codeButtons($('.body', el));
   if (meta) el.insertAdjacentHTML('beforeend', '<div class="meta">' + esc(meta) + '</div>');
   el.classList.toggle('starred', !!starred);
-  el.insertAdjacentHTML('beforeend', '<div class="acts"><button class="act" data-a="copy">' + COPY + 'Copiar</button><button class="act" data-a="star" aria-pressed="' + !!starred + '" title="Guárdala en tus favoritos">' + STAR_A + '<span>' + (starred ? 'Favorita' : 'Guardar') + '</span></button>' + (last ? '<button class="act" data-a="regen" title="Pide otra respuesta: cuenta como un mensaje nuevo">' + REGEN + 'Otra vez</button>' : '') + (last && cont ? '<button class="act" data-a="cont" title="Pide que siga desde donde quedó: cuenta como un mensaje nuevo">↪ Continuar</button>' : '') + '</div>');
+  el.insertAdjacentHTML('beforeend', '<div class="acts"><button class="act" data-a="copy">' + COPY + 'Copiar</button><button class="act" data-a="voice" title="Escuchar esta respuesta con la voz de esta IA"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg><span>Escuchar</span></button><button class="act" data-a="star" aria-pressed="' + !!starred + '" title="Guárdala en tus favoritos">' + STAR_A + '<span>' + (starred ? 'Favorita' : 'Guardar') + '</span></button>' + (last ? '<button class="act" data-a="regen" title="Pide otra respuesta: cuenta como un mensaje nuevo">' + REGEN + 'Otra vez</button>' : '') + (last && cont ? '<button class="act" data-a="cont" title="Pide que siga desde donde quedó: cuenta como un mensaje nuevo">↪ Continuar</button>' : '') + '</div>');
   el.classList.toggle('last', !!last);
 }
 /* ---------- saludo: el principal la primera vez y tras 12 h; en cada chat nuevo, otro ---------- */
@@ -811,7 +812,7 @@ function renderMsgs(){
   const ck0 = ckey();
   chat.forEach((m, i) => {
     if (m.role === 'user'){ const u = userEl(m.content, m.files); u.style.animation = 'none'; lane.appendChild(u); if (m.agent) lane.appendChild(agentSumEl(m.agent)); }
-    else { const b = botEl(m.model || selId()); b.style.animation = 'none'; b._raw = m.content; b._ck = ck0; b._ci = i; b.dataset.ci = i; if (m.work) b.insertBefore(SZ.workSaved(m.work), $('.body', b)); $('.body', b).innerHTML = md(m.content); finishBot(b, m.meta, i === chat.length - 1, m.cont, m.star); lane.appendChild(b); }
+    else { const b = botEl(m.model || selId()); b.style.animation = 'none'; b._raw = m.content; b._ck = ck0; b._ci = i; b.dataset.ci = i; if (m.work) b.insertBefore(SZ.workSaved(m.work), $('.body', b)); $('.body', b).innerHTML = md(m.content); if (m.imgId) imgFill($('.body', b), m); finishBot(b, m.meta, i === chat.length - 1, m.cont, m.star); lane.appendChild(b); }
   });
   if (thinking) lane.appendChild(thinkEl(thinking));
   if (fresh){ msgsEl.scrollTop = 0; requestAnimationFrame(() => { msgsEl.scrollTop = 0; }); } else jump();
@@ -1139,6 +1140,7 @@ function apiMsgs(chat, vision, o = {}){
   if (!o.naive) for (let i = chat.length - 1; i >= 0; i--) if (chat[i].role === 'user' && chat[i].files && chat[i].files.length){ lastF = i; break; }
   const start = Math.max(0, chat.length - keepN);
   const h = chat.slice(start).map((m, j) => {
+    if (m.imgId) return null;
     if (m.role !== 'user' || !m.files || !m.files.length) return { role:m.role, content:(m.role === 'user' && m.ask) || m.content };
     const full = o.naive || start + j === lastF;
     let t = m.ask || m.content || '';
@@ -1149,7 +1151,7 @@ function apiMsgs(chat, vision, o = {}){
     const imgs = vision && m._imgs && full ? m._imgs : [];
     t = t.trim() || 'Mira la imagen.';
     return imgs.length ? { role:m.role, content:[{ type:'text', text:t }, ...imgs.map(u => ({ type:'image_url', image_url:{ url:u } }))] } : { role:m.role, content:t };
-  });
+  }).filter(Boolean);
   while (h.length && h[0].role !== 'user') h.shift();
   const sys = [];
   if (saver) sys.push('Responde en el idioma del usuario, de forma clara y breve, sin relleno.');
@@ -1168,6 +1170,112 @@ function cachePut(k, r){
   const ks = Object.keys(c).sort((a, b) => c[b].t - c[a].t); ks.slice(60).forEach(x => delete c[x]);
   try{ localStorage.setItem(CACHE_KEY, JSON.stringify(c)); }catch(e){}
 }
+/* ---------- v2.0 · crear imágenes (Pollinations): solo con cuenta, con su propio límite diario ----------
+   La imagen se guarda en este equipo (IndexedDB) para no llenar tu espacio en la nube; el chat guarda solo la referencia. */
+const IMGK = 'imagen';
+const IMG_RX = /^(?:por favor\s+)?(?:crea(?:me)?|haz(?:me)?|genera(?:me)?|dib[uú]ja(?:me)?|pinta(?:me)?|dise[ñn]a(?:me)?)\s+(?:una?\s+|el\s+|la\s+)?(?:imagen|foto|fotograf[ií]a|dibujo|ilustraci[oó]n|p[oó]ster|logo|fondo de pantalla)\b/i;
+let imgMode = false;
+const imgDB = (() => {
+  let p = null;
+  const open = () => p || (p = new Promise((ok, no) => { try{ const r = indexedDB.open('synthz-img', 1); r.onupgradeneeded = () => r.result.createObjectStore('img'); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); }catch(e){ no(e); } }));
+  const tx = async (mode, fn) => { const db = await open(); return new Promise((ok, no) => { const t = db.transaction('img', mode), s = t.objectStore('img'), r = fn(s); t.oncomplete = () => ok(r && r.result); t.onerror = () => no(t.error); }); };
+  return { put:(id, blob) => tx('readwrite', s => s.put(blob, id)), get:id => tx('readonly', s => s.get(id)) };
+})();
+/* botón «Crear imagen» junto al clip */
+const imgBtn = document.createElement('button');
+imgBtn.type = 'button'; imgBtn.className = 'attach imgb'; imgBtn.id = 'imgBtn'; imgBtn.setAttribute('aria-pressed', 'false'); imgBtn.setAttribute('aria-label', 'Crear una imagen'); imgBtn.dataset.tip = 'Crear una imagen';
+imgBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 9"/></svg>';
+{ const ab = $('#attachBtn'); if (ab) ab.after(imgBtn); }
+function setImgMode(on){
+  if (on && !SZ.ACC.ready){ toast('Para crear imágenes entra a tu cuenta (es gratis).'); SZ.guestGate({ mode:'signup' }); return; }
+  imgMode = !!on; imgBtn.setAttribute('aria-pressed', String(imgMode)); document.body.classList.toggle('imaging', imgMode);
+  inp.placeholder = imgMode ? 'Describe la imagen que quieres crear…' : (agentOn() ? 'Modo agente: cuéntame qué necesitas…' : 'Escribe tu mensaje…');
+  if (imgMode){ const q = SZ.SZQ.img; toast('Crear imagen: describe lo que quieres ver.' + (q && q.max ? ' Hoy te quedan ' + Math.max(0, q.max - q.used) + '.' : '')); inp.focus(); }
+}
+imgBtn.addEventListener('click', () => setImgMode(!imgMode));
+/* pasa una imagen a JPEG liviano (máx. 1024 px) */
+async function toJpeg(dataUrl){
+  const im = new Image(); im.src = dataUrl; await im.decode();
+  const k = Math.min(1, 1024 / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement('canvas');
+  c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k);
+  c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+  return new Promise(ok => c.toBlob(b => ok(b), 'image/jpeg', .86));
+}
+function imgWorkEl(){
+  const el = document.createElement('div'); el.className = 'm bot brand think-wrap imgwork';
+  el.innerHTML = '<div class="who"><b>Creador de imágenes</b></div><div class="work"><div class="wk-row"><span class="pxw">' + SZ.pixelGrid() + '</span><span class="wk-t"><b class="wk-w">Creando tu imagen</b><small class="wk-s">puede tardar unos segundos</small></span></div></div>';
+  el._px = SZ.pixelRun($('.pxw', el)); el._t0 = performance.now(); return el;
+}
+async function createImage(prompt){
+  if (!SZ.ACC.ready){ toast('Para crear imágenes entra a tu cuenta (es gratis).'); SZ.guestGate({ mode:'signup' }); return; }
+  if (Object.keys(busy).length) return toast('Espera a que termine la respuesta anterior.');
+  const chat = chatArr(), g0 = gen;
+  chat.push({ role:'user', content:prompt, imgReq:true }); touchThread(); save();
+  inp.value = ''; autoGrow(); updateHint(); renderMsgs();
+  const w = imgWorkEl(); lane.appendChild(w); jump(); busy[IMGK] = 'write';
+  try{
+    const r = await fetch('/api/ai', { method:'POST', headers:SZ.szHeaders(), body:JSON.stringify({ action:'image', prompt }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.img) throw Object.assign(new Error(d.error || 'No pude crear la imagen. Intenta en un rato.'), { code:d.code, status:r.status });
+    const blob = await toJpeg(d.img), id = 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    await imgDB.put(id, blob);
+    if (SZ.SZQ.img) SZ.SZQ.img.used = (SZ.SZQ.img.max || 0) - (d.left || 0);
+    chat.push({ role:'assistant', model:IMGK, content:'Imagen creada: «' + prompt.slice(0, 300) + '»', imgId:id, meta:'creada en ' + ((performance.now() - w._t0) / 1000 || 0).toFixed(0) + ' s · te quedan ' + (d.left || 0) + ' hoy' });
+    touchThread(); save();
+    try{ SZ.BOT.react && SZ.BOT.react('done', { cool:120000 }); }catch(e){}
+  }catch(err){
+    chat.pop(); save();
+    if (g0 === gen){ renderMsgs(); showErr(Object.assign(err, { limit:/img_limit|img_login/.test(err.code || '') })); inp.value = prompt; autoGrow(); }
+  }finally{ delete busy[IMGK]; try{ w._px.stop(); }catch(e){} w.remove(); if (g0 === gen) renderMsgs(); renderNow(); }
+}
+/* en el chat: la imagen con «Descargar» */
+function imgFill(body, m){
+  body.innerHTML = '<figure class="szimg"><div class="szimg-f"><span class="pxw">' + SZ.pixelGrid() + '</span></div><figcaption></figcaption><div class="szimg-b"><button type="button" class="cnv-b" data-imgdl>' + CNV_ICO.down + '<span>Descargar</span></button><button type="button" class="cnv-b" data-imgbig>' + CNV_ICO.eye + '<span>Ver en grande</span></button></div></figure>';
+  $('figcaption', body).textContent = m.content.replace(/^Imagen creada: «|»$/g, '');
+  const f = $('.szimg-f', body);
+  imgDB.get(m.imgId).then(blob => {
+    if (!blob){ f.innerHTML = '<p class="szimg-no">Esta imagen quedó guardada en el equipo donde la creaste.</p>'; $('.szimg-b', body).hidden = true; return; }
+    const u = URL.createObjectURL(blob), im = document.createElement('img'); im.alt = m.content; im.src = u; f.innerHTML = ''; f.appendChild(im); body._imgUrl = u;
+  }).catch(() => { f.innerHTML = '<p class="szimg-no">No pude abrir la imagen.</p>'; });
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-imgdl], [data-imgbig]'); if (!b) return;
+  const body = b.closest('.body'), u = body && body._imgUrl; if (!u) return;
+  if (b.hasAttribute('data-imgdl')){ const a = document.createElement('a'); a.href = u; a.download = 'synthz-imagen.jpg'; document.body.appendChild(a); a.click(); a.remove(); toast('Descargué tu imagen.'); }
+  else { const o = document.createElement('div'); o.className = 'szm imgbig'; o.innerHTML = '<img alt="">'; $('img', o).src = u; document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('on')); o.addEventListener('click', () => { o.classList.remove('on'); setTimeout(() => o.remove(), 300); }); }
+});
+/* ---------- v2.0 · voz: cada familia de IA habla con su propia voz (GPT una, Mistral otra, Gemini otra…) ----------
+   Usa la voz que ya trae tu navegador o tu celular: gratis y sin enviar nada a internet. */
+const VOZ_FAM = {
+  openai:[1.0, 1.02], gemini:[1.18, 1.05], gemma:[1.28, 1.08], google:[1.18, 1.05], anthropic:[.9, .96], claude:[.9, .96], meta:[.82, 1.0], llama:[.82, 1.0],
+  mistral:[1.32, 1.1], mistralai:[1.32, 1.1], deepseek:[.74, .94], qwen:[1.4, 1.12], xai:[.66, 1.04], grok:[.66, 1.04], moonshot:[1.08, .92], kimi:[1.08, .92],
+  microsoft:[.96, 1.06], nvidia:[.88, 1.02], cohere:[1.12, .98], synthz:[1.06, 1.0], imagen:[1.06, 1.0]
+};
+const famOfEl = el => String((el && el.dataset.brand) || 'synthz').toLowerCase();
+let vozCur = null;
+function vocesEs(){ const V = (window.speechSynthesis && speechSynthesis.getVoices()) || []; const es = V.filter(v => /^es/i.test(v.lang)); return es.length ? es : V; }
+/* a cada familia le toca siempre la misma voz (si tu equipo tiene varias en español) y su propio tono y velocidad */
+function vozDe(fam){
+  const V = vocesEs(), keys = Object.keys(VOZ_FAM), i = Math.max(0, keys.indexOf(fam));
+  const [pitch, rate] = VOZ_FAM[fam] || [1, 1];
+  return { voice:V.length ? V[i % V.length] : null, pitch, rate };
+}
+const textoParaLeer = el => { const b = $('.body', el); if (!b) return ''; const c = b.cloneNode(true); $$('pre, .fcard, .cnv, .szimg, .katex-mathml, math', c).forEach(x => x.replaceWith(document.createTextNode(' (aquí hay un código o un archivo) '))); return c.textContent.replace(/\s+/g, ' ').trim().slice(0, 4000); };
+function vozParar(){ try{ speechSynthesis.cancel(); }catch(e){} if (vozCur){ vozCur.classList.remove('on'); const s = $('span', vozCur); if (s) s.textContent = 'Escuchar'; vozCur = null; } }
+function vozLeer(btn){
+  if (!('speechSynthesis' in window)){ toast('Tu navegador no tiene voz. Prueba con Chrome, Edge o Safari.'); return; }
+  if (vozCur === btn){ vozParar(); return; }
+  vozParar();
+  const el = btn.closest('.m.bot'), txt = textoParaLeer(el); if (!txt) return;
+  const fam = famOfEl(el), V = vozDe(fam);
+  /* se lee por frases (así no se corta en textos largos) */
+  const parts = txt.match(/[^.!?¡¿\n]{1,220}[.!?]*|.+$/g) || [txt];
+  vozCur = btn; btn.classList.add('on'); const s = $('span', btn); if (s) s.textContent = 'Detener';
+  parts.forEach((t, i) => { const u = new SpeechSynthesisUtterance(t.trim()); if (V.voice) u.voice = V.voice; u.lang = (V.voice && V.voice.lang) || 'es-ES'; u.pitch = V.pitch; u.rate = V.rate; if (i === parts.length - 1) u.onend = () => { if (vozCur === btn) vozParar(); }; u.onerror = () => { if (vozCur === btn) vozParar(); }; speechSynthesis.speak(u); });
+}
+if ('speechSynthesis' in window){ try{ speechSynthesis.getVoices(); speechSynthesis.addEventListener && speechSynthesis.addEventListener('voiceschanged', () => {}); }catch(e){} }
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-a="voice"]'); if (b){ e.stopPropagation(); vozLeer(b); } }, true);
+addEventListener('pagehide', vozParar);
 /* ---------- v1.8 · modo agente: tú escribes; el agente entiende y mejora tu pedido, elige la IA que más sabe de eso
    y te muestra cada paso. Al final decides: quedarte con esa IA o seguir en modo agente ---------- */
 let agentBusy = false;
@@ -1202,6 +1310,14 @@ function agentSumEl(a){
   if (a.ask){ $('.ag-d p', el).textContent = a.ask; const row = $('.ag-row', el), d = $('.ag-d', el); row.addEventListener('click', () => { const on = d.hidden; d.hidden = !on; row.setAttribute('aria-expanded', String(on)); el.classList.toggle('open', on); }); }
   return el;
 }
+/* v2.0 · tareas MUY simples: una IA rápida que gasta menos, pero buena (nunca la más pequeña si hay otra) */
+const LIGHT = [/flash-lite/i, /mistral-small/i, /gpt-oss-20b/i, /gemma-3-27b/i, /qwen3-8b/i, /gemma-3-12b/i, /llama-3\.1-8b/i];
+const isSimple = (text, plan) => !!(plan && plan.simple) && text.length < 180 && !/```|\n.*\n/.test(text) && !/c[oó]digo|program|ensayo|informe|analiza|compara|plan de|paso a paso/i.test(text);
+function lightPick(){
+  const L = cat.list.filter(m => /^sz:/.test(m.id) && connected(m.id));
+  for (const rx of LIGHT){ const m = L.find(x => rx.test(x.id)); if (m) return m.id; }
+  return null;
+}
 function agentPick(tema){
   const L = tema ? recommendTop(tema, 10).filter(m => connected(m.id)) : [];
   const top = L.find(m => (info(m.id).spend || 1) < 3) || L[0];   /* no gasta tu Puter en las IA que más consumen si hay otra experta */
@@ -1232,13 +1348,14 @@ function agentChoice(pick){
 }
 async function agentPlan(text){
   const keys = TOPICS.map(t => t[0]).join(', ');
-  const sys = 'Eres el planificador de SynthFlow. Lees el pedido de una persona y lo mejoras para que otra IA lo entienda mejor. Responde SOLO con JSON válido y nada más: {"tema":"<una de: ' + keys + '>","pedido":"<el pedido mejorado, en el mismo idioma de la persona, claro, con el contexto que dio y el formato de respuesta que le sirve; no inventes datos; máximo 120 palabras>"}';
+  const sys = 'Eres el planificador de SynthFlow. Lees el pedido de una persona y lo mejoras para que otra IA lo entienda mejor. Responde SOLO con JSON válido y nada más: {"tema":"<una de: ' + keys + '>","dificultad":"<muy_simple si es un saludo, una pregunta de una línea con respuesta corta, traducir o corregir una frase corta; si no, normal>","pedido":"<el pedido mejorado, en el mismo idioma de la persona, claro, con el contexto que dio y el formato de respuesta que le sirve; no inventes datos; máximo 120 palabras>"}';
   const r = await SZ.askStream(SZ.SZ_P, [{ role:'system', content:sys }, { role:'user', content:text.slice(0, 4000) }], { model:'sz:auto', _noFall:true });
   const m = String((r && r.text) || '').match(/\{[\s\S]*\}/); if (!m) throw new Error('sin plan');
   const j = JSON.parse(m[0]); if (!j || typeof j.pedido !== 'string' || j.pedido.trim().length < 4) throw new Error('sin plan');
-  return { tema:TOPIC[j.tema] ? j.tema : null, pedido:j.pedido.trim().slice(0, 4000) };
+  return { tema:TOPIC[j.tema] ? j.tema : null, simple:j.dificultad === 'muy_simple', pedido:j.pedido.trim().slice(0, 4000) };
 }
 async function send(){
+  if (imgMode && mode === 'solo'){ const t = inp.value.trim(); if (t) createImage(t); return; }
   if (isLocked()){ lockNudge(); return; }
   if (mode === 'cmp') return compare();
   const text = inp.value.trim(), ready = files.filter(f => f.state === 'ok');
@@ -1252,6 +1369,8 @@ async function send(){
   /* modo agente: no eliges IA; el agente entiende tu pedido, lo mejora, elige la IA experta y te muestra los pasos */
   if (agentOn() && mode === 'solo' && text && !files.length){
     if (agentBusy) return;
+    /* el agente ve que pides una imagen: la crea el creador de imágenes */
+    if (IMG_RX.test(text) && SZ.ACC.ready){ toast('El agente vio que quieres una imagen: la crea el creador de imágenes.'); return createImage(text); }
     agentBusy = true; inp.readOnly = true; sendBtn.disabled = true;
     try{ localStorage.setItem('synthz:sent', String(sentN() + 1)); }catch(e){}
     try{ frustration(text, false); }catch(e){}
@@ -1269,15 +1388,16 @@ async function send(){
     card.set(1, same ? 'Tu pedido ya era claro: lo paso tal cual' : 'Mejoré tu pedido para que la IA lo entienda mejor');
     await SZ.sleepRaw(550);
     const tl = plan.tema && TOPIC[plan.tema] ? TOPIC[plan.tema].l.toLowerCase() : '';
-    card.set(2, tl ? 'Eligiendo la IA que más sabe de ' + tl : 'Eligiendo la mejor IA para esto');
-    const pick = agentPick(plan.tema);
+    const light = isSimple(text, plan) ? lightPick() : null;
+    card.set(2, light ? 'Es algo sencillo: uso una IA rápida que gasta menos' : tl ? 'Eligiendo la IA que más sabe de ' + tl : 'Eligiendo la mejor IA para esto');
+    const pick = light || agentPick(plan.tema);
     await SZ.sleepRaw(750);
     card.set(3, 'Le paso tu pedido a ' + info(pick).name);
     await SZ.sleepRaw(600); card.stop();
     agentBusy = false; inp.readOnly = false; sendBtn.disabled = false;
     if (g0 !== gen){ card.el.remove(); return; }                /* cambiaste de chat mientras tanto */
     if (!same) msg.ask = plan.pedido;
-    msg.agent = { pick, name:info(pick).name, tl, ask:same ? '' : plan.pedido };
+    msg.agent = { pick, name:info(pick).name, tl:light ? 'cosas sencillas (gasta menos)' : tl, ask:same ? '' : plan.pedido };
     st().model.openrouter = pick; save(); paintSel(); renderTop(false); paintAccent();
     let ok = true;
     await runSolo(err => { ok = false; chat.pop(); save(); renderMsgs(); showErr(err); inp.value = text; autoGrow(); updateHint(); });
@@ -2018,7 +2138,7 @@ async function runGuide(){
     await gPoint(gAny('#payPill', '#payL', '#payM'), 'Aquí ves cómo va tu límite gratis de hoy.', { pad:6 });
     await gPoint(gT('#rail [data-r="chats"]', '#tabbar [data-tab="chats"]'), 'Tus chats y tus mensajes favoritos quedan aquí, en cualquier dispositivo si entras con tu cuenta.', { side:true });
     await gPoint(gT('.tchip[data-topic]', '.tchip[data-topic]'), 'Toca un tema cuando quieras y te recomiendo IA expertas en eso.');
-    await gPoint(gT('#guideTop', '#guideTop') || gT('#helpBtn', '#helpBtn'), 'Y si te pierdes, la Guía siempre está aquí. Puedes verla Asistida o en Lectura.', { mood:'guino' });
+    await gPoint(gT('#guideTop', '#guideTop') || gT('#helpBtn', '#helpBtn'), 'Y si te pierdes, la Guía rápida siempre está aquí: la ves completa o solo lo que quieras.', { mood:'guino' });
     H.unspot(); H.quiet();
 
     /* 4 · comparar 2 IA (ejemplo animado: no gasta nada) */
@@ -2121,6 +2241,70 @@ function endGuide(done){
   else H.hide();
 }
 addEventListener('keydown', e => { if (e.key === 'Escape' && G && !document.querySelector('.szm,#conn,#acc,#sx,#blk')){ e.preventDefault(); endGuide(false); } });
+/* ===== v2.0 · Guía por temas: SynthonIA muestra solo lo que elegiste, en el orden en que lo elegiste ===== */
+const TOPIC_STEPS = {
+  chat:async () => {
+    await gPoint(gT('#inp', '#inp'), 'Aquí escribes lo que necesitas. Entre más detalles le das (qué quieres, para qué y cómo), mejor te responde.');
+    await gPoint(gT('#sendBtn', '#sendBtn'), 'Con esta flecha, o con Enter, lo envías. Si se demora mucho, el mismo botón la detiene.');
+    const ex = gT('#hexR', '#hexR'); if (ex) await gPoint(ex, 'Si no sabes qué pedir, toca una de estas ideas: se escribe sola y tú decides cuándo enviarla.');
+  },
+  ia:async () => {
+    if (agentOn()){ await gPoint(gT('#agPill', '#agPill'), 'Ahora estás en modo agente: él elige la IA por ti. Si quieres elegirla tú, toca «Apagar».'); return; }
+    await gPoint(gAny('#cPick', '#curChip'), 'Aquí eliges con qué IA hablas. Tócalo y se abre su ventana con temas, buscador y filtros.');
+    const tc = gT('.tchip[data-topic]', '.tchip[data-topic]'); if (tc) await gPoint(tc, 'Cada tema te recomienda las IA que mejor lo hacen. Por ejemplo, «Código» te muestra las expertas en programar.');
+  },
+  comparar:async () => {
+    if (agentOn()){ await gPoint(null, 'Comparar se usa sin el modo agente: apágalo y verás el botón «Comparar con otra IA» abajo.'); return; }
+    await gPoint(gAny('#cCmp', '#pickRow [data-add]'), 'Aquí sumas otra IA, hasta 4. Todas responden la misma pregunta y aparecen lado a lado, en el orden en que llegan. Ojo: cada una gasta lo suyo.');
+  },
+  agente:async () => {
+    await gPoint(gT('#railAgent', '#tabbar [data-tab="chats"]'), isMobile() ? 'El modo agente está en «Chats», en la pestaña «Agente».' : 'Este es el modo agente, debajo de «Mis chats».');
+    await gPoint(null, 'En modo agente no eliges IA: tú escribes, el agente entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso. Al final decides si te quedas con esa IA o sigues en modo agente.', { mood:'guino' });
+  },
+  archivos:async () => {
+    await gPoint(gT('#attachBtn', '#attachBtn'), 'Con el clip le das a la IA fotos, PDF o archivos de texto para que los lea.');
+    const fc = gT('.fcard', '.fcard');
+    if (fc) await gPoint(fc, 'Y cuando la IA te da un archivo, sale así: tócalo para ver el código; si es una página, mira su vista previa y descárgala con su nombre.');
+    else await gPoint(null, 'Y cuando la IA te da un archivo (una página, un código…), sale como una tarjeta: ves el código, su vista previa si se puede, y lo descargas con su nombre.');
+  },
+  chats:async () => {
+    await gPoint(gT('#rail [data-r="chats"]', '#tabbar [data-tab="chats"]'), 'Tus chats quedan aquí. Si entras con tu cuenta, los ves en cualquier celular o computador.', { side:true });
+    await gPoint(gT('#railFav', '#tabbar [data-tab="chats"]'), 'Y aquí tus favoritos: las respuestas que guardas con la estrella ★.', { side:true });
+  },
+  limite:async () => {
+    await gPoint(gAny('#payPill', '#railCoin', '#payL', '#payM'), 'Aquí ves cómo va tu límite gratis de hoy: el anillo se va vaciando y a medianoche se llena otra vez. Sin cuenta son 5 mensajes de prueba; con tu cuenta gratis, mucho más.', { pad:6 });
+  },
+  cuenta:async () => {
+    await gPoint(gT('#accBtn', '#tabbar [data-tab="me"]'), 'Aquí entras o creas tu cuenta gratis: sin correo ni tarjeta. Tus chats y favoritos te siguen a todas partes.', { side:true });
+    await gPoint(null, 'Y si quieres más, conecta Puter: tu versión pro de las IAs más usadas (ChatGPT, Claude, Gemini…), gratis y con un clic.', { mood:'guino' });
+  },
+  ajustes:async () => {
+    await gPoint(gT('#cfgBtn', '#tabbar [data-tab="cfg"]'), 'En Ajustes eliges «más bonito» o «más rápido», apagas mis sonidos o activas el modo principiante, que explica todo con palabras sencillas.', { side:true });
+  },
+  synthonia:async () => {
+    await gPoint(gT('#szBot', '#szBot'), 'Y yo siempre estoy aquí. Tócame y pregúntame cómo se hace algo: te lo explico o te lo señalo con mi manita.', { mood:'encantada' });
+  }
+};
+async function runTopics(list){
+  list = (list || []).filter(k => TOPIC_STEPS[k]);
+  if (G || !list.length) return;
+  closeSide(); closeChatsSheet(); if (tourEl) closeTour(false);
+  G = { skip:false, total:list.length, topics:[] };
+  root.classList.add('guiding');
+  try{
+    if (mode !== 'solo') setMode('solo');
+    H.show({ x:innerWidth - 60, y:innerHeight - 70 });
+    await gWait(80);
+    for (let i = 0; i < list.length; i++){
+      const T = SZ.GTOPICS.find(t => t[0] === list[i]);
+      gHud(i + 1, T ? T[1] : 'Guía');
+      await TOPIC_STEPS[list[i]]();
+      H.unspot && H.unspot();
+    }
+    endGuide(true);
+  }catch(e){ if (!(e && e.guide)) console.error('[synthz] guía', e); endGuide(false); }
+}
+window.SynthFlowTopics = runTopics;
 /* =====================================================================
    Primera vez en SynthFlow (camino B): 1 ¿qué quieres FlowIA'r? · 2 elige tu IA · 3 chatea
    «Siguiente» sube y «Atrás» baja (la animación al revés)
@@ -2222,7 +2406,7 @@ function bflowClose(toChat, then){
   o.classList.add('bye');
   setTimeout(() => { o.remove(); root.classList.remove('bflowing'); if (then) then(); else if (matchMedia('(pointer: fine)').matches) inp.focus(); }, SZ.reduce ? 10 : 620);
 }
-function openGuide(){ SZ.guideChooser({ asistida:runGuide, lectura:openHelp }); }
+function openGuide(){ SZ.guideAsk({ full:runGuide, pick:list => runTopics(list), read:openHelp }); }
 window.SynthFlowGuide = { run:runGuide, end:() => endGuide(false), on:() => !!G };
 addEventListener('keydown', e => {
   if (e.key === 'Escape' && tourEl) closeTour(false);
@@ -2237,7 +2421,8 @@ SZ.ctxMenu(() => [
   { label:'Borrar este chat', fn:() => clearChat(true) },
   { label:'Copiar toda la conversación', fn:() => { navigator.clipboard && navigator.clipboard.writeText(chatMd()); toast('Conversación copiada.'); } },
   { label:'Exportar como .md', fn:exportMd },
-  { label:'Guía (Asistida o Lectura)', fn:() => openGuide() },
+  { label:'Guía rápida', fn:() => openGuide() },
+  { label:'Qué hay de nuevo', fn:() => SZ.whatsNew(true, list => runTopics(list)) },
   { label:'Guía rápida (leer)', fn:() => openHelp() },
   { label:'Ver tutorial de conexión', fn:openTour },
   { label:'Mis IA conectadas', fn:() => openConnect() },
@@ -3022,9 +3207,12 @@ if (!q && DRAFTS[draftK]){
   }, enter ? 1700 : 600);
 }
 try{
+  /* temas elegidos en la portada: SynthonIA los muestra aquí, en ese orden */
+  let gt = null; try{ gt = JSON.parse(sessionStorage.getItem('synthz:gtopics') || 'null'); sessionStorage.removeItem('synthz:gtopics'); }catch(e){}
   if (params.get('guia') === '1') setTimeout(runGuide, enter ? 2000 : 500);
+  else if (Array.isArray(gt) && gt.length) setTimeout(() => runTopics(gt), enter ? 2000 : 600);
   else if (!q && !draftK && !localStorage.getItem('synthz:tour')) bflowOpen(enter ? 1500 : 200);
-  else { setTimeout(warnBlocked, enter ? 2700 : 900); if (!q && SZ.wasAway()) setTimeout(() => SZ.welcomeBack({ learn:runGuide, flow:() => { if (matchMedia('(pointer: fine)').matches) inp.focus(); } }), enter ? 2200 : 700); }
+  else { setTimeout(warnBlocked, enter ? 2700 : 900); if (!q && SZ.wasAway()) setTimeout(() => SZ.welcomeBack({ learn:runGuide, flow:() => { if (matchMedia('(pointer: fine)').matches) inp.focus(); } }), enter ? 2200 : 700); setTimeout(() => { if (!G && !document.querySelector('.szm, #szWelcome')) SZ.whatsNew(false, list => runTopics(list)); }, enter ? 4200 : 3000); }
 }catch(e){}
 try{ const clean = new URLSearchParams(location.search); ['q', 'from', 'draft', 'prueba', 'guia'].forEach(k => clean.delete(k)); window.history.replaceState(null, '', location.pathname + (clean.toString() ? '?' + clean.toString() : '')); }catch(e){}
 if (q){ inp.value = q.slice(0, 4000); autoGrow(); updateHint(); if (fromHome) setTimeout(() => { send(); }, enter ? 1500 : 300); else inp.focus(); }

@@ -263,3 +263,7 @@ html.noglass .card,html.noglass .ptop{backdrop-filter:none;-webkit-backdrop-filt
 .gate{padding-left:0;padding-right:0}
 @media (max-width:600px){.gate{padding:16px}}
 
+/* v2.0 · alerta de proveedores */
+.palert{border-color:rgba(239,107,107,.6) !important;background:linear-gradient(150deg,rgba(239,107,107,.16),rgba(255,255,255,.02)) !important;margin-bottom:16px;opacity:1 !important;transform:none !important}
+.palert b{color:#ffb0b0;font-size:16px}
+.palert p{margin:6px 0 0}

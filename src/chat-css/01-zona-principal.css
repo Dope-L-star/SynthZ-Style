@@ -163,3 +163,19 @@ html.noanim .cvp,html.noanim .cvp-in{transition-duration:.01s}
 .cvp-prev[hidden],.cvp-code[hidden]{display:none !important}
 body.canvasing #szBot,body.canvasing #szBotB,body.canvasing .bbeta,body.canvasing .bb{visibility:hidden}
 .fname-h{display:none}
+/* v2.0 · crear imágenes */
+.imgb[aria-pressed="true"]{color:#f3d79e;background:rgba(230,182,95,.14);box-shadow:inset 0 0 0 1px rgba(230,182,95,.45)}
+body.imaging .comp-in,body.imaging .composer .field{box-shadow:0 0 0 1px rgba(143,176,255,.5),0 0 40px -12px rgba(143,176,255,.5)}
+.szimg{margin:0;display:flex;flex-direction:column;gap:8px;max-width:520px}
+.szimg-f{min-height:120px;border-radius:16px;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1)}
+.szimg-f img{display:block;width:100%;height:auto}
+.szimg figcaption{font-size:13px;color:var(--mute)}
+.szimg-b{display:flex;gap:8px}
+.szimg-no{margin:0;padding:18px;color:var(--mute);font-size:13.5px}
+.imgbig{display:grid;place-items:center;padding:20px;background:rgba(5,6,10,.9);opacity:0;transition:opacity .3s}
+.imgbig.on{opacity:1}
+.imgbig img{max-width:96vw;max-height:92vh;border-radius:14px}
+/* v2.0 · voz */
+.act[data-a="voice"].on{color:#f3d79e;border-color:rgba(230,182,95,.5);background:rgba(230,182,95,.1)}
+.act[data-a="voice"].on svg{animation:vozPulse 1s ease-in-out infinite}
+@keyframes vozPulse{50%{transform:scale(1.15)}}

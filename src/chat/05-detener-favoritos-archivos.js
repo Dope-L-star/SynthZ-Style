@@ -122,6 +122,7 @@ function apiMsgs(chat, vision, o = {}){
   if (!o.naive) for (let i = chat.length - 1; i >= 0; i--) if (chat[i].role === 'user' && chat[i].files && chat[i].files.length){ lastF = i; break; }
   const start = Math.max(0, chat.length - keepN);
   const h = chat.slice(start).map((m, j) => {
+    if (m.imgId) return null;
     if (m.role !== 'user' || !m.files || !m.files.length) return { role:m.role, content:(m.role === 'user' && m.ask) || m.content };
     const full = o.naive || start + j === lastF;
     let t = m.ask || m.content || '';
@@ -132,7 +133,7 @@ function apiMsgs(chat, vision, o = {}){
     const imgs = vision && m._imgs && full ? m._imgs : [];
     t = t.trim() || 'Mira la imagen.';
     return imgs.length ? { role:m.role, content:[{ type:'text', text:t }, ...imgs.map(u => ({ type:'image_url', image_url:{ url:u } }))] } : { role:m.role, content:t };
-  });
+  }).filter(Boolean);
   while (h.length && h[0].role !== 'user') h.shift();
   const sys = [];
   if (saver) sys.push('Responde en el idioma del usuario, de forma clara y breve, sin relleno.');

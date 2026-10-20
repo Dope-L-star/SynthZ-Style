@@ -99,7 +99,7 @@ function bflowClose(toChat, then){
   o.classList.add('bye');
   setTimeout(() => { o.remove(); root.classList.remove('bflowing'); if (then) then(); else if (matchMedia('(pointer: fine)').matches) inp.focus(); }, SZ.reduce ? 10 : 620);
 }
-function openGuide(){ SZ.guideChooser({ asistida:runGuide, lectura:openHelp }); }
+function openGuide(){ SZ.guideAsk({ full:runGuide, pick:list => runTopics(list), read:openHelp }); }
 window.SynthFlowGuide = { run:runGuide, end:() => endGuide(false), on:() => !!G };
 addEventListener('keydown', e => {
   if (e.key === 'Escape' && tourEl) closeTour(false);
@@ -114,7 +114,8 @@ SZ.ctxMenu(() => [
   { label:'Borrar este chat', fn:() => clearChat(true) },
   { label:'Copiar toda la conversación', fn:() => { navigator.clipboard && navigator.clipboard.writeText(chatMd()); toast('Conversación copiada.'); } },
   { label:'Exportar como .md', fn:exportMd },
-  { label:'Guía (Asistida o Lectura)', fn:() => openGuide() },
+  { label:'Guía rápida', fn:() => openGuide() },
+  { label:'Qué hay de nuevo', fn:() => SZ.whatsNew(true, list => runTopics(list)) },
   { label:'Guía rápida (leer)', fn:() => openHelp() },
   { label:'Ver tutorial de conexión', fn:openTour },
   { label:'Mis IA conectadas', fn:() => openConnect() },

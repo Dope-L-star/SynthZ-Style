@@ -13,10 +13,25 @@ export const PROV = {
   openrouter:{ name:'OpenRouter', base:() => process.env.OPENROUTER_URL || 'https://openrouter.ai/api/v1', cap:+process.env.POOL_CAP_OR || 45,
     best:['openrouter/free'] },
   cloudflare:{ name:'Cloudflare', base:acct => (process.env.TRIAL_CF_URL || 'https://api.cloudflare.com/client/v4') + '/accounts/' + acct + '/ai/v1', cap:+process.env.POOL_CAP_CF || 250,
-    best:['@cf/meta/llama-3.3-70b-instruct-fp8-fast', '@cf/meta/llama-3.1-8b-instruct', '@cf/meta/llama-3.2-3b-instruct', '@cf/google/gemma-3-12b-it'] }
+    best:['@cf/meta/llama-3.3-70b-instruct-fp8-fast', '@cf/meta/llama-3.1-8b-instruct', '@cf/meta/llama-3.2-3b-instruct', '@cf/google/gemma-3-12b-it'] },
+  /* v2.0 · Google AI Studio: SOLO los modelos de la capa gratis (Flash, Flash-Lite y Gemma). Ojo: la llave debe ser de un proyecto SIN facturación */
+  google:{ name:'Google AI Studio', base:() => process.env.POOL_GOOGLE_URL || 'https://generativelanguage.googleapis.com/v1beta/openai', cap:+process.env.POOL_CAP_GOOGLE || 900,
+    best:['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemma-3-27b-it'] },
+  /* Ollama (nube): plan gratis con límites por sesión/semana; no cobra por uso */
+  ollama:{ name:'Ollama', base:() => process.env.POOL_OLLAMA_URL || 'https://ollama.com/v1', cap:+process.env.POOL_CAP_OLLAMA || 300,
+    best:['gpt-oss:120b', 'gpt-oss:20b', 'qwen3-coder:480b', 'deepseek-v3.1:671b'] },
+  /* SiliconFlow (.com): SOLO la lista de modelos gratis; los de pago se rechazan aunque haya saldo */
+  siliconflow:{ name:'SiliconFlow', base:() => process.env.POOL_SF_URL || 'https://api.siliconflow.com/v1', cap:+process.env.POOL_CAP_SF || 500,
+    best:['Qwen/Qwen3-8B', 'THUDM/GLM-4-9B-0414', 'Qwen/Qwen2.5-7B-Instruct'] }
 };
-export const ORDER = ['groq', 'mistral', 'openrouter', 'cloudflare'];
-const ENV_KEY = { groq:'GROQ_API_KEY', mistral:'MISTRAL_API_KEY', cloudflare:'CLOUDFLARE_API_TOKEN', openrouter:'POOL_OPENROUTER_KEY' };
+export const ORDER = ['groq', 'google', 'mistral', 'openrouter', 'cloudflare', 'ollama', 'siliconflow'];
+/* llaves que no son de chat (imágenes): se guardan y prueban igual, pero no entran a la lista de IAs */
+export const IMG = { pollinations:{ name:'Pollinations (imágenes)', base:() => process.env.POOL_POLLI_URL || 'https://gen.pollinations.ai', cap:+process.env.POOL_CAP_POLLI || 150 } };
+export const KEY_PROVS = [...ORDER, 'pollinations'];
+export const provName = p => (PROV[p] || IMG[p] || { name:p }).name;
+const ENV_KEY = { groq:'GROQ_API_KEY', mistral:'MISTRAL_API_KEY', cloudflare:'CLOUDFLARE_API_TOKEN', openrouter:'POOL_OPENROUTER_KEY', google:'GEMINI_API_KEY', ollama:'OLLAMA_API_KEY', siliconflow:'SILICONFLOW_API_KEY', pollinations:'POLLINATIONS_API_KEY' };
+/* un proveedor que pide pago o cambió su plan gratis: eso es una ALERTA (no un simple «se acabó por hoy») */
+export const PAY_RX = /billing|payment|pay as you go|subscri|upgrade (your|to)|credit balance|insufficient[_ ](balance|credit|funds)|top.?up|pollen|purchase|not available on the free/i;
 export const PLAN_RX = /billing|payment|subscri|upgrade|plan|credit|quota exceeded|insufficient/i;
 export const DAY_LIMIT_DEFAULT = 25000;   /* ≈ 30 mensajes al día por persona */
 const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -36,14 +51,14 @@ export async function calm(make){
 }
 
 /* ---------- configuración: tope diario y llaves de cada cuenta del equipo ---------- */
-export async function settings(){ const s = (await getJ('cfg:pool:set')) || {}; return { dayLimit:Math.max(1000, Math.min(500000, +s.dayLimit || DAY_LIMIT_DEFAULT)) }; }
-export async function saveSettings(patch){ const s = (await getJ('cfg:pool:set')) || {}; if (patch.dayLimit != null) s.dayLimit = Math.max(1000, Math.min(500000, Math.round(+patch.dayLimit) || DAY_LIMIT_DEFAULT)); await setJ('cfg:pool:set', s); return settings(); }
+export async function settings(){ const s = (await getJ('cfg:pool:set')) || {}; return { dayLimit:Math.max(1000, Math.min(500000, +s.dayLimit || DAY_LIMIT_DEFAULT)), imgDay:Math.max(0, Math.min(50, s.imgDay == null ? 3 : +s.imgDay || 0)) }; }
+export async function saveSettings(patch){ const s = (await getJ('cfg:pool:set')) || {}; if (patch.dayLimit != null) s.dayLimit = Math.max(1000, Math.min(500000, Math.round(+patch.dayLimit) || DAY_LIMIT_DEFAULT)); if (patch.imgDay != null) s.imgDay = Math.max(0, Math.min(50, Math.round(+patch.imgDay) || 0)); await setJ('cfg:pool:set', s); return settings(); }
 /* cfg:pool = { <sub>: { name, rank, keys:{ groq, mistral, cloudflare, openrouter } (cifradas), cfAccount, t } } */
 export async function ownersRaw(){ return (await getJ('cfg:pool')) || {}; }
 export async function saveOwnerKeys(me, rank, patch){
   const all = await ownersRaw(), o = all[me.sub] || { keys:{} };
   o.name = String(me.username || me.name || 'equipo').slice(0, 40); o.rank = rank; o.t = Date.now(); o.keys = o.keys || {};
-  for (const id of ORDER){ if (typeof patch[id] === 'string'){ const k = patch[id].trim().slice(0, 300); if (k) o.keys[id] = enc(k); else delete o.keys[id]; } }
+  for (const id of KEY_PROVS){ if (typeof patch[id] === 'string'){ const k = patch[id].trim().slice(0, 300); if (k) o.keys[id] = enc(k); else delete o.keys[id]; } }
   if (typeof patch.cfAccount === 'string') o.cfAccount = patch.cfAccount.replace(/[^a-f0-9]/gi, '').slice(0, 64);
   all[me.sub] = o; await setJ('cfg:pool', all);
   await redis('DEL', 'pool:models');                       /* la lista de modelos se rehace con las llaves nuevas */
@@ -53,12 +68,12 @@ export async function saveOwnerKeys(me, rank, patch){
 export async function loadKeys(){
   const out = [], seen = new Set();
   const add = (prov, key, owner, src, cfAccount) => { if (!key) return; const id = sha(prov + ':' + key).slice(0, 12); if (seen.has(id)) return; seen.add(id); out.push({ id, prov, key, owner, src, cfAccount:cfAccount || '' }); };
-  for (const p of ORDER) add(p, process.env[ENV_KEY[p]], { name:'Vercel', rank:'Prime' }, 'vercel', process.env.CLOUDFLARE_ACCOUNT_ID);
+  for (const p of KEY_PROVS) add(p, process.env[ENV_KEY[p]], { name:'Vercel', rank:'Prime' }, 'vercel', process.env.CLOUDFLARE_ACCOUNT_ID);
   const legacy = (await getJ('cfg:trial')) || {};
   for (const p of ['groq', 'mistral', 'cloudflare']) if (legacy.keys && legacy.keys[p]){ try{ add(p, dec(legacy.keys[p]), { name:'panel de la prueba', rank:'Prime' }, 'panel', legacy.cfAccount); }catch(e){} }
   const all = await ownersRaw();
   for (const [sub, o] of Object.entries(all)){
-    for (const p of ORDER) if (o.keys && o.keys[p]){ try{ add(p, dec(o.keys[p]), { sub, name:o.name, rank:o.rank }, 'cuenta', o.cfAccount); }catch(e){} }
+    for (const p of KEY_PROVS) if (o.keys && o.keys[p]){ try{ add(p, dec(o.keys[p]), { sub, name:o.name, rank:o.rank }, 'cuenta', o.cfAccount); }catch(e){} }
   }
   return out;
 }
@@ -72,9 +87,12 @@ async function cfAcct(k){
   if (id) await redis('SET', 'pool:cfacct:' + k.id, id, 'EX', '2592000');
   return id || '';
 }
-export const baseOf = async k => k.prov === 'cloudflare' ? PROV.cloudflare.base(await cfAcct(k)) : PROV[k.prov].base();
+export const baseOf = async k => k.prov === 'cloudflare' ? PROV.cloudflare.base(await cfAcct(k)) : (PROV[k.prov] || IMG[k.prov]).base();
 
 /* ---------- catálogo: solo modelos gratis de texto ---------- */
+/* solo lo gratis: Google (Flash, Flash-Lite, Gemma; nunca Pro, imagen, voz ni «live») y SiliconFlow (su lista gratis) */
+const GOOGLE_FREE = /^(gemini-[\d.]+-flash(-lite)?(-\d{3})?|gemini-flash(-lite)?-latest|gemma-[\w.-]+-it)$/i;
+const SF_FREE = /(^|\/)(qwen3-8b|qwen2\.5-7b-instruct|qwen3\.5-4b|glm-4-9b-0414|glm-z1-9b-0414|deepseek-r1-0528-qwen3-8b|hunyuan-mt-7b)$/i;
 const DROP = /whisper|guard|tts|orpheus|safeguard|allam|compound|distil|playai|embed|moderation|ocr|voxtral|transcri|lora|vision-preview|lyria|music|audio|image|flux|stable|dall/i;
 async function listFor(prov, k){
   const base = await baseOf(k), H = { Authorization:'Bearer ' + k.key };
@@ -90,7 +108,9 @@ async function listFor(prov, k){
     return (d.result || []).map(m => String(m.name || '')).filter(n => /^@cf\//.test(n) && !DROP.test(n)).map(n => ({ mid:n, name:n.replace(/^@cf\/[^/]+\//, ''), ctx:0 }));
   }
   const d = await (await fetch(base + '/models', { headers:H, signal:AbortSignal.timeout(10000) })).json();
-  let L = (d.data || []).filter(m => m && m.id && m.active !== false && !DROP.test(m.id));
+  let L = (d.data || d.models || []).map(m => m && (m.id || m.name) ? Object.assign({}, m, { id:String(m.id || m.name).replace(/^models\//, '') }) : null).filter(m => m && m.active !== false && !DROP.test(m.id));
+  if (prov === 'google') L = L.filter(m => GOOGLE_FREE.test(m.id));
+  if (prov === 'siliconflow') L = L.filter(m => SF_FREE.test(m.id) && !/^pro\//i.test(m.id));
   if (prov === 'mistral') L = L.filter(m => !m.capabilities || m.capabilities.completion_chat !== false).filter(m => !m.deprecation && (/-latest$/.test(m.id) || /nemo/.test(m.id)));
   return L.map(m => ({ mid:m.id, name:m.id, ctx:+m.context_window || +m.max_context_length || 0 }));
 }
@@ -114,10 +134,11 @@ export async function models(force){
 }
 
 /* ---------- elegir llave: la menos usada hoy, sin pausas y bajo su tope ---------- */
-async function pickKeys(prov){
+export async function pickKeys(prov){
   const d = today(), ks = (await loadKeys()).filter(k => k.prov === prov); if (!ks.length) return [];
   const r = await pipe(ks.flatMap(k => [['GET', 'pk:n:' + k.id + ':' + d], ['GET', 'pk:down:' + k.id]]));
-  return ks.map((k, i) => Object.assign(k, { n:+r[i * 2] || 0, down:r[i * 2 + 1] })).filter(k => !k.down && k.n < PROV[prov].cap).sort((a, b) => a.n - b.n);
+  const cap = (PROV[prov] || IMG[prov]).cap;
+  return ks.map((k, i) => Object.assign(k, { n:+r[i * 2] || 0, down:r[i * 2 + 1] })).filter(k => !k.down && k.n < cap).sort((a, b) => a.n - b.n);
 }
 /* orden de respaldo: el modelo pedido y, si su proveedor no responde, el mejor de los otros */
 async function plan(model){
@@ -163,13 +184,14 @@ export async function chat({ who, ipKey, messages, model, maxTokens, system, str
         const s = up ? up.status : 0, txt = up ? await up.text().catch(() => '') : '';
         tried.push(m.prov + ':' + (s || 'sin respuesta'));
         console.error('[synthz] ia', m.prov, k.id, s ? classify(s) : 'sin respuesta');      /* sin llaves ni mensajes */
+        if (s === 402 || ((s === 401 || s === 403) && PAY_RX.test(txt))) await markPay(k, s, txt);
         const ttl = s === 429 ? (PLAN_RX.test(txt) ? 1800 : 60) : s === 401 || s === 403 || s === 402 ? 3600 : 120;
         /* alerta: si el modelo ya no existe, se esconde para todos 6 h y la lista se rehace */
         if (s === 404 || (s === 400 && /model/i.test(txt))) await pipe([['HSET', 'pool:badm', m.id, String(Date.now())], ['DEL', 'pool:models'], ['LPUSH', 'evl', JSON.stringify({ t:Date.now(), kind:'error', who:'Servidor', rank:'Alerta', sub:'', page:'ia', detail:'Modelo sin servicio: ' + m.name + ' (' + m.prov + ')' })], ['LTRIM', 'evl', '0', '299']]).catch(() => {});
         await pipe([['SET', 'pk:down:' + k.id, (s ? classify(s) : 'sin respuesta') + (txt ? ' · ' + provSaid(txt) : ''), 'EX', String(ttl)], ['HINCRBY', 'st:' + d, 'err', '1']]);
         continue;
       }
-      await pipe([['INCR', 'pk:n:' + k.id + ':' + d], ['EXPIRE', 'pk:n:' + k.id + ':' + d, '172800']]);
+      await pipe([['INCR', 'pk:n:' + k.id + ':' + d], ['EXPIRE', 'pk:n:' + k.id + ':' + d, '172800'], ['DEL', 'pk:plan:' + k.id]]);
       const account = async (tok, outChars) => {
         const total = Math.max(1, tok || 0);
         await pipe([['INCRBY', quotaKey(who), String(total)], ['EXPIRE', quotaKey(who), '172800'], ['INCRBY', quotaKey(ipKey), String(total)], ['EXPIRE', quotaKey(ipKey), '172800'],
@@ -212,14 +234,49 @@ export async function chat({ who, ipKey, messages, model, maxTokens, system, str
   throw err(503, 'Las IAs están muy ocupadas ahora mismo. Intenta en un momento o conecta Puter.', 'sz_down');
 }
 
+/* ---------- alerta: un proveedor pidió pago o quitó lo gratis ----------
+   Se anota la llave (pk:plan:<id>), el proveedor (alerts) y un aviso para el equipo en Pulsem.
+   Si TODAS las llaves de chat están así, la página entra en «modo alerta» hasta que vuelva una. */
+export async function markPay(k, s, txt){
+  const info = JSON.stringify({ t:Date.now(), prov:k.prov, s, msg:provSaid(txt) });
+  await pipe([['SET', 'pk:plan:' + k.id, info, 'EX', '259200'], ['SET', 'alert:' + k.prov, info], ['SADD', 'alerts', k.prov],
+    ['LPUSH', 'evl', JSON.stringify({ t:Date.now(), kind:'error', who:'Servidor', rank:'Alerta', sub:'', page:'ia', detail:'ALERTA: ' + provName(k.prov) + ' pidió pago o cambió su plan gratis (' + s + '). Revisa Pulsem.' })], ['LTRIM', 'evl', '0', '299']]).catch(() => {});
+}
+export async function clearPay(k){
+  await redis('DEL', 'pk:plan:' + k.id).catch(() => {});
+  const rest = (await loadKeys()).filter(x => x.prov === k.prov && x.id !== k.id);
+  const still = rest.length ? await pipe(rest.map(x => ['EXISTS', 'pk:plan:' + x.id])) : [];
+  if (!still.some(x => +x)) await pipe([['DEL', 'alert:' + k.prov], ['SREM', 'alerts', k.prov]]).catch(() => {});
+}
+export async function alerts(){
+  const provs = (await redis('SMEMBERS', 'alerts')) || [];
+  const rows = provs.length ? await pipe(provs.map(p => ['GET', 'alert:' + p])) : [];
+  return provs.map((p, i) => { let a = {}; try{ a = JSON.parse(rows[i] || '{}'); }catch(e){} return Object.assign({ prov:p, name:provName(p) }, a); });
+}
+/* ¿quedó alguna IA gratis? (si hay llaves y todas pidieron pago → modo alerta) */
+export async function outage(){
+  const ks = (await loadKeys()).filter(k => ORDER.includes(k.prov)); if (!ks.length) return false;
+  const r = await pipe(ks.map(k => ['EXISTS', 'pk:plan:' + k.id]));
+  return r.every(x => +x);
+}
+
 /* ---------- estado para el panel: cada llave con su uso de hoy ---------- */
 export async function status(){
   const d = today(), keys = await loadKeys();
   const r = keys.length ? await pipe(keys.flatMap(k => [['GET', 'pk:n:' + k.id + ':' + d], ['GET', 'pk:t:' + k.id + ':' + d], ['GET', 'pk:down:' + k.id], ['GET', 'pk:chk:' + k.id]])) : [];
-  return keys.map((k, i) => { let chk = null; try{ chk = JSON.parse(r[i * 4 + 3] || 'null'); }catch(e){} return { id:k.id, prov:k.prov, provName:PROV[k.prov].name, key:mask(k.key), owner:k.owner, src:k.src, n:+r[i * 4] || 0, tok:+r[i * 4 + 1] || 0, cap:PROV[k.prov].cap, down:r[i * 4 + 2] || '', check:chk }; });
+  return keys.map((k, i) => { let chk = null; try{ chk = JSON.parse(r[i * 4 + 3] || 'null'); }catch(e){} return { id:k.id, prov:k.prov, provName:provName(k.prov), key:mask(k.key), owner:k.owner, src:k.src, n:+r[i * 4] || 0, tok:+r[i * 4 + 1] || 0, cap:(PROV[k.prov] || IMG[k.prov]).cap, down:r[i * 4 + 2] || '', check:chk }; });
 }
 /* probar una llave con un mensaje mínimo (máx. 4 palabras de respuesta) */
 export async function checkKey(k){
+  if (k.prov === 'pollinations'){
+    try{
+      const r = await fetch(IMG.pollinations.base() + '/v1/models', { headers:{ Authorization:'Bearer ' + k.key }, signal:AbortSignal.timeout(10000) });
+      const out = r.status === 401 || r.status === 403 ? { ok:false, kind:'auth', state:'llave no autorizada' } : r.ok ? { ok:true, kind:'ok', state:'guardada · solo gasta el saldo (pollen) que ya tengas; nunca cobra a una tarjeta' } : { ok:false, kind:'down', state:classify(r.status) };
+      await redis('SET', 'pk:chk:' + k.id, JSON.stringify(Object.assign({ t:Date.now() }, out)), 'EX', '604800');
+      if (out.ok){ await redis('DEL', 'pk:down:' + k.id); if (await redis('EXISTS', 'pk:plan:' + k.id)){ out.state = 'llave válida, pero se quedó sin saldo (pollen): las imágenes siguen pausadas'; out.kind = 'plan'; out.ok = false; } }
+      return out;
+    }catch(e){ return { ok:false, kind:'down', state:'no respondió a tiempo' }; }
+  }
   try{
     const base = await baseOf(k);
     if (k.prov === 'cloudflare' && /accounts\/\/ai/.test(base)) return { ok:false, kind:'auth', state:'no encontré el Account ID de Cloudflare' };
@@ -234,7 +291,8 @@ export async function checkKey(k){
       out = s === 402 || (s === 403 && PLAN_RX.test(tx)) ? { ok:false, kind:'plan', state:'pide un plan o un pago (SynthZ no lo activa)' } : s === 401 || s === 403 ? { ok:false, kind:'auth', state:'llave no autorizada' } : s === 429 ? { ok:false, kind:'limit', state:'límite gratis alcanzado por ahora' } : { ok:false, kind:'down', state:classify(s) };
       out.detail = provSaid(tx); out.model = mid; }
     await redis('SET', 'pk:chk:' + k.id, JSON.stringify(Object.assign({ t:Date.now() }, out)), 'EX', '604800');
-    if (out.ok) await redis('DEL', 'pk:down:' + k.id);
+    if (out.ok){ await redis('DEL', 'pk:down:' + k.id); await clearPay(k); }
+    else if (out.kind === 'plan') await markPay(k, c.status, out.detail || '');
     return out;
   }catch(e){ return { ok:false, kind:'down', state:'no respondió a tiempo' }; }
 }
