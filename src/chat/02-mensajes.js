@@ -52,6 +52,7 @@ function codeButtons(body){
   all.forEach(pre => {
     const old = $('.cpc', pre); if (old) old.remove();
     const M = cnvMeta(pre);
+    if (/^(json|txt)$/.test(M.ext) || /"diapositivas"/.test(M.text)){ const D = deckFrom(M.text); if (D){ deckCard(pre, D); return; } }
     if (isFile(M, pre)){
       const c = document.createElement('div'); c.className = 'fcard'; c.dataset.ext = M.ext;
       c.innerHTML = '<button type="button" class="fc-main" data-fv="open" title="Abrir ' + esc(M.name) + '"><span class="fc-ic" aria-hidden="true">' + esc(M.ext.slice(0, 4).toUpperCase()) + '</span><span class="fc-t"><b>' + esc(M.name) + '</b><small>' + esc(M.label) + ' · ' + M.lines + (M.lines === 1 ? ' línea' : ' líneas') + (canPreview(M) ? ' · con vista previa' : '') + '</small></span></button>'
@@ -135,10 +136,11 @@ document.addEventListener('click', async e => {
 });
 const STAR_A = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9 6.8 19.7l1-5.9L3.5 9.7l5.9-.8z"/></svg>';
 function finishBot(el, meta, last, cont, starred){
-  codeButtons($('.body', el));
+  codeButtons($('.body', el)); if (el._sources) citeLinks($('.body', el), el._sources);
   if (meta) el.insertAdjacentHTML('beforeend', '<div class="meta">' + esc(meta) + '</div>');
   el.classList.toggle('starred', !!starred);
   el.insertAdjacentHTML('beforeend', '<div class="acts"><button class="act" data-a="copy">' + COPY + 'Copiar</button><button class="act" data-a="voice" title="Escuchar esta respuesta con la voz de esta IA"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg><span>Escuchar</span></button><button class="act" data-a="star" aria-pressed="' + !!starred + '" title="Guárdala en tus favoritos">' + STAR_A + '<span>' + (starred ? 'Favorita' : 'Guardar') + '</span></button>' + (last ? '<button class="act" data-a="regen" title="Pide otra respuesta: cuenta como un mensaje nuevo">' + REGEN + 'Otra vez</button>' : '') + (last && cont ? '<button class="act" data-a="cont" title="Pide que siga desde donde quedó: cuenta como un mensaje nuevo">↪ Continuar</button>' : '') + '</div>');
+  $$('.acts .act', el).forEach(b => { if (!b.title) b.title = b.textContent.trim(); if (!b.getAttribute('aria-label')) b.setAttribute('aria-label', b.textContent.trim()); });
   el.classList.toggle('last', !!last);
 }
 /* ---------- saludo: el principal la primera vez y tras 12 h; en cada chat nuevo, otro ---------- */

@@ -103,7 +103,7 @@ const attMenu = $('#attMenu'), attBtn = $('#attachBtn');
 function attOpen(){ attMenu.hidden = false; attMenu.classList.remove('bye'); attBtn.setAttribute('aria-expanded', 'true'); }
 function attClose(){ if (attMenu.hidden) return; attBtn.setAttribute('aria-expanded', 'false'); attMenu.classList.add('bye'); setTimeout(() => { if (attMenu.classList.contains('bye')){ attMenu.hidden = true; attMenu.classList.remove('bye'); } }, 260); }
 attBtn.addEventListener('click', () => { if (mode === 'cmp'){ toast('Los archivos funcionan con una sola IA. Quita las demás para adjuntar.'); return; } if (attMenu.hidden) attOpen(); else attClose(); });
-attMenu.addEventListener('click', e => { const b = e.target.closest('[data-att]'); if (!b) return; attClose(); $({ file:'#fileIn', img:'#imgIn', cam:'#camIn' }[b.dataset.att]).click(); });
+attMenu.addEventListener('click', e => { const b = e.target.closest('[data-att]'); if (!b) return; attClose(); const k = b.dataset.att; if (k === 'mkimg') return setImgMode(!imgMode); if (k === 'web'){ if (imgMode) setImgMode(false); return setWeb(!webOn); } $({ file:'#fileIn', img:'#imgIn', cam:'#camIn' }[k]).click(); });
 document.addEventListener('pointerdown', e => { if (!attMenu.hidden && !e.target.closest('.attw')) attClose(); });
 addEventListener('keydown', e => { if (e.key === 'Escape' && !attMenu.hidden){ e.preventDefault(); attClose(); attBtn.focus(); } });
 ['#fileIn', '#imgIn', '#camIn'].forEach(s => $(s).addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; }));
@@ -137,6 +137,7 @@ function apiMsgs(chat, vision, o = {}){
   while (h.length && h[0].role !== 'user') h.shift();
   const sys = [];
   if (saver) sys.push('Responde en el idioma del usuario, de forma clara y breve, sin relleno.');
+  { const mm = memSystem(); if (mm && !o.naive) sys.push(mm); }
   if (SZ.CFG.beginner) sys.push('Modo principiante: la persona no sabe nada del tema. Usa palabras sencillas y frases cortas, explica paso a paso, evita los tecnicismos (si usas uno, explícalo) y pon un ejemplo de la vida diaria.');
   if (sys.length) h.unshift({ role:'system', content:sys.join(' ') });
   return h;

@@ -87,6 +87,7 @@ function cleanChats(c){
     if (!Array.isArray(c[k]) || !(byId(k) || /^openrouter::./.test(k))) return;
     out[k] = c[k].filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
       .map(m => ({ role:m.role, content:m.content, meta: typeof m.meta === 'string' ? m.meta : undefined, model: typeof m.model === 'string' ? m.model : undefined,
+        sources: Array.isArray(m.sources) ? m.sources.slice(0, 8).map(x => ({ t:String((x && x.t) || '').slice(0, 200), u:/^https?:\/\//.test(String(x && x.u)) ? String(x.u).slice(0, 500) : '' })).filter(x => x.u) : undefined, web: typeof m.web === 'string' ? m.web.slice(0, 20) : undefined,
         imgId: typeof m.imgId === 'string' && /^i[\w]{4,40}$/.test(m.imgId) ? m.imgId : undefined, imgReq: m.imgReq ? true : undefined, ask: typeof m.ask === 'string' ? m.ask.slice(0, 4000) : undefined,
         agent: m.agent && typeof m.agent === 'object' ? { pick:String(m.agent.pick || '').slice(0, 160), name:String(m.agent.name || '').slice(0, 80), tl:String(m.agent.tl || '').slice(0, 60), ask:String(m.agent.ask || '').slice(0, 4000) } : undefined,
         cont: m.cont ? true : undefined, star: m.star ? true : undefined, again: m.again ? true : undefined, work: cleanWork(m.work), files: Array.isArray(m.files) ? m.files.slice(0, 8).map(f => ({ name:String((f && f.name) || ''), kind:String((f && f.kind) || ''), text: typeof (f && f.text) === 'string' ? f.text : undefined, thumb: typeof (f && f.thumb) === 'string' ? f.thumb : undefined })) : undefined }));
@@ -108,6 +109,13 @@ function cleanModels(o){
 let state = Object.assign({ keys:{}, model:{}, models:{}, usage:{}, chats:{}, fav:[], cmp:[] }, load() || {});
 state.sx = Object.assign({ daily:0, saver:false, saved:0, hits:0, over:'', warned:'' }, state.sx && typeof state.sx === 'object' ? state.sx : {});
 const strList = (a, max) => Array.isArray(a) ? [...new Set(a.filter(x => typeof x === 'string' && x))].slice(0, max) : [];
+/* v2.1 · memoria: lo que la persona le pidió a SynthFlow que recuerde (máx. 40 cosas cortas) */
+function cleanMem(m){
+  m = m && typeof m === 'object' ? m : {};
+  const items = (Array.isArray(m.items) ? m.items : []).filter(x => x && typeof x.text === 'string' && x.text.trim()).slice(0, 40)
+    .map(x => ({ id:/^m[\w]{3,30}$/.test(x.id) ? x.id : 'm' + Math.random().toString(36).slice(2, 10), t:+x.t || Date.now(), text:x.text.replace(/\s+/g, ' ').trim().slice(0, 300) }));
+  return { on:m.on !== false, t:+m.t || 0, items };
+}
 function normalize(){
   state.keys = cleanStrMap(state.keys); state.model = cleanStrMap(state.model); state.models = cleanModels(state.models);
   state.chats = cleanChats(state.chats);
@@ -116,6 +124,7 @@ function normalize(){
   if (!L){ L = { ep:0, dev:{} }; const leg = legacyRow(state.usage); if (Object.keys(leg).length) L.dev.legacy = leg; }
   state.ledger = L; state.usage = usageOf(L); writeLedger();
   state.fav = strList(state.fav, 300); state.cmp = strList(state.cmp, 4);
+  state.mem = cleanMem(state.mem);
 }
 normalize();
 function syncLedger(){ const s = readLedger(); if (s){ state.ledger = mergeLedger(state.ledger, s); state.usage = usageOf(state.ledger); } }

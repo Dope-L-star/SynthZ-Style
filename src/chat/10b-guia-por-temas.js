@@ -24,6 +24,11 @@ const TOPIC_STEPS = {
     if (fc) await gPoint(fc, 'Y cuando la IA te da un archivo, sale así: tócalo para ver el código; si es una página, mira su vista previa y descárgala con su nombre.');
     else await gPoint(null, 'Y cuando la IA te da un archivo (una página, un código…), sale como una tarjeta: ves el código, su vista previa si se puede, y lo descargas con su nombre.');
   },
+  extras:async () => {
+    await gPoint(gT('#webBtn', '#attachBtn'), isMobile() ? 'En el clip está «Buscar en internet»: la IA busca datos de hoy y te muestra de dónde los sacó.' : 'Con este globo la IA busca en internet: responde con datos de hoy y te muestra de dónde los sacó.');
+    await gPoint(gT('#moreBtn', '#moreBtn'), 'Y en este menú ⋯ ves lo que recuerdo de ti (y lo borras cuando quieras) e instalas SynthFlow como app.');
+    await gPoint(null, 'Un truco más: escribe «hazme una presentación de…» y te la entrego lista para PowerPoint.', { mood:'guino' });
+  },
   chats:async () => {
     await gPoint(gT('#rail [data-r="chats"]', '#tabbar [data-tab="chats"]'), 'Tus chats quedan aquí. Si entras con tu cuenta, los ves en cualquier celular o computador.', { side:true });
     await gPoint(gT('#railFav', '#tabbar [data-tab="chats"]'), 'Y aquí tus favoritos: las respuestas que guardas con la estrella ★.', { side:true });

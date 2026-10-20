@@ -27,9 +27,12 @@ export const PROV = {
 export const ORDER = ['groq', 'google', 'mistral', 'openrouter', 'cloudflare', 'ollama', 'siliconflow'];
 /* llaves que no son de chat (imágenes): se guardan y prueban igual, pero no entran a la lista de IAs */
 export const IMG = { pollinations:{ name:'Pollinations (imágenes)', base:() => process.env.POOL_POLLI_URL || 'https://gen.pollinations.ai', cap:+process.env.POOL_CAP_POLLI || 150 } };
-export const KEY_PROVS = [...ORDER, 'pollinations'];
-export const provName = p => (PROV[p] || IMG[p] || { name:p }).name;
-const ENV_KEY = { groq:'GROQ_API_KEY', mistral:'MISTRAL_API_KEY', cloudflare:'CLOUDFLARE_API_TOKEN', openrouter:'POOL_OPENROUTER_KEY', google:'GEMINI_API_KEY', ollama:'OLLAMA_API_KEY', siliconflow:'SILICONFLOW_API_KEY', pollinations:'POLLINATIONS_API_KEY' };
+/* v2.1 · buscadores para «Buscar en internet» (sin tarjeta: Tavily y Exa; Wikipedia siempre gratis y sin llave) */
+export const SEARCH = { tavily:{ name:'Tavily (búsqueda)', base:() => process.env.POOL_TAVILY_URL || 'https://api.tavily.com', cap:+process.env.POOL_CAP_TAVILY || 40 },
+  exa:{ name:'Exa (búsqueda)', base:() => process.env.POOL_EXA_URL || 'https://api.exa.ai', cap:+process.env.POOL_CAP_EXA || 80 } };
+export const KEY_PROVS = [...ORDER, 'pollinations', 'tavily', 'exa'];
+export const provName = p => (PROV[p] || IMG[p] || SEARCH[p] || { name:p }).name;
+const ENV_KEY = { tavily:'TAVILY_API_KEY', exa:'EXA_API_KEY', groq:'GROQ_API_KEY', mistral:'MISTRAL_API_KEY', cloudflare:'CLOUDFLARE_API_TOKEN', openrouter:'POOL_OPENROUTER_KEY', google:'GEMINI_API_KEY', ollama:'OLLAMA_API_KEY', siliconflow:'SILICONFLOW_API_KEY', pollinations:'POLLINATIONS_API_KEY' };
 /* un proveedor que pide pago o cambió su plan gratis: eso es una ALERTA (no un simple «se acabó por hoy») */
 export const PAY_RX = /billing|payment|pay as you go|subscri|upgrade (your|to)|credit balance|insufficient[_ ](balance|credit|funds)|top.?up|pollen|purchase|not available on the free/i;
 export const PLAN_RX = /billing|payment|subscri|upgrade|plan|credit|quota exceeded|insufficient/i;
@@ -87,7 +90,7 @@ async function cfAcct(k){
   if (id) await redis('SET', 'pool:cfacct:' + k.id, id, 'EX', '2592000');
   return id || '';
 }
-export const baseOf = async k => k.prov === 'cloudflare' ? PROV.cloudflare.base(await cfAcct(k)) : (PROV[k.prov] || IMG[k.prov]).base();
+export const baseOf = async k => k.prov === 'cloudflare' ? PROV.cloudflare.base(await cfAcct(k)) : (PROV[k.prov] || IMG[k.prov] || SEARCH[k.prov]).base();
 
 /* ---------- catálogo: solo modelos gratis de texto ---------- */
 /* solo lo gratis: Google (Flash, Flash-Lite, Gemma; nunca Pro, imagen, voz ni «live») y SiliconFlow (su lista gratis) */
@@ -137,7 +140,7 @@ export async function models(force){
 export async function pickKeys(prov){
   const d = today(), ks = (await loadKeys()).filter(k => k.prov === prov); if (!ks.length) return [];
   const r = await pipe(ks.flatMap(k => [['GET', 'pk:n:' + k.id + ':' + d], ['GET', 'pk:down:' + k.id]]));
-  const cap = (PROV[prov] || IMG[prov]).cap;
+  const cap = (PROV[prov] || IMG[prov] || SEARCH[prov]).cap;
   return ks.map((k, i) => Object.assign(k, { n:+r[i * 2] || 0, down:r[i * 2 + 1] })).filter(k => !k.down && k.n < cap).sort((a, b) => a.n - b.n);
 }
 /* orden de respaldo: el modelo pedido y, si su proveedor no responde, el mejor de los otros */
@@ -264,10 +267,44 @@ export async function outage(){
 export async function status(){
   const d = today(), keys = await loadKeys();
   const r = keys.length ? await pipe(keys.flatMap(k => [['GET', 'pk:n:' + k.id + ':' + d], ['GET', 'pk:t:' + k.id + ':' + d], ['GET', 'pk:down:' + k.id], ['GET', 'pk:chk:' + k.id]])) : [];
-  return keys.map((k, i) => { let chk = null; try{ chk = JSON.parse(r[i * 4 + 3] || 'null'); }catch(e){} return { id:k.id, prov:k.prov, provName:provName(k.prov), key:mask(k.key), owner:k.owner, src:k.src, n:+r[i * 4] || 0, tok:+r[i * 4 + 1] || 0, cap:(PROV[k.prov] || IMG[k.prov]).cap, down:r[i * 4 + 2] || '', check:chk }; });
+  return keys.map((k, i) => { let chk = null; try{ chk = JSON.parse(r[i * 4 + 3] || 'null'); }catch(e){} return { id:k.id, prov:k.prov, provName:provName(k.prov), key:mask(k.key), owner:k.owner, src:k.src, n:+r[i * 4] || 0, tok:+r[i * 4 + 1] || 0, cap:(PROV[k.prov] || IMG[k.prov] || SEARCH[k.prov]).cap, down:r[i * 4 + 2] || '', check:chk }; });
 }
 /* probar una llave con un mensaje mínimo (máx. 4 palabras de respuesta) */
+/* una búsqueda en un proveedor: devuelve [{ t, u, s }] (título, enlace, resumen) */
+export async function searchWith(k, q, n = 6){
+  if (k.prov === 'tavily'){
+    const r = await fetch(SEARCH.tavily.base() + '/search', { method:'POST', headers:{ Authorization:'Bearer ' + k.key, 'content-type':'application/json' }, body:JSON.stringify({ query:q, max_results:n, search_depth:'basic', include_answer:false }), signal:AbortSignal.timeout(15000) });
+    if (!r.ok) throw Object.assign(new Error('tavily ' + r.status), { status:r.status, txt:await r.text().catch(() => '') });
+    const d = await r.json(); return (d.results || []).map(x => ({ t:String(x.title || ''), u:String(x.url || ''), s:String(x.content || '').slice(0, 700) }));
+  }
+  if (k.prov === 'exa'){
+    const r = await fetch(SEARCH.exa.base() + '/search', { method:'POST', headers:{ 'x-api-key':k.key, 'content-type':'application/json' }, body:JSON.stringify({ query:q, numResults:n, contents:{ text:{ maxCharacters:700 } } }), signal:AbortSignal.timeout(15000) });
+    if (!r.ok) throw Object.assign(new Error('exa ' + r.status), { status:r.status, txt:await r.text().catch(() => '') });
+    const d = await r.json(); return (d.results || []).map(x => ({ t:String(x.title || ''), u:String(x.url || ''), s:String(x.text || '').slice(0, 700) }));
+  }
+  return [];
+}
+/* Wikipedia en español: siempre gratis y sin llave (respaldo) */
+export async function searchWiki(q, n = 4){
+  const base = process.env.POOL_WIKI_URL || 'https://es.wikipedia.org';
+  const r = await fetch(base + '/w/api.php?action=query&list=search&format=json&utf8=1&srlimit=' + n + '&srsearch=' + encodeURIComponent(q), { headers:{ 'user-agent':'SynthZ/2.1 (https://synthz-style.vercel.app)' }, signal:AbortSignal.timeout(10000) });
+  if (!r.ok) return [];
+  const d = await r.json().catch(() => ({}));
+  return ((d.query && d.query.search) || []).map(x => ({ t:String(x.title), u:base + '/wiki/' + encodeURIComponent(String(x.title).replace(/ /g, '_')), s:String(x.snippet || '').replace(/<[^>]+>/g, '').replace(/&quot;/g, '"').replace(/&amp;/g, '&').slice(0, 500) }));
+}
 export async function checkKey(k){
+  if (SEARCH[k.prov]){
+    try{
+      await searchWith(k, 'SynthZ prueba', 1);
+      const out = { ok:true, kind:'ok', state:'funciona · búsquedas gratis (sin tarjeta)' };
+      await redis('SET', 'pk:chk:' + k.id, JSON.stringify(Object.assign({ t:Date.now() }, out)), 'EX', '604800'); await redis('DEL', 'pk:down:' + k.id); await clearPay(k);
+      return out;
+    }catch(e){
+      const s = e.status || 0, out = s === 401 || s === 403 ? { ok:false, kind:'auth', state:'llave no autorizada' } : s === 432 || s === 402 || PAY_RX.test(e.txt || '') ? { ok:false, kind:'plan', state:'se acabaron las búsquedas gratis del mes' } : s === 429 ? { ok:false, kind:'limit', state:'límite gratis alcanzado por ahora' } : { ok:false, kind:'down', state:s ? classify(s) : 'no respondió a tiempo' };
+      await redis('SET', 'pk:chk:' + k.id, JSON.stringify(Object.assign({ t:Date.now() }, out)), 'EX', '604800');
+      return out;
+    }
+  }
   if (k.prov === 'pollinations'){
     try{
       const r = await fetch(IMG.pollinations.base() + '/v1/models', { headers:{ Authorization:'Bearer ' + k.key }, signal:AbortSignal.timeout(10000) });

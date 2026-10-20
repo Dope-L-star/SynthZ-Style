@@ -6,7 +6,7 @@ function mmOpen(){
   const items = [['Nuevo chat', () => newChat()]];
   if (mode === 'solo') items.push(['Borrar este chat', () => clearChat(true)], ['Copiar la conversación', () => { copyText(chatMd()); toast('Conversación copiada.'); }], ['Exportar como .md', exportMd]);
   else items.push(['Empezar otra comparación', () => clearChat()], ['Volver a una sola IA', () => removeCmp(st().cmp[st().cmp.length - 1])]);
-  items.push(['—'], ['Tu ranking (a ciegas)', () => rankModal()]);
+  items.push(['—'], ['Lo que recuerdo de ti', () => memModal()], ['Qué hay de nuevo', () => SZ.whatsNew(true, list => runTopics(list))], ['Instalar la app', () => SZ.installApp()], ['Tu ranking (a ciegas)', () => rankModal()]);
   if (trialOn) items.push(['Salir de la prueba guiada', () => exitTrial()]);
   items.push(['Google Drive · guardar mis chats', () => driveModal()]);
   items.push(['Conectar IA', () => openConnect()], ['Elegir mis IA ideales', () => SZ.surveyModal(ok => { if (ok){ forMeK = ''; applySurvey(true); renderList({ keep:true }); } })]);

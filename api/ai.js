@@ -3,11 +3,39 @@
    POST { messages, model?, maxTokens? } → respuesta en vivo (streaming), con el gasto al final
    Sin cuenta también funciona: se cuenta por dispositivo y por conexión. */
 import { route, body, json, fail, auth, sha, redis, pipe, today, ipOf, limit, str, roleOf } from './_lib.js';
-import { models, chat, settings, usedToday, PROV, IMG, pickKeys, markPay, clearPay, outage, classify } from './_pool.js';
+import { models, chat, settings, usedToday, PROV, IMG, pickKeys, markPay, clearPay, outage, classify, searchWith, searchWiki, PAY_RX } from './_pool.js';
 
 /* v2.0 · imágenes con Pollinations: solo con cuenta, con su propio límite diario (no gasta Puter ni tu límite de chat).
    Solo gasta el saldo que ya esté cargado en Pollinations: nunca cobra a una tarjeta. */
 const IMG_GLOBAL = +process.env.SYNTHZ_IMG_GLOBAL || 150;
+/* v2.1 · «Buscar en internet»: Tavily o Exa (gratis, sin tarjeta) y, si no hay, Wikipedia. Cuenta en su propio límite */
+const SEARCH_GLOBAL = +process.env.SYNTHZ_SEARCH_GLOBAL || 300;
+async function webSearch(req, me, who, b){
+  const q = str(b.q, 300); if (q.length < 2) throw Object.assign(new Error('Escribe qué quieres buscar.'), { status:400, code:'s_empty' });
+  const team = me && roleOf(me) !== 'user', max = team ? 200 : me ? 30 : 3, d = today();
+  await limit('srch:' + who, 10, 60);
+  const uk = 'srch:' + who + ':' + d, gk = 'srch:all:' + d;
+  const [n, g] = (await pipe([['GET', uk], ['GET', gk]])).map(x => +x || 0);
+  if (n >= max) throw Object.assign(new Error(me ? 'Ya hiciste tus ' + max + ' búsquedas en internet de hoy. Mañana tienes más.' : 'Sin cuenta puedes buscar en internet ' + max + ' veces al día. Entra (es gratis) para buscar más.'), { status:429, code:me ? 's_limit' : 's_guest' });
+  let res = [], via = 'internet';
+  if (g < SEARCH_GLOBAL){
+    for (const prov of ['tavily', 'exa']){
+      for (const k of (await pickKeys(prov)).slice(0, 2)){
+        try{ res = await searchWith(k, q, 6); await pipe([['INCR', 'pk:n:' + k.id + ':' + d], ['EXPIRE', 'pk:n:' + k.id + ':' + d, '172800']]); if (res.length) break; }
+        catch(e){
+          const s = e.status || 0; console.error('[synthz] búsqueda', prov, s ? classify(s) : 'sin respuesta');
+          if (s === 402 || ((s === 401 || s === 403) && PAY_RX.test(e.txt || ''))) await markPay(k, s, e.txt || '');
+          await redis('SET', 'pk:down:' + k.id, s === 432 ? 'se acabaron las búsquedas gratis del mes' : s ? classify(s) : 'sin respuesta', 'EX', s === 432 ? '21600' : '600').catch(() => {});
+        }
+      }
+      if (res.length) break;
+    }
+  }
+  if (!res.length){ res = await searchWiki(q, 4).catch(() => []); via = 'wikipedia'; }
+  res = res.filter(x => /^https?:\/\//.test(x.u)).slice(0, 6);
+  await pipe([['INCR', uk], ['EXPIRE', uk, '172800'], ['INCR', gk], ['EXPIRE', gk, '172800']]);
+  return json({ results:res, via, left:Math.max(0, max - n - 1) });
+}
 async function makeImage(req, me, b){
   if (!me) throw Object.assign(new Error('Para crear imágenes entra a tu cuenta (es gratis).'), { status:401, code:'img_login' });
   const set = await settings(), d = today(), team = roleOf(me) !== 'user';
@@ -67,6 +95,7 @@ export default route({
   async POST(req){
     const b = await body(req, 600000), { who, ipKey, me } = await whoOf(req); let guest = null;
     if (b.action === 'image') return makeImage(req, me, b);
+    if (b.action === 'search') return webSearch(req, me, who, b);
     if (!me){
       const turn = /^[\w-]{4,40}$/.test(String(b.turn || '')) ? String(b.turn) : 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
       const [inDev, inIp, g, n] = await Promise.all([redis('SISMEMBER', gKey(who), turn), redis('SISMEMBER', gKey(ipKey), turn), guestUsed(who, ipKey), redis('GET', 'gt:' + who + ':' + turn)]);

@@ -6,6 +6,8 @@ const PROVS = [['groq', 'Groq', 'https://console.groq.com/keys', 'Llave de Groq 
   ['google', 'Google AI Studio', 'https://aistudio.google.com/apikey', 'Llave de Google AI Studio (AIza…)', 'Créala en un proyecto SIN facturación: así Google nunca cobra (si se acaba lo gratis, solo deja de responder). Solo uso Flash, Flash-Lite y Gemma.'],
   ['ollama', 'Ollama', 'https://ollama.com/settings/keys', 'Llave de Ollama', 'Plan gratis de la nube de Ollama: tiene límites por sesión y por semana. No cobra por uso.'],
   ['siliconflow', 'SiliconFlow', 'https://cloud.siliconflow.com/account/ak', 'Llave de SiliconFlow (sk-…)', 'Solo uso sus modelos gratis (Qwen3-8B, GLM-4-9B…). Los de pago se rechazan aunque tengas saldo.'],
+  ['tavily', 'Tavily (buscar en internet)', 'https://app.tavily.com/home', 'Llave de Tavily (tvly-…)', '1.000 búsquedas gratis al mes, sin tarjeta. Cuando se acaban, se usa Exa o Wikipedia.'],
+  ['exa', 'Exa (buscar en internet)', 'https://dashboard.exa.ai/api-keys', 'Llave de Exa', 'Crédito gratis cada mes, sin tarjeta. Respaldo de Tavily.'],
   ['pollinations', 'Pollinations (imágenes)', 'https://enter.pollinations.ai', 'Llave de Pollinations (sk_…)', 'Para crear imágenes. Gasta su saldo «pollen» (prepago): nunca cobra a una tarjeta; si se acaba, solo se pausan las imágenes y te aviso.']];
 const PAGES = { chat:'SynthFlow', index:'Inicio', pulso:'Pulsem', pulsem:'Pulsem' };
 const rc = r => String(r || '').toLowerCase();

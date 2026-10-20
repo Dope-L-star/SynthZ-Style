@@ -399,6 +399,34 @@ body.imaging .comp-in,body.imaging .composer .field{box-shadow:0 0 0 1px rgba(14
 .act[data-a="voice"].on{color:#f3d79e;border-color:rgba(230,182,95,.5);background:rgba(230,182,95,.1)}
 .act[data-a="voice"].on svg{animation:vozPulse 1s ease-in-out infinite}
 @keyframes vozPulse{50%{transform:scale(1.15)}}
+
+/* en el celular, la barrita de cada respuesta va solo con íconos (cabe entera y no tapa el texto) */
+@media (max-width:600px){.m.bot .acts .act{font-size:0;gap:0;padding:8px 10px}.m.bot .acts .act svg{width:17px;height:17px}.m.bot .acts .act span{display:none}}
+/* v2.1 · presentaciones */
+.fcard.deck .fc-ic{background:linear-gradient(150deg,#ffb38a,#d24726)}
+.cvp-b.deckv{flex-direction:column;gap:16px;overflow:auto}
+.slw{flex:none}
+.sl{position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#0b0c10;border:1px solid rgba(255,255,255,.1);padding:5% 6%;container-type:inline-size}
+.sl::before{content:"";position:absolute;left:0;top:0;bottom:0;width:1%;background:#e6b65f}
+.sl-t::before{width:auto;right:0;bottom:auto;height:1.6%;background:#c9566c}
+.sl h2{margin:14% 0 0;font:400 6.2cqw/1.08 Georgia,serif;color:#ecebe7}
+.sl-t .sl-bar{display:block;width:12%;height:1.2%;margin:3% 0;background:#e6b65f}
+.sl-t p{margin:0;font-size:3cqw;color:#c9c8c3}
+.sl-t small{position:absolute;left:6%;bottom:5%;font-size:1.7cqw;color:#8d8c88}
+.sl h3{margin:0;font:400 4.4cqw/1.1 Georgia,serif;color:#ecebe7}
+.sl .sl-bar{display:block;width:9%;height:1%;margin:2.5% 0 3%;background:#c9566c}
+.sl ul{margin:0;padding-left:4%;color:#d9d7d2;font-size:2.9cqw;line-height:1.35}
+.sl li{margin-bottom:1.6%}
+.sl-n{position:absolute;right:4%;bottom:4%;font-size:1.7cqw;color:#8d8c88}
+.sl-notes{margin:6px 2px 0;font-size:12.5px;color:var(--mute)}
+/* v2.1 · memoria */
+.meml{list-style:none;margin:12px 0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:40vh;overflow:auto}
+.meml li{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);font-size:14px}
+.meml li span{flex:1}
+.meml .memnone{color:var(--mute);font-size:13.5px}
+.memadd{display:flex;gap:8px;align-items:center}
+.memadd .field{flex:1;margin:0}
+.memadd input{width:100%}
 /* ---------- caja de escribir ---------- */
 .composer{padding:10px clamp(16px,4vw,48px) 28px}
 .comp-in{width:min(100%,840px);margin:0 auto;display:flex;align-items:flex-end;gap:10px}
@@ -713,6 +741,25 @@ html.noanim .agrun .ag-s li.on i{animation-duration:2s}
   .comp-in{gap:8px}
 }
 
+/* v2.1 · buscar en internet */
+.webb[aria-pressed="true"]{color:#9fd3ff;background:rgba(127,190,255,.14);box-shadow:inset 0 0 0 1px rgba(127,190,255,.45)}
+body.webbing .comp-in,body.webbing .composer .field{box-shadow:0 0 0 1px rgba(127,190,255,.5),0 0 40px -12px rgba(127,190,255,.5)}
+.websum .ag-row{border-color:rgba(127,190,255,.35);background:rgba(127,190,255,.06)}
+.websum .ag-ic svg{color:#9fd3ff}
+.websum .ag-tx b{color:#9fd3ff}
+.webrun{border-color:rgba(127,190,255,.35);background:linear-gradient(160deg,rgba(127,190,255,.08),rgba(255,255,255,.02))}
+.webrun .ag-t b{color:#9fd3ff}
+.srcl{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;text-align:left}
+.srcl a{display:flex;flex-direction:column;padding:6px 10px;border-radius:10px;text-decoration:none;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}
+.srcl a:hover{border-color:rgba(127,190,255,.4)}
+.srcl b{font-weight:500;color:var(--text);font-size:13.5px}
+.srcl small{color:var(--mute);font-size:12px}
+a.cite{display:inline-grid;place-items:center;min-width:18px;height:18px;margin:0 2px;padding:0 5px;border-radius:999px;font:600 10.5px var(--mono);color:#0d1622;background:#9fd3ff;text-decoration:none;vertical-align:2px}
+a.cite:hover{background:#cde9ff}
+
+/* en el celular, «Crear imagen» y «Buscar en internet» van dentro del clip (y el clip se ilumina si están activos) */
+.amenu .only-small{display:none}
+@media (max-width:600px){#imgBtn,#webBtn{display:none !important}.amenu .only-small{display:flex}body.imaging #attachBtn,body.webbing #attachBtn{color:#f3d79e;background:rgba(230,182,95,.14)}}
 /* ===== v10 ===== */
 /* péndulo de Newton rápido y seguido: tin, sale, tin, sale */
 .mark .sw1{animation:swL 1.15s infinite}
@@ -1459,7 +1506,7 @@ body.cmpm .top .now-chip.live{display:none}
 @keyframes mflash{0%,100%{background:transparent}25%{background:rgba(230,182,95,.1)}}
 
 /* ---------- caja de escribir ---------- */
-.attw{position:relative;flex:none}
+.attw{position:relative;flex:none;display:flex;align-items:center;gap:6px}
 .attach[aria-expanded="true"]{background:rgba(230,182,95,.12);color:#f6e3bd;border-color:rgba(230,182,95,.5)}
 .attach svg{transition:transform .5s cubic-bezier(.22,1,.36,1)}
 .attach[aria-expanded="true"] svg{transform:rotate(-30deg) scale(1.05)}

@@ -82,7 +82,7 @@ body.cmpm .top .now-chip.live{display:none}
 @keyframes mflash{0%,100%{background:transparent}25%{background:rgba(230,182,95,.1)}}
 
 /* ---------- caja de escribir ---------- */
-.attw{position:relative;flex:none}
+.attw{position:relative;flex:none;display:flex;align-items:center;gap:6px}
 .attach[aria-expanded="true"]{background:rgba(230,182,95,.12);color:#f6e3bd;border-color:rgba(230,182,95,.5)}
 .attach svg{transition:transform .5s cubic-bezier(.22,1,.36,1)}
 .attach[aria-expanded="true"] svg{transform:rotate(-30deg) scale(1.05)}

@@ -157,6 +157,7 @@ function cleanChats(c){
     if (!Array.isArray(c[k]) || !(byId(k) || /^openrouter::./.test(k))) return;
     out[k] = c[k].filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
       .map(m => ({ role:m.role, content:m.content, meta: typeof m.meta === 'string' ? m.meta : undefined, model: typeof m.model === 'string' ? m.model : undefined,
+        sources: Array.isArray(m.sources) ? m.sources.slice(0, 8).map(x => ({ t:String((x && x.t) || '').slice(0, 200), u:/^https?:\/\//.test(String(x && x.u)) ? String(x.u).slice(0, 500) : '' })).filter(x => x.u) : undefined, web: typeof m.web === 'string' ? m.web.slice(0, 20) : undefined,
         imgId: typeof m.imgId === 'string' && /^i[\w]{4,40}$/.test(m.imgId) ? m.imgId : undefined, imgReq: m.imgReq ? true : undefined, ask: typeof m.ask === 'string' ? m.ask.slice(0, 4000) : undefined,
         agent: m.agent && typeof m.agent === 'object' ? { pick:String(m.agent.pick || '').slice(0, 160), name:String(m.agent.name || '').slice(0, 80), tl:String(m.agent.tl || '').slice(0, 60), ask:String(m.agent.ask || '').slice(0, 4000) } : undefined,
         cont: m.cont ? true : undefined, star: m.star ? true : undefined, again: m.again ? true : undefined, work: cleanWork(m.work), files: Array.isArray(m.files) ? m.files.slice(0, 8).map(f => ({ name:String((f && f.name) || ''), kind:String((f && f.kind) || ''), text: typeof (f && f.text) === 'string' ? f.text : undefined, thumb: typeof (f && f.thumb) === 'string' ? f.thumb : undefined })) : undefined }));
@@ -178,6 +179,13 @@ function cleanModels(o){
 let state = Object.assign({ keys:{}, model:{}, models:{}, usage:{}, chats:{}, fav:[], cmp:[] }, load() || {});
 state.sx = Object.assign({ daily:0, saver:false, saved:0, hits:0, over:'', warned:'' }, state.sx && typeof state.sx === 'object' ? state.sx : {});
 const strList = (a, max) => Array.isArray(a) ? [...new Set(a.filter(x => typeof x === 'string' && x))].slice(0, max) : [];
+/* v2.1 · memoria: lo que la persona le pidió a SynthFlow que recuerde (máx. 40 cosas cortas) */
+function cleanMem(m){
+  m = m && typeof m === 'object' ? m : {};
+  const items = (Array.isArray(m.items) ? m.items : []).filter(x => x && typeof x.text === 'string' && x.text.trim()).slice(0, 40)
+    .map(x => ({ id:/^m[\w]{3,30}$/.test(x.id) ? x.id : 'm' + Math.random().toString(36).slice(2, 10), t:+x.t || Date.now(), text:x.text.replace(/\s+/g, ' ').trim().slice(0, 300) }));
+  return { on:m.on !== false, t:+m.t || 0, items };
+}
 function normalize(){
   state.keys = cleanStrMap(state.keys); state.model = cleanStrMap(state.model); state.models = cleanModels(state.models);
   state.chats = cleanChats(state.chats);
@@ -186,6 +194,7 @@ function normalize(){
   if (!L){ L = { ep:0, dev:{} }; const leg = legacyRow(state.usage); if (Object.keys(leg).length) L.dev.legacy = leg; }
   state.ledger = L; state.usage = usageOf(L); writeLedger();
   state.fav = strList(state.fav, 300); state.cmp = strList(state.cmp, 4);
+  state.mem = cleanMem(state.mem);
 }
 normalize();
 function syncLedger(){ const s = readLedger(); if (s){ state.ledger = mergeLedger(state.ledger, s); state.usage = usageOf(state.ledger); } }
@@ -227,7 +236,7 @@ function slimChat(arr){
 }
 function prefsOut(){
   return { v:2, t:Date.now(), model:state.model, fav:state.fav, cmp:state.cmp, sx:state.sx, pinned:state.pinned || '', threads:state.threads || {}, del:(state.del || []).slice(-300),
-    arena:state.arena || {}, survey:state.survey || null, useTeam:state.useTeam || '', battle:!!state.battle, cfg:CFG,
+    arena:state.arena || {}, survey:state.survey || null, useTeam:state.useTeam || '', battle:!!state.battle, cfg:CFG, mem:state.mem,
     chatKeys:Object.keys(state.chats).filter(k => Array.isArray(state.chats[k]) && state.chats[k].length) };
 }
 function mergeIn(p, chats){
@@ -243,6 +252,7 @@ function mergeIn(p, chats){
     if (p.arena && typeof p.arena === 'object'){ state.arena = state.arena || {}; Object.keys(p.arena).forEach(id => { const r = p.arena[id], l = state.arena[id]; if (r && typeof r === 'object' && (!l || (+r.t || 0) > (+l.t || 0))) state.arena[id] = { r:+r.r || 1000, w:+r.w || 0, l:+r.l || 0, t:+r.t || 0 }; }); }
     if (p.survey && typeof p.survey === 'object' && (!state.survey || (+p.survey.t || 0) > (+state.survey.t || 0))) state.survey = p.survey;
     if (p.battle) state.battle = true;
+    if (p.mem && typeof p.mem === 'object'){ const m = cleanMem(p.mem); if ((+m.t || 0) > (+(state.mem && state.mem.t) || 0)) state.mem = m; }
     if (p.ledger && typeof p.ledger === 'object'){ syncLedger(); state.ledger = mergeLedger(state.ledger, cleanLedger(p.ledger)); }
     else if (p.usage && typeof p.usage === 'object' && !state.ledger.ep){ const leg = legacyRow(p.usage); if (Object.keys(leg).length){ syncLedger(); state.ledger = mergeLedger(state.ledger, { ep:state.ledger.ep, dev:{ legacy:leg } }); } }
     state.usage = usageOf(state.ledger); writeLedger();
@@ -3424,6 +3434,7 @@ const GTOPICS = [
   ['comparar', 'Comparar IAs', 'Varias IA responden lo mismo, lado a lado.'],
   ['agente', 'Modo agente', 'Escribes y el agente elige la IA por ti.'],
   ['archivos', 'Archivos y vista previa', 'Adjuntar archivos y ver los que te da la IA.'],
+  ['extras', 'Internet, memoria y app', 'Buscar datos de hoy, que te recuerde e instalarla.'],
   ['chats', 'Mis chats y favoritos', 'Dónde quedan tus conversaciones.'],
   ['limite', 'Tu límite gratis', 'Cuánto te queda hoy y cuándo se llena.'],
   ['cuenta', 'Tu cuenta y Puter', 'Guardar tus chats y la versión pro de las IA.'],
@@ -3495,12 +3506,12 @@ document.addEventListener('click', e => {
 }, true);
 
 /* «Qué hay de nuevo»: SynthonIA te lo cuenta una vez por versión (y está en el menú cuando quieras) */
-const WHATSNEW = { v:'2.0', items:[
-  ['archivos', 'Los archivos que te da la IA se ven como en Claude: con vista previa y para descargar.'],
-  ['chat', 'Ahora puedes crear imágenes: toca el botón del cuadrito junto al clip (con tu cuenta).'],
-  ['chat', 'Cada IA tiene su propia voz: toca «Escuchar» debajo de una respuesta.'],
-  ['agente', 'El modo agente elige la IA que más sabe y, si es algo muy sencillo, una que gasta menos.'],
-  ['synthonia', 'La Guía rápida: me dices qué quieres aprender y te lo muestro. ¡Y ahora muevo la boca!']
+const WHATSNEW = { v:'2.1', items:[
+  ['extras', 'Busca en internet: toca el globo 🌐 junto al clip y la IA responde con datos de hoy y te muestra sus fuentes.'],
+  ['archivos', 'Pídele «hazme una presentación de…» y te la entrega lista para descargar en PowerPoint.'],
+  ['extras', 'Ahora puedo recordar cosas de ti (tu nombre, lo que estudias…) si tú me dejas. Lo ves y lo borras en el menú ⋯.'],
+  ['extras', 'SynthFlow ya es una app: instálala en tu celular o computador desde el menú ⋯ → «Instalar la app». Abre más rápido y avisa si no hay internet.'],
+  ['synthonia', 'Antes: imágenes, voz para cada IA, archivos con vista previa y la Guía rápida. ¡Todo sigue aquí!']
 ] };
 function whatsNew(force, onShow){
   let seen = ''; try{ seen = localStorage.getItem('synthz:newv') || ''; }catch(e){}
@@ -3554,6 +3565,40 @@ addEventListener('synthz-szq', () => {
     if (!seen) setTimeout(() => { try{ BOTAPI.offer && BOTAPI.offer('Ojo, equipo: hay ' + SZQ.alertN + (SZQ.alertN === 1 ? ' alerta' : ' alertas') + ' de las IAs (un proveedor pidió pago o cambió su plan gratis). Nada se cobró. Revísalo en Pulsem.', 'preocupada', 'Abrir Pulsem', () => { location.href = 'pulsem.html'; }); }catch(e){} }, 4000);
   }
 });
+/* ---------- v2.1 · SynthFlow es la app (SynthZ es solo la página de inicio en la web): se instala en el celular o el computador ---------- */
+let installEvt = null;
+const isStandalone = () => { try{ return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }catch(e){ return false; } };
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+if (isFlow() && 'serviceWorker' in navigator && (location.protocol === 'https:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname))){
+  addEventListener('load', () => { try{ navigator.serviceWorker && navigator.serviceWorker.register('/sw.js', { scope:'/' }).catch(() => {}); }catch(e){} });
+}
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; root.classList.add('can-install'); });
+addEventListener('appinstalled', () => { installEvt = null; root.classList.remove('can-install'); toast('¡Listo! SynthFlow ya está instalada como app.'); try{ SND.done(); }catch(e){} });
+if (isStandalone()) root.classList.add('is-app');
+function installModal(title, steps){
+  const o = document.createElement('div'); o.className = 'szm szc';
+  o.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="' + esc(title) + '"><div class="word">' + zWord('Synth') + '</div><div class="tb"><h3>' + esc(title) + '</h3><ol class="inst-ol">' + steps.map(s => '<li>' + s + '</li>').join('') + '</ol><p class="inst-p">Así SynthFlow queda con su propio ícono, abre en pantalla completa y carga más rápido.</p></div><div class="tbtn" style="margin-top:16px"><button class="btn sm" type="button" data-close>Entendido</button></div></div>';
+  document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('on'));
+  const out = () => { removeEventListener('keydown', key, true); o.classList.remove('on'); setTimeout(() => o.remove(), 400); };
+  const key = e => { if (e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); out(); } };
+  addEventListener('keydown', key, true);
+  $('[data-close]', o).addEventListener('click', out);
+  o.addEventListener('pointerdown', e => { if (e.target === o) out(); });
+  setTimeout(() => { const b = $('[data-close]', o); if (b) b.focus(); }, 50);
+}
+async function installApp(){
+  if (!isFlow()){ location.href = 'chat.html'; return; }
+  if (isStandalone()) return toast('Ya estás usando la app de SynthFlow.');
+  if (installEvt){
+    const e = installEvt; installEvt = null; root.classList.remove('can-install');
+    try{ e.prompt(); const r = await e.userChoice; if (r && r.outcome !== 'accepted') toast('Cuando quieras, la instalas desde este mismo menú.'); }catch(err){}
+    return;
+  }
+  const share = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
+  if (isIOS()) return installModal('Instala SynthFlow en tu iPhone', ['Abre esta página en <b>Safari</b>.', 'Toca el botón de compartir ' + share + ' (abajo o arriba).', 'Elige <b>«Agregar a inicio»</b> y toca <b>«Agregar»</b>.']);
+  if (/android/i.test(navigator.userAgent)) return installModal('Instala SynthFlow en tu celular', ['Toca el menú <b>⋮</b> de tu navegador (arriba a la derecha).', 'Elige <b>«Instalar app»</b> o <b>«Agregar a la pantalla principal»</b>.', 'Confirma con <b>«Instalar»</b>.']);
+  installModal('Instala SynthFlow en tu computador', ['Usa <b>Chrome</b> o <b>Edge</b>.', 'Busca el ícono de instalar en la barra de direcciones (una pantalla con una flecha) o abre el menú <b>⋮</b>.', 'Elige <b>«Instalar SynthFlow»</b>.']);
+}
 /* ===== v1.4 · eventos especiales: a las 50, 100 y 500 visitas la página «se hackea» y das un logro ===== */
 const EV = (() => {
   const K = 'synthz:visits', A = 'synthz:ach';
@@ -3648,5 +3693,5 @@ const EV = (() => {
 window.SZ = { root, $, $$, clamp, fmt, reduce, today, sleepRaw, esc, est, Z_PATH, ICONS, ico, zWord, API, MANUAL, ALL, byId,
   get state(){ return state; }, set state(v){ state = v; normalize(); },
   normalize, cleanUsage, cleanChats, cleanStrMap, save, total, addUsage, resetUsage, estAll, todayEst, todayReq, providerBalance, balanceHtml, splitHtml, syncNote, helpGuide, smoothDetails, szPrompt, swapDir, swapDir, face, FACE_GOOD, randomGoodFace, welcomeBack, wasAway, accSignOutAll, accClaim, ROLE_NAME, trialGet, trialSet, trialStart, legacyRow, cleanLedger, mergeLedger, DEV, hooks, toast, hydrateIcons, md, countTo,
-  BRAND, isFlow, flowWord, zMark, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, BRANDS, brandOf, glassIcon, PIXART, pixelRun, pixelGrid, workView, workSaved, mdLoad, MDLIB, SZ_P, SZQ, SZ_AUTO, szqSet, msgsLeft, msgsTotal, limTxt, limShort, limLvl, limPct, limRing, limBar, szCatalog, szHeaders, guestGate, guestFull, isGuestQ, setTurn, puterOut, puterOutNote, TEL, telEv, telBeat, DEVH, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, feedbackModal, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI, EV, lipSync, ballFace, guideAsk, GTOPICS, whatsNew };
+  BRAND, isFlow, flowWord, zMark, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, BRANDS, brandOf, glassIcon, PIXART, pixelRun, pixelGrid, workView, workSaved, mdLoad, MDLIB, SZ_P, SZQ, SZ_AUTO, szqSet, msgsLeft, msgsTotal, limTxt, limShort, limLvl, limPct, limRing, limBar, szCatalog, szHeaders, guestGate, guestFull, isGuestQ, setTurn, puterOut, puterOutNote, TEL, telEv, telBeat, DEVH, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, feedbackModal, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI, EV, lipSync, ballFace, guideAsk, GTOPICS, whatsNew, installApp, isStandalone };
 })();

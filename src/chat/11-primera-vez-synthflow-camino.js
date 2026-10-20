@@ -116,6 +116,7 @@ SZ.ctxMenu(() => [
   { label:'Exportar como .md', fn:exportMd },
   { label:'Guía rápida', fn:() => openGuide() },
   { label:'Qué hay de nuevo', fn:() => SZ.whatsNew(true, list => runTopics(list)) },
+  { label:'Lo que recuerdo de ti', fn:() => memModal() },
   { label:'Guía rápida (leer)', fn:() => openHelp() },
   { label:'Ver tutorial de conexión', fn:openTour },
   { label:'Mis IA conectadas', fn:() => openConnect() },

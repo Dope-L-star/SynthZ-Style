@@ -70,11 +70,11 @@ function agentChoice(pick){
 }
 async function agentPlan(text){
   const keys = TOPICS.map(t => t[0]).join(', ');
-  const sys = 'Eres el planificador de SynthFlow. Lees el pedido de una persona y lo mejoras para que otra IA lo entienda mejor. Responde SOLO con JSON válido y nada más: {"tema":"<una de: ' + keys + '>","dificultad":"<muy_simple si es un saludo, una pregunta de una línea con respuesta corta, traducir o corregir una frase corta; si no, normal>","pedido":"<el pedido mejorado, en el mismo idioma de la persona, claro, con el contexto que dio y el formato de respuesta que le sirve; no inventes datos; máximo 120 palabras>"}';
+  const sys = 'Eres el planificador de SynthFlow. Lees el pedido de una persona y lo mejoras para que otra IA lo entienda mejor. Responde SOLO con JSON válido y nada más: {"tema":"<una de: ' + keys + '>","internet":<true si para responder bien hacen falta datos actuales de internet (noticias, precios, fechas recientes, resultados, algo de hoy); si no, false>,"dificultad":"<muy_simple si es un saludo, una pregunta de una línea con respuesta corta, traducir o corregir una frase corta; si no, normal>","pedido":"<el pedido mejorado, en el mismo idioma de la persona, claro, con el contexto que dio y el formato de respuesta que le sirve; no inventes datos; máximo 120 palabras>"}';
   const r = await SZ.askStream(SZ.SZ_P, [{ role:'system', content:sys }, { role:'user', content:text.slice(0, 4000) }], { model:'sz:auto', _noFall:true });
   const m = String((r && r.text) || '').match(/\{[\s\S]*\}/); if (!m) throw new Error('sin plan');
   const j = JSON.parse(m[0]); if (!j || typeof j.pedido !== 'string' || j.pedido.trim().length < 4) throw new Error('sin plan');
-  return { tema:TOPIC[j.tema] ? j.tema : null, simple:j.dificultad === 'muy_simple', pedido:j.pedido.trim().slice(0, 4000) };
+  return { tema:TOPIC[j.tema] ? j.tema : null, web:j.internet === true, simple:j.dificultad === 'muy_simple', pedido:j.pedido.trim().slice(0, 4000) };
 }
 async function send(){
   if (imgMode && mode === 'solo'){ const t = inp.value.trim(); if (t) createImage(t); return; }
@@ -119,11 +119,14 @@ async function send(){
     agentBusy = false; inp.readOnly = false; sendBtn.disabled = false;
     if (g0 !== gen){ card.el.remove(); return; }                /* cambiaste de chat mientras tanto */
     if (!same) msg.ask = plan.pedido;
+    if (plan.web || needsWeb(text)){ card.el.remove(); await webPrep(msg, plan.pedido || text); if (g0 !== gen) return; }
+    if (PPT_RX.test(text)){ msg.ask = (msg.ask || plan.pedido || text) + DECK_INSTR; msg.deck = true; }
     msg.agent = { pick, name:info(pick).name, tl:light ? 'cosas sencillas (gasta menos)' : tl, ask:same ? '' : plan.pedido };
     st().model.openrouter = pick; save(); paintSel(); renderTop(false); paintAccent();
     let ok = true;
     await runSolo(err => { ok = false; chat.pop(); save(); renderMsgs(); showErr(err); inp.value = text; autoGrow(); updateHint(); });
     if (ok && g0 === gen) agentChoice(pick);
+    if (ok && g0 === gen && MEM_RX.test(text)) memOffer(text);
     return;
   }
   const th0 = ckey(), m0 = selId(), at0 = Date.now(), needed = needsConn();
@@ -139,8 +142,12 @@ async function send(){
   if (sent.length) msg.files = sent.map(f => ({ name:f.name, kind:f.kind, text:f.text, thumb:f.thumb }));
   const imgs = sent.filter(f => f.kind === 'img').map(f => f.dataUrl);
   if (imgs.length) Object.defineProperty(msg, '_imgs', { value:imgs, enumerable:false, writable:true });
+  if (text && PPT_RX.test(text)){ msg.ask = (msg.ask || text) + DECK_INSTR; msg.deck = true; }
   chat.push(msg); touchThread(); save();
-  await runSolo(err => { chat.pop(); save(); renderMsgs(); showErr(err); inp.value = text; files.push(...sent); autoGrow(); updateHint(); renderTray(); });
+  if (text && needsWeb(text)){ renderMsgs(); await webPrep(msg, text); save(); }
+  let okSent = true;
+  await runSolo(err => { okSent = false; chat.pop(); save(); renderMsgs(); showErr(err); inp.value = text; files.push(...sent); autoGrow(); updateHint(); renderTray(); });
+  if (okSent && text && MEM_RX.test(text)) memOffer(text);
 }
 
 /* ---------- v1.3 · SynthonIA te rescata cuando una IA falla o cuando notas que no te entiende ---------- */
@@ -220,6 +227,7 @@ async function runSolo(onFail, o = {}){
       await rv.end();
       el.classList.remove('writing'); el.style.removeProperty('--p'); el._raw = r.text; el._ck = ckey(); el._ci = chat.length - 1; el.dataset.ci = el._ci;
       $('.body', el).innerHTML = md(r.text);
+      { const u = [...chat].reverse().find(x => x.role === 'user'); el._sources = u && u.sources && u.sources.length ? u.sources : null; }
       finishBot(el, msg.meta, true, msg.cont); follow();
       if (SZ.BOT.react && !r.aborted && !G) SZ.BOT.react('done', { cool:180000 });
     }

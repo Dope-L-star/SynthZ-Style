@@ -7,6 +7,7 @@ const GTOPICS = [
   ['comparar', 'Comparar IAs', 'Varias IA responden lo mismo, lado a lado.'],
   ['agente', 'Modo agente', 'Escribes y el agente elige la IA por ti.'],
   ['archivos', 'Archivos y vista previa', 'Adjuntar archivos y ver los que te da la IA.'],
+  ['extras', 'Internet, memoria y app', 'Buscar datos de hoy, que te recuerde e instalarla.'],
   ['chats', 'Mis chats y favoritos', 'Dónde quedan tus conversaciones.'],
   ['limite', 'Tu límite gratis', 'Cuánto te queda hoy y cuándo se llena.'],
   ['cuenta', 'Tu cuenta y Puter', 'Guardar tus chats y la versión pro de las IA.'],
@@ -78,12 +79,12 @@ document.addEventListener('click', e => {
 }, true);
 
 /* «Qué hay de nuevo»: SynthonIA te lo cuenta una vez por versión (y está en el menú cuando quieras) */
-const WHATSNEW = { v:'2.0', items:[
-  ['archivos', 'Los archivos que te da la IA se ven como en Claude: con vista previa y para descargar.'],
-  ['chat', 'Ahora puedes crear imágenes: toca el botón del cuadrito junto al clip (con tu cuenta).'],
-  ['chat', 'Cada IA tiene su propia voz: toca «Escuchar» debajo de una respuesta.'],
-  ['agente', 'El modo agente elige la IA que más sabe y, si es algo muy sencillo, una que gasta menos.'],
-  ['synthonia', 'La Guía rápida: me dices qué quieres aprender y te lo muestro. ¡Y ahora muevo la boca!']
+const WHATSNEW = { v:'2.1', items:[
+  ['extras', 'Busca en internet: toca el globo 🌐 junto al clip y la IA responde con datos de hoy y te muestra sus fuentes.'],
+  ['archivos', 'Pídele «hazme una presentación de…» y te la entrega lista para descargar en PowerPoint.'],
+  ['extras', 'Ahora puedo recordar cosas de ti (tu nombre, lo que estudias…) si tú me dejas. Lo ves y lo borras en el menú ⋯.'],
+  ['extras', 'SynthFlow ya es una app: instálala en tu celular o computador desde el menú ⋯ → «Instalar la app». Abre más rápido y avisa si no hay internet.'],
+  ['synthonia', 'Antes: imágenes, voz para cada IA, archivos con vista previa y la Guía rápida. ¡Todo sigue aquí!']
 ] };
 function whatsNew(force, onShow){
   let seen = ''; try{ seen = localStorage.getItem('synthz:newv') || ''; }catch(e){}

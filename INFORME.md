@@ -1,3 +1,15 @@
+# SynthZ v2.1B — Internet con fuentes, presentaciones, memoria y app instalable
+
+- **Buscar en internet:** globo 🌐 junto al clip (en el celular, dentro del clip). La IA responde con datos de hoy, cita [1], [2]… y abajo salen las fuentes con enlace. Si preguntas algo de «hoy», «precio», «noticias»… lo busca solo. Límite diario: 3 sin cuenta, 30 con cuenta, 200 el equipo (tope general 300 al día).
+  - Buscadores: **Tavily** (1.000 gratis al mes, sin tarjeta) y **Exa** (saldo gratis de bienvenida, sin tarjeta); si no hay llaves o se acaban, usa **Wikipedia** (gratis, sin llave). Las llaves se pegan en Pulsem como las demás.
+- **Presentaciones:** «hazme una presentación de…» → la IA arma las diapositivas, se ven en el lienzo y se descargan en **PowerPoint (.pptx)** con notas para el presentador. Probado: el archivo abre bien (5 diapositivas + notas).
+- **Memoria:** si dices «recuerda que…» o algo tuyo (tu nombre, lo que estudias), SynthZ pregunta «¿Quieres que lo recuerde?». Solo si aceptas. Se ve, se apaga y se borra en ⋯ › «Lo que recuerdo de ti». Con cuenta te sigue a todos tus equipos.
+- **App instalable (solo SynthFlow):** SynthZ queda como página de inicio en la web; la app es SynthFlow. ⋯ › «Instalar la app». En Android/PC se instala con un toque; en iPhone explica los 3 pasos. Ícono propio (la F de vidrio de Flow), abre en pantalla completa, guarda una copia de la página para abrir rápido y, sin internet, muestra «Estás sin internet» y vuelve sola. Nunca guarda tus chats ni nada del servidor.
+- **Velocidad:** las imágenes y librerías se guardan un día en el navegador; la de PowerPoint solo se carga cuando la usas.
+- **Guía rápida:** tema nuevo «Internet, memoria y app». «Qué hay de nuevo» actualizado a 2.1 y SynthonIA ya sabe explicar todo esto.
+- **Privacidad:** la página explica la memoria, la búsqueda, las imágenes y la copia de la app.
+- **Pagos:** siguen apagados. Nada de esta versión cobra.
+
 # SynthZ v2.0B — Guía nueva, más IAs gratis, imágenes, voz y modo alerta
 
 - **Guía rápida:** el botón ahora dice «Guía rápida». SynthonIA pregunta «¿Quieres ver la guía completa o qué quieres aprender?»: eliges uno o varios temas (chat, elegir IA, comparar, agente, archivos, chats, límite, cuenta, ajustes, SynthonIA) y te los muestra en el orden en que los tocaste. En la portada también, con «Esta página».

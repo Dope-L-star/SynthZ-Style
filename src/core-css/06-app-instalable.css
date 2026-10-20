@@ -1,0 +1,5 @@
+/* v2.1 · instalar SynthZ como app */
+.inst-ol{margin:10px 0 0;padding-left:22px;text-align:left;display:grid;gap:8px;color:var(--ink2,#cfc8e6);font-size:14.5px;line-height:1.45}
+.inst-ol b{color:var(--ink,#fff);font-weight:600}
+.inst-p{margin-top:12px;font-size:13px;opacity:.75}
+.is-app .only-web{display:none!important}
