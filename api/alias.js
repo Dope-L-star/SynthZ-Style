@@ -144,8 +144,10 @@ async function runSearch(req, me, lang, plan, step, prev){
       if (res.length) break;
     }
   }
-  if (!res.length) res = await searchWiki(q, 4).catch(() => []);
+  let wikiDown = false;
+  if (!res.length) res = await searchWiki(q, 4).catch(() => { wikiDown = true; return []; });
   res = res.filter(x => x && /^https?:\/\//.test(x.u)).slice(0, 6);
+  if (!res.length && wikiDown) throw A('srv.busquedaFallo', 503);   /* nada respondió: es un fallo (se puede rehacer), no «no hay fuentes»; no gasta cupo */
   await pipe([['INCR', uk], ['EXPIRE', uk, '172800'], ['INCR', gk], ['EXPIRE', gk, '172800']]);
   if (!res.length) return { output:t(lang, 'error.fuentes'), sources:[] };
   const sources = res.map(x => ({ title:str(x.t, 120) || x.u, url:x.u }));
