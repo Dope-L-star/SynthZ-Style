@@ -202,9 +202,9 @@ function renderSettings(){
     + ((sp.errs || []).length ? '<p class="cnote">Últimos avisos: ' + sp.errs.slice(0, 3).map(x => esc(x.m)).join(' · ') + '</p>' : '')
     + (P.rank === 'Prime' && sp.on ? '<div class="acts" style="margin-top:8px"><button class="mini" type="button" data-set="sbsync">Copiar todo lo de antes a Supabase</button></div>' : '') + '</div>');
   const mt = (T && T.maint) || {};
-  if (can) $('#setG').insertAdjacentHTML('beforeend', '<div class="set"><b>Aviso de mantenimiento</b><p>Cuando lo enciendes, la página entera se cubre con un aviso y SynthonIA en el centro para que la gente charle un rato. Prime y ZFlow siempre pueden entrar con «Entrar igual».</p>'
-    + '<label class="field"><span>Texto del aviso</span><textarea id="sMaint" rows="2" maxlength="300">' + esc(mt.text || 'Estamos presentando fallas o actualizaciones. Espera un momento.') + '</textarea></label>'
-    + '<div class="acts" style="margin-top:8px">' + (mt.on ? '<span class="tag bad">Encendido ahora</span> <button class="mini" type="button" data-set="maint" data-on="0">Apagar aviso</button>' : '<button class="mini" type="button" data-set="maint" data-on="1">Encender aviso</button>') + '</div></div>');
+  if (can) $('#setG').insertAdjacentHTML('beforeend', '<div class="set' + (mt.on ? ' mton' : '') + '"><b>Aviso de mantenimiento' + (mt.on ? ' <span class="mtlive">● Encendido</span>' : '') + '</b><p>Cubre toda la página con este aviso y SynthonIA en el centro para charlar mientras arreglan. Pulsem nunca se cubre; Prime y ZFlow pueden «Entrar igual».</p>'
+    + '<label class="field"><textarea id="sMaint" rows="3" maxlength="300" placeholder="Estamos presentando fallas o actualizaciones. Espera un momento.">' + esc(mt.text || '') + '</textarea></label>'
+    + '<div class="acts" style="margin-top:8px">' + (mt.on ? '<button class="btn sm" type="button" data-set="maint" data-on="1">Cambiar texto</button><button class="btn sm ghost" type="button" data-set="maint" data-on="0">Apagar aviso</button>' : '<button class="btn sm" type="button" data-set="maint" data-on="1">Encender aviso</button>') + '</div></div>');
   $('#setNote').hidden = can;
 }
 $('#setG').addEventListener('click', async e => {

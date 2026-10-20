@@ -242,7 +242,7 @@ async function runGuide(){
     }
     gNeed();
 
-    /* 6 · ¿qué es Puter? (opcional): más IA con tus créditos personales */
+    /* 6 · ¿qué es Puter?: más IA con tus créditos personales */
     gHud(6, 'Tu Puter');
     H.quiet();
     const P6 = gPanel('<h3>¿Qué es Puter?</h3><div class="gp-pu"><div class="gp-pc" style="--i:0"><span class="gp-pi">' + SZ.puterLogo() + '</span><b>Tu versión pro de las IAs más usadas</b><small>ChatGPT, Claude, Gemini y más, en su versión más potente. Gratis.</small></div><div class="gp-pc" style="--i:1"><span class="gp-pi">✨</span><b>Con un límite cada mes</b><small>Tienes un saldo gratis que se llena de nuevo cada mes. Se crea con un clic, sin tarjeta.</small></div><div class="gp-pc" style="--i:2"><span class="gp-pi"><span class="sz-logo" aria-hidden="true"></span></span><b>Es opcional</b><small>Si no lo conectas, sigues con las IAs conectadas y su límite gratis de cada día.</small></div></div><div class="gp-act"><button type="button" class="lnk" data-glater>Después</button><span style="flex:1"></span>' + (puterOn() ? '<span class="gp-ok">✓ Ya tienes tu Puter conectado</span><button type="button" class="btn sm flow" data-gnext>Siguiente →</button>' : '<button type="button" class="btn sm flow" data-gnext>Conectar mi Puter</button>') + '</div>', 'puter', puterOn() ? 'Ya tienes tu Puter conectado: si se acaba tu límite de hoy, sigues con él.' : 'Ya puedes chatear gratis. Y si quieres más: Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.', puterOn() ? 'encantada' : 'guino', 1);

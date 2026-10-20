@@ -12,10 +12,12 @@ const cfgPreset = perf => CFG_KEYS.reduce((o, k) => (o[k] = perf !== 'speed', o)
 const CFG = (() => {
   let c = {}; try{ c = JSON.parse(localStorage.getItem('synthz:cfg')) || {}; }catch(e){}
   if (c.v !== 2) c = Object.assign(cfgPreset(c.perf), { perf:c.perf || 'visual' });   /* migración: los ajustes concuerdan con el modo */
-  /* primera visita desde un celular: arranca en el modo rápido (sin fondo animado ni vidrio, que son lo que más pesa); se cambia en Ajustes */
+  /* v2.3 · en el celular lo que más pesa es el vidrio (desenfoque detrás de cada panel) y el fondo animado.
+     Primera visita: modo rápido. Quien ya tenía SynthZ: se le apagan solo esas dos cosas una vez (las vuelve a encender en Ajustes). */
   let fresh = false; try{ fresh = localStorage.getItem('synthz:cfg') === null; }catch(e){}
   const phone = (() => { try{ return matchMedia('(pointer:coarse)').matches && Math.min(screen.width, screen.height) <= 820; }catch(e){ return false; } })();
-  if (fresh && phone) c = Object.assign(cfgPreset('speed'), { perf:'speed', anim:true });
+  if (phone && fresh) c = Object.assign(cfgPreset('speed'), { perf:'speed', anim:true, lite:1 });
+  else if (phone && !c.lite){ c = Object.assign({}, cfgPreset(c.perf), c, { glass:false, bg:false, cursor:false, lite:1 }); try{ localStorage.setItem('synthz:cfg', JSON.stringify(Object.assign({ v:2 }, c))); }catch(e){} }
   return Object.assign({ v:2, perf:'visual', intro:'always', sound:true }, cfgPreset(c.perf), c);
 })();
 const PERF = CFG.perf === 'speed';

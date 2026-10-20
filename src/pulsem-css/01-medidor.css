@@ -7,3 +7,8 @@
 .use .ub b{display:block;height:100%;border-radius:99px;transition:width .6s ease}
 .use .ub em{font-style:normal;font-size:12px;opacity:.7}
 .use .usew{margin:8px 0 0;font-size:12.5px;color:#f2b36b}
+/* tarjeta del aviso de mantenimiento */
+.set.mton{border-color:rgba(255,143,122,.45);box-shadow:inset 0 0 0 1px rgba(255,143,122,.15)}
+.set .mtlive{margin-left:6px;font-size:12px;font-weight:600;color:#ff8f7a;letter-spacing:.02em;animation:mtlive 1.6s ease-in-out infinite}
+.set .acts{display:flex;gap:8px;flex-wrap:wrap}
+@keyframes mtlive{50%{opacity:.45}}

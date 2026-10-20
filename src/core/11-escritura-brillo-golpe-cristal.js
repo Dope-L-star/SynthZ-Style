@@ -6,7 +6,8 @@ function mirrorType(ta){
   fld.classList.add('mw'); fld.insertBefore(m, ta);
   /* v1.3: el dueño prefirió la rayita normal del navegador (la propia se quitó) */
   let prev = '', kind = '';
-  const css = () => { const c = getComputedStyle(ta); ['font', 'padding', 'lineHeight', 'letterSpacing', 'textIndent', 'tabSize'].forEach(k => { m.style[k] = c[k]; }); };
+  let cssOk = false;   /* v2.3: copiar el estilo de la caja solo cuando cambia (antes, en cada letra: frenaba el celular) */
+  const css = () => { if (cssOk) return; cssOk = true; const c = getComputedStyle(ta); ['font', 'padding', 'lineHeight', 'letterSpacing', 'textIndent', 'tabSize'].forEach(k => { m.style[k] = c[k]; }); };
   const spans = s => [...s].map((ch, i) => '<span class="nw" style="animation-delay:' + Math.min(i * 12, 420) + 'ms">' + esc(ch) + '</span>').join('');
   /* dónde queda la letra número «off» dentro del espejo */
   function rectAt(off){
@@ -63,12 +64,13 @@ function mirrorType(ta){
   ['focus', 'click', 'keyup', 'select'].forEach(ev => ta.addEventListener(ev, () => requestAnimationFrame(() => placeCaret(false))));
   /* (sin rayita propia) */
   document.addEventListener('selectionchange', () => { if (document.activeElement === ta) placeCaret(false); });
-  addEventListener('resize', () => placeCaret(false));
+  addEventListener('resize', () => { cssOk = false; placeCaret(false); });
+  ta.addEventListener('focus', () => { cssOk = false; });
   m.appendChild(document.createTextNode('​')); sync();
 }
 /* golpe suave de cristal: como el clic del mouse pero más lento, borroso y con efecto glass */
 function thud(x, y){
-  if (reduce) return;
+  if (reduce || !CFG.glass) return;   /* v2.3: sin vidrio (celulares) no hay golpe de cristal: era de lo más pesado al tocar */
   const big = Math.hypot(innerWidth, innerHeight) * 2.2 / 46, ring = 'radial-gradient(circle,transparent 58%,#000 60%,#000 72%,transparent 74%)';
   const base = 'position:fixed;left:' + x + 'px;top:' + y + 'px;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;pointer-events:none;';
   const g = document.createElement('i');

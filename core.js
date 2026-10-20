@@ -12,10 +12,12 @@ const cfgPreset = perf => CFG_KEYS.reduce((o, k) => (o[k] = perf !== 'speed', o)
 const CFG = (() => {
   let c = {}; try{ c = JSON.parse(localStorage.getItem('synthz:cfg')) || {}; }catch(e){}
   if (c.v !== 2) c = Object.assign(cfgPreset(c.perf), { perf:c.perf || 'visual' });   /* migración: los ajustes concuerdan con el modo */
-  /* primera visita desde un celular: arranca en el modo rápido (sin fondo animado ni vidrio, que son lo que más pesa); se cambia en Ajustes */
+  /* v2.3 · en el celular lo que más pesa es el vidrio (desenfoque detrás de cada panel) y el fondo animado.
+     Primera visita: modo rápido. Quien ya tenía SynthZ: se le apagan solo esas dos cosas una vez (las vuelve a encender en Ajustes). */
   let fresh = false; try{ fresh = localStorage.getItem('synthz:cfg') === null; }catch(e){}
   const phone = (() => { try{ return matchMedia('(pointer:coarse)').matches && Math.min(screen.width, screen.height) <= 820; }catch(e){ return false; } })();
-  if (fresh && phone) c = Object.assign(cfgPreset('speed'), { perf:'speed', anim:true });
+  if (phone && fresh) c = Object.assign(cfgPreset('speed'), { perf:'speed', anim:true, lite:1 });
+  else if (phone && !c.lite){ c = Object.assign({}, cfgPreset(c.perf), c, { glass:false, bg:false, cursor:false, lite:1 }); try{ localStorage.setItem('synthz:cfg', JSON.stringify(Object.assign({ v:2 }, c))); }catch(e){} }
   return Object.assign({ v:2, perf:'visual', intro:'always', sound:true }, cfgPreset(c.perf), c);
 })();
 const PERF = CFG.perf === 'speed';
@@ -1315,7 +1317,8 @@ function mirrorType(ta){
   fld.classList.add('mw'); fld.insertBefore(m, ta);
   /* v1.3: el dueño prefirió la rayita normal del navegador (la propia se quitó) */
   let prev = '', kind = '';
-  const css = () => { const c = getComputedStyle(ta); ['font', 'padding', 'lineHeight', 'letterSpacing', 'textIndent', 'tabSize'].forEach(k => { m.style[k] = c[k]; }); };
+  let cssOk = false;   /* v2.3: copiar el estilo de la caja solo cuando cambia (antes, en cada letra: frenaba el celular) */
+  const css = () => { if (cssOk) return; cssOk = true; const c = getComputedStyle(ta); ['font', 'padding', 'lineHeight', 'letterSpacing', 'textIndent', 'tabSize'].forEach(k => { m.style[k] = c[k]; }); };
   const spans = s => [...s].map((ch, i) => '<span class="nw" style="animation-delay:' + Math.min(i * 12, 420) + 'ms">' + esc(ch) + '</span>').join('');
   /* dónde queda la letra número «off» dentro del espejo */
   function rectAt(off){
@@ -1372,12 +1375,13 @@ function mirrorType(ta){
   ['focus', 'click', 'keyup', 'select'].forEach(ev => ta.addEventListener(ev, () => requestAnimationFrame(() => placeCaret(false))));
   /* (sin rayita propia) */
   document.addEventListener('selectionchange', () => { if (document.activeElement === ta) placeCaret(false); });
-  addEventListener('resize', () => placeCaret(false));
+  addEventListener('resize', () => { cssOk = false; placeCaret(false); });
+  ta.addEventListener('focus', () => { cssOk = false; });
   m.appendChild(document.createTextNode('​')); sync();
 }
 /* golpe suave de cristal: como el clic del mouse pero más lento, borroso y con efecto glass */
 function thud(x, y){
-  if (reduce) return;
+  if (reduce || !CFG.glass) return;   /* v2.3: sin vidrio (celulares) no hay golpe de cristal: era de lo más pesado al tocar */
   const big = Math.hypot(innerWidth, innerHeight) * 2.2 / 46, ring = 'radial-gradient(circle,transparent 58%,#000 60%,#000 72%,transparent 74%)';
   const base = 'position:fixed;left:' + x + 'px;top:' + y + 'px;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;pointer-events:none;';
   const g = document.createElement('i');
@@ -2263,7 +2267,7 @@ function balanceHtml(b, extra){
   const row = (ico, name, main, sub) => '<div class="bl-row">' + ico + '<div><b>' + name + '</b><span>' + main + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</div></div>';
   let h = '';
   const pu = b.puter;
-  h += row(puterLogo(), 'Puter (opcional)', pu && pu.pct != null ? 'Te queda <em>' + Math.round(pu.pct * 100) + '%</em> de tu crédito gratis de este mes' : pu && pu.err ? 'Puter no respondió con tu saldo. Intenta más tarde.' : window.puter && puter.auth && puter.auth.isSignedIn && puter.auth.isSignedIn() ? 'Puter todavía no nos dice cuánto saldo te queda.' : 'Puter es opcional. Conecta tu versión pro de las IAs más usadas.', 'Saldo de Puter · se llena otra vez cada mes');
+  h += row(puterLogo(), 'Puter', pu && pu.pct != null ? 'Te queda <em>' + Math.round(pu.pct * 100) + '%</em> de tu crédito gratis de este mes' : pu && pu.err ? 'Puter no respondió con tu saldo. Intenta más tarde.' : window.puter && puter.auth && puter.auth.isSignedIn && puter.auth.isSignedIn() ? 'Puter todavía no nos dice cuánto saldo te queda.' : 'Puter es opcional. Conecta tu versión pro de las IAs más usadas.', 'Saldo de Puter · se llena otra vez cada mes');
   const or = b.openrouter, fr = todayReq('openrouter', true);
   const orMain = or && !or.err
     ? 'Modelos gratis: <em>' + fmt(fr) + '</em> de ' + (or.freeTier ? '50' : '50 (o 1.000 si compraste 10 créditos o más)') + ' mensajes hoy'
@@ -2310,7 +2314,7 @@ function helpGuide(opts){
     ['¿Cómo lo uso?', 'Entra a SynthFlow, escribe tu pregunta abajo y pulsa Enter. Si no sabes qué pedir, toca un ejemplo. Tus chats quedan en la barrita de la izquierda (en el celular, abajo).'],
     ['¿Qué son las IAs conectadas?', 'Las IAs conectadas son IAs gratis que ya vienen listas en SynthZ. No tienes que configurar nada ni dar tarjeta: solo escribes. Sin cuenta pruebas con 5 mensajes al día; con tu cuenta gratis, mucho más.'],
     ['¿Qué es el límite de hoy?', 'Cada día tienes un límite gratis para usar las IAs conectadas. A medianoche se vuelve a llenar. El anillo se va vaciando mientras chateas.'],
-    ['¿Qué es Puter? Es opcional', 'Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.'],
+    ['¿Qué es Puter y cómo lo conecto?', 'Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis y tiene un saldo que se renueva cada mes. Se conecta en Ajustes › IAs y memoria › «Conectar Puter u otra IA» › «Conectar con Puter».'],
     ['Varias IA a la vez', 'Con «+» sumas otra IA (hasta 4). Todas responden lo mismo y tú eliges la que más te gusta con «Esta tiene más Flow».'],
     ['Archivos', 'Con el «+» agregas un archivo, un PDF o una foto (hasta 6 por mensaje). Todas las IA leen textos y PDF; las fotos solo las entienden las IA que «ven fotos». También puedes arrastrarlos o pegarlos.'],
     ['Modo principiante', 'En Ajustes puedes activar el modo principiante: las IA te responden con palabras sencillas, paso a paso y con ejemplos.'],
@@ -2442,7 +2446,7 @@ const SURVEY = [
   { k:'uses', get q(){ return '¿Para qué vas a usar ' + BRAND() + '?'; }, sub:'Elige todas las que quieras.', multi:true, o:[['code', '💻', 'Programar'], ['write', '✍️', 'Escribir y redactar'], ['study', '📚', 'Estudiar y tareas'], ['ideas', '💡', 'Ideas y trabajo'], ['vision', '🖼️', 'Imágenes y PDF'], ['chat', '💬', 'Charlar']] },
   { k:'pace', q:'¿Qué prefieres?', o:[['fast', '⚡', 'Respuestas al instante'], ['mid', '⚖️', 'Equilibrio'], ['deep', '🧠', 'Que piense bien antes']] },
   { k:'lang', q:'¿En qué idioma vas a hablar más?', o:[['es', '🇨🇴', 'Español'], ['en', '🇺🇸', 'Inglés'], ['both', '🌎', 'Los dos']] },
-  { k:'key', q:'¿Tienes cuenta de Puter?', sub:'Conecta tu versión pro de las IAs más usadas. Es opcional.', o:[['pu', '✨', 'Sí, o quiero conectarla'], ['no', '🙅', 'No, por ahora no'], ['idk', '🤔', 'No sé qué es']] }
+  { k:'key', q:'¿Tienes cuenta de Puter?', sub:'Conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini.', o:[['pu', '✨', 'Sí, o quiero conectarla'], ['no', '🙅', 'No, por ahora no'], ['idk', '🤔', 'No sé qué es']] }
 ];
 function surveyScore(m, s){
   if (!s || !s.a) return 0;
@@ -2918,16 +2922,17 @@ const HAND = (() => {
    3) «Hablar con el equipo»: una persona (Prime, ZFlow o Symmetrix) te responde aquí mismo
    ===================================================================== */
 const BOT_FAQ = [
-  { k:'conectar conecto conexion conecta llave key activar bloqueado bloqueo desbloquear funciona', a:'¡No tienes que conectar nada! Ya puedes escribir: las IAs conectadas son IAs gratis que ya vienen listas en SynthZ. No tienes que configurar nada ni dar tarjeta: solo escribes. Sin cuenta pruebas con 5 mensajes al día; con tu cuenta gratis, mucho más. Si un día usas todos tus mensajes, puedes seguir con Puter.', go:['#payPill', '#payL', '#payM', '#cPick', '#curChip'] },
+  { k:'conectar conecto conexion conecta llave key activar bloqueado bloqueo desbloquear funciona', a:'Para chatear no tienes que configurar nada: escribe y listo. Las IAs conectadas son IAs gratis que ya vienen listas en SynthZ. No tienes que configurar nada ni dar tarjeta: solo escribes. Sin cuenta pruebas con 5 mensajes al día; con tu cuenta gratis, mucho más. Si un día usas todos tus mensajes, puedes seguir con Puter.', go:['#payPill', '#payL', '#payM', '#cPick', '#curChip'] },
   { k:'ias conectadas que son las ias conectadas gratis listas', a:'Las IAs conectadas son IAs gratis que ya vienen listas en SynthZ. No tienes que configurar nada ni dar tarjeta: solo escribes. Sin cuenta pruebas con 5 mensajes al día; con tu cuenta gratis, mucho más. Cada día tienes un límite gratis para usar las IAs conectadas. A medianoche se vuelve a llenar.', mood:'feliz' },
-  { k:'puter que es puter creditos personales cuenta', a:'Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic. Es opcional. Al lado de cada IA de Puter verás rayitas: verdes gasta poco, amarillas normal y rojas gasta mucho.', act:'conn', lbl:'Conectar mi Puter' },
+  { k:'puter que es puter creditos personales cuenta', a:'Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un saldo que se renueva cada mes y se conecta en Ajustes › IAs y memoria › «Conectar Puter u otra IA». Al lado de cada IA de Puter verás rayitas: verdes gasta poco, amarillas normal y rojas gasta mucho.', act:'conn', lbl:'Conectar mi Puter' },
+  { k:'puter conectar conecto conecta conectarlo vincular vinculo', need:'puter', a:'Así conectas Puter: abre Ajustes › pestaña «IAs y memoria» › «Conectar Puter u otra IA» y toca «Conectar con Puter». Se abre una ventanita: entra o crea tu cuenta de Puter (es gratis) y listo. También se conecta solo si eliges una IA que diga «Conecta tu Puter» y le escribes. Con Puter usas la versión pro de IAs como ChatGPT, Claude o Gemini, con un saldo gratis que se renueva cada mes.', act:'conn', lbl:'Conectar mi Puter', go:['[data-tab="cfg"]', '#railCfg', '#cfgBtn'] },
   { k:'cambiar elegir escoger ia modelo cual otra seleccionar', a:'Toca el nombre de la IA que estás usando y se abre «¿Con quién fluyes hoy?». Primero eliges para qué la quieres y luego aparecen las IA. Tocas «Usar» y listo.', go:['#cPick', '#curChip', '[data-tab="ia"]'] },
   { k:'comparar comparacion varias dos lado mismo tiempo', a:'Con «Comparar con otra IA» sumas hasta 4. Todas responden lo mismo y aparecen en el orden en que llegan.', go:['#cCmp', '#pickRow [data-add]'] },
   { k:'guia tutorial aprender enseñar como funciona', a:'En la Guía rápida te pregunto si la quieres completa o qué quieres ver: eliges uno o varios temas y te los muestro con mi manita, en ese orden.', go:['#guideTop', '#helpBtn'], act:'guide', lbl:'Abrir la Guía' },
   { k:'limite cuanto queda quedan mensajes barra uso gasto consumo synxcoin coins', a:'Cada día tienes un límite gratis para usar las IAs conectadas. A medianoche se vuelve a llenar. Sin cuenta son 5 mensajes de prueba al día; con tu cuenta gratis tienes mucho más. El anillo se va vaciando mientras chateas: te muestro dónde está.', go:['#railCoin', '#tabCoin', '#navTotal', '.pill-total'], tour:'coins' },
   { k:'pagar cobro cobran gratis precio plata dinero costo tarjeta', a:'SynthZ es gratis y nunca te cobra. Las IAs conectadas son gratis, y Puter también tiene su parte gratis cada mes.' },
   { k:'chats historial conversaciones anteriores guardados donde estan mis', a:'Tus chats están en «Mis chats», en la barrita (en el celular, la pestaña Chats). Se guardan en tu dispositivo y en tu cuenta si entras.', go:['#railChats', '[data-r="chats"]', '[data-tab="chats"]'] },
-  { k:'drive google espacio guardar copia respaldo', a:'En Ajustes › IAs y memoria › Google Drive vinculas tu Drive y guardo una copia de tus chats en una carpeta privada. No puedo ver tus otros archivos.', go:['#moreBtn'] },
+  { k:'drive google espacio guardar copia respaldo conectar conecto vincular', a:'En Ajustes › IAs y memoria › Google Drive vinculas tu Drive y guardo una copia de tus chats en una carpeta privada. No puedo ver tus otros archivos.', go:['#moreBtn'] },
   { k:'adjuntar archivo pdf imagen foto subir documento clip', a:'Con el «+» agregas archivos, PDF o fotos (también puedes arrastrarlos). Para fotos elige una IA que «ve fotos».', go:['#attachBtn'] },
   { k:'cuenta registrar registro entrar iniciar sesion perfil usuario contraseña', a:'Crear tu cuenta es gratis y no pide correo ni tarjeta. Sin cuenta puedes probar con 5 mensajes al día; con cuenta tienes mucho más, y tus chats y favoritos te siguen a cualquier dispositivo. Entra desde tu foto en la barrita.', go:['#accBtn', '[data-tab="me"]'] },
   { k:'ajustes rendimiento lento animaciones configuracion sonido sonidos cursor principiante', a:'En Ajustes puedes poner la página «más rápida», activar el modo principiante o apagar mis sonidos.', go:['#cfgBtn', '[data-tab="cfg"]'] },
@@ -2943,13 +2948,13 @@ const BOT_FAQ = [
   { k:'gracias genial perfecto listo vale chevere bacano', a:'¡Con gusto! Aquí estoy cuando me necesites. ✨', mood:'encantada' },
   { k:'adios chao nos vemos hasta luego', a:'¡Chao! Que tengas un día con mucho Flow. 👋', wave:true }
 ];
-const BOT_QUICK = [[1, '¿Qué son las IAs conectadas?'], [2, '¿Qué es Puter?'], [3, '¿Cómo cambio de IA?'], [4, '¿Cómo comparo IA?'], [6, '¿Qué es el límite de hoy?'], [19, 'Cuéntame un chiste']];
+const BOT_QUICK = [[1, '¿Qué son las IAs conectadas?'], [2, '¿Qué es Puter?'], [3, '¿Cómo conecto Puter?'], [4, '¿Cómo cambio de IA?'], [7, '¿Qué es el límite de hoy?'], [20, 'Cuéntame un chiste']];
 const fold = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9ñ\s]/g, ' ');
 function botMatch(q){
   const STOP = /^(que|como|donde|cual|para|por|con|una|uno|los|las|del|mis|tus|sus|esta|este|esto|eso|hay|hago|hacer|puedo|quiero|tengo|necesito|sobre|algo|the|and|how|can|what|where|synthflow|synthz|pagina|favor|porfa|ayuda|ayudame)$/;
-  const w = fold(q).split(/\s+/).filter(x => (x.length > 2 || /^(ia|ai)$/.test(x)) && !STOP.test(x)); if (!w.length) return /ayuda|help/i.test(q) ? BOT_FAQ[5] : null;
+  const w = fold(q).split(/\s+/).filter(x => (x.length > 2 || /^(ia|ai)$/.test(x)) && !STOP.test(x)); if (!w.length) return /ayuda|help/i.test(q) ? BOT_FAQ[6] : null;
   let best = null, bs = 0;
-  BOT_FAQ.forEach(f => { const K = fold(f.k).split(/\s+/); let sc = 0; w.forEach(x => { if (K.includes(x)) sc += 1; else if (K.some(k => k.length > 4 && (k.startsWith(x) || x.startsWith(k)))) sc += .6; }); if (sc > bs){ bs = sc; best = f; } });
+  BOT_FAQ.forEach(f => { if (f.need && !w.includes(f.need)) return; const K = fold(f.k).split(/\s+/); let sc = 0; w.forEach(x => { if (K.includes(x)) sc += 1; else if (K.some(k => k.length > 4 && (k.startsWith(x) || x.startsWith(k)))) sc += .6; }); if (sc > bs){ bs = sc; best = f; } });
   return bs >= Math.max(.6, w.length * .45) ? best : null;
 }
 const BOT = { el:null, panel:null, open:false, hist:[], help:null, poll:0, seen:0, team:null, inbox:[], cur:null, mode:'chat', teamSeen:{} };
@@ -3174,6 +3179,7 @@ function botAct(a){
   if (BOT.acts && BOT.acts[a]){ const fn = BOT.acts[a]; delete BOT.acts[a]; botClose(); try{ fn(); }catch(e){} return; }
   if (a === 'tochat'){ const q = BOT.pendingQ || ''; botClose(); if (isFlow()){ const i = document.getElementById('inp'); if (i){ i.value = q; i.dispatchEvent(new Event('input', { bubbles:true })); i.focus(); } } else { try{ sessionStorage.setItem('synthz:q', JSON.stringify({ q, t:Date.now() })); }catch(e){} portalOut('chat.html'); } return; }
   if (a === 'guide'){ botClose(); const g = $('#guideTop') || $('#helpBtn'); if (g) g.click(); }
+  else if (a === 'conn' && !/chat\.html/.test(location.pathname)){ botClose(); SZ.portalOut ? SZ.portalOut('chat.html?conn=1') : (location.href = 'chat.html?conn=1'); }
   else if (a === 'conn'){ botClose(); const x = document.createElement('a'); x.setAttribute('data-conn', ''); document.body.appendChild(x); x.click(); x.remove(); }
   else if (a === 'team') botTeam();
   else if (a === 'login'){ botClose(); const b = $('#accBtn') || $('[data-tab="me"]'); if (b) b.click(); }
@@ -3765,6 +3771,131 @@ if (matchMedia('(hover: hover) and (pointer: fine)').matches){
   addEventListener('pointerout', e => { if (tipFor && !(e.relatedTarget && tipFor.contains(e.relatedTarget))) hide(); });
   addEventListener('pointerdown', hide, true); addEventListener('scroll', hide, true); addEventListener('keydown', hide);
 }
+/* ---------- v2.3 · aviso de mantenimiento: cubre la página y SynthonIA (la de verdad) charla un rato ----------
+   Lo encienden Prime o ZFlow en Pulsem › Ajustes. Pulsem nunca se cubre (desde ahí se apaga).
+   SynthonIA cambia de cara según lo que le dicen: con cariño se encanta, con chistes se ríe, si piensa pone cara de pensar.
+   Si la IA no responde (puede ser justo la falla), contesta con frases propias para que la charla nunca se corte. */
+const MT = { el:null, hist:[], timer:0, mood:'feliz', busy:false, since:0, idle:0 };
+const MT_LOVE = /(gracias|te quiero|te amo|te adoro|eres (muy |la |una )?(linda|bonita|hermosa|genial|la mejor|incre[ií]ble|tierna|buena|top)|qu[eé] (linda|bonita|tierna|genial)|me (caes|encantas|gustas)|eres lo m[aá]ximo|abrazo|besito|❤|♥|💖|😍|🥰)/i;
+const MT_FUN = /(ja(ja)+|je(je)+|xd|😂|🤣|chiste|gracios)/i;
+const MT_SAD = /(fe[ao]|tonta|in[uú]til|odio|aburr|mala|est[uú]pida)/i;
+const mtOff = () => /pulsem/.test(location.pathname);
+const mtAdmin = () => !!(ACC && ACC.user && ['owner', 'admin'].includes(ACC.user.role));
+const mtSkipped = () => { try{ return sessionStorage.getItem('synthz:mtskip') === '1'; }catch(e){ return false; } };
+
+/* frases propias por si la IA no está (la falla puede ser justo esa) */
+const MT_LOCAL = {
+  love:['¡Ay, me sonrojé! 💛 Gracias, de verdad. Tú también eres lo máximo.', '¡Me hiciste el día! Ya casi vuelvo con todo, gracias por esperarme.', 'Awww 🥰 Con gente como tú da gusto arreglar cosas.'],
+  fun:['¡Jajaja! Me dio risa hasta en los circuitos.', 'Jaja, ¿te sabes otro? Mientras tanto el equipo sigue arreglando.', '¡Me hiciste reír! Eso me recarga más que la electricidad.'],
+  sad:['Uy… tienes razón en estar molesto. Estamos trabajando para que vuelva pronto y mejor.', 'Perdón por la espera. El equipo está en ello, te lo prometo.'],
+  any:['¡Te escucho! Ahora mismo no puedo pensar muy profundo porque estamos arreglando cosas, pero aquí sigo contigo.', 'Mientras se arregla todo, cuéntame: ¿qué es lo primero que quieres hacer cuando vuelva SynthFlow?', 'Buena pregunta. En cuanto termine el mantenimiento te respondo mejor. ¿Me cuentas algo más?']
+};
+const mtPick = L => L[Math.floor(Math.random() * L.length)];
+const mtKind = q => MT_LOVE.test(q) ? 'love' : MT_FUN.test(q) ? 'fun' : MT_SAD.test(q) ? 'sad' : 'any';
+const MT_MOOD_OF = { love:'encantada', fun:'riendo', sad:'disculpa', any:'feliz' };
+
+function mtSetMood(m, hop){
+  if (!MT.el) return;
+  MT.mood = FACE[m] ? m : 'feliz';
+  const w = $('.mt-face', MT.el); w.innerHTML = face(MT.mood, 168, 'mt-sz');
+  if (hop && !reduce) w.animate([{ transform:'translateY(0) scale(1)' }, { transform:'translateY(-18px) scale(1.06)' }, { transform:'translateY(0) scale(.97)' }, { transform:'none' }], { duration:620, easing:'cubic-bezier(.3,1.6,.5,1)' });
+}
+function mtBurst(kind){
+  if (!MT.el || reduce) return;
+  const box = $('.mt-face', MT.el), ch = kind === 'love' ? ['💛', '💖', '✨', '💗'] : ['✨', '⭐', '😄'];
+  for (let i = 0; i < 9; i++){
+    const s = document.createElement('i'); s.className = 'mt-pt'; s.textContent = ch[i % ch.length];
+    const a = (Math.PI * 2 * i) / 9 + Math.random() * .5, d = 70 + Math.random() * 60;
+    box.appendChild(s);
+    s.animate([{ transform:'translate(-50%,-50%) scale(.4)', opacity:0 }, { opacity:1, offset:.2 }, { transform:'translate(calc(-50% + ' + Math.cos(a) * d + 'px), calc(-50% + ' + (Math.sin(a) * d - 30) + 'px)) scale(1.15)', opacity:0 }], { duration:1300 + Math.random() * 500, easing:'cubic-bezier(.2,.8,.3,1)' }).onfinish = () => s.remove();
+  }
+}
+function mtAdd(role, text, mood){
+  const L = $('.mt-msgs', MT.el), d = document.createElement('div');
+  d.className = 'mt-m ' + (role === 'user' ? 'me' : 'ia');
+  d.innerHTML = '<p></p>'; $('p', d).textContent = text; L.appendChild(d);
+  L.scrollTo({ top:L.scrollHeight, behavior:reduce ? 'auto' : 'smooth' });
+  MT.hist.push({ role, content:text });
+  if (role !== 'user'){
+    if (mood) mtSetMood(mood);
+    typeIn($('p', d), { cps:42, max:4, onFrame:lipSync([$('.mt-face .szface', MT.el)], text) }).catch(() => {});
+  }
+}
+async function mtSend(q){
+  q = String(q || '').trim(); if (!q || MT.busy) return;
+  const inp = $('.mt-in', MT.el); inp.value = '';
+  mtAdd('user', q);
+  const kind = mtKind(q);
+  if (kind === 'love' || kind === 'fun'){ mtSetMood(MT_MOOD_OF[kind], true); mtBurst(kind); try{ SND.flow(); }catch(e){} }
+  else mtSetMood('pensando');
+  MT.busy = true; $('.mt-send', MT.el).disabled = true; MT.el.classList.add('thinking');
+  let text = '', mood = MT_MOOD_OF[kind];
+  try{
+    const r = await fetch('/api/help', { method:'POST', headers:Object.assign({ 'content-type':'application/json' }, SESS ? { authorization:'Bearer ' + SESS } : {}), body:JSON.stringify({ action:'ask', ctx:'maint', q, hist:MT.hist.slice(-7, -1) }) });
+    const d = await r.json().catch(() => ({}));
+    if (r.ok && d.text){ text = d.text; if (d.mood && FACE[d.mood]) mood = d.mood; }
+  }catch(e){}
+  if (!text) text = mtPick(MT_LOCAL[kind]);
+  await sleepRaw(kind === 'love' ? 650 : 250);
+  MT.busy = false; $('.mt-send', MT.el).disabled = false; MT.el.classList.remove('thinking');
+  mtAdd('assistant', text, mood);
+  clearTimeout(MT.back); MT.back = setTimeout(() => { if (MT.el && !MT.busy) mtSetMood('feliz'); }, 7000);
+}
+function mtExit(){
+  const x = MT.el && $('.mt-exit', MT.el); if (!x) return;
+  x.hidden = !mtAdmin();
+}
+function mtAgo(){
+  if (!MT.el || !MT.since) return;
+  const m = Math.max(1, Math.round((Date.now() - MT.since) / 60e3));
+  $('.mt-ago', MT.el).textContent = m < 60 ? 'Trabajando en ello desde hace ' + m + ' min' : 'Trabajando en ello desde hace ' + Math.round(m / 60) + ' h';
+}
+function mtOpen(m){
+  MT.since = m.t || MT.since || Date.now();
+  if (MT.el){ $('.mt-text', MT.el).textContent = m.text; mtAgo(); return; }
+  const el = document.createElement('div');
+  el.id = 'szMaint'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'SynthZ está en mantenimiento');
+  el.innerHTML = '<div class="mt-bg" aria-hidden="true"><i></i><i></i><i></i></div>'
+    + '<div class="mt-wrap"><div class="mt-face" title="¡Tócame!"></div>'
+    + '<div class="mt-head"><span class="mt-chip"><i></i>Mantenimiento</span><h2>Volvemos en un momento</h2><p class="mt-text"></p><small class="mt-ago"></small></div>'
+    + '<div class="mt-chat"><div class="mt-msgs" aria-live="polite"></div>'
+    + '<div class="mt-sugs">' + ['Cuéntame un chiste', '¿Qué estás arreglando?', 'Eres la mejor 💛'].map(s => '<button type="button" class="mt-sug">' + esc(s) + '</button>').join('') + '</div>'
+    + '<form class="mt-form" autocomplete="off"><input class="mt-in" maxlength="300" placeholder="Charla con SynthonIA…" aria-label="Escribir a SynthonIA"><button class="mt-send" type="submit" aria-label="Enviar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></form></div>'
+    + '<button class="mt-exit" type="button" hidden>Entrar igual · solo Prime y ZFlow</button></div>';
+  document.body.appendChild(el); document.documentElement.classList.add('mt-on');
+  MT.el = el;
+  $('.mt-text', el).textContent = m.text;
+  mtSetMood('feliz'); mtAgo(); mtExit();
+  $('.mt-form', el).addEventListener('submit', e => { e.preventDefault(); mtSend($('.mt-in', el).value); });
+  $('.mt-sugs', el).addEventListener('click', e => { const b = e.target.closest('.mt-sug'); if (b){ mtSend(b.textContent); b.remove(); } });
+  $('.mt-face', el).addEventListener('click', () => { const k = MT.mood === 'riendo' ? 'encantada' : 'riendo'; mtSetMood(k, true); mtBurst(k === 'encantada' ? 'love' : 'fun'); });
+  $('.mt-exit', el).addEventListener('click', () => { try{ sessionStorage.setItem('synthz:mtskip', '1'); }catch(e){} mtClose(); });
+  if (!reduce) el.animate([{ opacity:0 }, { opacity:1 }], { duration:500 });
+  setTimeout(() => { if (MT.el && !MT.hist.length) mtAdd('assistant', '¡Hola! Soy SynthonIA. Estamos dejando todo mejor para ti. Mientras tanto, ¿charlamos un rato?', 'feliz'); }, 650);
+  /* de vez en cuando hace un gesto, para que se sienta viva */
+  clearInterval(MT.idle); MT.idle = setInterval(() => { if (MT.el && !MT.busy && MT.mood === 'feliz' && !document.hidden){ const g = mtPick(['guino', 'flow', 'riendo']); mtSetMood(g); setTimeout(() => { if (MT.el && MT.mood === g) mtSetMood('feliz'); }, 1800); } }, 9000);
+  if (matchMedia('(hover:hover)').matches) setTimeout(() => { const i = MT.el && $('.mt-in', MT.el); if (i) i.focus({ preventScroll:true }); }, 500);
+}
+function mtClose(){
+  if (!MT.el) return;
+  const el = MT.el; MT.el = null; clearInterval(MT.idle);
+  document.documentElement.classList.remove('mt-on');
+  if (reduce) el.remove(); else el.animate([{ opacity:1 }, { opacity:0 }], { duration:380 }).onfinish = () => el.remove();
+}
+async function mtCheck(){
+  try{
+    const r = await fetch('/api/config', { cache:'no-store' }); if (!r.ok) return;
+    const m = (await r.json()).maint || {};
+    if (m.on && !mtSkipped()) mtOpen({ text:m.text || 'Estamos presentando fallas o actualizaciones. Espera un momento.', t:m.t });
+    else if (!m.on){ mtClose(); try{ sessionStorage.removeItem('synthz:mtskip'); }catch(e){} }
+  }catch(e){}
+}
+if (!mtOff()){
+  const go = () => { mtCheck(); MT.timer = setInterval(() => { if (!document.hidden) mtCheck(); mtAgo(); }, 45000); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+  addEventListener('synthz-acc', mtExit); accHooks.push(() => setTimeout(mtExit, 0));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) mtCheck(); });
+}
 /* ===== v1.4 · eventos especiales: a las 50, 100 y 500 visitas la página «se hackea» y das un logro ===== */
 const EV = (() => {
   const K = 'synthz:visits', A = 'synthz:ach';
@@ -3860,83 +3991,4 @@ window.SZ = { root, $, $$, clamp, fmt, reduce, today, sleepRaw, esc, est, Z_PATH
   get state(){ return state; }, set state(v){ state = v; normalize(); },
   normalize, cleanUsage, cleanChats, cleanStrMap, save, total, addUsage, resetUsage, estAll, todayEst, todayReq, providerBalance, balanceHtml, splitHtml, syncNote, helpGuide, smoothDetails, szPrompt, swapDir, swapDir, face, FACE_GOOD, randomGoodFace, welcomeBack, wasAway, accSignOutAll, accClaim, ROLE_NAME, trialGet, trialSet, trialStart, legacyRow, cleanLedger, mergeLedger, DEV, hooks, toast, hydrateIcons, md, countTo,
   BRAND, isFlow, flowWord, zMark, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, BRANDS, brandOf, glassIcon, PIXART, pixelRun, pixelGrid, workView, workSaved, mdLoad, MDLIB, SZ_P, SZQ, SZ_AUTO, szqSet, msgsLeft, msgsTotal, limTxt, limShort, limLvl, limPct, limRing, limBar, szCatalog, szHeaders, guestGate, guestFull, isGuestQ, setTurn, puterOut, puterOutNote, TEL, telEv, telBeat, DEVH, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, feedbackModal, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI, EV, lipSync, ballFace, guideAsk, GTOPICS, whatsNew, signedish, cfgLinks, memAddCore, memPanel, menuOpen, menuClose, MICO };
-})();
-/* ---------- aviso de mantenimiento: cubre la página y SynthonIA charla un rato ----------
-   Lo enciende Prime o ZFlow desde Pulsem › Ajustes. Solo muestra; el servidor no lo bloquea. */
-const MT = { shown:false, el:null, hist:[], timer:null };
-const MT_KIND = /\b(gracias|te quiero|te amo|eres (?:muy )?(?:genial|linda|lindo|buena|bueno|bonita|bonito)|lind[oa]s?|bonit[oa]s?|genial|excelente|me encantas?|te adoro|muy bien|cari[ñn]o)\b/i;
-const mtIsAdmin = () => typeof ACC !== 'undefined' && ACC.user && ['owner', 'admin'].includes(ACC.user.role);
-const mtSkipped = () => { try{ return sessionStorage.getItem('synthz:mtskip') === '1'; }catch(e){ return false; } };
-
-function mtFace(happy){
-  return '<svg class="mt-face' + (happy ? ' happy' : '') + '" viewBox="0 0 120 120" aria-hidden="true">'
-    + '<defs><radialGradient id="mtG" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#ffe9b8"/><stop offset="1" stop-color="#c98a3d"/></radialGradient></defs>'
-    + '<g class="mt-body"><circle cx="60" cy="60" r="46" fill="url(#mtG)"/>'
-    + '<g class="mt-eyes"><ellipse class="mt-eye" cx="45" cy="54" rx="5" ry="6.5" fill="#2a1d0e"/><ellipse class="mt-eye" cx="75" cy="54" rx="5" ry="6.5" fill="#2a1d0e"/></g>'
-    + '<path class="mt-mouth" d="' + (happy ? 'M42 70 Q60 96 78 70 Z' : 'M46 74 Q60 84 74 74') + '" fill="' + (happy ? '#7a2e2e' : 'none') + '" stroke="#2a1d0e" stroke-width="3.5" stroke-linecap="round"/></g>'
-    + '<text class="mt-heart" x="92" y="28">♥</text></svg>';
-}
-
-function mtPaint(){
-  if (!MT.el) return;
-  MT.el.querySelector('.mt-msgs').innerHTML = MT.hist.map(m => '<div class="mt-m ' + (m.role === 'user' ? 'me' : 'ia') + '">' + mtEsc(m.content) + '</div>').join('');
-  const box = MT.el.querySelector('.mt-msgs'); box.scrollTop = box.scrollHeight;
-}
-const mtEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
-
-function mtHappy(on){
-  if (!MT.el) return;
-  const f = MT.el.querySelector('.mt-face'); if (!f) return;
-  f.outerHTML = mtFace(on);
-  if (on){ clearTimeout(MT.hm); MT.hm = setTimeout(() => mtHappy(false), 3200); }
-}
-
-async function mtSend(){
-  const inp = MT.el.querySelector('.mt-in'), q = inp.value.trim(); if (!q) return;
-  inp.value = ''; MT.hist.push({ role:'user', content:q }); mtPaint();
-  if (MT_KIND.test(q)) mtHappy(true);
-  const bt = MT.el.querySelector('.mt-send'); bt.disabled = true;
-  try{
-    const r = await fetch('/api/help', { method:'POST', headers:{ 'content-type':'application/json' }, body:JSON.stringify({ action:'ask', q, hist:MT.hist.slice(-8, -1) }) });
-    const d = await r.json().catch(() => ({}));
-    MT.hist.push({ role:'assistant', content:r.ok && d.text ? d.text : (d.error || 'Ahorita no puedo responder, pero aquí estoy. Intenta de nuevo en un momento.') });
-  }catch(e){ MT.hist.push({ role:'assistant', content:'Se cortó la conexión. Vuelve a intentar.' }); }
-  bt.disabled = false; mtPaint();
-  if (!MT_KIND.test(q) && /\b(hola|jaja|jeje|feliz|bien)\b/i.test(q)) mtHappy(true);
-}
-
-function mtOpen(text){
-  if (MT.el) { MT.el.querySelector('.mt-text').textContent = text; return; }
-  const el = document.createElement('div');
-  el.id = 'szMaint'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true');
-  el.innerHTML = '<div class="mt-card"><div class="mt-top">' + mtFace(false)
-    + '<h2>Un momento, SynthZ está en mantenimiento</h2><p class="mt-text"></p></div>'
-    + '<div class="mt-chat"><p class="mt-hint">Mientras tanto, charla un rato con SynthonIA.</p><div class="mt-msgs"></div>'
-    + '<form class="mt-form" autocomplete="off"><input class="mt-in" maxlength="300" placeholder="Escríbele algo a SynthonIA…" aria-label="Escribir a SynthonIA"><button class="mt-send" type="submit">Enviar</button></form></div>'
-    + (mtIsAdmin() ? '<button class="mt-exit" type="button">Entrar igual (solo equipo)</button>' : '') + '</div>';
-  document.body.appendChild(el); document.documentElement.classList.add('mt-on');
-  el.querySelector('.mt-text').textContent = text;
-  el.querySelector('.mt-form').addEventListener('submit', e => { e.preventDefault(); mtSend(); });
-  const ex = el.querySelector('.mt-exit');
-  if (ex) ex.addEventListener('click', () => { try{ sessionStorage.setItem('synthz:mtskip', '1'); }catch(e){} mtClose(); });
-  MT.el = el; if (!MT.hist.length) MT.hist.push({ role:'assistant', content:'¡Hola! Qué bueno verte por aquí. Mientras se arregla todo, ¿quieres contarme algo o preguntarme cómo va SynthZ?' }); mtPaint();
-  setTimeout(() => el.querySelector('.mt-in').focus({ preventScroll:true }), 300);
-}
-
-function mtClose(){
-  if (MT.el) MT.el.remove(); MT.el = null; document.documentElement.classList.remove('mt-on');
-}
-
-async function mtCheck(){
-  try{
-    const r = await fetch('/api/config', { cache:'no-store' }); const d = r.ok ? await r.json() : {};
-    const m = d.maint || {};
-    if (m.on && !mtSkipped()) mtOpen(m.text || 'Estamos presentando fallas o actualizaciones. Espera un momento.');
-    else if (!m.on) mtClose();
-  }catch(e){}
-}
-
-(function mtStart(){
-  const go = () => { mtCheck(); MT.timer = setInterval(mtCheck, 60000); document.addEventListener('visibilitychange', () => { if (!document.hidden) mtCheck(); }); };
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
 })();
