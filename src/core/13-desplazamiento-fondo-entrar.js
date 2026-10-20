@@ -66,9 +66,10 @@ async function signedIn(d){
 (async function sbReturn(){
   const h = location.hash || ''; if (!/access_token=|error_description=/.test(h)) return;
   const p = new URLSearchParams(h.slice(1)); try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){}
+  if (p.get('access_token')){ ACC.joining = true; root.classList.add('joining'); }
   if (p.get('error_description')){ setTimeout(() => toast('No se pudo entrar con Google: ' + p.get('error_description')), 800); return; }
   try{ const d = await api('auth', { method:'POST', body:{ mode:'supabase', token:p.get('access_token') } }); await signedIn(d); askDrive(); }
-  catch(e){ setTimeout(() => toast((e && e.message) || 'No pude entrar con Google. Intenta de nuevo.'), 800); }
+  catch(e){ ACC.joining = false; root.classList.remove('joining'); setTimeout(() => toast((e && e.message) || 'No pude entrar con Google. Intenta de nuevo.'), 800); }
 })();
 async function onGoogle(resp){
   try{ const d = await api('auth', { method:'POST', body:{ credential:resp.credential } }); await signedIn(d); if (gsiDone) gsiDone(d.isNew ? 'new' : 'in'); askDrive(); }
@@ -82,9 +83,9 @@ async function askDrive(){
     try{ if (localStorage.getItem('synthz:askdrive')) return; localStorage.setItem('synthz:askdrive', String(Date.now())); }catch(e){}
     await sleepRaw(900);
     const ok = await szConfirm('¿Quieres conectar tu Google Drive?', 'Guardo una copia de tus chats en una carpeta privada dentro de tu Google Drive, para que tengas más espacio. No puedo ver ni tocar tus otros archivos. Puedes cambiarlo cuando quieras.', 'Sí, conectar', false, 'No, gracias');
-    if (!ok){ toast('Listo. Si cambias de idea, está en «⋯ › Google Drive» en SynthFlow.'); return; }
+    if (!ok){ toast('Listo. Si cambias de idea, está en Ajustes › IAs y memoria › Google Drive.'); return; }
     const r = await DRIVE.sync(); if (r && !r.busy) toast('¡Listo! Tus chats también quedan en tu Google Drive.');
-  }catch(e){ toast((e && e.message) || 'No pude conectar tu Drive. Inténtalo luego en «⋯ › Google Drive».'); }
+  }catch(e){ toast((e && e.message) || 'No pude conectar tu Drive. Inténtalo luego en Ajustes › IAs y memoria › Google Drive.'); }
 }
 const EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
 function passStrength(p, u){

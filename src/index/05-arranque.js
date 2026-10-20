@@ -18,7 +18,7 @@ function puterCard(){
 function renderAccIdx(){
   const b = $('#accBtn'); if (!b) return; const A = SZ.ACC;
   if (A.ready){ b.className = 'accb'; b.innerHTML = SZ.myAvatar() + '<span>' + esc(SZ.accName().slice(0, 14)) + '</span><i class="sy' + (A.err ? ' bad' : '') + '"></i>'; }
-  else if (A.busy){ b.className = 'accb'; b.innerHTML = '<span class="av-me">…</span><span>Abriendo</span><i class="sy wait"></i>'; }
+  else if (A.busy || SZ.signedish()){ b.className = 'accb'; b.innerHTML = '<span class="av-me">…</span><span>Abriendo</span><i class="sy wait"></i>'; }
   else { b.className = 'accb out'; b.textContent = 'Entrar'; }
 }
 $('#accBtn').addEventListener('click', () => {
@@ -130,3 +130,7 @@ else {
   paintMe(); SZ.accHooks.push(paintMe);
 })();
 })();
+
+/* v2.2 · Ajustes › IAs y memoria en la portada, y el «!» de novedades sobre SynthonIA */
+SZ.cfgLinks.push(['Elegir mis IA ideales', () => SZ.surveyModal(), '3 preguntas y te digo cuáles te sirven más'], ['Abrir SynthFlow', () => { location.href = 'chat.html'; }, 'El chat con todas las IAs']);
+setTimeout(() => { if (!document.querySelector('.szm, #vintro, #intro')) SZ.whatsNew(false); }, 4000);

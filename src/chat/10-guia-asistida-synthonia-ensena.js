@@ -264,7 +264,7 @@ async function runGuide(){
       const r7 = await H.talk('¿Quieres más espacio? Vincula tu Google Drive y guardo una copia de tus chats en una carpeta privada de SynthFlow. No puedo ver tus otros archivos.', { mood:'encantada', buttons:[{ label:'Vincular mi Drive' }, { label:'Ahora no', ghost:true }] });
       gNeed();
       if (r7 === 0){ H.quiet(); const ok = await driveGo(null); gNeed(); if (ok) await H.talk('¡Hecho! Desde ahora tus chats también viven en tu Drive. Lo encuentras en «⋯ › Google Drive».', { mood:'celebrando', buttons:[{ label:'Terminar' }] }); }
-      else { H.talk('Sin problema. Cuando quieras, está en «⋯ › Google Drive».', { mood:'guino' }); await gWait(2400); }
+      else { H.talk('Sin problema. Cuando quieras, está en Ajustes › IAs y memoria › Google Drive.', { mood:'guino' }); await gWait(2400); }
       gNeed();
     }
     endGuide(true);

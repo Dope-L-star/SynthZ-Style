@@ -55,11 +55,62 @@ function mouthSet(svgs, v){
     if (v === null){ m.setAttribute('d', m._d0); m.setAttribute('fill', m._f0); return; }
     m.setAttribute('d', VIS[v][0]); m.setAttribute('fill', VIS[v][1] ? FACE_G : 'none'); });
 }
-/* devuelve el «onFrame» para typeIn: según cuánto texto va escrito, la boca toma la forma de esa letra */
+/* v2.2 · habla de verdad: la frase se parte en sílabas y la boca las «dice» a ritmo de voz (≈7 por segundo),
+   con la forma de cada vocal (a abierta, e/i ancha, o/u redonda), labios cerrados en m/b/p y paso suave entre una y otra.
+   Devuelve el «onFrame» para typeIn: arranca al primer cuadro y termina poco después de que se escribe todo. */
+const MOUTH = { a:[7.2, 6.4], e:[9, 3.6], i:[8.4, 2.8], o:[4.8, 5.6], u:[3.8, 4.4], m:[7, .5], f:[6.4, 1.6], c:[6, 2.4], r:[5.4, 0] };
+function syllables(text){
+  const t = String(text || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zñ\s]/g, ' ');
+  const out = [];
+  for (const w of t.split(/\s+/).filter(Boolean)){
+    const parts = w.match(/[^aeiou]*[aeiou]+/g) || [w];
+    for (const s of parts){
+      const v = (s.match(/[aeiou]/) || ['a'])[0], c = s.replace(/[aeiou]+$/, '').slice(-1);
+      if (c && 'mbp'.includes(c)) out.push('m'); else if (c && 'fv'.includes(c)) out.push('f');
+      out.push(v);
+    }
+    out.push('r');                                   /* respiro entre palabras */
+  }
+  return out;
+}
+function talkEls(svg){
+  if (svg._talk) return svg._talk;
+  const NS = 'http://www.w3.org/2000/svg', g = document.createElementNS(NS, 'g'); g.setAttribute('class', 'ftalk');
+  const mo = document.createElementNS(NS, 'ellipse'), tg = document.createElementNS(NS, 'ellipse');
+  mo.setAttribute('cx', '50'); mo.setAttribute('cy', '65'); mo.setAttribute('fill', '#2a0d18'); mo.setAttribute('stroke', FACE_G); mo.setAttribute('stroke-width', '3');
+  tg.setAttribute('cx', '50'); tg.setAttribute('fill', '#e07a93');
+  g.appendChild(mo); g.appendChild(tg); svg.appendChild(g);
+  return (svg._talk = { g, mo, tg });
+}
 function lipSync(svgs, text){
   svgs = (svgs || []).filter(Boolean); if (!svgs.length || reduce) return undefined;
-  const t = String(text || '').replace(/\s+/g, ' '); let last = '';
-  return k => { if (k >= 1){ mouthSet(svgs, null); last = ''; return; } const v = visOf(t[Math.min(t.length - 1, Math.floor(k * t.length))]); if (v !== last){ last = v; mouthSet(svgs, v); } };
+  const seq = syllables(text); if (!seq.length) return undefined;
+  let raf = 0, t0 = 0, doneAt = 0, rx = 6, ry = 0, i = 0;
+  const fm = svg => svg.querySelector('.fm');
+  const L = svgs.map(el => ({ el, ball:!!(el.closest && el.closest('#szBot')) }));
+  const live = () => L.map(o => { if (!o.el.isConnected && o.ball) o.el = ballFace() || o.el; return o.el; }).filter(e => e.isConnected);
+  const paint = () => live().forEach(svg => { const T = talkEls(svg), m = fm(svg);
+    if (m) m.style.opacity = '0';
+    T.mo.setAttribute('rx', rx.toFixed(2)); T.mo.setAttribute('ry', Math.max(.4, ry).toFixed(2));
+    T.tg.setAttribute('rx', (rx * .55).toFixed(2)); T.tg.setAttribute('ry', Math.max(0, ry * .32).toFixed(2)); T.tg.setAttribute('cy', (65 + ry * .55).toFixed(2));
+    T.g.style.opacity = '1'; });
+  const stop = () => { cancelAnimationFrame(raf); raf = 0; L.map(o => o.el).forEach(svg => { const T = svg._talk, m = fm(svg); if (T) T.g.style.opacity = '0'; if (m) m.style.opacity = ''; }); };
+  const SYL = 140;                                    /* ms por sílaba: ritmo de voz */
+  function loop(now){
+    if (!t0) t0 = now;
+    i = Math.floor((now - t0) / SYL);
+    const ending = doneAt && (now - doneAt > 1100 || i >= seq.length);
+    const v = ending ? 'r' : seq[Math.min(i, seq.length - 1)], tgt = MOUTH[v] || MOUTH.c;
+    const ph = ((now - t0) % SYL) / SYL, open = v === 'r' || v === 'm' ? 1 : Math.sin(Math.min(1, ph * 1.6) * Math.PI) * .35 + .75;
+    rx += (tgt[0] - rx) * .35; ry += (tgt[1] * open - ry) * .38;
+    paint();
+    if (ending && ry < .6){ stop(); return; }
+    raf = requestAnimationFrame(loop);
+  }
+  return k => {
+    if (!raf && !doneAt) raf = requestAnimationFrame(loop);
+    if (k >= 1 && !doneAt) doneAt = performance.now();
+  };
 }
 const ballFace = () => { const b = document.getElementById('szBot'); return b ? (b.querySelector('.bf > :last-child .szface') || b.querySelector('.bf .szface')) : null; };
 const randomGoodFace = (not) => { const L = FACE_GOOD.filter(m => !(not && not.has && not.has(m))); return L[Math.floor(Math.random() * L.length)] || 'feliz'; };

@@ -10,7 +10,7 @@ function helpGuide(opts){
     ['¿Qué es el límite de hoy?', 'Cada día tienes un límite gratis para usar las IAs conectadas. A medianoche se vuelve a llenar. El anillo se va vaciando mientras chateas.'],
     ['¿Qué es Puter? Es opcional', 'Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.'],
     ['Varias IA a la vez', 'Con «+» sumas otra IA (hasta 4). Todas responden lo mismo y tú eliges la que más te gusta con «Esta tiene más Flow».'],
-    ['Archivos', 'Con el clip agregas un archivo, un PDF o una foto (hasta 6 por mensaje). Todas las IA leen textos y PDF; las fotos solo las entienden las IA que «ven fotos». También puedes arrastrarlos o pegarlos.'],
+    ['Archivos', 'Con el «+» agregas un archivo, un PDF o una foto (hasta 6 por mensaje). Todas las IA leen textos y PDF; las fotos solo las entienden las IA que «ven fotos». También puedes arrastrarlos o pegarlos.'],
     ['Modo principiante', 'En Ajustes puedes activar el modo principiante: las IA te responden con palabras sencillas, paso a paso y con ejemplos.'],
     ['Modo agente', 'En la barra de la izquierda, «Modo agente»: una IA entiende lo que escribiste, lo mejora y se lo pasa a la IA que más sabe de ese tema. Luego decides si te quedas con esa IA. Esos chats se guardan aparte.'],
     ['Configuración', 'En Ajustes eliges si lo quieres «Más bonito» o «Más rápido», y enciendes o apagas cada detalle: cursor, fondo, vidrio, animaciones, sonidos e intro.']
@@ -70,7 +70,7 @@ function turnId(messages){
 /* sin cuenta, después de los mensajes de prueba: «Para seguir FlowIAndo, entra o crea tu cuenta» */
 let gateOpen = false;
 function guestGate(o = {}){
-  if (gateOpen || (ACC && ACC.ready) || document.querySelector('#authm,#acc,#szGate')) return;
+  if (gateOpen || signedish() || document.querySelector('#authm,#acc,#szGate')) return;
   gateOpen = true;
   const g = SZQ.guest || { max:5 }, pu = !!(window.puter && puter.auth && puter.auth.isSignedIn && (() => { try{ return puter.auth.isSignedIn(); }catch(e){ return false; } })());
   const el = document.createElement('div'); el.id = 'szGate'; el.className = 'szm';
@@ -86,7 +86,15 @@ function guestGate(o = {}){
   el.addEventListener('pointerdown', e => { if (e.target === el){ out(); if (o.onClose) o.onClose(); } });
   authBox($('#gateBox', el), () => { out(); szqSet({ guest:null }); szCatalog().catch(() => {}); toast('¡Listo! Ya puedes seguir FlowIAndo.'); if (o.done) o.done(); }, () => {}, o.mode || 'signup');
 }
-addEventListener('synthz-acc', () => { if (ACC && ACC.ready){ szqSet({ guest:null }); szCatalog().catch(() => {}); } });
+/* apenas tu cuenta está lista: se cierra todo lo que te pedía entrar */
+function accSettled(){
+  if (!(ACC && ACC.ready)) return;
+  szqSet({ guest:null }); szCatalog().catch(() => {});
+  document.querySelectorAll('#szGate').forEach(g => { gateOpen = false; g.classList.remove('on'); setTimeout(() => g.remove(), 450); });
+  ACC.joining = false; root.classList.add('signed'); root.classList.remove('joining');
+}
+accHooks.push(k => { if (k === 'out') root.classList.remove('signed'); });
+addEventListener('synthz-acc', accSettled); accHooks.push(k => { if (k === 'pull') accSettled(); });
 function szConfirm(title, text, ok, danger, no){
   return new Promise(res => {
     const o = document.createElement('div'); o.className = 'szm szc';

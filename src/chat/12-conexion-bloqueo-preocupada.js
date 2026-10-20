@@ -38,6 +38,7 @@ let lockReady = !!(window.__puterOK || window.__puterBlocked), lockWas = null, l
 addEventListener('puter-ready', () => { lockReady = true; paintLock(); });
 addEventListener('puter-blocked', () => { lockReady = true; paintLock(); });
 setTimeout(() => { lockReady = true; paintLock(); }, 2600);
+SZ.accHooks.push(() => { lockWas = null; paintLock(); }); addEventListener('synthz-acc', () => { lockWas = null; paintLock(); });
 function isLocked(){ return lockReady && !G && !szOn() && !(trialOn && trialLeft() > 0) && !puterOn() && !orOn() && !gqOn(); }
 function paintLock(){
   const L = isLocked(), gst = L && SZ.guestFull(), key = L + ':' + gst;

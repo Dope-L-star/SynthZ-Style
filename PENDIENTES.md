@@ -1,5 +1,50 @@
 # Pendientes
 
+## PLAN DE PAGOS — APAGADO (no se activa hasta que Sammuel lo diga)
+
+Nada de esto está encendido. No hay llaves de pago, ni cobros, ni botones de comprar. Es el plan para cuando lleguen los pagos.
+
+### Lo que se reserva para los planes de pago
+- **Asistente en WhatsApp, Telegram y Slack** (como «Claw» de Abacus): SynthFlow responde en tus apps de mensajes y recuerda la conversación.
+- **Estudio de video y voz** (como «Studio» de Abacus): videos cortos, voces y boca que habla al ritmo del audio.
+
+### El agente de pago (cambia a las IAs de pago solo cuando haya pagos)
+Para cada pedido elige la IA de pago que mejor lo hace. Lo demás sigue con las IAs gratis de hoy (Groq, Google Flash, Mistral, Cloudflare, Ollama, SiliconFlow, Pollinations, Tavily, Exa).
+| Tarea | IA de pago |
+|---|---|
+| Textos difíciles, razonar, estudiar | GPT (OpenAI) o Claude (Anthropic) |
+| Programar | Claude |
+| Imágenes y **videos** | Gemini (Google: imágenes y Veo para video) |
+| Actualidad y redes | Grok (xAI) |
+| Todo lo demás, con muchos modelos y pago por uso | OpenRouter |
+| Saludos y tareas muy simples | Siguen en las IAs gratis (no gasta) |
+Reglas: un interruptor del servidor `PAGOS_ACTIVOS` (hoy apagado); las llaves de pago solo en el servidor; tope de gasto diario por persona y global; si se pasa el tope, vuelve a las gratis. Nunca cobra solo: la persona ve antes cuánto le queda.
+
+### Lo que cuesta (precios de las APIs, octubre 2026, verificar antes de lanzar)
+| Uso | Costo aprox. |
+|---|---|
+| 1 mensaje normal con GPT 6.1 Sol / Claude Sonnet / Grok 4.6 (≈1.500 de entrada + 600 de salida) | US$0,007–0,014 |
+| 1 mensaje con lo más potente (GPT 6 Astra / Claude Opus) | ≈ US$0,045 |
+| 1 imagen (GPT Image, calidad media) | ≈ US$0,05 |
+| 1 video de 8 s con Veo 3.1 Fast 720p | ≈ US$0,80 (Veo normal ≈ US$3,20) |
+
+### Tarifas recomendadas (más baratas y claras que Abacus: US$10 y US$20)
+| Plan | Precio | Qué trae cada mes |
+|---|---|---|
+| **Gratis** | US$0 | Lo de hoy: IAs gratis, imágenes con límite, internet, memoria |
+| **Flow Plus** | US$7,99 (≈ COP 32.000) | 400 mensajes con IAs pro (GPT, Claude, Grok, Gemini Pro) + 30 imágenes pro + todo lo gratis sin límite apretado |
+| **Flow Pro** | US$17,99 (≈ COP 72.000) | 900 mensajes pro + 50 con lo más potente + 80 imágenes + 2 videos cortos + asistente en WhatsApp/Telegram |
+| **Equipos** | US$8,99 por persona (mín. 3) | Lo de Plus para cada persona + chats y panel de equipo |
+Contador siempre visible de «te quedan X mensajes pro» (lo que más le critican a Abacus es que no se sabe cuánto gasta cada tarea).
+
+### Próximos descuentos recomendados
+- **Lanzamiento:** 40 % los primeros 3 meses para quienes tengan el logro de 100 o 500 visitas (ya se les prometió).
+- **Anual:** paga 10 meses y usa 12 (≈ 17 % menos).
+- **Estudiantes:** 30 % menos con correo de universidad o colegio.
+- **Invita amigos:** 1 mes gratis por cada 3 personas invitadas que paguen.
+- **Siempre:** cancelar con un clic y aviso 3 días antes de cada cobro (nada de renovaciones sorpresa).
+
+
 **Hechos en v1.9B:** archivos tipo Claude con vista previa, ejemplos en la caja, texto claro, guía que felicita y cierra lo abierto, saludo y boca de SynthonIA, revisión de seguridad.
 
 **Para Sammuel (opcional, en Supabase):** Authentication → Providers → apagar «Email» si solo se va a entrar con Google (SynthZ ya rechaza esas cuentas, pero así ni se crean).

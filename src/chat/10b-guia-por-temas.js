@@ -19,14 +19,14 @@ const TOPIC_STEPS = {
     await gPoint(null, 'En modo agente no eliges IA: tú escribes, el agente entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso. Al final decides si te quedas con esa IA o sigues en modo agente.', { mood:'guino' });
   },
   archivos:async () => {
-    await gPoint(gT('#attachBtn', '#attachBtn'), 'Con el clip le das a la IA fotos, PDF o archivos de texto para que los lea.');
+    await gPoint(gT('#attachBtn', '#attachBtn'), 'Con el «+» le das a la IA fotos, PDF o archivos de texto. Ahí mismo creas imágenes, buscas en internet o pides respuestas cortas.');
     const fc = gT('.fcard', '.fcard');
     if (fc) await gPoint(fc, 'Y cuando la IA te da un archivo, sale así: tócalo para ver el código; si es una página, mira su vista previa y descárgala con su nombre.');
     else await gPoint(null, 'Y cuando la IA te da un archivo (una página, un código…), sale como una tarjeta: ves el código, su vista previa si se puede, y lo descargas con su nombre.');
   },
   extras:async () => {
-    await gPoint(gT('#webBtn', '#attachBtn'), isMobile() ? 'En el clip está «Buscar en internet»: la IA busca datos de hoy y te muestra de dónde los sacó.' : 'Con este globo la IA busca en internet: responde con datos de hoy y te muestra de dónde los sacó.');
-    await gPoint(gT('#moreBtn', '#moreBtn'), 'Y en este menú ⋯ ves lo que recuerdo de ti (y lo borras cuando quieras) e instalas SynthFlow como app.');
+    await gPoint(gT('#attachBtn', '#attachBtn'), 'En el «+» está «Buscar en internet»: la IA busca datos de hoy y te muestra de dónde los sacó. Si preguntas por algo de hoy, busca sola.');
+    await gPoint(gT('#cfgBtn', '#tabbar [data-tab="cfg"]'), 'Y en Ajustes › «IAs y memoria» ves lo que recuerdo de ti y lo borras cuando quieras.', { side:true });
     await gPoint(null, 'Un truco más: escribe «hazme una presentación de…» y te la entrego lista para PowerPoint.', { mood:'guino' });
   },
   chats:async () => {
@@ -41,7 +41,7 @@ const TOPIC_STEPS = {
     await gPoint(null, 'Y si quieres más, conecta Puter: tu versión pro de las IAs más usadas (ChatGPT, Claude, Gemini…), gratis y con un clic.', { mood:'guino' });
   },
   ajustes:async () => {
-    await gPoint(gT('#cfgBtn', '#tabbar [data-tab="cfg"]'), 'En Ajustes eliges «más bonito» o «más rápido», apagas mis sonidos o activas el modo principiante, que explica todo con palabras sencillas.', { side:true });
+    await gPoint(gT('#cfgBtn', '#tabbar [data-tab="cfg"]'), 'Ajustes tiene 2 pestañas: «Página» (más bonito o más rápido, sonidos, animaciones) e «IAs y memoria» (modo principiante, respuestas cortas, lo que recuerdo de ti y tus IAs).', { side:true });
   },
   synthonia:async () => {
     await gPoint(gT('#szBot', '#szBot'), 'Y yo siempre estoy aquí. Tócame y pregúntame cómo se hace algo: te lo explico o te lo señalo con mi manita.', { mood:'encantada' });

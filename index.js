@@ -191,15 +191,11 @@ const sprog = document.createElement('i'); sprog.id = 'sprog'; document.body.app
 let spQ = 0; addEventListener('scroll', () => { if (spQ) return; spQ = requestAnimationFrame(() => { spQ = 0; const h = document.documentElement.scrollHeight - innerHeight; sprog.style.transform = 'scaleX(' + (h > 0 ? scrollY / h : 0).toFixed(4) + ')'; }); }, { passive:true });
 const go = id => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior:'smooth' }); };
 SZ.ctxMenu(() => [
-  { label:'Abrir SynthFlow', fn:() => openChat() },
-  { label:'Mis IA', fn:() => go('conectar') },
-  { label:'Ver mi consumo', fn:() => go('consumo') },
-  { label:'Volver arriba', fn:() => scrollTo({ top:0, behavior:'smooth' }) },
-  { label:'Guía rápida', fn:() => openHelp() },
-  { label:'Recorrido por la página', fn:() => pageTour() },
-  { label:'Elegir mis IA (3 preguntas)', fn:() => SZ.surveyModal() },
-  { label:'Configuración', fn:() => SZ.cfgModal() },
-  { label:'Recargar', fn:() => location.reload() }]);
+  { label:'Abrir SynthFlow', ico:'open', fn:() => openChat() },
+  { label:'Ver mi consumo', ico:'chart', fn:() => go('consumo') },
+  { label:'Volver arriba', ico:'up', fn:() => scrollTo({ top:0, behavior:'smooth' }) }, '—',
+  { label:'Ajustes', ico:'cog', fn:() => SZ.cfgModal() },
+  { label:'Guía rápida', ico:'help', fn:() => openHelp() }]);
 document.addEventListener('click', e => { const u = e.target.closest && e.target.closest('a[data-draft]'); if (!u || e.defaultPrevented || e.button || e.ctrlKey || e.metaKey || e.shiftKey) return; e.preventDefault(); SZ.portalOut(u.getAttribute('href')); });
 document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('a[href="chat.html"]'); if (!a || e.defaultPrevented || e.button || e.ctrlKey || e.metaKey || e.shiftKey) return; e.preventDefault(); openChat(); });
 $('#launchInp').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); openChat(); } });
@@ -630,7 +626,7 @@ function puterCard(){
 function renderAccIdx(){
   const b = $('#accBtn'); if (!b) return; const A = SZ.ACC;
   if (A.ready){ b.className = 'accb'; b.innerHTML = SZ.myAvatar() + '<span>' + esc(SZ.accName().slice(0, 14)) + '</span><i class="sy' + (A.err ? ' bad' : '') + '"></i>'; }
-  else if (A.busy){ b.className = 'accb'; b.innerHTML = '<span class="av-me">…</span><span>Abriendo</span><i class="sy wait"></i>'; }
+  else if (A.busy || SZ.signedish()){ b.className = 'accb'; b.innerHTML = '<span class="av-me">…</span><span>Abriendo</span><i class="sy wait"></i>'; }
   else { b.className = 'accb out'; b.textContent = 'Entrar'; }
 }
 $('#accBtn').addEventListener('click', () => {
@@ -742,3 +738,7 @@ else {
   paintMe(); SZ.accHooks.push(paintMe);
 })();
 })();
+
+/* v2.2 · Ajustes › IAs y memoria en la portada, y el «!» de novedades sobre SynthonIA */
+SZ.cfgLinks.push(['Elegir mis IA ideales', () => SZ.surveyModal(), '3 preguntas y te digo cuáles te sirven más'], ['Abrir SynthFlow', () => { location.href = 'chat.html'; }, 'El chat con todas las IAs']);
+setTimeout(() => { if (!document.querySelector('.szm, #vintro, #intro')) SZ.whatsNew(false); }, 4000);

@@ -4,7 +4,7 @@ function renderAccBtn(){
   const b = $('#accBtn'); if (!b) return;
   const A = SZ.ACC, u = A.user || {}, tm = $('#tabMe .tme');
   if (A.ready){ b.className = 'rbtn rme'; b.dataset.tip = SZ.accName(); b.setAttribute('aria-label', 'Tu cuenta: ' + SZ.accName()); b.innerHTML = SZ.myAvatar() + '<span class="rl"><b>' + esc(SZ.accName().slice(0, 22)) + '</b><small>' + esc(SZ.ROLE_NAME[u.role || 'user'] || 'Synther') + ' · ' + (A.err ? 'sin guardar en tu cuenta' : 'guardado en tu cuenta') + '</small></span><i class="sy' + (A.err ? ' bad' : '') + '" title="' + (A.err ? esc(A.err) : 'Sincronizado') + '"></i>'; if (tm) tm.innerHTML = SZ.myAvatar(); }
-  else if (A.busy){ b.className = 'rbtn rme'; b.dataset.tip = 'Abriendo tu cuenta…'; b.innerHTML = '<span class="av-me">…</span><span class="rl"><b>Abriendo…</b><small>tu cuenta</small></span><i class="sy wait"></i>'; if (tm) tm.innerHTML = '<span class="av-me">…</span>'; }
+  else if (A.busy || SZ.signedish()){ b.className = 'rbtn rme'; b.dataset.tip = 'Abriendo tu cuenta…'; b.innerHTML = '<span class="av-me">…</span><span class="rl"><b>Abriendo…</b><small>tu cuenta</small></span><i class="sy wait"></i>'; if (tm) tm.innerHTML = '<span class="av-me">…</span>'; }
   else { b.className = 'rbtn rme out'; b.dataset.tip = 'Entrar a tu cuenta'; b.setAttribute('aria-label', 'Entrar a tu cuenta'); b.innerHTML = '<span class="av-me" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span><span class="rl"><b>Entrar</b><small>guarda tus chats</small></span>'; if (tm) tm.innerHTML = '<span class="av-me" style="background:rgba(255,255,255,.1);color:var(--soft)" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span>'; }
   b.style.setProperty('--i', 6);
 }
@@ -55,7 +55,7 @@ function accModal(){
   $('#aEdit').addEventListener('click', () => SZ.profileModal(() => { renderAccBtn(); reopen(); }));
   const sec = $('#aSec'); if (sec) sec.addEventListener('click', () => SZ.securityModal());
   $('#aSurvey').addEventListener('click', () => SZ.surveyModal(ok => { if (ok){ forMeK = ''; applySurvey(true); renderList({ keep:true }); } }));
-  $('#aKey').addEventListener('click', e => { st().syncKey = !st().syncKey; save(); e.currentTarget.setAttribute('aria-pressed', String(!!st().syncKey)); if (!st().syncKey) SZ.api('me', { method:'PUT', body:{ key:'' } }).catch(() => {}); toast(st().syncKey ? 'Tu llave se guardará cifrada en tu cuenta.' : 'Tu llave se borró de tu cuenta.'); });
+  const aKey = $('#aKey'); if (aKey) aKey.addEventListener('click', e => { st().syncKey = !st().syncKey; save(); e.currentTarget.setAttribute('aria-pressed', String(!!st().syncKey)); if (!st().syncKey) SZ.api('me', { method:'PUT', body:{ key:'' } }).catch(() => {}); toast(st().syncKey ? 'Tu llave se guardará cifrada en tu cuenta.' : 'Tu llave se borró de tu cuenta.'); });
   $('#aSync').addEventListener('click', async e => { const b = e.currentTarget; b.textContent = 'Sincronizando…'; await SZ.accPush({ ledger:true }); b.textContent = 'Sincronizar'; toast(SZ.ACC.err || 'Todo sincronizado.'); });
   $('#aOut').addEventListener('click', async e => {
     const b = e.currentTarget; b.textContent = 'Guardando…'; b.disabled = true;

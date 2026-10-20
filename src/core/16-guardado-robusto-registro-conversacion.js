@@ -75,7 +75,7 @@ function balanceHtml(b, extra){
 /* desglose: confirmado (lo reportó el proveedor) vs estimado (≈, SynthZ lo calculó por el largo del texto) */
 function splitHtml(){ return limBar({ puter:true }); }
 function syncNote(){
-  if (!ACC.ready) return '<p class="cnote">Tus chats se guardan en este equipo. Entra a tu cuenta para verlos también en tu celular o en otro computador.</p>';
+  if (!ACC.ready) return signedish() ? '<p class="cnote">Abriendo tu cuenta…</p>' : '<p class="cnote">Tus chats se guardan en este equipo. Entra a tu cuenta para verlos también en tu celular o en otro computador.</p>';
   if (ACC.full) return '<p class="sxerr">⚠ ' + esc(ACC.err) + '</p>';
   if (ACC.err) return '<p class="sxerr">⚠ No pude guardar en tu cuenta (' + esc(ACC.err) + '). Todo sigue aquí y se sube solo cuando vuelva la conexión.</p>';
   return '<p class="cnote">Guardado en tu cuenta' + (ACC.t ? ' · guardado hace ' + Math.max(1, Math.round((Date.now() - ACC.t) / 1000)) + ' s' : '') + '.</p>';

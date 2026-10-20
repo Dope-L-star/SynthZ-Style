@@ -7,7 +7,7 @@ const GTOPICS = [
   ['comparar', 'Comparar IAs', 'Varias IA responden lo mismo, lado a lado.'],
   ['agente', 'Modo agente', 'Escribes y el agente elige la IA por ti.'],
   ['archivos', 'Archivos y vista previa', 'Adjuntar archivos y ver los que te da la IA.'],
-  ['extras', 'Internet, memoria y app', 'Buscar datos de hoy, que te recuerde e instalarla.'],
+  ['extras', 'Internet y memoria', 'Buscar datos de hoy y que la IA te recuerde.'],
   ['chats', 'Mis chats y favoritos', 'Dónde quedan tus conversaciones.'],
   ['limite', 'Tu límite gratis', 'Cuánto te queda hoy y cuándo se llena.'],
   ['cuenta', 'Tu cuenta y Puter', 'Guardar tus chats y la versión pro de las IA.'],
@@ -79,18 +79,30 @@ document.addEventListener('click', e => {
 }, true);
 
 /* «Qué hay de nuevo»: SynthonIA te lo cuenta una vez por versión (y está en el menú cuando quieras) */
-const WHATSNEW = { v:'2.1', items:[
-  ['extras', 'Busca en internet: toca el globo 🌐 junto al clip y la IA responde con datos de hoy y te muestra sus fuentes.'],
+const WHATSNEW = { v:'2.2', items:[
+  ['chat', 'SynthFlow se renovó: más limpio y fácil. Todo para escribir está en una sola caja, y el «+» trae archivos, crear imagen, buscar en internet y respuestas cortas.'],
+  ['extras', 'Busca en internet: «+» › «Buscar en internet». La IA responde con datos de hoy y te muestra sus fuentes (y si preguntas algo de hoy, busca sola).'],
   ['archivos', 'Pídele «hazme una presentación de…» y te la entrega lista para descargar en PowerPoint.'],
-  ['extras', 'Ahora puedo recordar cosas de ti (tu nombre, lo que estudias…) si tú me dejas. Lo ves y lo borras en el menú ⋯.'],
-  ['extras', 'SynthFlow ya es una app: instálala en tu celular o computador desde el menú ⋯ → «Instalar la app». Abre más rápido y avisa si no hay internet.'],
-  ['synthonia', 'Antes: imágenes, voz para cada IA, archivos con vista previa y la Guía rápida. ¡Todo sigue aquí!']
+  ['ajustes', 'Ajustes ahora tiene 2 pestañas: «Página» e «IAs y memoria» (lo que recuerdo de ti, respuestas cortas, tus IA ideales y más).'],
+  ['synthonia', '¡Y ahora hablo de verdad: muevo la boca con cada sílaba! Cuando haya novedades verás un «!» sobre mi cabeza.']
 ] };
+function newsBang(onShow){
+  const b = $('#szBot'); if (!b){ setTimeout(() => newsBang(onShow), 600); return; }
+  if ($('.nwbang', b)) return;
+  const x = document.createElement('span'); x.className = 'nwbang'; x.setAttribute('role', 'button'); x.setAttribute('tabindex', '0'); x.setAttribute('aria-label', '¿Qué hay de nuevo?'); x.dataset.tip = '¿Qué hay de nuevo?'; x.textContent = '!';
+  const go = e => { e.preventDefault(); e.stopPropagation(); whatsNew(true, onShow); };
+  x.addEventListener('click', go); x.addEventListener('pointerdown', e => e.stopPropagation()); x.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') go(e); });
+  b.appendChild(x); b.setAttribute('aria-label', 'SynthonIA · hay novedades');
+  try{ SND.blip('celebrando'); }catch(e){}
+}
 function whatsNew(force, onShow){
   let seen = ''; try{ seen = localStorage.getItem('synthz:newv') || ''; }catch(e){}
   const visited = (() => { try{ return !!localStorage.getItem('synthz:visited'); }catch(e){ return false; } })();
   if (!force && (seen === WHATSNEW.v || !visited)){ try{ localStorage.setItem('synthz:newv', WHATSNEW.v); }catch(e){} return false; }
+  /* v2.2 · ya no se abre sola: sale un «!» sobre la cabeza de SynthonIA (una vez por versión) y se abre al tocarlo */
+  if (!force){ newsBang(onShow); return false; }
   try{ localStorage.setItem('synthz:newv', WHATSNEW.v); }catch(e){}
+  $$('.nwbang').forEach(x => { x.classList.add('out'); setTimeout(() => x.remove(), 400); }); const sb = $('#szBot'); if (sb) sb.setAttribute('aria-label', 'SynthonIA');
   if ($('#szNew')) return true;
   const w = document.createElement('div'); w.id = 'szNew'; w.className = 'szm';
   w.innerHTML = '<div class="tcard gq" role="dialog" aria-modal="true" aria-label="Qué hay de nuevo"><div class="gq-say"><span class="gq-f">' + face('celebrando', 64) + '</span><div><b>SynthonIA · Qué hay de nuevo</b><p></p></div></div>'

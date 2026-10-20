@@ -11,7 +11,7 @@ function useExample(i){
   typeIntoComposer(x[1], () => {
     if (x[2] === 'file' && !files.length){
       const a = $('#attachBtn'); a.classList.remove('pulse'); void a.offsetWidth; a.classList.add('pulse');
-      toast('Adjunta el documento con el clip 📎 y luego envía.');
+      toast('Adjunta el documento con el «+» y luego envía.');
     } else toast('Completa el mensaje y envíalo cuando quieras.');
   });
 }

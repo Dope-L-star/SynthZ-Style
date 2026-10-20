@@ -8,7 +8,7 @@ webBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 { const ib = $('#imgBtn') || $('#attachBtn'); if (ib) ib.after(webBtn); }
 function setWeb(on){ webOn = !!on; webBtn.setAttribute('aria-pressed', String(webOn)); document.body.classList.toggle('webbing', webOn); if (webOn) toast('Buscar en internet: tu próximo mensaje se responde con información de hoy y sus fuentes.'); }
 webBtn.addEventListener('click', () => { if (imgMode) setImgMode(false); setWeb(!webOn); });
-const needsWeb = text => webOn || WEB_RX.test(text);
+const needsWeb = text => webOn || (SZ.CFG.autoWeb !== false && WEB_RX.test(text));
 function webCard(){
   const el = document.createElement('div'); el.className = 'agrun webrun';
   el.innerHTML = '<div class="ag-h"><span class="pxw">' + SZ.pixelGrid() + '</span><span class="ag-t"><b>Buscando en internet</b><small>Leo varias páginas para responderte con datos de hoy…</small></span></div>';

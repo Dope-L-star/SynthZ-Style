@@ -631,7 +631,7 @@ function finishBot(el, meta, last, cont, starred){
   codeButtons($('.body', el)); if (el._sources) citeLinks($('.body', el), el._sources);
   if (meta) el.insertAdjacentHTML('beforeend', '<div class="meta">' + esc(meta) + '</div>');
   el.classList.toggle('starred', !!starred);
-  el.insertAdjacentHTML('beforeend', '<div class="acts"><button class="act" data-a="copy">' + COPY + 'Copiar</button><button class="act" data-a="voice" title="Escuchar esta respuesta con la voz de esta IA"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg><span>Escuchar</span></button><button class="act" data-a="star" aria-pressed="' + !!starred + '" title="Guárdala en tus favoritos">' + STAR_A + '<span>' + (starred ? 'Favorita' : 'Guardar') + '</span></button>' + (last ? '<button class="act" data-a="regen" title="Pide otra respuesta: cuenta como un mensaje nuevo">' + REGEN + 'Otra vez</button>' : '') + (last && cont ? '<button class="act" data-a="cont" title="Pide que siga desde donde quedó: cuenta como un mensaje nuevo">↪ Continuar</button>' : '') + '</div>');
+  el.insertAdjacentHTML('beforeend', '<div class="acts"><button class="act" data-a="copy" data-tip="Copiar" aria-label="Copiar">' + COPY + 'Copiar</button><button class="act" data-a="voice" data-tip="Escuchar" aria-label="Escuchar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg><span>Escuchar</span></button><button class="act" data-a="star" aria-pressed="' + !!starred + '" data-tip="' + (starred ? 'Quitar de favoritos' : 'Guardar en favoritos') + '" aria-label="Guardar en favoritos">' + STAR_A + '<span>' + (starred ? 'Favorita' : 'Guardar') + '</span></button>' + (last ? '<button class="act" data-a="regen" data-tip="Otra respuesta (cuenta como un mensaje)" aria-label="Pedir otra respuesta">' + REGEN + 'Otra vez</button>' : '') + (last && cont ? '<button class="act" data-a="cont" data-tip="Que siga desde donde quedó" aria-label="Continuar">↪ Continuar</button>' : '') + '</div>');
   $$('.acts .act', el).forEach(b => { if (!b.title) b.title = b.textContent.trim(); if (!b.getAttribute('aria-label')) b.setAttribute('aria-label', b.textContent.trim()); });
   el.classList.toggle('last', !!last);
 }
@@ -916,7 +916,7 @@ function useExample(i){
   typeIntoComposer(x[1], () => {
     if (x[2] === 'file' && !files.length){
       const a = $('#attachBtn'); a.classList.remove('pulse'); void a.offsetWidth; a.classList.add('pulse');
-      toast('Adjunta el documento con el clip 📎 y luego envía.');
+      toast('Adjunta el documento con el «+» y luego envía.');
     } else toast('Completa el mensaje y envíalo cuando quieras.');
   });
 }
@@ -1290,7 +1290,7 @@ webBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 { const ib = $('#imgBtn') || $('#attachBtn'); if (ib) ib.after(webBtn); }
 function setWeb(on){ webOn = !!on; webBtn.setAttribute('aria-pressed', String(webOn)); document.body.classList.toggle('webbing', webOn); if (webOn) toast('Buscar en internet: tu próximo mensaje se responde con información de hoy y sus fuentes.'); }
 webBtn.addEventListener('click', () => { if (imgMode) setImgMode(false); setWeb(!webOn); });
-const needsWeb = text => webOn || WEB_RX.test(text);
+const needsWeb = text => webOn || (SZ.CFG.autoWeb !== false && WEB_RX.test(text));
 function webCard(){
   const el = document.createElement('div'); el.className = 'agrun webrun';
   el.innerHTML = '<div class="ag-h"><span class="pxw">' + SZ.pixelGrid() + '</span><span class="ag-t"><b>Buscando en internet</b><small>Leo varias páginas para responderte con datos de hoy…</small></span></div>';
@@ -1419,12 +1419,7 @@ window.SynthFlowDeck = { build:deckBuild, from:deckFrom };
    Solo guarda lo que tú apruebas, lo ves y lo borras cuando quieras. Con cuenta, te sigue a todos tus equipos. ---------- */
 const MEM_RX = /\b(recuerda|recu[eé]rdalo|acu[eé]rdate|no (te )?olvides|ten en cuenta|guarda en tu memoria)\b\s*(que|de|esto|:)?\s*/i;
 const memSt = () => st().mem || (st().mem = { on:true, t:0, items:[] });
-function memAdd(text){
-  const m = memSt(), t = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 300); if (t.length < 3) return false;
-  if (m.items.some(x => x.text.toLowerCase() === t.toLowerCase())) return true;
-  m.items.unshift({ id:'m' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), t:Date.now(), text:t }); m.items = m.items.slice(0, 40); m.t = Date.now(); save();
-  try{ SZ.accPush && SZ.accPush(); }catch(e){} return true;
-}
+function memAdd(text){ return SZ.memAddCore(text); }
 /* lo que la IA recibe (solo si la memoria está encendida) */
 function memSystem(){ const m = memSt(); if (!m.on || !m.items.length) return ''; return 'Datos que la persona te pidió recordar (úsalos cuando sirvan, sin repetirlos todo el tiempo): ' + m.items.slice(0, 25).map(x => '- ' + x.text).join(' '); }
 /* «¿Quieres que lo recuerde?» después de un mensaje que lo pide */
@@ -1434,34 +1429,12 @@ function memOffer(text){
   if (fact.length < 3) fact = text.trim(); fact = fact.slice(0, 300);
   $$('.memoff', lane).forEach(x => x.remove());
   const d = document.createElement('div'); d.className = 'agkeep memoff';
-  d.innerHTML = '<span>¿Quieres que lo recuerde para tus próximos chats? «<b></b>»</span><div class="agk-b"><button type="button" class="btn sm" data-mm="yes">Recordar</button><button type="button" class="btn sm ghost" data-mm="no">No</button></div><small>Lo ves y lo borras cuando quieras en «⋯ › Lo que recuerdo de ti».</small>';
+  d.innerHTML = '<span>¿Quieres que lo recuerde para tus próximos chats? «<b></b>»</span><div class="agk-b"><button type="button" class="btn sm" data-mm="yes">Recordar</button><button type="button" class="btn sm ghost" data-mm="no">No</button></div><small>Lo ves y lo borras cuando quieras en Ajustes › IAs y memoria.</small>';
   $('span b', d).textContent = fact; lane.appendChild(d); follow();
   d.addEventListener('click', e => { const b = e.target.closest('[data-mm]'); if (!b) return; d.remove(); if (b.dataset.mm === 'yes' && memAdd(fact)) toast('¡Listo! Lo voy a recordar.'); });
 }
-function memModal(){
-  if ($('#szMem')) return;
-  const w = document.createElement('div'); w.id = 'szMem'; w.className = 'szm';
-  const paint = () => {
-    const m = memSt();
-    w.innerHTML = '<div class="tcard gq" role="dialog" aria-modal="true" aria-label="Lo que recuerdo de ti"><div class="gq-say"><span class="gq-f">' + SZ.face('guino', 64) + '</span><div><b>Memoria</b><p>Esto es lo que recuerdo de ti. Lo uso para responderte mejor en todos tus chats.</p></div></div>'
-      + '<div class="cfgrow"><p>Usar mi memoria<small>Si la apagas, no la uso (pero no se borra).</small></p><button class="cfgsw" type="button" role="switch" data-mem="on" aria-checked="' + m.on + '" aria-pressed="' + m.on + '" aria-label="Usar mi memoria"><i></i></button></div>'
-      + '<ul class="meml">' + (m.items.length ? m.items.map(x => '<li><span></span><button type="button" class="lnk" data-del="' + x.id + '" aria-label="Olvidar">Olvidar</button></li>').join('') : '<li class="memnone">Todavía no recuerdo nada. Escribe «recuerda que…» en el chat o agrégalo aquí.</li>') + '</ul>'
-      + '<form class="memadd"><label class="field"><input type="text" maxlength="300" placeholder="Ej.: Me llamo Ana y estudio diseño gráfico" aria-label="Algo para recordar"></label><button class="btn sm" type="submit">Agregar</button></form>'
-      + '<div class="tbtn gq-b"><button class="lnk" type="button" data-mem="clear"' + (m.items.length ? '' : ' hidden') + '>Olvidar todo</button><button class="btn sm" type="button" data-close>Listo</button></div></div>';
-    const L = $$('.meml li span', w); m.items.forEach((x, i) => { if (L[i]) L[i].textContent = x.text; });
-    $('.memadd', w).addEventListener('submit', e => { e.preventDefault(); const v = $('.memadd input', w).value; if (memAdd(v)){ paint(); toast('Agregado a tu memoria.'); } });
-  };
-  paint(); document.body.appendChild(w); requestAnimationFrame(() => w.classList.add('on'));
-  const close = () => { w.classList.remove('on'); setTimeout(() => w.remove(), 420); };
-  w.addEventListener('click', async e => {
-    if (e.target === w || e.target.closest('[data-close]')) return close();
-    const d = e.target.closest('[data-del]'); if (d){ const m = memSt(); m.items = m.items.filter(x => x.id !== d.dataset.del); m.t = Date.now(); save(); try{ SZ.accPush && SZ.accPush(); }catch(x){} paint(); return; }
-    const t = e.target.closest('[data-mem]'); if (!t) return;
-    const m = memSt();
-    if (t.dataset.mem === 'on'){ m.on = !m.on; m.t = Date.now(); save(); try{ SZ.accPush && SZ.accPush(); }catch(x){} paint(); }
-    else if (t.dataset.mem === 'clear' && await SZ.szConfirm('¿Olvidar todo?', 'Borro todo lo que recuerdo de ti. No se puede deshacer.', 'Olvidar todo', true)){ m.items = []; m.t = Date.now(); save(); try{ SZ.accPush && SZ.accPush(); }catch(x){} paint(); }
-  });
-}
+/* v2.2 · «Lo que recuerdo de ti» vive en Ajustes › IAs y memoria */
+function memModal(){ SZ.cfgModal('mem'); }
 /* ---------- v1.8 · modo agente: tú escribes; el agente entiende y mejora tu pedido, elige la IA que más sabe de eso
    y te muestra cada paso. Al final decides: quedarte con esa IA o seguir en modo agente ---------- */
 let agentBusy = false;
@@ -2087,7 +2060,7 @@ const TOUR = [
   { t:'Tu Puter (opcional)', p:'Cada día tienes un límite gratis para usar las IAs conectadas. A medianoche se vuelve a llenar. Si se te acaban, puedes seguir con Puter. Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.', x:'conn' },
   { t:'¿Dónde quieres empezar?', p:'Elige y te dejo en su pestaña con su mejor IA. Si no eliges, empiezas con ' + APODEX_NAME + '.', x:'pick' },
   { t:'Tu límite de hoy', p:'Cada día tienes un límite gratis. El anillo de la barrita se va vaciando mientras chateas y se llena otra vez a medianoche. «Respuestas cortas» te ayuda a que te alcancen más.' },
-  { t:'Más trucos', p:'Adjunta imágenes, PDF o código con el clip. En "Comparar" le preguntas lo mismo a hasta 4 IAs. El botón «?» de arriba abre la guía rápida cuando quieras.' },
+  { t:'Más trucos', p:'Adjunta imágenes, PDF o código con el «+». En "Comparar" le preguntas lo mismo a hasta 4 IAs. El botón «?» de arriba abre la guía rápida cuando quieras.' },
   { t:'Todo listo', p:'', x:'done' }
 ];
 const TCOL = ['#8fb0ff', '#7fd6b8', '#c9566c', '#f2b36b', '#ff8f7a', '#c9566c'];
@@ -2419,7 +2392,7 @@ async function runGuide(){
       const r7 = await H.talk('¿Quieres más espacio? Vincula tu Google Drive y guardo una copia de tus chats en una carpeta privada de SynthFlow. No puedo ver tus otros archivos.', { mood:'encantada', buttons:[{ label:'Vincular mi Drive' }, { label:'Ahora no', ghost:true }] });
       gNeed();
       if (r7 === 0){ H.quiet(); const ok = await driveGo(null); gNeed(); if (ok) await H.talk('¡Hecho! Desde ahora tus chats también viven en tu Drive. Lo encuentras en «⋯ › Google Drive».', { mood:'celebrando', buttons:[{ label:'Terminar' }] }); }
-      else { H.talk('Sin problema. Cuando quieras, está en «⋯ › Google Drive».', { mood:'guino' }); await gWait(2400); }
+      else { H.talk('Sin problema. Cuando quieras, está en Ajustes › IAs y memoria › Google Drive.', { mood:'guino' }); await gWait(2400); }
       gNeed();
     }
     endGuide(true);
@@ -2456,14 +2429,14 @@ const TOPIC_STEPS = {
     await gPoint(null, 'En modo agente no eliges IA: tú escribes, el agente entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso. Al final decides si te quedas con esa IA o sigues en modo agente.', { mood:'guino' });
   },
   archivos:async () => {
-    await gPoint(gT('#attachBtn', '#attachBtn'), 'Con el clip le das a la IA fotos, PDF o archivos de texto para que los lea.');
+    await gPoint(gT('#attachBtn', '#attachBtn'), 'Con el «+» le das a la IA fotos, PDF o archivos de texto. Ahí mismo creas imágenes, buscas en internet o pides respuestas cortas.');
     const fc = gT('.fcard', '.fcard');
     if (fc) await gPoint(fc, 'Y cuando la IA te da un archivo, sale así: tócalo para ver el código; si es una página, mira su vista previa y descárgala con su nombre.');
     else await gPoint(null, 'Y cuando la IA te da un archivo (una página, un código…), sale como una tarjeta: ves el código, su vista previa si se puede, y lo descargas con su nombre.');
   },
   extras:async () => {
-    await gPoint(gT('#webBtn', '#attachBtn'), isMobile() ? 'En el clip está «Buscar en internet»: la IA busca datos de hoy y te muestra de dónde los sacó.' : 'Con este globo la IA busca en internet: responde con datos de hoy y te muestra de dónde los sacó.');
-    await gPoint(gT('#moreBtn', '#moreBtn'), 'Y en este menú ⋯ ves lo que recuerdo de ti (y lo borras cuando quieras) e instalas SynthFlow como app.');
+    await gPoint(gT('#attachBtn', '#attachBtn'), 'En el «+» está «Buscar en internet»: la IA busca datos de hoy y te muestra de dónde los sacó. Si preguntas por algo de hoy, busca sola.');
+    await gPoint(gT('#cfgBtn', '#tabbar [data-tab="cfg"]'), 'Y en Ajustes › «IAs y memoria» ves lo que recuerdo de ti y lo borras cuando quieras.', { side:true });
     await gPoint(null, 'Un truco más: escribe «hazme una presentación de…» y te la entrego lista para PowerPoint.', { mood:'guino' });
   },
   chats:async () => {
@@ -2478,7 +2451,7 @@ const TOPIC_STEPS = {
     await gPoint(null, 'Y si quieres más, conecta Puter: tu versión pro de las IAs más usadas (ChatGPT, Claude, Gemini…), gratis y con un clic.', { mood:'guino' });
   },
   ajustes:async () => {
-    await gPoint(gT('#cfgBtn', '#tabbar [data-tab="cfg"]'), 'En Ajustes eliges «más bonito» o «más rápido», apagas mis sonidos o activas el modo principiante, que explica todo con palabras sencillas.', { side:true });
+    await gPoint(gT('#cfgBtn', '#tabbar [data-tab="cfg"]'), 'Ajustes tiene 2 pestañas: «Página» (más bonito o más rápido, sonidos, animaciones) e «IAs y memoria» (modo principiante, respuestas cortas, lo que recuerdo de ti y tus IAs).', { side:true });
   },
   synthonia:async () => {
     await gPoint(gT('#szBot', '#szBot'), 'Y yo siempre estoy aquí. Tócame y pregúntame cómo se hace algo: te lo explico o te lo señalo con mi manita.', { mood:'encantada' });
@@ -2616,26 +2589,24 @@ function exportMd(){
   if (!chatArr().length){ toast('Esta conversación está vacía.'); return; }
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([chatMd()], { type:'text/markdown' })); a.download = 'chat-' + info(selId()).name.replace(/[^\w.-]+/g, '_') + '.md'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
-SZ.ctxMenu(() => [
-  { label:'Borrar este chat', fn:() => clearChat(true) },
-  { label:'Copiar toda la conversación', fn:() => { navigator.clipboard && navigator.clipboard.writeText(chatMd()); toast('Conversación copiada.'); } },
-  { label:'Exportar como .md', fn:exportMd },
-  { label:'Guía rápida', fn:() => openGuide() },
-  { label:'Qué hay de nuevo', fn:() => SZ.whatsNew(true, list => runTopics(list)) },
-  { label:'Lo que recuerdo de ti', fn:() => memModal() },
-  { label:'Guía rápida (leer)', fn:() => openHelp() },
-  { label:'Ver tutorial de conexión', fn:openTour },
-  { label:'Mis IA conectadas', fn:() => openConnect() },
-  { label:'Mi límite de hoy', fn:() => coinModal('panel') },
-  { label:'Mi cuenta', fn:() => accModal() },
-  { label:'Elegir mis IA (3 preguntas)', fn:() => SZ.surveyModal(ok => { if (ok){ forMeK = ''; applySurvey(true); renderList({ keep:true }); } }) },
-  { label:'Mis chats', fn:() => thOpen() },
-  { label:'Chat nuevo', fn:() => newChat() },
-  { label:'Mis IA favoritas (por mis votos)', fn:() => rankModal() },
-  { label:'Configuración', fn:() => SZ.cfgModal() },
-  { label:'Ayuda: algo no carga', fn:() => showBlockHelp(window.__puterBlocked ? 'script' : 'popup') },
-  { label:'Privacidad y términos', fn:() => window.open('privacidad.html', '_blank', 'noopener') },
-  { label:'Volver a SynthZ', fn:() => $('#backLink').click() }]);
+/* v2.2 · clic derecho: corto y según dónde hiciste clic (una respuesta, tu mensaje, un texto seleccionado o el chat) */
+SZ.ctxMenu((e, sel) => {
+  const L = [], m = e.target.closest && e.target.closest('.m.bot, .m.user'), act = k => () => { const b = m && m.querySelector('[data-a="' + k + '"]'); if (b) b.click(); };
+  if (sel) L.push({ label:'Preguntarle a la IA sobre esto', ico:'quote', fn:() => { inp.value = '«' + sel.slice(0, 1500) + '»\n\n'; autoGrow(); updateHint(); inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); } }, '—');
+  if (m && m.classList.contains('bot') && !sel){
+    L.push({ head:'Esta respuesta' }, { label:'Copiar respuesta', ico:'copy', fn:act('copy') });
+    if (m.querySelector('[data-a="voice"]')) L.push({ label:'Escuchar', ico:'sound', fn:act('voice') });
+    if (m.querySelector('[data-a="star"]')) L.push({ label:m.querySelector('[data-a="star"][aria-pressed="true"]') ? 'Quitar de favoritos' : 'Guardar en favoritos', ico:'star', fn:act('star') });
+    if (m.querySelector('[data-a="regen"]')) L.push({ label:'Pedir otra respuesta', ico:'regen', fn:act('regen') });
+    L.push('—');
+  } else if (m && !sel){
+    const t = (m.querySelector('.bub') || m).innerText || '';
+    L.push({ label:'Copiar mi mensaje', ico:'copy', fn:() => { copyText(t); toast('Copiado.'); } }, { label:'Escribirlo otra vez', ico:'new', fn:() => { inp.value = t; autoGrow(); updateHint(); inp.focus(); } }, '—');
+  }
+  L.push({ label:'Nuevo chat', ico:'new', fn:() => newChat() }, { label:'Buscar en mis chats', ico:'search', fn:() => thOpen() }, '—',
+    { label:'Ajustes', ico:'cog', fn:() => SZ.cfgModal() }, { label:'Guía rápida', ico:'help', fn:() => openGuide() });
+  return L;
+});
 
 /* ---------- conexión: las IAs conectadas (ya activada para todos) y, si quieres más, tu Puter ---------- */
 let connEl = null;
@@ -2677,6 +2648,7 @@ let lockReady = !!(window.__puterOK || window.__puterBlocked), lockWas = null, l
 addEventListener('puter-ready', () => { lockReady = true; paintLock(); });
 addEventListener('puter-blocked', () => { lockReady = true; paintLock(); });
 setTimeout(() => { lockReady = true; paintLock(); }, 2600);
+SZ.accHooks.push(() => { lockWas = null; paintLock(); }); addEventListener('synthz-acc', () => { lockWas = null; paintLock(); });
 function isLocked(){ return lockReady && !G && !szOn() && !(trialOn && trialLeft() > 0) && !puterOn() && !orOn() && !gqOn(); }
 function paintLock(){
   const L = isLocked(), gst = L && SZ.guestFull(), key = L + ':' + gst;
@@ -3157,28 +3129,24 @@ $('#thList').addEventListener('click', async e => {
 /* compatibilidad: lo que antes abría la ventanita de conversaciones */
 function thOpen(){ showChats('chats', true); }
 
-/* ---------- menú «⋯» de la conversación ---------- */
-let mmEl = null;
-function mmClose(){ if (!mmEl) return; const el = mmEl; mmEl = null; el.animate([{ opacity:1 }, { opacity:0, transform:'translateY(-4px) scale(.97)' }], { duration:180 }).onfinish = () => el.remove(); }
+/* ---------- menú «⋯» de la conversación (v2.2: corto, por grupos y con íconos) ---------- */
+function mmClose(){ SZ.menuClose(); }
 function mmOpen(){
-  if (mmEl){ mmClose(); return; }
-  const items = [['Nuevo chat', () => newChat()]];
-  if (mode === 'solo') items.push(['Borrar este chat', () => clearChat(true)], ['Copiar la conversación', () => { copyText(chatMd()); toast('Conversación copiada.'); }], ['Exportar como .md', exportMd]);
-  else items.push(['Empezar otra comparación', () => clearChat()], ['Volver a una sola IA', () => removeCmp(st().cmp[st().cmp.length - 1])]);
-  items.push(['—'], ['Lo que recuerdo de ti', () => memModal()], ['Qué hay de nuevo', () => SZ.whatsNew(true, list => runTopics(list))], ['Instalar la app', () => SZ.installApp()], ['Tu ranking (a ciegas)', () => rankModal()]);
-  if (trialOn) items.push(['Salir de la prueba guiada', () => exitTrial()]);
-  items.push(['Google Drive · guardar mis chats', () => driveModal()]);
-  items.push(['Conectar IA', () => openConnect()], ['Elegir mis IA ideales', () => SZ.surveyModal(ok => { if (ok){ forMeK = ''; applySurvey(true); renderList({ keep:true }); } })]);
-  mmEl = document.createElement('div'); mmEl.className = 'ctxm mm'; mmEl.setAttribute('role', 'menu');
-  items.forEach(([l, fn]) => { if (l === '—'){ mmEl.appendChild(document.createElement('hr')); return; } const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'menuitem'); b.textContent = l; b.addEventListener('click', () => { mmClose(); fn(); }); mmEl.appendChild(b); });
-  document.body.appendChild(mmEl);
-  const r = $('#moreBtn').getBoundingClientRect(), w = mmEl.offsetWidth;
-  mmEl.style.left = Math.max(10, Math.min(r.right - w, innerWidth - w - 10)) + 'px'; mmEl.style.top = (r.bottom + 8) + 'px';
-  const f = $('button', mmEl); if (f) f.focus();
+  const mb = $('#moreBtn');
+  if (mb.getAttribute('aria-expanded') === 'true' && document.querySelector('.ctxm.mm')){ SZ.menuClose(); mb.setAttribute('aria-expanded', 'false'); return; }
+  const L = [{ label:'Nuevo chat', ico:'new', fn:() => newChat() }];
+  if (mode === 'solo') L.push({ label:'Copiar la conversación', ico:'copy', fn:() => { copyText(chatMd()); toast('Conversación copiada.'); } }, { label:'Descargar como texto', ico:'down', fn:exportMd });
+  else L.push({ label:'Empezar otra comparación', ico:'cmp', fn:() => clearChat() }, { label:'Volver a una sola IA', ico:'exit', fn:() => removeCmp(st().cmp[st().cmp.length - 1]) });
+  L.push('—', { label:'Lo que recuerdo de ti', ico:'brain', fn:() => SZ.cfgModal('mem') }, { label:'Ajustes', ico:'cog', fn:() => SZ.cfgModal() }, { label:'Ayuda: algo no carga', ico:'help', fn:() => showBlockHelp(window.__puterBlocked ? 'script' : 'popup') });
+  if (trialOn) L.push({ label:'Salir de la prueba guiada', ico:'exit', fn:() => exitTrial() });
+  if (mode === 'solo') L.push('—', { label:'Borrar este chat', ico:'trash', danger:true, fn:() => clearChat(true) });
+  const r = mb.getBoundingClientRect(), m = SZ.menuOpen(L, 0, r.bottom + 8, 'mm');
+  m.style.left = Math.max(10, Math.min(r.right - m.offsetWidth, innerWidth - m.offsetWidth - 10)) + 'px';
+  mb.setAttribute('aria-expanded', 'true'); const f = $('button', m); if (f) f.focus();
 }
+$('#moreBtn').dataset.menuOwner = '1'; $('#moreBtn').setAttribute('aria-expanded', 'false');
 $('#moreBtn').addEventListener('click', mmOpen);
-document.addEventListener('pointerdown', e => { if (mmEl && !mmEl.contains(e.target) && !e.target.closest('#moreBtn')) mmClose(); });
-addEventListener('keydown', e => { if (e.key === 'Escape' && mmEl){ e.preventDefault(); mmClose(); $('#moreBtn').focus(); } });
+addEventListener('pointerdown', e => { if (!document.querySelector('.ctxm.mm')) $('#moreBtn').setAttribute('aria-expanded', 'false'); });
 
 /* ---------- batalla ciega: votas sin saber qué IA es ---------- */
 function arenaVote(winner, ids){
@@ -3266,7 +3234,7 @@ function renderAccBtn(){
   const b = $('#accBtn'); if (!b) return;
   const A = SZ.ACC, u = A.user || {}, tm = $('#tabMe .tme');
   if (A.ready){ b.className = 'rbtn rme'; b.dataset.tip = SZ.accName(); b.setAttribute('aria-label', 'Tu cuenta: ' + SZ.accName()); b.innerHTML = SZ.myAvatar() + '<span class="rl"><b>' + esc(SZ.accName().slice(0, 22)) + '</b><small>' + esc(SZ.ROLE_NAME[u.role || 'user'] || 'Synther') + ' · ' + (A.err ? 'sin guardar en tu cuenta' : 'guardado en tu cuenta') + '</small></span><i class="sy' + (A.err ? ' bad' : '') + '" title="' + (A.err ? esc(A.err) : 'Sincronizado') + '"></i>'; if (tm) tm.innerHTML = SZ.myAvatar(); }
-  else if (A.busy){ b.className = 'rbtn rme'; b.dataset.tip = 'Abriendo tu cuenta…'; b.innerHTML = '<span class="av-me">…</span><span class="rl"><b>Abriendo…</b><small>tu cuenta</small></span><i class="sy wait"></i>'; if (tm) tm.innerHTML = '<span class="av-me">…</span>'; }
+  else if (A.busy || SZ.signedish()){ b.className = 'rbtn rme'; b.dataset.tip = 'Abriendo tu cuenta…'; b.innerHTML = '<span class="av-me">…</span><span class="rl"><b>Abriendo…</b><small>tu cuenta</small></span><i class="sy wait"></i>'; if (tm) tm.innerHTML = '<span class="av-me">…</span>'; }
   else { b.className = 'rbtn rme out'; b.dataset.tip = 'Entrar a tu cuenta'; b.setAttribute('aria-label', 'Entrar a tu cuenta'); b.innerHTML = '<span class="av-me" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span><span class="rl"><b>Entrar</b><small>guarda tus chats</small></span>'; if (tm) tm.innerHTML = '<span class="av-me" style="background:rgba(255,255,255,.1);color:var(--soft)" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span>'; }
   b.style.setProperty('--i', 6);
 }
@@ -3317,7 +3285,7 @@ function accModal(){
   $('#aEdit').addEventListener('click', () => SZ.profileModal(() => { renderAccBtn(); reopen(); }));
   const sec = $('#aSec'); if (sec) sec.addEventListener('click', () => SZ.securityModal());
   $('#aSurvey').addEventListener('click', () => SZ.surveyModal(ok => { if (ok){ forMeK = ''; applySurvey(true); renderList({ keep:true }); } }));
-  $('#aKey').addEventListener('click', e => { st().syncKey = !st().syncKey; save(); e.currentTarget.setAttribute('aria-pressed', String(!!st().syncKey)); if (!st().syncKey) SZ.api('me', { method:'PUT', body:{ key:'' } }).catch(() => {}); toast(st().syncKey ? 'Tu llave se guardará cifrada en tu cuenta.' : 'Tu llave se borró de tu cuenta.'); });
+  const aKey = $('#aKey'); if (aKey) aKey.addEventListener('click', e => { st().syncKey = !st().syncKey; save(); e.currentTarget.setAttribute('aria-pressed', String(!!st().syncKey)); if (!st().syncKey) SZ.api('me', { method:'PUT', body:{ key:'' } }).catch(() => {}); toast(st().syncKey ? 'Tu llave se guardará cifrada en tu cuenta.' : 'Tu llave se borró de tu cuenta.'); });
   $('#aSync').addEventListener('click', async e => { const b = e.currentTarget; b.textContent = 'Sincronizando…'; await SZ.accPush({ ledger:true }); b.textContent = 'Sincronizar'; toast(SZ.ACC.err || 'Todo sincronizado.'); });
   $('#aOut').addEventListener('click', async e => {
     const b = e.currentTarget; b.textContent = 'Guardando…'; b.disabled = true;
@@ -3367,6 +3335,48 @@ delete st().teamKey; delete st().team; delete st().teams;
 renderAccBtn();
 if (params.get('acc') === '1') setTimeout(accModal, 2600);
 
+/* ===== v2.2 · orden nuevo: todo donde lo buscarías (estilo Claude) ===== */
+/* Ajustes › IAs y memoria: atajos a lo que antes estaba regado en menús */
+SZ.cfgLinks.push(
+  ['Elegir mis IA ideales', () => SZ.surveyModal(ok => { if (ok){ forMeK = ''; applySurvey(true); renderList({ keep:true }); } }), '3 preguntas y te digo cuáles te sirven más'],
+  ['Conectar Puter u otra IA', () => openConnect(), 'Tu versión pro de las IAs más usadas, gratis'],
+  ['Google Drive', () => driveModal(), 'Guarda una copia de tus chats en tu Drive'],
+  ['Tu ranking (a ciegas)', () => rankModal(), 'Las IAs que más te gustan según tus votos']);
+/* «Respuestas cortas» desde Ajustes también pinta su botón */
+addEventListener('synthz-saver', () => { $$('#sxSw, #saverBtn').forEach(x => x.setAttribute('aria-pressed', String(!!st().sx.saver))); updateHint(); });
+/* el «+» trae todo: archivos, crear imagen, buscar en internet y respuestas cortas */
+{
+  const am = $('#attMenu'), ab = $('#attachBtn');
+  if (ab){ ab.setAttribute('aria-label', 'Agregar: archivos, imagen, internet…'); ab.dataset.tip = 'Archivos, crear imagen, buscar en internet…'; ab.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'; }
+  if (am){
+    $$('.only-small', am).forEach(x => x.classList.remove('only-small'));
+    const hint = $('.ahint', am), sv = document.createElement('button');
+    sv.type = 'button'; sv.setAttribute('role', 'menuitemcheckbox'); sv.dataset.att = 'saver';
+    sv.innerHTML = '<i aria-hidden="true">🍃</i><span><b>Respuestas cortas</b><small>Gastas menos de tu límite de hoy</small></span><em class="mck" aria-hidden="true"></em>';
+    am.insertBefore(sv, hint);
+    const paint = () => { const on = !!st().sx.saver; sv.setAttribute('aria-checked', String(on)); $('.mck', sv).textContent = on ? '✓' : ''; };
+    paint(); addEventListener('synthz-saver', paint);
+    sv.addEventListener('click', e => { e.stopPropagation(); setSaver(!st().sx.saver); paint(); attClose(); }, true);
+    const wb = $('[data-att="web"]', am), ib = $('[data-att="mkimg"]', am);
+    const mark = () => { if (wb) wb.setAttribute('aria-checked', String(webOn)); if (ib) ib.setAttribute('aria-checked', String(imgMode)); };
+    new MutationObserver(mark).observe(document.body, { attributes:true, attributeFilter:['class'] }); mark();
+  }
+}
+/* chips de lo que está encendido (imagen, internet, cortas): se ven en la caja y se apagan con un toque */
+{
+  const host = document.createElement('div'); host.className = 'onchips'; host.id = 'onChips';
+  const ci = $('.comp-in'); if (ci) ci.appendChild(host);
+  const paint = () => {
+    const L = [];
+    if (imgMode) L.push(['img', '🎨 Crear imagen']);
+    if (webOn) L.push(['web', '🌐 Internet']);
+    if (st().sx.saver) L.push(['saver', '🍃 Cortas']);
+    host.innerHTML = L.map(([k, t]) => '<button type="button" class="onchip" data-off="' + k + '" data-tip="Apagar">' + t + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg></button>').join('');
+  };
+  host.addEventListener('click', e => { const b = e.target.closest('[data-off]'); if (!b) return; const k = b.dataset.off; if (k === 'img') setImgMode(false); else if (k === 'web') setWeb(false); else setSaver(false); paint(); });
+  new MutationObserver(paint).observe(document.body, { attributes:true, attributeFilter:['class'] });
+  addEventListener('synthz-saver', paint); $('#saverBtn') && $('#saverBtn').addEventListener('click', () => setTimeout(paint, 0)); paint();
+}
 /* ---------- arranque ---------- */
 const wantModel = params.get('model');
 if (wantModel && /^(pu|or):[\w.\/:@-]{2,120}$/.test(wantModel)){ st().model.openrouter = wantModel; save(); }

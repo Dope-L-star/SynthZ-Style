@@ -1739,3 +1739,100 @@ html.guiding #toast{z-index:9800}
 html.noglass #szgHud,html.noglass .szgp .gp-in{background:#16141a;backdrop-filter:none;-webkit-backdrop-filter:none}
 html.noanim .szgp .gp-in,html.noanim .gp-ia,html.noanim .gd-card,html.noanim .gd-wait>span{animation:none !important;transition-duration:.01s !important}
 @media (max-width:560px){#szgHud .gh-bar{display:none}.szgp{padding-top:64px}.szgp .gp-in{padding:18px}}
+/* ===== v2.2 · diseño claro, estilo Claude (se conservan el vidrio, el fondo y las animaciones) ===== */
+:root{--code:ui-monospace,'Cascadia Code','JetBrains Mono',Consolas,Menlo,monospace;--mono:var(--sans)}
+pre,code,kbd,.cvp-code,.cnv pre,.rccode,.hk-code,.og code,.fc .ic{font-family:var(--code)!important}
+
+/* ---- la caja para escribir: todo adentro, como en Claude ---- */
+.composer{padding:8px clamp(12px,4vw,48px) 18px}
+.composer .comp-in{width:min(100%,780px);margin:0 auto;display:grid!important;grid-template-columns:auto 1fr auto;grid-template-areas:"c c c" "f f f" "a p s";align-items:center;gap:6px 8px;padding:10px 10px 10px 12px;border-radius:24px;border:1px solid rgba(255,255,255,.12);background:rgba(30,29,36,.72);backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3);box-shadow:0 18px 50px -28px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.05);transition:border-color .3s,box-shadow .3s}
+.composer .comp-in:focus-within{border-color:rgba(230,182,95,.38)}
+.composer .comp-in>.field{grid-area:f;border:0!important;background:none!important;box-shadow:none!important;border-radius:0!important}
+.composer .comp-in textarea{padding:4px 6px!important;font-size:16px!important;min-height:26px;max-height:220px}
+.composer.big .comp-in textarea{min-height:56px}
+.composer .attw{grid-area:a;display:flex;align-items:center;gap:6px}
+.composer .cpick{grid-area:p;min-width:0;display:flex!important;align-items:center;gap:6px;overflow:hidden;justify-content:flex-end;order:0!important;width:auto!important;flex:initial!important}
+.composer .send{grid-area:s;width:36px;height:36px;border-radius:12px}
+.composer .send svg{width:18px;height:18px}
+.composer .attach{width:36px;height:36px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03)}
+.composer .attach svg{width:18px;height:18px}
+#imgBtn,#webBtn{display:none!important}
+.amenu .only-small{display:flex!important}
+.amenu [aria-checked="true"]{background:rgba(230,182,95,.1)}
+.amenu .mck{font-style:normal;color:#e6b65f;margin-left:auto;width:14px}
+.cpk{min-height:36px!important;padding:0 10px 0 6px!important;border-radius:12px!important;font-size:13.5px!important;background:rgba(255,255,255,.03)!important}
+.cpk2{min-height:36px!important;border-radius:12px!important;font-size:13.5px!important;padding:0 12px!important}
+.agpill{min-height:36px;border-radius:12px}
+.onchips{grid-area:c;display:flex;flex-wrap:wrap;gap:6px}
+.onchips:empty{display:none}
+.onchip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px 4px 10px;border-radius:999px;font-size:12.5px;color:#f3dcae;background:rgba(230,182,95,.1);border:1px solid rgba(230,182,95,.3);animation:chipin .4s cubic-bezier(.22,1,.36,1) both}
+.onchip svg{width:12px;height:12px;opacity:.7}
+.onchip:hover{background:rgba(230,182,95,.18)}
+/* debajo de la caja: solo tu límite, discreto */
+.hintline{width:min(100%,780px)!important;justify-content:center!important;margin-top:8px!important;font-size:12px!important}
+.hintline .kbdh,.hintline .saver[aria-pressed="false"],.hintline .saver{display:none!important}
+#sideFoot .sxfoot{display:none}
+
+/* ---- la conversación: respuestas limpias, sin marcos ---- */
+.lane{gap:26px}
+.m.bot{padding-left:0!important}
+.m.bot::before,.m.bot.brand::before{display:none!important}
+.m.bot>.body,.m.bot.brand>.body{padding:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important}
+.m.bot .body{font-size:16px;line-height:1.75;color:var(--text)}
+.m.bot .body p{margin:0 0 .8em}
+.who{font-size:13px!important;gap:8px;margin-bottom:10px}
+.m.bot.brand .who>b{background:none!important;-webkit-text-fill-color:currentColor;color:var(--text)!important;font-weight:600}
+.m.bot.brand .who .md{border:0!important;background:rgba(255,255,255,.06)!important;color:var(--mute)!important;font-size:11.5px!important;padding:2px 8px!important}
+.who .md::before{content:none!important}
+.m.user .who{display:none!important}
+.m.user .bub{background:rgba(255,255,255,.075)!important;border:1px solid rgba(255,255,255,.06);border-radius:20px!important;padding:10px 16px!important;font-size:15.5px;line-height:1.6}
+.m .meta{font-size:12px!important;opacity:.8;margin-top:6px!important}
+.work{margin:0 0 10px!important}
+.work.fin .wk-row{border:0!important;background:none!important;padding:2px 2px!important;gap:6px!important}
+.work.fin .wk-row .pxw{display:none}
+.work.fin .wk-w{font-size:12.5px!important;color:var(--mute)!important}
+.work.fin .wk-s{display:none}
+/* botones bajo cada respuesta: solo íconos (dicen qué hacen al pasar el mouse) */
+.m.bot .acts{position:static!important;background:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:0!important;margin-top:6px!important;gap:2px!important}
+.m.bot .acts .act{font-size:0!important;gap:0!important;width:32px;height:32px;padding:0!important;display:inline-flex!important;align-items:center;justify-content:center;border:0!important;border-radius:9px!important;background:none!important;color:var(--mute)}
+.m.bot .acts .act:hover{background:rgba(255,255,255,.08)!important;color:var(--text)}
+.m.bot .acts .act svg{width:16px!important;height:16px!important}
+.m.bot .acts .act span{display:none}
+.m.bot .acts .act[data-a="star"][aria-pressed="true"]{color:#e6b65f}
+.m.bot .acts .act[data-a="cont"]{font-size:12.5px!important;width:auto;padding:0 10px!important}
+
+/* ---- arriba: menos botones ---- */
+.guideb span{display:none}
+.guideb{width:40px;padding:0!important;justify-content:center}
+.top{border-bottom-color:transparent!important}
+
+/* ---- inicio vacío: saludo, caja e ideas (sin texto repetido) ---- */
+body.fresh .hsub2,body.fresh .hfoot{display:none!important}
+
+/* ---- celular ---- */
+@media (max-width:760px){
+  .composer{padding:6px 10px calc(10px + env(safe-area-inset-bottom))}
+  .composer .comp-in{padding:8px 8px 8px 10px;border-radius:22px}
+  .cpk{max-width:46vw!important}
+  .cpk .sug{display:none}
+  .cpk2 span{display:none}
+  .m.bot .body{font-size:15.5px}
+  body.fresh .comp-in .cpick{flex:initial!important;overflow:hidden!important}
+}
+/* ajustes finos */
+.ctxm .mico svg,.m.bot .acts .act svg{display:block;margin:0!important;position:static!important;translate:none!important}
+.ctxm button>*{align-self:center}
+.m.bot .acts .act{vertical-align:middle;line-height:0}
+/* la IA se elige arriba durante la conversación; en el inicio vacío, dentro de la caja */
+body:not(.fresh) .composer #cPick,body:not(.fresh) .composer #cCmp{display:none!important}
+.composer .cpick{justify-content:flex-start}
+/* detalles de cada respuesta: se ven en la última y al pasar el mouse */
+.m.bot:not(.last) .meta{opacity:0;transition:opacity .3s}
+.m.bot:not(.last):hover .meta{opacity:.8}
+.side-foot:has(.sxfoot:only-child){border-top:0}
+/* el menú «+» con vidrio que sí se lee */
+.amenu{background:rgba(24,23,30,.94)!important;backdrop-filter:blur(24px) saturate(1.3)!important;-webkit-backdrop-filter:blur(24px) saturate(1.3)!important;border-radius:16px!important}
+.amenu button{align-items:center!important}
+.amenu button>i{display:grid;place-items:center;width:28px;flex:none;font-style:normal}
+#attMenu.amenu{background:rgba(24,23,30,.97)!important}
+@media (hover:none){#attMenu .ahint{display:none}}

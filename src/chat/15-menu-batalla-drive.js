@@ -1,25 +1,21 @@
-/* ---------- menú «⋯» de la conversación ---------- */
-let mmEl = null;
-function mmClose(){ if (!mmEl) return; const el = mmEl; mmEl = null; el.animate([{ opacity:1 }, { opacity:0, transform:'translateY(-4px) scale(.97)' }], { duration:180 }).onfinish = () => el.remove(); }
+/* ---------- menú «⋯» de la conversación (v2.2: corto, por grupos y con íconos) ---------- */
+function mmClose(){ SZ.menuClose(); }
 function mmOpen(){
-  if (mmEl){ mmClose(); return; }
-  const items = [['Nuevo chat', () => newChat()]];
-  if (mode === 'solo') items.push(['Borrar este chat', () => clearChat(true)], ['Copiar la conversación', () => { copyText(chatMd()); toast('Conversación copiada.'); }], ['Exportar como .md', exportMd]);
-  else items.push(['Empezar otra comparación', () => clearChat()], ['Volver a una sola IA', () => removeCmp(st().cmp[st().cmp.length - 1])]);
-  items.push(['—'], ['Lo que recuerdo de ti', () => memModal()], ['Qué hay de nuevo', () => SZ.whatsNew(true, list => runTopics(list))], ['Instalar la app', () => SZ.installApp()], ['Tu ranking (a ciegas)', () => rankModal()]);
-  if (trialOn) items.push(['Salir de la prueba guiada', () => exitTrial()]);
-  items.push(['Google Drive · guardar mis chats', () => driveModal()]);
-  items.push(['Conectar IA', () => openConnect()], ['Elegir mis IA ideales', () => SZ.surveyModal(ok => { if (ok){ forMeK = ''; applySurvey(true); renderList({ keep:true }); } })]);
-  mmEl = document.createElement('div'); mmEl.className = 'ctxm mm'; mmEl.setAttribute('role', 'menu');
-  items.forEach(([l, fn]) => { if (l === '—'){ mmEl.appendChild(document.createElement('hr')); return; } const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'menuitem'); b.textContent = l; b.addEventListener('click', () => { mmClose(); fn(); }); mmEl.appendChild(b); });
-  document.body.appendChild(mmEl);
-  const r = $('#moreBtn').getBoundingClientRect(), w = mmEl.offsetWidth;
-  mmEl.style.left = Math.max(10, Math.min(r.right - w, innerWidth - w - 10)) + 'px'; mmEl.style.top = (r.bottom + 8) + 'px';
-  const f = $('button', mmEl); if (f) f.focus();
+  const mb = $('#moreBtn');
+  if (mb.getAttribute('aria-expanded') === 'true' && document.querySelector('.ctxm.mm')){ SZ.menuClose(); mb.setAttribute('aria-expanded', 'false'); return; }
+  const L = [{ label:'Nuevo chat', ico:'new', fn:() => newChat() }];
+  if (mode === 'solo') L.push({ label:'Copiar la conversación', ico:'copy', fn:() => { copyText(chatMd()); toast('Conversación copiada.'); } }, { label:'Descargar como texto', ico:'down', fn:exportMd });
+  else L.push({ label:'Empezar otra comparación', ico:'cmp', fn:() => clearChat() }, { label:'Volver a una sola IA', ico:'exit', fn:() => removeCmp(st().cmp[st().cmp.length - 1]) });
+  L.push('—', { label:'Lo que recuerdo de ti', ico:'brain', fn:() => SZ.cfgModal('mem') }, { label:'Ajustes', ico:'cog', fn:() => SZ.cfgModal() }, { label:'Ayuda: algo no carga', ico:'help', fn:() => showBlockHelp(window.__puterBlocked ? 'script' : 'popup') });
+  if (trialOn) L.push({ label:'Salir de la prueba guiada', ico:'exit', fn:() => exitTrial() });
+  if (mode === 'solo') L.push('—', { label:'Borrar este chat', ico:'trash', danger:true, fn:() => clearChat(true) });
+  const r = mb.getBoundingClientRect(), m = SZ.menuOpen(L, 0, r.bottom + 8, 'mm');
+  m.style.left = Math.max(10, Math.min(r.right - m.offsetWidth, innerWidth - m.offsetWidth - 10)) + 'px';
+  mb.setAttribute('aria-expanded', 'true'); const f = $('button', m); if (f) f.focus();
 }
+$('#moreBtn').dataset.menuOwner = '1'; $('#moreBtn').setAttribute('aria-expanded', 'false');
 $('#moreBtn').addEventListener('click', mmOpen);
-document.addEventListener('pointerdown', e => { if (mmEl && !mmEl.contains(e.target) && !e.target.closest('#moreBtn')) mmClose(); });
-addEventListener('keydown', e => { if (e.key === 'Escape' && mmEl){ e.preventDefault(); mmClose(); $('#moreBtn').focus(); } });
+addEventListener('pointerdown', e => { if (!document.querySelector('.ctxm.mm')) $('#moreBtn').setAttribute('aria-expanded', 'false'); });
 
 /* ---------- batalla ciega: votas sin saber qué IA es ---------- */
 function arenaVote(winner, ids){

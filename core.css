@@ -774,8 +774,64 @@ html.noglass .szdisc{background:#16141a}
 #szAlert .al-w{display:flex;align-items:center;gap:10px;margin-top:6px;color:var(--text,#ecebe7)}
 #szAlert .al-w i{width:16px;height:16px;border-radius:50%;border:2px solid #e6b65f;border-top-color:transparent;animation:agSpin .9s linear infinite;flex:none}
 @keyframes agSpin{to{transform:rotate(360deg)}}
-/* v2.1 · instalar SynthZ como app */
+/* v2.2 · utilidades de cuenta (la app instalable vuelve más adelante) */
 .inst-ol{margin:10px 0 0;padding-left:22px;text-align:left;display:grid;gap:8px;color:var(--ink2,#cfc8e6);font-size:14.5px;line-height:1.45}
 .inst-ol b{color:var(--ink,#fff);font-weight:600}
 .inst-p{margin-top:12px;font-size:13px;opacity:.75}
 .is-app .only-web{display:none!important}
+.signed .only-guest{display:none!important}
+/* ===== v2.2 · menús, etiquetas, ajustes con pestañas y el «!» de novedades ===== */
+.ctxm{min-width:236px;max-width:min(320px,calc(100vw - 20px));padding:6px;gap:1px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(22,22,28,.86);backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);box-shadow:0 24px 60px -18px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.06)}
+.ctxm button{display:flex;align-items:center;gap:10px;width:100%;min-height:34px;padding:7px 10px;border-radius:9px;font-size:14px;color:var(--soft,#c3c5ce);text-align:left}
+.ctxm button:hover,.ctxm button:focus-visible{background:rgba(255,255,255,.08);color:var(--text,#ecebe7);outline:0}
+.ctxm button span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ctxm .mico{display:grid;place-items:center;width:18px;height:18px;flex:none;color:var(--mute,#8d909c)}
+.ctxm .mico svg{width:17px;height:17px}
+.ctxm button:hover .mico{color:var(--text,#ecebe7)}
+.ctxm kbd{font:11px var(--sans,system-ui);color:var(--mute,#8d909c);opacity:.8}
+.ctxm .mck{font-style:normal;color:#e6b65f;width:14px;text-align:center}
+.ctxm hr{border:0;height:1px;margin:5px 6px;background:rgba(255,255,255,.08)}
+.ctxm .mhd{padding:6px 10px 4px;font-size:11.5px;color:var(--mute,#8d909c);letter-spacing:.02em}
+.ctxm .dng,.ctxm .dng .mi{color:#ff9d8a}
+.ctxm .dng:hover{background:rgba(255,120,100,.12);color:#ffb3a7}
+.sztip{position:fixed;z-index:10050;pointer-events:none;max-width:260px;padding:5px 10px;border-radius:8px;background:rgba(240,238,232,.96);color:#121318;font:500 12.5px/1.35 var(--sans,system-ui);box-shadow:0 8px 24px -8px rgba(0,0,0,.6);opacity:0;transform:translateY(3px);transition:opacity .16s,transform .2s cubic-bezier(.22,1,.36,1)}
+.sztip.on{opacity:1;transform:none}
+/* Ajustes */
+.cfgcard{width:min(94vw,560px)!important;max-height:min(88vh,760px);display:flex;flex-direction:column;padding:22px 22px 16px!important}
+.cfghead{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.cfghead h3{font-size:32px!important;margin:0}
+.cfgtabs{position:relative;display:inline-flex;padding:4px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}
+.cfgtabs button{position:relative;z-index:1;padding:7px 14px;border-radius:999px;font-size:13.5px;color:var(--mute,#8d909c);transition:color .3s}
+.cfgtabs button[aria-selected="true"]{color:var(--text,#ecebe7)}
+.cfgtabs .pill{position:absolute;left:4px;top:4px;bottom:4px;width:0;border-radius:999px;background:rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.12);transition:transform .45s cubic-bezier(.22,1,.36,1),width .45s cubic-bezier(.22,1,.36,1)}
+.cfgbody{flex:1;min-height:0;overflow-y:auto;margin:0 -6px;padding:0 6px 6px;scrollbar-width:thin}
+.cfgpane{animation:cfgin .45s cubic-bezier(.22,1,.36,1) both}
+@keyframes cfgin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.cfgfoot{margin-top:12px!important;padding-top:12px;border-top:1px solid rgba(255,255,255,.07)}
+.cfgmem .meml{list-style:none;margin:8px 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.cfgmem .meml li{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);font-size:14px}
+.cfgmem .meml li span{flex:1;min-width:0}
+.cfgmem .memnone{color:var(--mute,#8d909c);justify-content:center;text-align:center}
+.cfgmem .memadd{display:flex;gap:8px;align-items:stretch}
+.cfgmem .memadd .field{flex:1;min-width:0}
+.cfgmem .memadd input{width:100%;padding:10px 12px;font-size:14px}
+.cfgmem .memclr{margin-top:8px;font-size:13px}
+.cfglinks{display:flex;flex-direction:column;gap:6px}
+.cfglk{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 10px;padding:11px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);text-align:left;transition:background .25s,border-color .25s}
+.cfglk:hover{background:rgba(255,255,255,.07);border-color:rgba(230,182,95,.35)}
+.cfglk b{font-weight:500;font-size:14.5px;color:var(--text,#ecebe7)}
+.cfglk small{grid-column:1;font-size:12.5px;color:var(--mute,#8d909c)}
+.cfglk svg{grid-row:1/3;grid-column:2;width:16px;height:16px;color:var(--mute,#8d909c)}
+/* «!» de novedades sobre la cabeza de SynthonIA */
+.nwbang{position:absolute;left:50%;top:-16px;z-index:3;width:22px;height:22px;margin-left:-11px;display:grid;place-items:center;border-radius:50%;background:linear-gradient(135deg,#ffcf7a,#e6b65f);color:#1a1206;font:800 14px/1 var(--sans,system-ui);box-shadow:0 0 0 2px rgba(11,12,16,.9),0 6px 18px -4px rgba(230,182,95,.8);cursor:pointer;animation:bangin .6s cubic-bezier(.34,1.56,.64,1) both,bangbob 2.4s ease-in-out .6s infinite}
+.nwbang:hover{filter:brightness(1.1)}
+.nwbang.out{animation:bangout .35s ease both}
+#szBot.inhead .nwbang{top:-10px;width:18px;height:18px;margin-left:-9px;font-size:12px}
+@keyframes bangin{from{opacity:0;transform:translateY(10px) scale(.3)}to{opacity:1;transform:none}}
+@keyframes bangbob{0%,100%{translate:0 0}50%{translate:0 -3px}}
+@keyframes bangout{to{opacity:0;transform:translateY(-8px) scale(.5)}}
+html.noanim .nwbang{animation:none}
+/* boca que habla */
+.ftalk{opacity:0;transition:opacity .12s}
+/* con sesión: nada de «entra a tu cuenta» */
+.signed .only-guest{display:none!important}

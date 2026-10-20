@@ -188,22 +188,67 @@ function waterIn(el){
   })(t0);
 }
 
-function ctxMenu(getItems){
-  let m = null; const close = () => { if (m){ m.remove(); m = null; } };
-  addEventListener('contextmenu', e => {
-    if (e.target.closest && e.target.closest('input,textarea')) return;
-    e.preventDefault(); close();
-    const sel = String(getSelection() || '').trim();
-    const items = [...(sel ? [{ label:'Copiar selección', fn:() => navigator.clipboard && navigator.clipboard.writeText(sel) }] : []), ...getItems(e)];
-    m = document.createElement('div'); m.className = 'ctxm'; m.setAttribute('role', 'menu');
-    items.forEach(it => { const b = document.createElement('button'); b.type = 'button'; b.textContent = it.label; b.addEventListener('click', ev => { ev.stopPropagation(); close(); it.fn(); }); m.appendChild(b); });
-    document.body.appendChild(m);
-    m.style.left = Math.max(8, Math.min(e.clientX, innerWidth - m.offsetWidth - 10)) + 'px'; m.style.top = Math.max(8, Math.min(e.clientY, innerHeight - m.offsetHeight - 10)) + 'px';
-    m.animate([{ opacity:0, transform:'scale(.9) translateY(6px)', filter:'blur(6px)' }, { opacity:1, transform:'none', filter:'blur(0)' }], { duration:380, easing:'cubic-bezier(.22,1,.36,1)' });
+/* v2.2 · menús limpios: íconos, grupos (separados con «—»), atajos y lo peligroso en rojo. Se usan con el clic derecho y con «⋯» */
+const MI = (d) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
+const MICO = {
+  copy:MI('<rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>'),
+  new:MI('<path d="M12 20h8"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'),
+  search:MI('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'),
+  cog:MI('<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>'),
+  help:MI('<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/>'),
+  star:MI('<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9 6.8 19.7l1-5.9L3.5 9.7l5.9-.8z"/>'),
+  sound:MI('<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/>'),
+  regen:MI('<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>'),
+  trash:MI('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'),
+  down:MI('<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>'),
+  quote:MI('<path d="M7 7h4v4H7zM13 7h4v4h-4z"/><path d="M9 11c0 3-1 5-3 6M15 11c0 3-1 5-3 6"/>'),
+  home:MI('<path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-6h4v6"/>'),
+  brain:MI('<path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 3 3h1V4z"/><path d="M15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-3 3h-1V4z"/>'),
+  chats:MI('<path d="M4 5h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/>'),
+  ai:MI('<path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z"/>'),
+  up:MI('<path d="M12 19V5M5 12l7-7 7 7"/>'),
+  user:MI('<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'),
+  open:MI('<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'),
+  chart:MI('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'),
+  reload:MI('<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>'),
+  stop:MI('<rect x="6" y="6" width="12" height="12" rx="2"/>'),
+  cmp:MI('<rect x="3" y="5" width="7.5" height="14" rx="2"/><rect x="13.5" y="5" width="7.5" height="14" rx="2"/>'),
+  trophy:MI('<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8"/>'),
+  exit:MI('<path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/>')
+};
+/* arma un menú (para el clic derecho o para un botón) en la posición x, y */
+function menuBuild(items, x, y, cls){
+  const m = document.createElement('div'); m.className = 'ctxm ' + (cls || ''); m.setAttribute('role', 'menu');
+  items.filter(Boolean).forEach((it, i, L) => {
+    if (it === '—'){ if (i && i < L.length - 1 && L[i - 1] !== '—') m.appendChild(document.createElement('hr')); return; }
+    if (it.head){ const h = document.createElement('div'); h.className = 'mhd'; h.textContent = it.head; m.appendChild(h); return; }
+    const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'menuitem'); if (it.danger) b.className = 'dng';
+    b.innerHTML = '<i class="mico">' + (MICO[it.ico] || '') + '</i><span></span>' + (it.key ? '<kbd>' + esc(it.key) + '</kbd>' : '') + (it.on != null ? '<em class="mck" aria-hidden="true">' + (it.on ? '✓' : '') + '</em>' : '');
+    $('span', b).textContent = it.label; if (it.on != null) b.setAttribute('aria-checked', String(!!it.on));
+    b.addEventListener('click', ev => { ev.stopPropagation(); menuClose(); it.fn(); });
+    m.appendChild(b);
   });
-  addEventListener('pointerdown', e => { if (m && !m.contains(e.target)) close(); });
-  addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
-  addEventListener('scroll', close, true); addEventListener('resize', close);
+  document.body.appendChild(m);
+  m.style.left = Math.max(8, Math.min(x, innerWidth - m.offsetWidth - 10)) + 'px'; m.style.top = Math.max(8, Math.min(y, innerHeight - m.offsetHeight - 10)) + 'px';
+  if (!reduce) m.animate([{ opacity:0, transform:'scale(.94) translateY(4px)', filter:'blur(4px)' }, { opacity:1, transform:'none', filter:'blur(0)' }], { duration:260, easing:'cubic-bezier(.22,1,.36,1)' });
+  m.addEventListener('keydown', e => { const B = $$('button', m), i = B.indexOf(document.activeElement); if (e.key === 'ArrowDown' || e.key === 'ArrowUp'){ e.preventDefault(); B[(i + (e.key === 'ArrowDown' ? 1 : B.length - 1)) % B.length].focus(); } });
+  return m;
+}
+let MENU = null;
+function menuClose(){ if (!MENU) return; const m = MENU; MENU = null; if (reduce){ m.remove(); return; } m.animate([{ opacity:1 }, { opacity:0, transform:'scale(.97)' }], { duration:140 }).onfinish = () => m.remove(); }
+function menuOpen(items, x, y, cls){ menuClose(); MENU = menuBuild(items, x, y, cls); return MENU; }
+addEventListener('pointerdown', e => { if (MENU && !MENU.contains(e.target) && !(e.target.closest && e.target.closest('[data-menu-owner]'))) menuClose(); });
+addEventListener('keydown', e => { if (e.key === 'Escape' && MENU){ e.preventDefault(); menuClose(); } });
+addEventListener('scroll', e => { if (MENU && !(e.target && e.target.nodeType === 1 && MENU.contains(e.target))) menuClose(); }, true); addEventListener('resize', () => menuClose());
+/* clic derecho: getItems(e, sel) arma lo que corresponde según dónde hiciste clic */
+function ctxMenu(getItems){
+  addEventListener('contextmenu', e => {
+    if (e.target.closest && e.target.closest('input,textarea,[contenteditable],a[href]')) return;
+    const sel = String(getSelection() || '').trim();
+    const items = [...(sel ? [{ label:'Copiar', ico:'copy', key:'Ctrl+C', fn:() => { navigator.clipboard && navigator.clipboard.writeText(sel); toast('Copiado.'); } }] : []), ...(getItems(e, sel) || [])];
+    if (!items.length) return;
+    e.preventDefault(); menuOpen(items, e.clientX, e.clientY);
+  });
 }
 if (matchMedia('(pointer: fine)').matches && !reduce){ let ax = 0, ay = 0, aq = 0; addEventListener('pointermove', e => { ax = e.clientX; ay = e.clientY; if (aq) return; aq = requestAnimationFrame(() => { aq = 0; const a = $('.aurora'); if (!a) return; a.style.setProperty('--mx', ((ax / innerWidth - .5) * 70).toFixed(1)); a.style.setProperty('--my', ((ay / innerHeight - .5) * 70).toFixed(1)); }); }, { passive:true }); }
 addEventListener('scroll', e => { const t = e.target; if (t && t !== document && t.scrollTop != null){ extraY += t.scrollTop - (t._lt || 0); t._lt = t.scrollTop; } }, true);

@@ -69,15 +69,11 @@ const sprog = document.createElement('i'); sprog.id = 'sprog'; document.body.app
 let spQ = 0; addEventListener('scroll', () => { if (spQ) return; spQ = requestAnimationFrame(() => { spQ = 0; const h = document.documentElement.scrollHeight - innerHeight; sprog.style.transform = 'scaleX(' + (h > 0 ? scrollY / h : 0).toFixed(4) + ')'; }); }, { passive:true });
 const go = id => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior:'smooth' }); };
 SZ.ctxMenu(() => [
-  { label:'Abrir SynthFlow', fn:() => openChat() },
-  { label:'Mis IA', fn:() => go('conectar') },
-  { label:'Ver mi consumo', fn:() => go('consumo') },
-  { label:'Volver arriba', fn:() => scrollTo({ top:0, behavior:'smooth' }) },
-  { label:'Guía rápida', fn:() => openHelp() },
-  { label:'Recorrido por la página', fn:() => pageTour() },
-  { label:'Elegir mis IA (3 preguntas)', fn:() => SZ.surveyModal() },
-  { label:'Configuración', fn:() => SZ.cfgModal() },
-  { label:'Recargar', fn:() => location.reload() }]);
+  { label:'Abrir SynthFlow', ico:'open', fn:() => openChat() },
+  { label:'Ver mi consumo', ico:'chart', fn:() => go('consumo') },
+  { label:'Volver arriba', ico:'up', fn:() => scrollTo({ top:0, behavior:'smooth' }) }, '—',
+  { label:'Ajustes', ico:'cog', fn:() => SZ.cfgModal() },
+  { label:'Guía rápida', ico:'help', fn:() => openHelp() }]);
 document.addEventListener('click', e => { const u = e.target.closest && e.target.closest('a[data-draft]'); if (!u || e.defaultPrevented || e.button || e.ctrlKey || e.metaKey || e.shiftKey) return; e.preventDefault(); SZ.portalOut(u.getAttribute('href')); });
 document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('a[href="chat.html"]'); if (!a || e.defaultPrevented || e.button || e.ctrlKey || e.metaKey || e.shiftKey) return; e.preventDefault(); openChat(); });
 $('#launchInp').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); openChat(); } });

@@ -16,7 +16,7 @@ export const PROV = {
     best:['@cf/meta/llama-3.3-70b-instruct-fp8-fast', '@cf/meta/llama-3.1-8b-instruct', '@cf/meta/llama-3.2-3b-instruct', '@cf/google/gemma-3-12b-it'] },
   /* v2.0 · Google AI Studio: SOLO los modelos de la capa gratis (Flash, Flash-Lite y Gemma). Ojo: la llave debe ser de un proyecto SIN facturación */
   google:{ name:'Google AI Studio', base:() => process.env.POOL_GOOGLE_URL || 'https://generativelanguage.googleapis.com/v1beta/openai', cap:+process.env.POOL_CAP_GOOGLE || 900,
-    best:['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemma-3-27b-it'] },
+    best:['gemini-flash-latest', 'gemini-flash-lite-latest', 'gemma-3-27b-it'] },
   /* Ollama (nube): plan gratis con límites por sesión/semana; no cobra por uso */
   ollama:{ name:'Ollama', base:() => process.env.POOL_OLLAMA_URL || 'https://ollama.com/v1', cap:+process.env.POOL_CAP_OLLAMA || 300,
     best:['gpt-oss:120b', 'gpt-oss:20b', 'qwen3-coder:480b', 'deepseek-v3.1:671b'] },
@@ -95,6 +95,9 @@ export const baseOf = async k => k.prov === 'cloudflare' ? PROV.cloudflare.base(
 /* ---------- catálogo: solo modelos gratis de texto ---------- */
 /* solo lo gratis: Google (Flash, Flash-Lite, Gemma; nunca Pro, imagen, voz ni «live») y SiliconFlow (su lista gratis) */
 const GOOGLE_FREE = /^(gemini-[\d.]+-flash(-lite)?(-\d{3})?|gemini-flash(-lite)?-latest|gemma-[\w.-]+-it)$/i;
+/* Google retira modelos viejos para cuentas nuevas: se ordena del más nuevo al más viejo (los «-latest» primero) */
+const gVer = id => /latest/.test(id) ? 99 : +((id.match(/(\d+(?:\.\d+)?)/) || [])[1] || 0);
+const gSort = (a, b) => (/^gemma/.test(a.id) - /^gemma/.test(b.id)) || (gVer(b.id) - gVer(a.id)) || (/lite/.test(a.id) - /lite/.test(b.id));
 const SF_FREE = /(^|\/)(qwen3-8b|qwen2\.5-7b-instruct|qwen3\.5-4b|glm-4-9b-0414|glm-z1-9b-0414|deepseek-r1-0528-qwen3-8b|hunyuan-mt-7b)$/i;
 const DROP = /whisper|guard|tts|orpheus|safeguard|allam|compound|distil|playai|embed|moderation|ocr|voxtral|transcri|lora|vision-preview|lyria|music|audio|image|flux|stable|dall/i;
 async function listFor(prov, k){
@@ -112,7 +115,7 @@ async function listFor(prov, k){
   }
   const d = await (await fetch(base + '/models', { headers:H, signal:AbortSignal.timeout(10000) })).json();
   let L = (d.data || d.models || []).map(m => m && (m.id || m.name) ? Object.assign({}, m, { id:String(m.id || m.name).replace(/^models\//, '') }) : null).filter(m => m && m.active !== false && !DROP.test(m.id));
-  if (prov === 'google') L = L.filter(m => GOOGLE_FREE.test(m.id));
+  if (prov === 'google') L = L.filter(m => GOOGLE_FREE.test(m.id)).sort(gSort);
   if (prov === 'siliconflow') L = L.filter(m => SF_FREE.test(m.id) && !/^pro\//i.test(m.id));
   if (prov === 'mistral') L = L.filter(m => !m.capabilities || m.capabilities.completion_chat !== false).filter(m => !m.deprecation && (/-latest$/.test(m.id) || /nemo/.test(m.id)));
   return L.map(m => ({ mid:m.id, name:m.id, ctx:+m.context_window || +m.max_context_length || 0 }));
@@ -180,6 +183,7 @@ export async function chat({ who, ipKey, messages, model, maxTokens, system, str
         const body = { model:m.mid, messages:msgs, stream, max_tokens:Math.min(1600, +maxTokens || 1200), temperature:.6 };
         if (stream && (m.prov === 'groq' || m.prov === 'mistral')) body.stream_options = { include_usage:true };
         if (stream && m.prov === 'openrouter') body.usage = { include:true };
+        if (m.prov === 'siliconflow') body.enable_thinking = false;
         up = await calm(() => fetch(base + '/chat/completions', { method:'POST', signal:AbortSignal.timeout(30000),
           headers:Object.assign({ Authorization:'Bearer ' + k.key, 'content-type':'application/json' }, m.prov === 'openrouter' ? { 'HTTP-Referer':'https://synthz.app', 'X-Title':'SynthZ' } : {}), body:JSON.stringify(body) }));
       }catch(e){ up = null; }
@@ -314,22 +318,32 @@ export async function checkKey(k){
       return out;
     }catch(e){ return { ok:false, kind:'down', state:'no respondió a tiempo' }; }
   }
+  const save = async out => { await redis('SET', 'pk:chk:' + k.id, JSON.stringify(Object.assign({ t:Date.now() }, out)), 'EX', '604800').catch(() => {}); return out; };
   try{
     const base = await baseOf(k);
-    if (k.prov === 'cloudflare' && /accounts\/\/ai/.test(base)) return { ok:false, kind:'auth', state:'no encontré el Account ID de Cloudflare' };
-    const list = await listFor(k.prov, k).catch(() => []);
-    const mid = PROV[k.prov].best.find(b => list.some(m => m.mid === b)) || (list[0] && list[0].mid) || PROV[k.prov].best[0];
-    await wait(k.prov === 'mistral' ? 1200 : 100);
-    const t0 = Date.now();
-    const c = await calm(() => fetch(base + '/chat/completions', { method:'POST', headers:{ Authorization:'Bearer ' + k.key, 'Content-Type':'application/json' }, body:JSON.stringify({ model:mid, messages:[{ role:'user', content:'Responde solo: ok' }], max_tokens:4, temperature:0 }), signal:AbortSignal.timeout(12000) }));
-    let out;
-    if (c.ok){ const j = await c.json().catch(() => ({})); out = j && j.choices ? { ok:true, kind:'ok', state:'funciona · respondió en ' + ((Date.now() - t0) / 1000).toFixed(1).replace('.', ',') + ' s', model:mid } : { ok:false, kind:'err', state:'respondió en un formato raro', model:mid }; }
-    else { const tx = await c.text().catch(() => ''), s = c.status;
-      out = s === 402 || (s === 403 && PLAN_RX.test(tx)) ? { ok:false, kind:'plan', state:'pide un plan o un pago (SynthZ no lo activa)' } : s === 401 || s === 403 ? { ok:false, kind:'auth', state:'llave no autorizada' } : s === 429 ? { ok:false, kind:'limit', state:'límite gratis alcanzado por ahora' } : { ok:false, kind:'down', state:classify(s) };
-      out.detail = provSaid(tx); out.model = mid; }
-    await redis('SET', 'pk:chk:' + k.id, JSON.stringify(Object.assign({ t:Date.now() }, out)), 'EX', '604800');
+    if (k.prov === 'cloudflare' && /accounts\/\/ai/.test(base)) return save({ ok:false, kind:'auth', state:'no encontré el Account ID de Cloudflare' });
+    let listed = true;
+    const list = await listFor(k.prov, k).catch(() => { listed = false; return []; });
+    const cands = k.prov === 'google' ? list.map(m => m.mid) : [...PROV[k.prov].best.filter(b => list.some(m => m.mid === b)), ...list.map(m => m.mid)];
+    const mids = [...new Set(cands.length ? cands : PROV[k.prov].best)].slice(0, 3);
+    let out, c, tx = '';
+    for (const mid of mids){
+      await wait(k.prov === 'mistral' ? 1200 : 100);
+      const t0 = Date.now(), body = { model:mid, messages:[{ role:'user', content:'Responde solo: ok' }], max_tokens:8, temperature:0 };
+      if (k.prov === 'siliconflow') body.enable_thinking = false;
+      try{ c = await calm(() => fetch(base + '/chat/completions', { method:'POST', headers:{ Authorization:'Bearer ' + k.key, 'Content-Type':'application/json' }, body:JSON.stringify(body), signal:AbortSignal.timeout(k.prov === 'siliconflow' || k.prov === 'ollama' ? 20000 : 12000) })); }
+      catch(e){ out = { ok:false, kind:'down', state:'no respondió a tiempo (el proveedor está lento)', model:mid }; continue; }
+      if (c.ok){ const j = await c.json().catch(() => ({})); out = j && j.choices ? { ok:true, kind:'ok', state:'funciona · respondió en ' + ((Date.now() - t0) / 1000).toFixed(1).replace('.', ',') + ' s', model:mid } : { ok:false, kind:'err', state:'respondió en un formato raro', model:mid }; break; }
+      tx = await c.text().catch(() => ''); const s = c.status;
+      out = s === 402 || (s === 403 && PLAN_RX.test(tx)) ? { ok:false, kind:'plan', state:'pide un plan o un pago (SynthZ no lo activa)' } : s === 401 || s === 403 ? { ok:false, kind:'auth', state:'llave no autorizada' } : s === 429 ? (listed && !PLAN_RX.test(tx) ? { ok:true, kind:'busy', state:'llave válida ✓ · ahora mismo está ocupada (su plan gratis permite pocas por minuto); se usa sola cuando se libera' } : { ok:false, kind:'limit', state:'límite gratis alcanzado por ahora' }) : { ok:false, kind:'down', state:classify(s) };
+      out.detail = provSaid(tx); out.model = mid;
+      if (s === 404 || (s === 400 && /model/i.test(tx))) continue;   /* modelo retirado: prueba el siguiente */
+      break;
+    }
+    await save(out);
     if (out.ok){ await redis('DEL', 'pk:down:' + k.id); await clearPay(k); }
-    else if (out.kind === 'plan') await markPay(k, c.status, out.detail || '');
+    else if (out.kind === 'plan') await markPay(k, c ? c.status : 402, out.detail || '');
     return out;
-  }catch(e){ return { ok:false, kind:'down', state:'no respondió a tiempo' }; }
+  }catch(e){ return save({ ok:false, kind:'down', state:'no respondió a tiempo' }); }
 }
+

@@ -1,4 +1,31 @@
-# SynthZ v2.1B — Internet con fuentes, presentaciones, memoria y app instalable
+# SynthZ v2.2B — SynthFlow renovado (estilo Claude), arreglos y listo para main
+
+- **Diseño nuevo, más claro (se conservan el vidrio, el fondo y todas las animaciones):**
+  - Una sola caja para escribir, con todo adentro. El **«+»** trae: archivos o fotos, crear imagen, buscar en internet y respuestas cortas. Lo que está encendido se ve como una etiqueta en la caja y se apaga con un toque.
+  - Respuestas limpias: sin marco ni raya de color. Arriba la IA que respondió; debajo, botones de íconos (copiar, escuchar, guardar, otra respuesta) que dicen qué hacen al pasar el mouse.
+  - Tus mensajes en una burbuja simple, sin «tú ▸».
+  - Una sola letra limpia en toda la página (la de máquina de escribir solo para código).
+  - La IA se elige arriba durante el chat (antes salía dos veces).
+  - Tu límite solo aparece debajo de la caja y en la barra.
+- **Clic derecho limpio:** según dónde hagas clic. En una respuesta: copiar, escuchar, guardar, otra respuesta. En un texto marcado: copiar o «preguntarle a la IA sobre esto». Siempre: nuevo chat, buscar, Ajustes y Guía. Con íconos y grupos. Antes tenía 19 opciones.
+- **Menú ⋯ corto:** nuevo chat, copiar, descargar como texto, lo que recuerdo de ti, Ajustes, ayuda. «Borrar este chat» va al final, en rojo.
+- **Ajustes con 2 pestañas:**
+  - **Página:** cómo se ve (más bonito o más rápido, cursor, animaciones, sonidos…).
+  - **IAs y memoria:** modo principiante, buscar en internet cuando haga falta, respuestas cortas, lo que recuerdo de ti (ver, agregar y olvidar) y atajos a tus IAs (elegir IA ideales, conectar Puter, Google Drive y tu ranking).
+- **«¿Qué hay de nuevo?»:** ya no se abre sola. Sale un **«!»** sobre la cabeza de SynthonIA, una vez por versión, y al tocarlo te lo cuenta.
+- **SynthonIA habla de verdad:** la boca dice cada sílaba a ritmo de voz (a abierta, e/i ancha, o/u redonda, labios cerrados en m/b/p) y se cierra suave al terminar.
+- **Instalación quitada por ahora:** la app vuelve más adelante, hecha 100 % nuestra. Si alguien la instaló en pruebas, su copia se borra sola.
+- **Arreglos:**
+  - **Letrero de iniciar sesión con la cuenta abierta:** salía mientras tu cuenta cargaba (y al volver de Google). Ahora la página sabe desde el primer segundo que ya entraste.
+  - **Perfil en «Cargando las IAs conectadas…» para siempre:** un botón viejo hacía fallar la ventana. Arreglado (también «Guardar ahora» y «Cerrar sesión» de esa ventana).
+  - **Google (error 404 del modelo retirado):** siempre usa el Flash más nuevo y, si uno se retira, prueba el siguiente solo.
+  - **Mistral «Rate limit exceeded»:** al probar, si está ocupado, dice «llave válida ✓ · ahora mismo está ocupada».
+  - **SiliconFlow «sin probar aún»:** si tardaba más de 12 s no se guardaba la prueba. Ahora espera hasta 20 s (sin el modo «pensar») y el resultado siempre queda guardado.
+- **Entrar con Google (lo cambias tú en Supabase):** Authentication → URL Configuration → Site URL `https://synthz-style.vercel.app`, y en Redirect URLs agregar `https://synthz-style.vercel.app/**` y la de pruebas.
+- **Plan de pagos documentado y APAGADO:** en PENDIENTES.md están el asistente de WhatsApp y Telegram, el estudio de video, el agente que cambia a GPT, Claude, Gemini, Grok y OpenRouter, tarifas y descuentos.
+- **Usuarios:** la versión nueva usa las mismas llaves de datos que main. Solo agrega, no renombra ni borra nada, así que no se pierde ninguna cuenta.
+
+# SynthZ v2.1B — Internet con fuentes, presentaciones y memoria (la app instalable se quitó en 2.2)
 
 - **Buscar en internet:** globo 🌐 junto al clip (en el celular, dentro del clip). La IA responde con datos de hoy, cita [1], [2]… y abajo salen las fuentes con enlace. Si preguntas algo de «hoy», «precio», «noticias»… lo busca solo. Límite diario: 3 sin cuenta, 30 con cuenta, 200 el equipo (tope general 300 al día).
   - Buscadores: **Tavily** (1.000 gratis al mes, sin tarjeta) y **Exa** (saldo gratis de bienvenida, sin tarjeta); si no hay llaves o se acaban, usa **Wikipedia** (gratis, sin llave). Las llaves se pegan en Pulsem como las demás.

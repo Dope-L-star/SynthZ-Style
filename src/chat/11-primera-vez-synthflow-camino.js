@@ -110,24 +110,22 @@ function exportMd(){
   if (!chatArr().length){ toast('Esta conversación está vacía.'); return; }
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([chatMd()], { type:'text/markdown' })); a.download = 'chat-' + info(selId()).name.replace(/[^\w.-]+/g, '_') + '.md'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
-SZ.ctxMenu(() => [
-  { label:'Borrar este chat', fn:() => clearChat(true) },
-  { label:'Copiar toda la conversación', fn:() => { navigator.clipboard && navigator.clipboard.writeText(chatMd()); toast('Conversación copiada.'); } },
-  { label:'Exportar como .md', fn:exportMd },
-  { label:'Guía rápida', fn:() => openGuide() },
-  { label:'Qué hay de nuevo', fn:() => SZ.whatsNew(true, list => runTopics(list)) },
-  { label:'Lo que recuerdo de ti', fn:() => memModal() },
-  { label:'Guía rápida (leer)', fn:() => openHelp() },
-  { label:'Ver tutorial de conexión', fn:openTour },
-  { label:'Mis IA conectadas', fn:() => openConnect() },
-  { label:'Mi límite de hoy', fn:() => coinModal('panel') },
-  { label:'Mi cuenta', fn:() => accModal() },
-  { label:'Elegir mis IA (3 preguntas)', fn:() => SZ.surveyModal(ok => { if (ok){ forMeK = ''; applySurvey(true); renderList({ keep:true }); } }) },
-  { label:'Mis chats', fn:() => thOpen() },
-  { label:'Chat nuevo', fn:() => newChat() },
-  { label:'Mis IA favoritas (por mis votos)', fn:() => rankModal() },
-  { label:'Configuración', fn:() => SZ.cfgModal() },
-  { label:'Ayuda: algo no carga', fn:() => showBlockHelp(window.__puterBlocked ? 'script' : 'popup') },
-  { label:'Privacidad y términos', fn:() => window.open('privacidad.html', '_blank', 'noopener') },
-  { label:'Volver a SynthZ', fn:() => $('#backLink').click() }]);
+/* v2.2 · clic derecho: corto y según dónde hiciste clic (una respuesta, tu mensaje, un texto seleccionado o el chat) */
+SZ.ctxMenu((e, sel) => {
+  const L = [], m = e.target.closest && e.target.closest('.m.bot, .m.user'), act = k => () => { const b = m && m.querySelector('[data-a="' + k + '"]'); if (b) b.click(); };
+  if (sel) L.push({ label:'Preguntarle a la IA sobre esto', ico:'quote', fn:() => { inp.value = '«' + sel.slice(0, 1500) + '»\n\n'; autoGrow(); updateHint(); inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); } }, '—');
+  if (m && m.classList.contains('bot') && !sel){
+    L.push({ head:'Esta respuesta' }, { label:'Copiar respuesta', ico:'copy', fn:act('copy') });
+    if (m.querySelector('[data-a="voice"]')) L.push({ label:'Escuchar', ico:'sound', fn:act('voice') });
+    if (m.querySelector('[data-a="star"]')) L.push({ label:m.querySelector('[data-a="star"][aria-pressed="true"]') ? 'Quitar de favoritos' : 'Guardar en favoritos', ico:'star', fn:act('star') });
+    if (m.querySelector('[data-a="regen"]')) L.push({ label:'Pedir otra respuesta', ico:'regen', fn:act('regen') });
+    L.push('—');
+  } else if (m && !sel){
+    const t = (m.querySelector('.bub') || m).innerText || '';
+    L.push({ label:'Copiar mi mensaje', ico:'copy', fn:() => { copyText(t); toast('Copiado.'); } }, { label:'Escribirlo otra vez', ico:'new', fn:() => { inp.value = t; autoGrow(); updateHint(); inp.focus(); } }, '—');
+  }
+  L.push({ label:'Nuevo chat', ico:'new', fn:() => newChat() }, { label:'Buscar en mis chats', ico:'search', fn:() => thOpen() }, '—',
+    { label:'Ajustes', ico:'cog', fn:() => SZ.cfgModal() }, { label:'Guía rápida', ico:'help', fn:() => openGuide() });
+  return L;
+});
 

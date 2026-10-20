@@ -212,6 +212,7 @@ const accHooks = [];
 const hashS = s => { let h = 5381; for (let i = 0; i < s.length; i++) h = (h * 33 + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); };
 var accSent = {}, accT = 0, accDelSent = new Set();
 let SESS = ''; try{ SESS = localStorage.getItem('synthz:sess') || ''; }catch(e){}
+if (SESS) document.documentElement.classList.add('signed');   /* con sesión: nada de «entra a tu cuenta» */
 function setSess(t){ SESS = t || ''; try{ if (SESS) localStorage.setItem('synthz:sess', SESS); else localStorage.removeItem('synthz:sess'); }catch(e){} }
 const accFire = k => accHooks.forEach(f => { try{ f(k); }catch(_){} });
 async function api(path, o = {}){
@@ -955,7 +956,9 @@ const SZ_AUTO = { id:'sz:auto', name:'Automática', vendor:'synthz', vlabel:'Eli
 /* ---------- límite de hoy: se muestra en mensajes (más fácil que contar «tokens») ---------- */
 const MSG_TOK = 800;
 /* sin cuenta: unos pocos mensajes de prueba al día; luego hay que entrar (gratis) */
-const isGuestQ = () => !!(SZQ.guest && !(ACC && ACC.ready));
+/* con sesión guardada (o volviendo de Google) ya cuentas como persona con cuenta, aunque tu cuenta tarde un segundo en cargar */
+const signedish = () => !!(ACC && (ACC.ready || ACC.joining || (SESS && !ACC.err)));
+const isGuestQ = () => !!(SZQ.guest && !signedish());
 const guestFull = () => isGuestQ() && (SZQ.guest.used || 0) >= (SZQ.guest.max || 5);
 const limPct = () => Math.max(SZQ.limit ? Math.min(1, (SZQ.used || 0) / SZQ.limit) : 0, isGuestQ() ? Math.min(1, (SZQ.guest.used || 0) / (SZQ.guest.max || 5)) : 0);
 const msgsLeft = () => Math.max(0, Math.floor(((SZQ.limit || 25000) - (SZQ.used || 0)) / MSG_TOK));
@@ -1584,22 +1587,67 @@ function waterIn(el){
   })(t0);
 }
 
-function ctxMenu(getItems){
-  let m = null; const close = () => { if (m){ m.remove(); m = null; } };
-  addEventListener('contextmenu', e => {
-    if (e.target.closest && e.target.closest('input,textarea')) return;
-    e.preventDefault(); close();
-    const sel = String(getSelection() || '').trim();
-    const items = [...(sel ? [{ label:'Copiar selección', fn:() => navigator.clipboard && navigator.clipboard.writeText(sel) }] : []), ...getItems(e)];
-    m = document.createElement('div'); m.className = 'ctxm'; m.setAttribute('role', 'menu');
-    items.forEach(it => { const b = document.createElement('button'); b.type = 'button'; b.textContent = it.label; b.addEventListener('click', ev => { ev.stopPropagation(); close(); it.fn(); }); m.appendChild(b); });
-    document.body.appendChild(m);
-    m.style.left = Math.max(8, Math.min(e.clientX, innerWidth - m.offsetWidth - 10)) + 'px'; m.style.top = Math.max(8, Math.min(e.clientY, innerHeight - m.offsetHeight - 10)) + 'px';
-    m.animate([{ opacity:0, transform:'scale(.9) translateY(6px)', filter:'blur(6px)' }, { opacity:1, transform:'none', filter:'blur(0)' }], { duration:380, easing:'cubic-bezier(.22,1,.36,1)' });
+/* v2.2 · menús limpios: íconos, grupos (separados con «—»), atajos y lo peligroso en rojo. Se usan con el clic derecho y con «⋯» */
+const MI = (d) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
+const MICO = {
+  copy:MI('<rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>'),
+  new:MI('<path d="M12 20h8"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'),
+  search:MI('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'),
+  cog:MI('<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>'),
+  help:MI('<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/>'),
+  star:MI('<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9 6.8 19.7l1-5.9L3.5 9.7l5.9-.8z"/>'),
+  sound:MI('<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/>'),
+  regen:MI('<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>'),
+  trash:MI('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'),
+  down:MI('<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>'),
+  quote:MI('<path d="M7 7h4v4H7zM13 7h4v4h-4z"/><path d="M9 11c0 3-1 5-3 6M15 11c0 3-1 5-3 6"/>'),
+  home:MI('<path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-6h4v6"/>'),
+  brain:MI('<path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 3 3h1V4z"/><path d="M15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-3 3h-1V4z"/>'),
+  chats:MI('<path d="M4 5h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/>'),
+  ai:MI('<path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z"/>'),
+  up:MI('<path d="M12 19V5M5 12l7-7 7 7"/>'),
+  user:MI('<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'),
+  open:MI('<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'),
+  chart:MI('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'),
+  reload:MI('<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>'),
+  stop:MI('<rect x="6" y="6" width="12" height="12" rx="2"/>'),
+  cmp:MI('<rect x="3" y="5" width="7.5" height="14" rx="2"/><rect x="13.5" y="5" width="7.5" height="14" rx="2"/>'),
+  trophy:MI('<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8"/>'),
+  exit:MI('<path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/>')
+};
+/* arma un menú (para el clic derecho o para un botón) en la posición x, y */
+function menuBuild(items, x, y, cls){
+  const m = document.createElement('div'); m.className = 'ctxm ' + (cls || ''); m.setAttribute('role', 'menu');
+  items.filter(Boolean).forEach((it, i, L) => {
+    if (it === '—'){ if (i && i < L.length - 1 && L[i - 1] !== '—') m.appendChild(document.createElement('hr')); return; }
+    if (it.head){ const h = document.createElement('div'); h.className = 'mhd'; h.textContent = it.head; m.appendChild(h); return; }
+    const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'menuitem'); if (it.danger) b.className = 'dng';
+    b.innerHTML = '<i class="mico">' + (MICO[it.ico] || '') + '</i><span></span>' + (it.key ? '<kbd>' + esc(it.key) + '</kbd>' : '') + (it.on != null ? '<em class="mck" aria-hidden="true">' + (it.on ? '✓' : '') + '</em>' : '');
+    $('span', b).textContent = it.label; if (it.on != null) b.setAttribute('aria-checked', String(!!it.on));
+    b.addEventListener('click', ev => { ev.stopPropagation(); menuClose(); it.fn(); });
+    m.appendChild(b);
   });
-  addEventListener('pointerdown', e => { if (m && !m.contains(e.target)) close(); });
-  addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
-  addEventListener('scroll', close, true); addEventListener('resize', close);
+  document.body.appendChild(m);
+  m.style.left = Math.max(8, Math.min(x, innerWidth - m.offsetWidth - 10)) + 'px'; m.style.top = Math.max(8, Math.min(y, innerHeight - m.offsetHeight - 10)) + 'px';
+  if (!reduce) m.animate([{ opacity:0, transform:'scale(.94) translateY(4px)', filter:'blur(4px)' }, { opacity:1, transform:'none', filter:'blur(0)' }], { duration:260, easing:'cubic-bezier(.22,1,.36,1)' });
+  m.addEventListener('keydown', e => { const B = $$('button', m), i = B.indexOf(document.activeElement); if (e.key === 'ArrowDown' || e.key === 'ArrowUp'){ e.preventDefault(); B[(i + (e.key === 'ArrowDown' ? 1 : B.length - 1)) % B.length].focus(); } });
+  return m;
+}
+let MENU = null;
+function menuClose(){ if (!MENU) return; const m = MENU; MENU = null; if (reduce){ m.remove(); return; } m.animate([{ opacity:1 }, { opacity:0, transform:'scale(.97)' }], { duration:140 }).onfinish = () => m.remove(); }
+function menuOpen(items, x, y, cls){ menuClose(); MENU = menuBuild(items, x, y, cls); return MENU; }
+addEventListener('pointerdown', e => { if (MENU && !MENU.contains(e.target) && !(e.target.closest && e.target.closest('[data-menu-owner]'))) menuClose(); });
+addEventListener('keydown', e => { if (e.key === 'Escape' && MENU){ e.preventDefault(); menuClose(); } });
+addEventListener('scroll', e => { if (MENU && !(e.target && e.target.nodeType === 1 && MENU.contains(e.target))) menuClose(); }, true); addEventListener('resize', () => menuClose());
+/* clic derecho: getItems(e, sel) arma lo que corresponde según dónde hiciste clic */
+function ctxMenu(getItems){
+  addEventListener('contextmenu', e => {
+    if (e.target.closest && e.target.closest('input,textarea,[contenteditable],a[href]')) return;
+    const sel = String(getSelection() || '').trim();
+    const items = [...(sel ? [{ label:'Copiar', ico:'copy', key:'Ctrl+C', fn:() => { navigator.clipboard && navigator.clipboard.writeText(sel); toast('Copiado.'); } }] : []), ...(getItems(e, sel) || [])];
+    if (!items.length) return;
+    e.preventDefault(); menuOpen(items, e.clientX, e.clientY);
+  });
 }
 if (matchMedia('(pointer: fine)').matches && !reduce){ let ax = 0, ay = 0, aq = 0; addEventListener('pointermove', e => { ax = e.clientX; ay = e.clientY; if (aq) return; aq = requestAnimationFrame(() => { aq = 0; const a = $('.aurora'); if (!a) return; a.style.setProperty('--mx', ((ax / innerWidth - .5) * 70).toFixed(1)); a.style.setProperty('--my', ((ay / innerHeight - .5) * 70).toFixed(1)); }); }, { passive:true }); }
 addEventListener('scroll', e => { const t = e.target; if (t && t !== document && t.scrollTop != null){ extraY += t.scrollTop - (t._lt || 0); t._lt = t.scrollTop; } }, true);
@@ -1706,9 +1754,10 @@ async function signedIn(d){
 (async function sbReturn(){
   const h = location.hash || ''; if (!/access_token=|error_description=/.test(h)) return;
   const p = new URLSearchParams(h.slice(1)); try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){}
+  if (p.get('access_token')){ ACC.joining = true; root.classList.add('joining'); }
   if (p.get('error_description')){ setTimeout(() => toast('No se pudo entrar con Google: ' + p.get('error_description')), 800); return; }
   try{ const d = await api('auth', { method:'POST', body:{ mode:'supabase', token:p.get('access_token') } }); await signedIn(d); askDrive(); }
-  catch(e){ setTimeout(() => toast((e && e.message) || 'No pude entrar con Google. Intenta de nuevo.'), 800); }
+  catch(e){ ACC.joining = false; root.classList.remove('joining'); setTimeout(() => toast((e && e.message) || 'No pude entrar con Google. Intenta de nuevo.'), 800); }
 })();
 async function onGoogle(resp){
   try{ const d = await api('auth', { method:'POST', body:{ credential:resp.credential } }); await signedIn(d); if (gsiDone) gsiDone(d.isNew ? 'new' : 'in'); askDrive(); }
@@ -1722,9 +1771,9 @@ async function askDrive(){
     try{ if (localStorage.getItem('synthz:askdrive')) return; localStorage.setItem('synthz:askdrive', String(Date.now())); }catch(e){}
     await sleepRaw(900);
     const ok = await szConfirm('¿Quieres conectar tu Google Drive?', 'Guardo una copia de tus chats en una carpeta privada dentro de tu Google Drive, para que tengas más espacio. No puedo ver ni tocar tus otros archivos. Puedes cambiarlo cuando quieras.', 'Sí, conectar', false, 'No, gracias');
-    if (!ok){ toast('Listo. Si cambias de idea, está en «⋯ › Google Drive» en SynthFlow.'); return; }
+    if (!ok){ toast('Listo. Si cambias de idea, está en Ajustes › IAs y memoria › Google Drive.'); return; }
     const r = await DRIVE.sync(); if (r && !r.busy) toast('¡Listo! Tus chats también quedan en tu Google Drive.');
-  }catch(e){ toast((e && e.message) || 'No pude conectar tu Drive. Inténtalo luego en «⋯ › Google Drive».'); }
+  }catch(e){ toast((e && e.message) || 'No pude conectar tu Drive. Inténtalo luego en Ajustes › IAs y memoria › Google Drive.'); }
 }
 const EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
 function passStrength(p, u){
@@ -1879,27 +1928,75 @@ function cfgChooser(box, cur, onPick){
   paint(cur);
 }
 const CFG_ROWS = [['cursor', 'Cursor ' + BRAND(), 'El cursor de vidrio con viento.'], ['smooth', 'Desplazamiento suave', 'La ruedita baja la página sin saltos.'], ['bg', 'Fondo animado', 'Los colores se mueven y giran al bajar.'], ['glass', 'Efecto vidrio', 'Ventanas y paneles que parecen de vidrio.'], ['anim', 'Animaciones', 'Escritura letra por letra, golpe de cristal y agua.'], ['favAnim', 'Icono animado', 'El péndulo (o el destello de Flow) en el icono de la pestaña.'], ['sound', 'Sonidos', 'La voz de SynthonIA, las teclas, las transiciones y los avisos. Apágalos si te molestan.'], ['beginner', 'Modo principiante', 'Las IA te responden con palabras sencillas, paso a paso y con ejemplos.']];
-function cfgModal(){
+/* v2.2 · Ajustes con 2 pestañas: «Página» (cómo se ve y se siente) e «IAs y memoria» (cómo te responden y qué recuerdan de ti) */
+const CFG_PAGE = CFG_ROWS.filter(r => r[0] !== 'beginner');
+const CFG_IA = [['beginner', 'Modo principiante', 'Te responden con palabras sencillas, paso a paso y con ejemplos.'], ['autoWeb', 'Buscar en internet cuando haga falta', 'Si preguntas por algo de hoy (precios, noticias, el clima…), la IA busca sola y te muestra sus fuentes.'], ['saver', 'Respuestas cortas', 'Respuestas más breves: gastas menos de tu límite de hoy.']];
+const memSt0 = () => state.mem || (state.mem = { on:true, t:0, items:[] });
+function memTouch(){ const m = memSt0(); m.t = Date.now(); save(); try{ if (ACC.ready) accPush(); }catch(e){} }
+function memAddCore(text){
+  const m = memSt0(), t = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 300); if (t.length < 3) return false;
+  if (!m.items.some(x => x.text.toLowerCase() === t.toLowerCase())) m.items.unshift({ id:'m' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), t:Date.now(), text:t });
+  m.items = m.items.slice(0, 40); memTouch(); return true;
+}
+/* la lista de «Lo que recuerdo de ti»: se ve, se agrega, se olvida */
+function memPanel(host){
+  const paint = () => {
+    const m = memSt0();
+    host.innerHTML = '<div class="cfgrow"><p>Usar mi memoria<small>Las IAs usan esto para responderte mejor. Si la apagas, no se usa (pero no se borra).</small></p><button class="cfgsw" type="button" role="switch" data-mem="on" aria-checked="' + m.on + '" aria-pressed="' + m.on + '" aria-label="Usar mi memoria"><i></i></button></div>'
+      + '<ul class="meml">' + (m.items.length ? m.items.map(x => '<li><span></span><button type="button" class="lnk" data-del="' + x.id + '">Olvidar</button></li>').join('') : '<li class="memnone">Todavía no recuerdo nada. Escribe «recuerda que…» en el chat o agrégalo aquí.</li>') + '</ul>'
+      + '<form class="memadd"><label class="field"><input type="text" maxlength="300" placeholder="Ej.: Me llamo Ana y estudio diseño gráfico" aria-label="Algo para recordar"></label><button class="btn sm" type="submit">Agregar</button></form>'
+      + (m.items.length ? '<button class="lnk memclr" type="button" data-mem="clear">Olvidar todo</button>' : '');
+    const L = $$('.meml li span', host); m.items.forEach((x, i) => { if (L[i]) L[i].textContent = x.text; });
+  };
+  paint();
+  host.addEventListener('submit', e => { e.preventDefault(); const i = $('.memadd input', host); if (memAddCore(i.value)){ paint(); toast('Agregado a tu memoria.'); } });
+  host.addEventListener('click', async e => {
+    const d = e.target.closest('[data-del]'); if (d){ const m = memSt0(); m.items = m.items.filter(x => x.id !== d.dataset.del); memTouch(); paint(); return; }
+    const t = e.target.closest('[data-mem]'); if (!t) return; const m = memSt0();
+    if (t.dataset.mem === 'on'){ m.on = !m.on; memTouch(); paint(); }
+    else if (t.dataset.mem === 'clear' && await szConfirm('¿Olvidar todo?', 'Borro todo lo que recuerdo de ti. No se puede deshacer.', 'Olvidar todo', true)){ m.items = []; memTouch(); paint(); }
+  });
+}
+/* cada página agrega aquí sus atajos de «Tus IAs» (elegir IA ideales, conectar, Drive…) */
+const cfgLinks = [];
+function cfgModal(tab){
   if ($('#cfgm')) return;
-  const draft = Object.assign({}, CFG);
+  const draft = Object.assign({ autoWeb:true }, CFG); draft.saver = !!(state.sx && state.sx.saver);
   const o = document.createElement('div'); o.id = 'cfgm'; o.className = 'szm';
   const row = ([k, t, s]) => '<div class="cfgrow"><p>' + t + '<small>' + s + '</small></p><button class="cfgsw" type="button" role="switch" data-k="' + k + '" aria-checked="' + !!draft[k] + '" aria-pressed="' + !!draft[k] + '" aria-label="' + t + '"></button></div>';
   const IN = [['always', 'Cada vez'], ['session', 'Una vez por visita'], ['never', 'Nunca']];
-  o.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="Configuración"><div class="word">' + zWord('Synth') + '</div><div class="tn">CONFIGURACIÓN</div><div class="tb"><h3>Configuración</h3><p>Elige si lo quieres más bonito o más rápido, y luego ajusta cada detalle a tu gusto.</p></div>'
-    + '<div class="cfglbl">Experiencia</div><div id="cfgCh"></div>'
-    + '<div class="cfglbl">Detalles</div><div id="cfgRows">' + CFG_ROWS.map(row).join('') + '</div>'
+  const ia = tab === 'ia' || tab === 'mem';
+  o.innerHTML = '<div class="tcard cfgcard" role="dialog" aria-modal="true" aria-label="Ajustes"><div class="cfghead"><h3>Ajustes</h3>'
+    + '<div class="cfgtabs" role="tablist"><span class="pill"></span><button type="button" role="tab" data-tab="page" aria-selected="' + !ia + '">Página</button><button type="button" role="tab" data-tab="ia" aria-selected="' + ia + '">IAs y memoria</button></div></div>'
+    + '<div class="cfgbody">'
+    + '<section class="cfgpane" data-pane="page"' + (ia ? ' hidden' : '') + '>'
+    + '<div class="cfglbl">Cómo se ve</div><div id="cfgCh"></div>'
+    + '<div class="cfglbl">Detalles</div><div id="cfgRows">' + CFG_PAGE.map(row).join('') + '</div>'
     + '<div class="cfglbl">Intro de la página</div><div class="cfgseg" id="cfgIn">' + IN.map(([v, l]) => '<button type="button" data-in="' + v + '" aria-pressed="' + (draft.intro === v) + '">' + l + '</button>').join('') + '</div><p class="cnote">La animación al entrar al chat siempre se ve.</p>'
-    + '<div class="tbtn" style="margin-top:18px"><button class="lnk" type="button" data-close>Cerrar</button><button class="btn sm" type="button" id="cfgOk">Guardar</button></div></div>';
+    + '</section>'
+    + '<section class="cfgpane" data-pane="ia"' + (ia ? '' : ' hidden') + '>'
+    + '<div class="cfglbl">Cómo te responden</div>' + CFG_IA.map(row).join('')
+    + '<div class="cfglbl" id="cfgMemL">Lo que recuerdo de ti</div><div id="szMem" class="cfgmem"></div>'
+    + (cfgLinks.length ? '<div class="cfglbl">Tus IAs</div><div class="cfglinks">' + cfgLinks.map(([l, , d], i) => '<button type="button" class="cfglk" data-lk="' + i + '"><b>' + esc(l) + '</b><small>' + esc(d || '') + '</small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>').join('') + '</div>' : '')
+    + '</section></div>'
+    + '<div class="tbtn cfgfoot"><button class="lnk" type="button" data-close>Cerrar</button><button class="btn sm" type="button" id="cfgOk">Guardar</button></div></div>';
   document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('on'));
-  $('.tcard', o).animate([{ transform:'scale(.92) translateY(20px)', opacity:0, filter:'blur(8px)' }, { transform:'none', opacity:1, filter:'blur(0)' }], { duration:600, easing:'cubic-bezier(.22,1,.36,1)' });
-  const paintRows = () => $$('.cfgsw', o).forEach(b => { b.setAttribute('aria-pressed', String(!!draft[b.dataset.k])); b.setAttribute('aria-checked', String(!!draft[b.dataset.k])); });
+  $('.tcard', o).animate([{ transform:'scale(.94) translateY(16px)', opacity:0, filter:'blur(8px)' }, { transform:'none', opacity:1, filter:'blur(0)' }], { duration:560, easing:'cubic-bezier(.22,1,.36,1)' });
+  const paintRows = () => $$('.cfgsw[data-k]', o).forEach(b => { b.setAttribute('aria-pressed', String(!!draft[b.dataset.k])); b.setAttribute('aria-checked', String(!!draft[b.dataset.k])); });
   cfgChooser($('#cfgCh', o), draft.perf, v => { draft.perf = v; Object.assign(draft, cfgPreset(v)); paintRows(); });
-  $$('.cfgsw', o).forEach(b => b.addEventListener('click', () => { draft[b.dataset.k] = !draft[b.dataset.k]; paintRows(); }));
+  memPanel($('#szMem', o));
+  $$('.cfgsw[data-k]', o).forEach(b => b.addEventListener('click', () => { draft[b.dataset.k] = !draft[b.dataset.k]; paintRows(); }));
   $$('[data-in]', o).forEach(b => b.addEventListener('click', () => { draft.intro = b.dataset.in; $$('[data-in]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
+  const tabs = $('.cfgtabs', o), pill = $('.pill', tabs);
+  const show = k => { $$('[role=tab]', tabs).forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === k))); $$('.cfgpane', o).forEach(p => { p.hidden = p.dataset.pane !== k; }); const b = $('[data-tab="' + k + '"]', tabs); if (b && pill){ pill.style.width = b.offsetWidth + 'px'; pill.style.transform = 'translateX(' + (b.offsetLeft - 4) + 'px)'; } $('.cfgbody', o).scrollTop = 0; };
+  tabs.addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) show(b.dataset.tab); });
+  requestAnimationFrame(() => show(ia ? 'ia' : 'page'));
+  if (tab === 'mem') setTimeout(() => { const l = $('#cfgMemL', o); if (l) l.scrollIntoView({ block:'start', behavior:reduce ? 'auto' : 'smooth' }); }, 350);
   const close = () => { o.classList.remove('on'); setTimeout(() => o.remove(), 450); };
+  $$('.cfglk', o).forEach(b => b.addEventListener('click', () => { const L = cfgLinks[+b.dataset.lk]; close(); if (L) setTimeout(L[1], 200); }));
   $('[data-close]', o).addEventListener('click', close);
   o.addEventListener('pointerdown', e => { if (e.target === o) close(); });
-  $('#cfgOk', o).addEventListener('click', () => applyCfg(draft, close));
+  $('#cfgOk', o).addEventListener('click', () => { state.sx = state.sx || {}; if (!!state.sx.saver !== !!draft.saver){ state.sx.saver = !!draft.saver; save(); try{ hooks.usage(); }catch(e){} try{ dispatchEvent(new Event('synthz-saver')); }catch(e){} } const d = Object.assign({}, draft); delete d.saver; applyCfg(d, close); });
 }
 function applyCfg(draft, close){
   const reload = draft.anim !== CFG.anim || (draft.cursor !== CFG.cursor && matchMedia('(pointer: fine)').matches) || (draft.bg && !!$('.aurora') && !$('.aurora .orbit'));
@@ -2175,7 +2272,7 @@ function balanceHtml(b, extra){
 /* desglose: confirmado (lo reportó el proveedor) vs estimado (≈, SynthZ lo calculó por el largo del texto) */
 function splitHtml(){ return limBar({ puter:true }); }
 function syncNote(){
-  if (!ACC.ready) return '<p class="cnote">Tus chats se guardan en este equipo. Entra a tu cuenta para verlos también en tu celular o en otro computador.</p>';
+  if (!ACC.ready) return signedish() ? '<p class="cnote">Abriendo tu cuenta…</p>' : '<p class="cnote">Tus chats se guardan en este equipo. Entra a tu cuenta para verlos también en tu celular o en otro computador.</p>';
   if (ACC.full) return '<p class="sxerr">⚠ ' + esc(ACC.err) + '</p>';
   if (ACC.err) return '<p class="sxerr">⚠ No pude guardar en tu cuenta (' + esc(ACC.err) + '). Todo sigue aquí y se sube solo cuando vuelva la conexión.</p>';
   return '<p class="cnote">Guardado en tu cuenta' + (ACC.t ? ' · guardado hace ' + Math.max(1, Math.round((Date.now() - ACC.t) / 1000)) + ' s' : '') + '.</p>';
@@ -2211,7 +2308,7 @@ function helpGuide(opts){
     ['¿Qué es el límite de hoy?', 'Cada día tienes un límite gratis para usar las IAs conectadas. A medianoche se vuelve a llenar. El anillo se va vaciando mientras chateas.'],
     ['¿Qué es Puter? Es opcional', 'Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.'],
     ['Varias IA a la vez', 'Con «+» sumas otra IA (hasta 4). Todas responden lo mismo y tú eliges la que más te gusta con «Esta tiene más Flow».'],
-    ['Archivos', 'Con el clip agregas un archivo, un PDF o una foto (hasta 6 por mensaje). Todas las IA leen textos y PDF; las fotos solo las entienden las IA que «ven fotos». También puedes arrastrarlos o pegarlos.'],
+    ['Archivos', 'Con el «+» agregas un archivo, un PDF o una foto (hasta 6 por mensaje). Todas las IA leen textos y PDF; las fotos solo las entienden las IA que «ven fotos». También puedes arrastrarlos o pegarlos.'],
     ['Modo principiante', 'En Ajustes puedes activar el modo principiante: las IA te responden con palabras sencillas, paso a paso y con ejemplos.'],
     ['Modo agente', 'En la barra de la izquierda, «Modo agente»: una IA entiende lo que escribiste, lo mejora y se lo pasa a la IA que más sabe de ese tema. Luego decides si te quedas con esa IA. Esos chats se guardan aparte.'],
     ['Configuración', 'En Ajustes eliges si lo quieres «Más bonito» o «Más rápido», y enciendes o apagas cada detalle: cursor, fondo, vidrio, animaciones, sonidos e intro.']
@@ -2271,7 +2368,7 @@ function turnId(messages){
 /* sin cuenta, después de los mensajes de prueba: «Para seguir FlowIAndo, entra o crea tu cuenta» */
 let gateOpen = false;
 function guestGate(o = {}){
-  if (gateOpen || (ACC && ACC.ready) || document.querySelector('#authm,#acc,#szGate')) return;
+  if (gateOpen || signedish() || document.querySelector('#authm,#acc,#szGate')) return;
   gateOpen = true;
   const g = SZQ.guest || { max:5 }, pu = !!(window.puter && puter.auth && puter.auth.isSignedIn && (() => { try{ return puter.auth.isSignedIn(); }catch(e){ return false; } })());
   const el = document.createElement('div'); el.id = 'szGate'; el.className = 'szm';
@@ -2287,7 +2384,15 @@ function guestGate(o = {}){
   el.addEventListener('pointerdown', e => { if (e.target === el){ out(); if (o.onClose) o.onClose(); } });
   authBox($('#gateBox', el), () => { out(); szqSet({ guest:null }); szCatalog().catch(() => {}); toast('¡Listo! Ya puedes seguir FlowIAndo.'); if (o.done) o.done(); }, () => {}, o.mode || 'signup');
 }
-addEventListener('synthz-acc', () => { if (ACC && ACC.ready){ szqSet({ guest:null }); szCatalog().catch(() => {}); } });
+/* apenas tu cuenta está lista: se cierra todo lo que te pedía entrar */
+function accSettled(){
+  if (!(ACC && ACC.ready)) return;
+  szqSet({ guest:null }); szCatalog().catch(() => {});
+  document.querySelectorAll('#szGate').forEach(g => { gateOpen = false; g.classList.remove('on'); setTimeout(() => g.remove(), 450); });
+  ACC.joining = false; root.classList.add('signed'); root.classList.remove('joining');
+}
+accHooks.push(k => { if (k === 'out') root.classList.remove('signed'); });
+addEventListener('synthz-acc', accSettled); accHooks.push(k => { if (k === 'pull') accSettled(); });
 function szConfirm(title, text, ok, danger, no){
   return new Promise(res => {
     const o = document.createElement('div'); o.className = 'szm szc';
@@ -2530,11 +2635,62 @@ function mouthSet(svgs, v){
     if (v === null){ m.setAttribute('d', m._d0); m.setAttribute('fill', m._f0); return; }
     m.setAttribute('d', VIS[v][0]); m.setAttribute('fill', VIS[v][1] ? FACE_G : 'none'); });
 }
-/* devuelve el «onFrame» para typeIn: según cuánto texto va escrito, la boca toma la forma de esa letra */
+/* v2.2 · habla de verdad: la frase se parte en sílabas y la boca las «dice» a ritmo de voz (≈7 por segundo),
+   con la forma de cada vocal (a abierta, e/i ancha, o/u redonda), labios cerrados en m/b/p y paso suave entre una y otra.
+   Devuelve el «onFrame» para typeIn: arranca al primer cuadro y termina poco después de que se escribe todo. */
+const MOUTH = { a:[7.2, 6.4], e:[9, 3.6], i:[8.4, 2.8], o:[4.8, 5.6], u:[3.8, 4.4], m:[7, .5], f:[6.4, 1.6], c:[6, 2.4], r:[5.4, 0] };
+function syllables(text){
+  const t = String(text || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zñ\s]/g, ' ');
+  const out = [];
+  for (const w of t.split(/\s+/).filter(Boolean)){
+    const parts = w.match(/[^aeiou]*[aeiou]+/g) || [w];
+    for (const s of parts){
+      const v = (s.match(/[aeiou]/) || ['a'])[0], c = s.replace(/[aeiou]+$/, '').slice(-1);
+      if (c && 'mbp'.includes(c)) out.push('m'); else if (c && 'fv'.includes(c)) out.push('f');
+      out.push(v);
+    }
+    out.push('r');                                   /* respiro entre palabras */
+  }
+  return out;
+}
+function talkEls(svg){
+  if (svg._talk) return svg._talk;
+  const NS = 'http://www.w3.org/2000/svg', g = document.createElementNS(NS, 'g'); g.setAttribute('class', 'ftalk');
+  const mo = document.createElementNS(NS, 'ellipse'), tg = document.createElementNS(NS, 'ellipse');
+  mo.setAttribute('cx', '50'); mo.setAttribute('cy', '65'); mo.setAttribute('fill', '#2a0d18'); mo.setAttribute('stroke', FACE_G); mo.setAttribute('stroke-width', '3');
+  tg.setAttribute('cx', '50'); tg.setAttribute('fill', '#e07a93');
+  g.appendChild(mo); g.appendChild(tg); svg.appendChild(g);
+  return (svg._talk = { g, mo, tg });
+}
 function lipSync(svgs, text){
   svgs = (svgs || []).filter(Boolean); if (!svgs.length || reduce) return undefined;
-  const t = String(text || '').replace(/\s+/g, ' '); let last = '';
-  return k => { if (k >= 1){ mouthSet(svgs, null); last = ''; return; } const v = visOf(t[Math.min(t.length - 1, Math.floor(k * t.length))]); if (v !== last){ last = v; mouthSet(svgs, v); } };
+  const seq = syllables(text); if (!seq.length) return undefined;
+  let raf = 0, t0 = 0, doneAt = 0, rx = 6, ry = 0, i = 0;
+  const fm = svg => svg.querySelector('.fm');
+  const L = svgs.map(el => ({ el, ball:!!(el.closest && el.closest('#szBot')) }));
+  const live = () => L.map(o => { if (!o.el.isConnected && o.ball) o.el = ballFace() || o.el; return o.el; }).filter(e => e.isConnected);
+  const paint = () => live().forEach(svg => { const T = talkEls(svg), m = fm(svg);
+    if (m) m.style.opacity = '0';
+    T.mo.setAttribute('rx', rx.toFixed(2)); T.mo.setAttribute('ry', Math.max(.4, ry).toFixed(2));
+    T.tg.setAttribute('rx', (rx * .55).toFixed(2)); T.tg.setAttribute('ry', Math.max(0, ry * .32).toFixed(2)); T.tg.setAttribute('cy', (65 + ry * .55).toFixed(2));
+    T.g.style.opacity = '1'; });
+  const stop = () => { cancelAnimationFrame(raf); raf = 0; L.map(o => o.el).forEach(svg => { const T = svg._talk, m = fm(svg); if (T) T.g.style.opacity = '0'; if (m) m.style.opacity = ''; }); };
+  const SYL = 140;                                    /* ms por sílaba: ritmo de voz */
+  function loop(now){
+    if (!t0) t0 = now;
+    i = Math.floor((now - t0) / SYL);
+    const ending = doneAt && (now - doneAt > 1100 || i >= seq.length);
+    const v = ending ? 'r' : seq[Math.min(i, seq.length - 1)], tgt = MOUTH[v] || MOUTH.c;
+    const ph = ((now - t0) % SYL) / SYL, open = v === 'r' || v === 'm' ? 1 : Math.sin(Math.min(1, ph * 1.6) * Math.PI) * .35 + .75;
+    rx += (tgt[0] - rx) * .35; ry += (tgt[1] * open - ry) * .38;
+    paint();
+    if (ending && ry < .6){ stop(); return; }
+    raf = requestAnimationFrame(loop);
+  }
+  return k => {
+    if (!raf && !doneAt) raf = requestAnimationFrame(loop);
+    if (k >= 1 && !doneAt) doneAt = performance.now();
+  };
 }
 const ballFace = () => { const b = document.getElementById('szBot'); return b ? (b.querySelector('.bf > :last-child .szface') || b.querySelector('.bf .szface')) : null; };
 const randomGoodFace = (not) => { const L = FACE_GOOD.filter(m => !(not && not.has && not.has(m))); return L[Math.floor(Math.random() * L.length)] || 'feliz'; };
@@ -2767,8 +2923,8 @@ const BOT_FAQ = [
   { k:'limite cuanto queda quedan mensajes barra uso gasto consumo synxcoin coins', a:'Cada día tienes un límite gratis para usar las IAs conectadas. A medianoche se vuelve a llenar. Sin cuenta son 5 mensajes de prueba al día; con tu cuenta gratis tienes mucho más. El anillo se va vaciando mientras chateas: te muestro dónde está.', go:['#railCoin', '#tabCoin', '#navTotal', '.pill-total'], tour:'coins' },
   { k:'pagar cobro cobran gratis precio plata dinero costo tarjeta', a:'SynthZ es gratis y nunca te cobra. Las IAs conectadas son gratis, y Puter también tiene su parte gratis cada mes.' },
   { k:'chats historial conversaciones anteriores guardados donde estan mis', a:'Tus chats están en «Mis chats», en la barrita (en el celular, la pestaña Chats). Se guardan en tu dispositivo y en tu cuenta si entras.', go:['#railChats', '[data-r="chats"]', '[data-tab="chats"]'] },
-  { k:'drive google espacio guardar copia respaldo', a:'En «⋯ › Google Drive» vinculas tu Drive y guardo una copia de tus chats en una carpeta privada. No puedo ver tus otros archivos.', go:['#moreBtn'] },
-  { k:'adjuntar archivo pdf imagen foto subir documento clip', a:'Con el clip agregas archivos, PDF o fotos (también puedes arrastrarlos). Para fotos elige una IA que «ve fotos».', go:['#attachBtn'] },
+  { k:'drive google espacio guardar copia respaldo', a:'En Ajustes › IAs y memoria › Google Drive vinculas tu Drive y guardo una copia de tus chats en una carpeta privada. No puedo ver tus otros archivos.', go:['#moreBtn'] },
+  { k:'adjuntar archivo pdf imagen foto subir documento clip', a:'Con el «+» agregas archivos, PDF o fotos (también puedes arrastrarlos). Para fotos elige una IA que «ve fotos».', go:['#attachBtn'] },
   { k:'cuenta registrar registro entrar iniciar sesion perfil usuario contraseña', a:'Crear tu cuenta es gratis y no pide correo ni tarjeta. Sin cuenta puedes probar con 5 mensajes al día; con cuenta tienes mucho más, y tus chats y favoritos te siguen a cualquier dispositivo. Entra desde tu foto en la barrita.', go:['#accBtn', '[data-tab="me"]'] },
   { k:'ajustes rendimiento lento animaciones configuracion sonido sonidos cursor principiante', a:'En Ajustes puedes poner la página «más rápida», activar el modo principiante o apagar mis sonidos.', go:['#cfgBtn', '[data-tab="cfg"]'] },
   { k:'favorito favoritos estrella guardar mensaje', a:'Con la estrella guardas un mensaje en favoritos. Están en la barrita, en la estrella.', go:['[data-r="fav"]', '#railFav'] },
@@ -3434,7 +3590,7 @@ const GTOPICS = [
   ['comparar', 'Comparar IAs', 'Varias IA responden lo mismo, lado a lado.'],
   ['agente', 'Modo agente', 'Escribes y el agente elige la IA por ti.'],
   ['archivos', 'Archivos y vista previa', 'Adjuntar archivos y ver los que te da la IA.'],
-  ['extras', 'Internet, memoria y app', 'Buscar datos de hoy, que te recuerde e instalarla.'],
+  ['extras', 'Internet y memoria', 'Buscar datos de hoy y que la IA te recuerde.'],
   ['chats', 'Mis chats y favoritos', 'Dónde quedan tus conversaciones.'],
   ['limite', 'Tu límite gratis', 'Cuánto te queda hoy y cuándo se llena.'],
   ['cuenta', 'Tu cuenta y Puter', 'Guardar tus chats y la versión pro de las IA.'],
@@ -3506,18 +3662,30 @@ document.addEventListener('click', e => {
 }, true);
 
 /* «Qué hay de nuevo»: SynthonIA te lo cuenta una vez por versión (y está en el menú cuando quieras) */
-const WHATSNEW = { v:'2.1', items:[
-  ['extras', 'Busca en internet: toca el globo 🌐 junto al clip y la IA responde con datos de hoy y te muestra sus fuentes.'],
+const WHATSNEW = { v:'2.2', items:[
+  ['chat', 'SynthFlow se renovó: más limpio y fácil. Todo para escribir está en una sola caja, y el «+» trae archivos, crear imagen, buscar en internet y respuestas cortas.'],
+  ['extras', 'Busca en internet: «+» › «Buscar en internet». La IA responde con datos de hoy y te muestra sus fuentes (y si preguntas algo de hoy, busca sola).'],
   ['archivos', 'Pídele «hazme una presentación de…» y te la entrega lista para descargar en PowerPoint.'],
-  ['extras', 'Ahora puedo recordar cosas de ti (tu nombre, lo que estudias…) si tú me dejas. Lo ves y lo borras en el menú ⋯.'],
-  ['extras', 'SynthFlow ya es una app: instálala en tu celular o computador desde el menú ⋯ → «Instalar la app». Abre más rápido y avisa si no hay internet.'],
-  ['synthonia', 'Antes: imágenes, voz para cada IA, archivos con vista previa y la Guía rápida. ¡Todo sigue aquí!']
+  ['ajustes', 'Ajustes ahora tiene 2 pestañas: «Página» e «IAs y memoria» (lo que recuerdo de ti, respuestas cortas, tus IA ideales y más).'],
+  ['synthonia', '¡Y ahora hablo de verdad: muevo la boca con cada sílaba! Cuando haya novedades verás un «!» sobre mi cabeza.']
 ] };
+function newsBang(onShow){
+  const b = $('#szBot'); if (!b){ setTimeout(() => newsBang(onShow), 600); return; }
+  if ($('.nwbang', b)) return;
+  const x = document.createElement('span'); x.className = 'nwbang'; x.setAttribute('role', 'button'); x.setAttribute('tabindex', '0'); x.setAttribute('aria-label', '¿Qué hay de nuevo?'); x.dataset.tip = '¿Qué hay de nuevo?'; x.textContent = '!';
+  const go = e => { e.preventDefault(); e.stopPropagation(); whatsNew(true, onShow); };
+  x.addEventListener('click', go); x.addEventListener('pointerdown', e => e.stopPropagation()); x.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') go(e); });
+  b.appendChild(x); b.setAttribute('aria-label', 'SynthonIA · hay novedades');
+  try{ SND.blip('celebrando'); }catch(e){}
+}
 function whatsNew(force, onShow){
   let seen = ''; try{ seen = localStorage.getItem('synthz:newv') || ''; }catch(e){}
   const visited = (() => { try{ return !!localStorage.getItem('synthz:visited'); }catch(e){ return false; } })();
   if (!force && (seen === WHATSNEW.v || !visited)){ try{ localStorage.setItem('synthz:newv', WHATSNEW.v); }catch(e){} return false; }
+  /* v2.2 · ya no se abre sola: sale un «!» sobre la cabeza de SynthonIA (una vez por versión) y se abre al tocarlo */
+  if (!force){ newsBang(onShow); return false; }
   try{ localStorage.setItem('synthz:newv', WHATSNEW.v); }catch(e){}
+  $$('.nwbang').forEach(x => { x.classList.add('out'); setTimeout(() => x.remove(), 400); }); const sb = $('#szBot'); if (sb) sb.setAttribute('aria-label', 'SynthonIA');
   if ($('#szNew')) return true;
   const w = document.createElement('div'); w.id = 'szNew'; w.className = 'szm';
   w.innerHTML = '<div class="tcard gq" role="dialog" aria-modal="true" aria-label="Qué hay de nuevo"><div class="gq-say"><span class="gq-f">' + face('celebrando', 64) + '</span><div><b>SynthonIA · Qué hay de nuevo</b><p></p></div></div>'
@@ -3565,39 +3733,33 @@ addEventListener('synthz-szq', () => {
     if (!seen) setTimeout(() => { try{ BOTAPI.offer && BOTAPI.offer('Ojo, equipo: hay ' + SZQ.alertN + (SZQ.alertN === 1 ? ' alerta' : ' alertas') + ' de las IAs (un proveedor pidió pago o cambió su plan gratis). Nada se cobró. Revísalo en Pulsem.', 'preocupada', 'Abrir Pulsem', () => { location.href = 'pulsem.html'; }); }catch(e){} }, 4000);
   }
 });
-/* ---------- v2.1 · SynthFlow es la app (SynthZ es solo la página de inicio en la web): se instala en el celular o el computador ---------- */
-let installEvt = null;
-const isStandalone = () => { try{ return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }catch(e){ return false; } };
-const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-if (isFlow() && 'serviceWorker' in navigator && (location.protocol === 'https:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname))){
-  addEventListener('load', () => { try{ navigator.serviceWorker && navigator.serviceWorker.register('/sw.js', { scope:'/' }).catch(() => {}); }catch(e){} });
-}
-addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; root.classList.add('can-install'); });
-addEventListener('appinstalled', () => { installEvt = null; root.classList.remove('can-install'); toast('¡Listo! SynthFlow ya está instalada como app.'); try{ SND.done(); }catch(e){} });
-if (isStandalone()) root.classList.add('is-app');
-function installModal(title, steps){
-  const o = document.createElement('div'); o.className = 'szm szc';
-  o.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="' + esc(title) + '"><div class="word">' + zWord('Synth') + '</div><div class="tb"><h3>' + esc(title) + '</h3><ol class="inst-ol">' + steps.map(s => '<li>' + s + '</li>').join('') + '</ol><p class="inst-p">Así SynthFlow queda con su propio ícono, abre en pantalla completa y carga más rápido.</p></div><div class="tbtn" style="margin-top:16px"><button class="btn sm" type="button" data-close>Entendido</button></div></div>';
-  document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('on'));
-  const out = () => { removeEventListener('keydown', key, true); o.classList.remove('on'); setTimeout(() => o.remove(), 400); };
-  const key = e => { if (e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); out(); } };
-  addEventListener('keydown', key, true);
-  $('[data-close]', o).addEventListener('click', out);
-  o.addEventListener('pointerdown', e => { if (e.target === o) out(); });
-  setTimeout(() => { const b = $('[data-close]', o); if (b) b.focus(); }, 50);
-}
-async function installApp(){
-  if (!isFlow()){ location.href = 'chat.html'; return; }
-  if (isStandalone()) return toast('Ya estás usando la app de SynthFlow.');
-  if (installEvt){
-    const e = installEvt; installEvt = null; root.classList.remove('can-install');
-    try{ e.prompt(); const r = await e.userChoice; if (r && r.outcome !== 'accepted') toast('Cuando quieras, la instalas desde este mismo menú.'); }catch(err){}
-    return;
-  }
-  const share = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
-  if (isIOS()) return installModal('Instala SynthFlow en tu iPhone', ['Abre esta página en <b>Safari</b>.', 'Toca el botón de compartir ' + share + ' (abajo o arriba).', 'Elige <b>«Agregar a inicio»</b> y toca <b>«Agregar»</b>.']);
-  if (/android/i.test(navigator.userAgent)) return installModal('Instala SynthFlow en tu celular', ['Toca el menú <b>⋮</b> de tu navegador (arriba a la derecha).', 'Elige <b>«Instalar app»</b> o <b>«Agregar a la pantalla principal»</b>.', 'Confirma con <b>«Instalar»</b>.']);
-  installModal('Instala SynthFlow en tu computador', ['Usa <b>Chrome</b> o <b>Edge</b>.', 'Busca el ícono de instalar en la barra de direcciones (una pantalla con una flecha) o abre el menú <b>⋮</b>.', 'Elige <b>«Instalar SynthFlow»</b>.']);
+/* ---------- v2.2 · la app instalable se quitó por ahora (vuelve más adelante, hecha 100 % nuestra).
+   Si alguien la alcanzó a instalar en pruebas, aquí se borra su copia guardada. ---------- */
+try{
+  if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())).catch(() => {});
+  if (window.caches) caches.keys().then(ks => ks.filter(k => /^synthz-/.test(k)).forEach(k => caches.delete(k))).catch(() => {});
+}catch(e){}
+/* ---------- v2.2 · etiquetas al pasar el mouse: cada botón con ícono dice qué hace (como en Claude) ---------- */
+if (matchMedia('(hover: hover) and (pointer: fine)').matches){
+  let tipEl = null, tipT = 0, tipFor = null;
+  const hide = () => { clearTimeout(tipT); tipFor = null; if (tipEl) tipEl.classList.remove('on'); };
+  addEventListener('pointerover', e => {
+    const t = e.target.closest && e.target.closest('[data-tip]');
+    if (!t || t === tipFor) return;
+    if (t.closest('.rail:not(.open)') || t.closest('.ctxm')) return hide();
+    hide(); tipFor = t;
+    tipT = setTimeout(() => {
+      if (!t.isConnected || tipFor !== t) return;
+      if (!tipEl){ tipEl = document.createElement('div'); tipEl.className = 'sztip'; tipEl.setAttribute('role', 'tooltip'); document.body.appendChild(tipEl); }
+      tipEl.textContent = t.dataset.tip; tipEl.classList.remove('on');
+      const r = t.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+      let y = r.top - h - 8; if (y < 6) y = r.bottom + 8;
+      tipEl.style.left = Math.max(6, Math.min(innerWidth - w - 6, r.left + r.width / 2 - w / 2)) + 'px'; tipEl.style.top = y + 'px';
+      requestAnimationFrame(() => tipEl && tipEl.classList.add('on'));
+    }, 380);
+  });
+  addEventListener('pointerout', e => { if (tipFor && !(e.relatedTarget && tipFor.contains(e.relatedTarget))) hide(); });
+  addEventListener('pointerdown', hide, true); addEventListener('scroll', hide, true); addEventListener('keydown', hide);
 }
 /* ===== v1.4 · eventos especiales: a las 50, 100 y 500 visitas la página «se hackea» y das un logro ===== */
 const EV = (() => {
@@ -3693,5 +3855,5 @@ const EV = (() => {
 window.SZ = { root, $, $$, clamp, fmt, reduce, today, sleepRaw, esc, est, Z_PATH, ICONS, ico, zWord, API, MANUAL, ALL, byId,
   get state(){ return state; }, set state(v){ state = v; normalize(); },
   normalize, cleanUsage, cleanChats, cleanStrMap, save, total, addUsage, resetUsage, estAll, todayEst, todayReq, providerBalance, balanceHtml, splitHtml, syncNote, helpGuide, smoothDetails, szPrompt, swapDir, swapDir, face, FACE_GOOD, randomGoodFace, welcomeBack, wasAway, accSignOutAll, accClaim, ROLE_NAME, trialGet, trialSet, trialStart, legacyRow, cleanLedger, mergeLedger, DEV, hooks, toast, hydrateIcons, md, countTo,
-  BRAND, isFlow, flowWord, zMark, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, BRANDS, brandOf, glassIcon, PIXART, pixelRun, pixelGrid, workView, workSaved, mdLoad, MDLIB, SZ_P, SZQ, SZ_AUTO, szqSet, msgsLeft, msgsTotal, limTxt, limShort, limLvl, limPct, limRing, limBar, szCatalog, szHeaders, guestGate, guestFull, isGuestQ, setTurn, puterOut, puterOutNote, TEL, telEv, telBeat, DEVH, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, feedbackModal, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI, EV, lipSync, ballFace, guideAsk, GTOPICS, whatsNew, installApp, isStandalone };
+  BRAND, isFlow, flowWord, zMark, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, BRANDS, brandOf, glassIcon, PIXART, pixelRun, pixelGrid, workView, workSaved, mdLoad, MDLIB, SZ_P, SZQ, SZ_AUTO, szqSet, msgsLeft, msgsTotal, limTxt, limShort, limLvl, limPct, limRing, limBar, szCatalog, szHeaders, guestGate, guestFull, isGuestQ, setTurn, puterOut, puterOutNote, TEL, telEv, telBeat, DEVH, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, feedbackModal, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI, EV, lipSync, ballFace, guideAsk, GTOPICS, whatsNew, signedish, cfgLinks, memAddCore, memPanel, menuOpen, menuClose, MICO };
 })();

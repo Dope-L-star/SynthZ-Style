@@ -1,0 +1,3 @@
+/* v2.2 · una sola letra limpia (monoespaciada solo para código) */
+:root{--code:ui-monospace,'Cascadia Code','JetBrains Mono',Consolas,Menlo,monospace;--mono:var(--sans)}
+pre,code,kbd,.rccode,.hk-code,.og code{font-family:var(--code)!important}

@@ -70,7 +70,7 @@ const TOUR = [
   { t:'Tu Puter (opcional)', p:'Cada día tienes un límite gratis para usar las IAs conectadas. A medianoche se vuelve a llenar. Si se te acaban, puedes seguir con Puter. Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.', x:'conn' },
   { t:'¿Dónde quieres empezar?', p:'Elige y te dejo en su pestaña con su mejor IA. Si no eliges, empiezas con ' + APODEX_NAME + '.', x:'pick' },
   { t:'Tu límite de hoy', p:'Cada día tienes un límite gratis. El anillo de la barrita se va vaciando mientras chateas y se llena otra vez a medianoche. «Respuestas cortas» te ayuda a que te alcancen más.' },
-  { t:'Más trucos', p:'Adjunta imágenes, PDF o código con el clip. En "Comparar" le preguntas lo mismo a hasta 4 IAs. El botón «?» de arriba abre la guía rápida cuando quieras.' },
+  { t:'Más trucos', p:'Adjunta imágenes, PDF o código con el «+». En "Comparar" le preguntas lo mismo a hasta 4 IAs. El botón «?» de arriba abre la guía rápida cuando quieras.' },
   { t:'Todo listo', p:'', x:'done' }
 ];
 const TCOL = ['#8fb0ff', '#7fd6b8', '#c9566c', '#f2b36b', '#ff8f7a', '#c9566c'];

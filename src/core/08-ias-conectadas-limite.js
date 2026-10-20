@@ -35,7 +35,9 @@ const SZ_AUTO = { id:'sz:auto', name:'Automática', vendor:'synthz', vlabel:'Eli
 /* ---------- límite de hoy: se muestra en mensajes (más fácil que contar «tokens») ---------- */
 const MSG_TOK = 800;
 /* sin cuenta: unos pocos mensajes de prueba al día; luego hay que entrar (gratis) */
-const isGuestQ = () => !!(SZQ.guest && !(ACC && ACC.ready));
+/* con sesión guardada (o volviendo de Google) ya cuentas como persona con cuenta, aunque tu cuenta tarde un segundo en cargar */
+const signedish = () => !!(ACC && (ACC.ready || ACC.joining || (SESS && !ACC.err)));
+const isGuestQ = () => !!(SZQ.guest && !signedish());
 const guestFull = () => isGuestQ() && (SZQ.guest.used || 0) >= (SZQ.guest.max || 5);
 const limPct = () => Math.max(SZQ.limit ? Math.min(1, (SZQ.used || 0) / SZQ.limit) : 0, isGuestQ() ? Math.min(1, (SZQ.guest.used || 0) / (SZQ.guest.max || 5)) : 0);
 const msgsLeft = () => Math.max(0, Math.floor(((SZQ.limit || 25000) - (SZQ.used || 0)) / MSG_TOK));

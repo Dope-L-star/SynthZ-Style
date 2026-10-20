@@ -4,6 +4,7 @@ const accHooks = [];
 const hashS = s => { let h = 5381; for (let i = 0; i < s.length; i++) h = (h * 33 + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); };
 var accSent = {}, accT = 0, accDelSent = new Set();
 let SESS = ''; try{ SESS = localStorage.getItem('synthz:sess') || ''; }catch(e){}
+if (SESS) document.documentElement.classList.add('signed');   /* con sesión: nada de «entra a tu cuenta» */
 function setSess(t){ SESS = t || ''; try{ if (SESS) localStorage.setItem('synthz:sess', SESS); else localStorage.removeItem('synthz:sess'); }catch(e){} }
 const accFire = k => accHooks.forEach(f => { try{ f(k); }catch(_){} });
 async function api(path, o = {}){
