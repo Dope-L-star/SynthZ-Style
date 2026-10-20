@@ -1,0 +1,15 @@
+const B = 'http://localhost:8765/api/';
+const call = (path, body, ip) => fetch(B + path, { method:body ? 'POST' : 'GET', headers:{ 'content-type':'application/json', 'x-forwarded-for':ip || '1.1.1.1' }, body:body ? JSON.stringify(body) : undefined }).then(r => r.json().then(d => ({ s:r.status, d })));
+const ok = (n, c, x) => console.log((c ? 'OK   ' : 'FALLA') + ' ' + n + (x ? ' ' + JSON.stringify(x).slice(0, 160) : ''));
+ok('id raro → 400', (await call('health', { id:'<x>', ok:false })).s === 400);
+await call('health', { id:'or:foo/bar:free', ok:false }, '2.2.2.2');
+ok('1 reporte no esconde', !(await call('health')).d.bad.some(x => x.id === 'or:foo/bar:free'));
+await call('health', { id:'or:foo/bar:free', ok:false }, '2.2.2.2');
+ok('la misma conexión dos veces no cuenta doble', !(await call('health')).d.bad.some(x => x.id === 'or:foo/bar:free'));
+const r = await call('health', { id:'or:foo/bar:free', ok:false }, '3.3.3.3');
+ok('2 conexiones distintas → escondida', r.d.hidden && (await call('health')).d.bad.some(x => x.id === 'or:foo/bar:free'));
+await call('health', { id:'or:foo/bar:free', ok:true }, '4.4.4.4');
+ok('si vuelve a responder → reaparece', !(await call('health')).d.bad.some(x => x.id === 'or:foo/bar:free'));
+const a = await call('help', { action:'ask', q:'¿Qué es SynthZ?' }, '5.5.5.5');
+ok('SynthonIA responde sin cuenta', a.s === 200 && typeof a.d.text === 'string', a.d);
+ok('pedir ayuda a personas necesita cuenta', (await call('help', { action:'open', text:'hola equipo' }, '5.5.5.6')).s === 401);

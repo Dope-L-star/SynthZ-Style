@@ -1,0 +1,23 @@
+const { open } = require('../v15/h.js');
+const ok = (n, c, x) => console.log((c ? 'OK   ' : 'FALLA') + ' ' + n + (x !== undefined ? '  ' + JSON.stringify(x).slice(0, 260) : ''));
+(async () => {
+  const { b, p, errs } = await open({ w:1280, h:800, page:'chat.html', state:{ keys:{} }, init:"if(!localStorage.getItem('synthz:cfg'))localStorage.setItem('synthz:cfg',JSON.stringify({v:2,intro:'never',sound:false}))", wait:4500 });
+  await p.evaluate(() => { window.__asks = []; const oc = puter.ai.chat; puter.ai.chat = async (msgs, o) => { window.__asks.push(msgs); return oc(msgs, o); }; });
+  const say = async t => { await p.evaluate(t => { const i = document.querySelector('#inp'); i.value = t; i.dispatchEvent(new Event('input', { bubbles:true })); document.querySelector('#sendBtn').click(); }, t); await p.waitForTimeout(7000); };
+  await say('Recuerda que me llamo Ana y estudio diseño gráfico.');
+  const off = await p.evaluate(() => (document.querySelector('.memoff') || {}).textContent || '');
+  ok('ofrece «¿Quieres que lo recuerde?» con lo que dijiste', /lo recuerde/.test(off) && /me llamo Ana y estudio diseño gráfico/.test(off), off);
+  await p.evaluate(() => document.querySelector('.memoff [data-mm="yes"]').click()); await p.waitForTimeout(400);
+  await say('¿qué me recomiendas leer?');
+  const sys = await p.evaluate(() => JSON.stringify((window.__asks.pop() || []).filter(m => m.role === 'system')));
+  ok('en el siguiente chat la IA ya lo sabe', /me llamo Ana/.test(sys), sys.slice(0, 200));
+  await p.evaluate(() => document.querySelector('#menuBtn, #moreBtn').click()); await p.waitForTimeout(500);
+  await p.evaluate(() => { const b = [...document.querySelectorAll('.ctxm button, .amenu2 button, [role="menuitem"]')].find(x => /recuerdo de ti/.test(x.textContent)); if (b) b.click(); }); await p.waitForTimeout(900);
+  const m = await p.evaluate(() => (document.querySelector('#szMem') || {}).textContent || '');
+  ok('«Lo que recuerdo de ti» lo muestra y se puede olvidar', /me llamo Ana/.test(m) && /Olvidar/.test(m), m.slice(0, 160));
+  await p.screenshot({ path:__dirname + '/mem.png' });
+  await p.evaluate(() => document.querySelector('#szMem [data-del]').click()); await p.waitForTimeout(400);
+  ok('al olvidarlo, se borra', await p.evaluate(() => SZ.state.mem.items.length === 0));
+  ok('sin errores', !errs.length, errs);
+  await b.close();
+})();

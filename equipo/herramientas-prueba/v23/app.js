@@ -1,0 +1,21 @@
+const { open } = require('../v15/h.js');
+const ok = (n, c, x) => console.log((c ? 'OK   ' : 'FALLA') + ' ' + n + (x !== undefined ? '  ' + JSON.stringify(x).slice(0, 200) : ''));
+(async () => {
+  let { b, p, errs } = await open({ w:390, h:844, page:'chat.html', wait:2500, init:"localStorage.removeItem('synthz:apppromo');" });
+  ok('manifest enlazado', await p.evaluate(async () => { const l = document.querySelector('link[rel=manifest]'); const m = await (await fetch(l.href)).json(); return m.name === 'SynthFlow' && m.icons.length === 3; }));
+  ok('íconos y video existen', await p.evaluate(async () => (await Promise.all(['/media/app/sf-192.png', '/media/app/sf-512.png', '/media/app/synthflow-demo.mp4', '/offline.html', '/sw.js'].map(u => fetch(u).then(r => r.ok)))).every(Boolean)));
+  await p.evaluate(() => { window.dispatchEvent(Object.assign(new Event('beforeinstallprompt'), { prompt(){ window.__prompted = 1; }, userChoice:Promise.resolve({ outcome:'accepted' }) })); });
+  await p.waitForSelector('#appPromo', { timeout:30000 }).catch(() => {});
+  ok('a los ~24 s sale «Descarga nuestra app SynthFlow»', !!(await p.$('#appPromo')));
+  await p.waitForTimeout(1500); await p.screenshot({ path:'app-m1.png' });
+  ok('el video carga', await p.evaluate(() => { const v = document.querySelector('#appPromo video'); return v && v.readyState >= 2; }));
+  await p.click('[data-ap="go"]'); await p.waitForTimeout(500);
+  ok('Android: abre la instalación de verdad', await p.evaluate(() => window.__prompted === 1));
+  ok('sin errores', !errs.length, errs); await b.close();
+  ({ b, p, errs } = await open({ w:390, h:844, page:'chat.html', wait:2000, init:"Object.defineProperty(navigator,'userAgent',{get:()=>'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1'});" }));
+  await p.evaluate(() => SZ.appPromo(true)); await p.waitForTimeout(800);
+  await p.click('[data-ap="go"]'); await p.waitForTimeout(500); await p.screenshot({ path:'app-m2.png' });
+  ok('iPhone: muestra los pasos (Compartir › Agregar a inicio)', await p.evaluate(() => /Agregar a inicio/.test(document.querySelector('.ap-how').textContent)));
+  ok('no vuelve a salir en 7 días', await p.evaluate(() => { document.querySelector('#appPromo')._close(); return new Promise(r => setTimeout(() => { SZ.appPromo(false); r(!document.querySelector('#appPromo')); }, 600)); }));
+  await b.close();
+})();

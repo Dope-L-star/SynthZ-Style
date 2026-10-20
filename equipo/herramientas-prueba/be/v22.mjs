@@ -1,0 +1,31 @@
+/* v2.2: «Probar» de Pulsem: Google con el modelo más nuevo, Mistral ocupado = llave válida, SiliconFlow lento sí queda probado */
+const B = 'http://localhost:8765/api/', S = 'http://localhost:8799/';
+const ok = (n, c, x) => console.log((c ? 'OK   ' : 'FALLA') + ' ' + n + (x !== undefined ? '  ' + JSON.stringify(x).slice(0, 260) : ''));
+const call = async (path, o = {}) => { const r = await fetch(B + path, { method:o.method || (o.body ? 'POST' : 'GET'), headers:Object.assign({ 'content-type':'application/json', 'x-forwarded-for':'9.9.9.9' }, o.tok ? { authorization:'Bearer ' + o.tok } : {}), body:o.body ? JSON.stringify(o.body) : undefined }); return { s:r.status, d:await r.json().catch(() => ({})) }; };
+(async () => {
+  const owner = (await call('auth', { body:{ mode:'signup', user:'sammuersynth', pass:'luz-de-prime-1', setup:'codigo-de-dueno-123' } })).d.token || (await call('auth', { body:{ mode:'login', user:'sammuersynth', pass:'luz-de-prime-1' } })).d.token;
+  await fetch(S + 'mockretire?m=gemini-2.5-flash,gemini-flash-latest&latest=1');
+  let r = await call('trial', { body:{ action:'keys', google:'AIza_prueba' }, tok:owner });
+  const g = (r.d.keys || []).find(k => k.prov === 'google');
+  ok('Google: si un modelo ya no existe para cuentas nuevas, prueba el siguiente más nuevo y funciona', g && g.ok && g.model === 'gemini-3.8-flash', g);
+  await fetch(S + 'mockretire?m=');
+  await fetch(S + 'mockfail?p=mistral&s=429');
+  r = await call('trial', { body:{ action:'keys', mistral:'mstr_prueba' }, tok:owner });
+  const m = (r.d.keys || []).find(k => k.prov === 'mistral');
+  ok('Mistral ocupado («Rate limit exceeded»): la llave sale válida, no como error', m && m.ok && m.kind === 'busy' && /válida/.test(m.state), m);
+  await fetch(S + 'mockfail?p=mistral&s=0');
+  await fetch(S + 'mockslow?p=sf&ms=14000');
+  r = await call('trial', { body:{ action:'keys', siliconflow:'sk-sf_prueba' }, tok:owner });
+  const sf = (r.d.keys || []).find(k => k.prov === 'siliconflow');
+  ok('SiliconFlow lento (14 s): igual responde y queda probado', sf && sf.ok, sf);
+  await fetch(S + 'mockslow?p=sf&ms=0');
+  r = await call('trial', { tok:owner });
+  const L = (r.d.keys || r.d.list || []);
+  const row = Array.isArray(L) ? L.find(k => k.prov === 'siliconflow') : null;
+  ok('en la lista ya no dice «sin probar todavía»', row && row.check && row.check.ok, row && row.check);
+  const body = { messages:[{ role:'user', content:'hola' }], model:'sz:google:gemini-2.5-flash' };
+  await fetch(S + 'mockretire?m=gemini-2.5-flash&latest=1');
+  r = await call('ai', { body, tok:owner });
+  ok('chat con un modelo de Google retirado: responde otra IA (no se cae)', r.s === 200, { s:r.s, d:String(r.d.raw || r.d.error || '').slice(0, 80) });
+  await fetch(S + 'mockretire?m=');
+})();

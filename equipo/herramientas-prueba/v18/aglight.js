@@ -1,0 +1,21 @@
+const { open } = require('../v15/h.js');
+const ok = (n, c, x) => console.log((c ? 'OK   ' : 'FALLA') + ' ' + n + (x !== undefined ? '  ' + JSON.stringify(x).slice(0, 300) : ''));
+const B = 'http://localhost:8765/api/';
+const call = async (path, body, tok) => (await fetch(B + path, { method:'POST', headers:{ 'content-type':'application/json', 'x-forwarded-for':'3.3.3.' + Math.floor(Math.random() * 200), ...(tok ? { authorization:'Bearer ' + tok } : {}) }, body:JSON.stringify(body) })).json();
+(async () => {
+  const own = await call('auth', { mode:'signup', user:'sammuersynth', pass:'luz-de-prime-1', setup:'codigo-de-dueno-123' });
+  const otok = own.token || (await call('auth', { mode:'login', user:'sammuersynth', pass:'luz-de-prime-1' })).token;
+  await call('trial', { action:'keys', groq:'gsk_prueba', google:'AIza_prueba' }, otok);
+  const { b, p, errs } = await open({ w:1280, h:800, page:'chat.html', state:{ keys:{} }, init:"localStorage.setItem('mockPuter','0');if(!localStorage.getItem('synthz:cfg'))localStorage.setItem('synthz:cfg',JSON.stringify({v:2,intro:'never',sound:false}));localStorage.setItem('synthz:newv','2.0')", wait:5000 });
+  console.log(await p.evaluate(() => SZ.SZQ));
+  await p.evaluate(() => { const orig = SZ.askStream; SZ.askStream = async (P, msgs, o, cb) => { if (msgs[0] && /planificador/.test(msgs[0].content)) return { text:JSON.stringify({ tema:'idiomas', dificultad:/hola|traduce/i.test(msgs[1].content) ? 'muy_simple' : 'normal', pedido:msgs[1].content }) }; return orig(P, msgs, o, cb); }; });
+  await p.evaluate(() => document.querySelector('#railAgent').click()); await p.waitForTimeout(800);
+  await p.evaluate(() => { const i = document.querySelector('#inp'); i.value = 'traduce hola amigo al inglés'; i.dispatchEvent(new Event('input', { bubbles:true })); document.querySelector('#sendBtn').click(); });
+  await p.waitForTimeout(2600);
+  const st = await p.evaluate(() => [...document.querySelectorAll('.agrun li')].map(l => l.textContent));
+  await p.waitForTimeout(6000);
+  const sum = await p.evaluate(() => (document.querySelector('.agsum') || {}).textContent);
+  ok('tarea muy simple: usa una IA rápida que gasta menos', /Flash Lite|flash-lite|gasta menos/i.test(sum || ''), { st, sum });
+  ok('sin errores', !errs.length, errs);
+  await b.close();
+})();

@@ -1,0 +1,22 @@
+const { chromium } = require('/opt/node-tools/node_modules/playwright');
+const PUTER = `window.puter = { auth:{ isSignedIn:()=>false, signIn:async()=>({}) }, ai:{ listModels: async () => [], chat: async () => ({}) } };`;
+(async () => {
+  const b = await chromium.launch({ executablePath:'/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args:['--no-sandbox'] });
+  const ctx = await b.newContext({ viewport:{ width:1280, height:800 } }); const errs = [];
+  await ctx.addInitScript("try{localStorage.setItem('synthz:tour','1');localStorage.setItem('synthz:visited','1');if(!localStorage.getItem('synthz:v1'))localStorage.setItem('synthz:v1',JSON.stringify({keys:{},model:{},models:{},usage:{},chats:{},fav:[],cmp:[]}))}catch(e){}");
+  await ctx.route('**/*', r => { const u = r.request().url(); if (u.startsWith('http://localhost')) return r.continue(); if (u.includes('js.puter.com')) return r.fulfill({ contentType:'text/javascript', body:PUTER }); return r.abort(); });
+  const p = await ctx.newPage(); p.on('pageerror', e => errs.push(e.message));
+  await p.goto('http://localhost:8765/chat.html'); await p.waitForTimeout(3500);
+  await p.evaluate(() => { const c = document.querySelector('#conn [data-close], #conn #cClose'); if (c) c.click(); }); await p.waitForTimeout(800);
+  await p.mouse.move(700, 500); await p.waitForTimeout(400);
+  console.log('estado:', await p.evaluate(() => document.querySelector('#now').innerText), '| para ti chip:', await p.evaluate(() => document.querySelector('.fchip[data-k=forme]').getAttribute('aria-pressed')));
+  await p.screenshot({ path:'/home/claude/t/B1.png', clip:{ x:0, y:0, width:1280, height:360 } });
+  const bk = await (await p.$('#backLink')).boundingBox(); await p.mouse.move(bk.x + 40, bk.y + bk.height / 2, { steps:5 }); await p.waitForTimeout(900);
+  await p.screenshot({ path:'/home/claude/t/B2.png', clip:{ x:0, y:0, width:400, height:80 } });
+  console.log('cursor sobre el logo:', await p.evaluate(() => document.querySelector('#cd').className + ' | vidrio: ' + document.querySelector('#cr').className));
+  const sb = await (await p.$('#cfgBtn')).boundingBox(); await p.mouse.move(sb.x + 15, sb.y + 15, { steps:4 }); await p.waitForTimeout(500);
+  console.log('cursor sobre un botón:', await p.evaluate(() => document.querySelector('#cd').className + ' | vidrio: ' + document.querySelector('#cr').className));
+  await p.screenshot({ path:'/home/claude/t/B3.png', clip:{ x:0, y:0, width:400, height:80 } });
+  console.log('ERRORS', JSON.stringify(errs));
+  await b.close();
+})();

@@ -1,0 +1,36 @@
+const { chromium } = require('/opt/node-tools/node_modules/playwright');
+const base = 'http://localhost:8765/';
+const H = { 'access-control-allow-origin':'*', 'access-control-allow-headers':'*' };
+const ORM = JSON.stringify({ data:[{ id:'apodex/apodex-1.1-mini:free', name:'Apodex: Apodex 1.1 Mini (free)', context_length:262144, pricing:{ prompt:'0', completion:'0' }, architecture:{ input_modalities:['text'], output_modalities:['text'] }, supported_parameters:['reasoning'] }] });
+const PUTER = `window.puter = { auth:{ isSignedIn:()=>true, signIn:async()=>({}) }, ai:{ listModels: async () => [], chat: async () => ({}) } };`;
+(async () => {
+  const b = await chromium.launch({ executablePath:'/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args:['--no-sandbox'] });
+  const ctx = await b.newContext({ viewport:{ width:1280, height:860 } }); const errs = [];
+  await ctx.addInitScript("try{localStorage.setItem('synthz:tour','1');localStorage.setItem('synthz:visited','1');if(!localStorage.getItem('synthz:v1'))localStorage.setItem('synthz:v1',JSON.stringify({keys:{openrouter:'sk-or-v1-x'},model:{openrouter:'or:apodex/apodex-1.1-mini:free'},models:{},usage:{},chats:{},fav:[],cmp:[]}))}catch(e){}");
+  let fail = 2;
+  await ctx.route('**/*', r => { const u = r.request().url();
+    if (u.startsWith(base)) return r.continue();
+    if (u.includes('js.puter.com')) return r.fulfill({ contentType:'text/javascript', body:PUTER });
+    if (u.includes('/api/v1/models')) return r.fulfill({ headers:H, contentType:'application/json', body:ORM });
+    if (u.includes('chat/completions')){ if (fail-- > 0) return r.fulfill({ status:500, headers:H, contentType:'application/json', body:'{"error":{"message":"Internal Server Error: upstream exception at node {stack}","code":500}}' }); return r.fulfill({ headers:H, contentType:'text/event-stream', body:'data: {"choices":[{"delta":{"content":"Ahora sí."},"finish_reason":"stop"}]}\n\ndata: {"choices":[],"usage":{"prompt_tokens":5,"completion_tokens":3}}\n\ndata: [DONE]\n\n' }); }
+    return r.abort(); });
+  const p = await ctx.newPage(); p.on('pageerror', e => errs.push(e.message));
+  await p.goto(base + 'chat.html'); await p.waitForTimeout(3500);
+  await p.fill('#inp', 'hola'); await p.press('#inp', 'Enter'); await p.waitForTimeout(1500);
+  console.log('error:', await p.evaluate(() => document.querySelector('.m.err').innerText.replace(/\n+/g, ' | ')), '| caja:', await p.evaluate(() => document.querySelector('#inp').value), '| SynXCoins:', await p.evaluate(() => SZ.totalAll()));
+  await p.evaluate(() => [...document.querySelectorAll('.m.err button')].find(x => x.textContent === 'Reintentar').click()); await p.waitForTimeout(1500);
+  console.log('2º intento:', await p.evaluate(() => document.querySelector('.m.err') ? document.querySelector('.m.err').innerText.split('\n')[0] : 'sin error'));
+  await p.evaluate(() => [...document.querySelectorAll('.m.err button')].find(x => x.textContent === 'Reintentar').click()); await p.waitForTimeout(2000);
+  console.log('3º intento:', await p.evaluate(() => [...document.querySelectorAll('.m')].slice(-1)[0].innerText.replace(/\n+/g, ' | ').slice(0, 120)), '| SynXCoins:', await p.evaluate(() => SZ.totalAll()));
+  console.log('«Otra vez» explica:', await p.evaluate(() => document.querySelector('[data-a=regen]').title));
+  await p.click('#helpBtn'); await p.waitForTimeout(800); console.log('elige:', await p.evaluate(() => [...document.querySelectorAll('#szGch .gco b')].map(x => x.textContent).join(' / '))); await p.evaluate(() => document.querySelector('#szGch [data-g="l"]').click()); await p.waitForTimeout(900);
+  console.log('guía:', await p.evaluate(() => [...document.querySelectorAll('#szHelp summary')].map(s => s.textContent).join(' · ')), '| bloquea?', await p.evaluate(() => { const r = document.querySelector('#szHelp').getBoundingClientRect(); return document.elementFromPoint(300, 400).closest('#szHelp') ? 'sí' : 'no (se puede seguir usando el chat) · ancho ' + Math.round(r.width); }));
+  await p.screenshot({ path:'/home/claude/t/G1.png' });
+  await p.keyboard.press('Escape'); await p.waitForTimeout(600);
+  console.log('Esc la cierra:', await p.evaluate(() => !document.querySelector('#szHelp')));
+  await p.goto(base + 'index.html'); await p.waitForTimeout(9000);
+  await p.evaluate(() => document.querySelector('#railHelp').click()); await p.waitForTimeout(800); console.log('elige:', await p.evaluate(() => [...document.querySelectorAll('#szGch .gco b')].map(x => x.textContent).join(' / '))); await p.evaluate(() => document.querySelector('#szGch [data-g="l"]').click()); await p.waitForTimeout(900);
+  console.log('guía en inicio:', await p.evaluate(() => !!document.querySelector('#szHelp') && [...document.querySelectorAll('#szHelp .hx2 button')].map(x => x.textContent).join(' · ')));
+  console.log('ERRORS', JSON.stringify(errs));
+  await b.close();
+})().catch(e => { console.log('FATAL', e.message.split('\n')[0]); process.exit(1); });

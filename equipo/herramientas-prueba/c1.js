@@ -1,0 +1,36 @@
+const { chromium } = require('/opt/node-tools/node_modules/playwright');
+(async () => {
+  const b = await chromium.launch({ executablePath:'/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args:['--no-sandbox'] });
+  const ctx = await b.newContext({ viewport:{ width:1280, height:860 } });
+  await ctx.addInitScript("try{localStorage.setItem('synthz:tour','1');localStorage.setItem('synthz:visited','1');if(!localStorage.getItem('synthz:v1'))localStorage.setItem('synthz:v1',JSON.stringify({keys:{openrouter:'sk-or-v1-x'},model:{},models:{},usage:{},chats:{},fav:[],cmp:[]}))}catch(e){}");
+  const PUTER = `window.puter = { auth:{ isSignedIn:()=>true, signIn:async()=>({}) }, ai:{ listModels: async () => [], chat: async () => ({}) } };`;
+  await ctx.route('**/*', r => { const u = r.request().url(); if (u.startsWith('http://localhost')) return r.continue(); if (u.includes('js.puter.com')) return r.fulfill({ contentType:'text/javascript', body:PUTER }); return r.abort(); });
+  const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
+  await p.goto('http://localhost:8765/chat.html'); await p.waitForTimeout(3500);
+  await p.mouse.move(400, 300); await p.evaluate(() => document.querySelector('#cfgBtn').click()); await p.waitForTimeout(900);
+  const sw = await (await p.$('#cfgm .cfgsw[data-k="smooth"]')).boundingBox();
+  await p.mouse.move(sw.x + sw.width / 2, sw.y + sw.height / 2, { steps:4 }); await p.waitForTimeout(500);
+  const st = () => p.evaluate(() => { const o = document.querySelector('#cfgm .cfgsw[data-k="smooth"]'), c = document.querySelector('#cl > *'); return { real:o.getAttribute('aria-pressed'), copiaEncima:c ? c.getAttribute('aria-pressed') : 'sin copia', vidrio:document.querySelector('#cr').className, flecha:document.querySelector('#cd').className, mano:getComputedStyle(document.querySelector('#cfgm .cfgsw')).cursor }; });
+  console.log('antes del clic', JSON.stringify(await st()));
+  await p.mouse.down(); await p.mouse.up(); await p.waitForTimeout(600);
+  console.log('después del clic', JSON.stringify(await st()));
+  await p.screenshot({ path:'/home/claude/t/C1.png', clip:{ x:sw.x - 330, y:sw.y - 30, width:420, height:90 } });
+  await p.evaluate(() => document.querySelector('#cfgm [data-in="never"]').scrollIntoView({ block:'center' })); await p.waitForTimeout(900);
+  const seg = await (await p.$('#cfgm [data-in="never"]')).boundingBox(); console.log('posición intro', JSON.stringify(seg));
+  await p.mouse.move(seg.x + seg.width / 2, seg.y + seg.height / 2, { steps:4 }); await p.waitForTimeout(500);
+  await p.mouse.down(); await p.mouse.up(); await p.waitForTimeout(600);
+  console.log('botón de intro tras clic', await p.evaluate(() => { const o = document.querySelector('#cfgm [data-in="never"]'), c = document.querySelector('#cl > *'); return 'real ' + o.getAttribute('aria-pressed') + ' / copia ' + (c && c.getAttribute('aria-pressed')) + ' · flecha ' + document.querySelector('#cd').className; }));
+  await p.waitForTimeout(800); await p.screenshot({ path:'/home/claude/t/C2.png', clip:{ x:seg.x - 200, y:seg.y - 40, width:520, height:110 } });
+  console.log('copia:', await p.evaluate(() => { const c = document.querySelector('#cl > *'); return c ? c.outerHTML.slice(0, 300) + ' | color ' + c.style.color + ' | op ' + getComputedStyle(document.querySelector('#cl')).opacity : 'nada'; }));
+  await p.mouse.move(seg.x - 150, seg.y + 80, { steps:3 }); await p.waitForTimeout(700);
+  await p.screenshot({ path:'/home/claude/t/C3.png', clip:{ x:seg.x - 200, y:seg.y - 40, width:520, height:110 } });
+  const op = await (await p.$('#cfgm .cfgo [data-v="speed"]')).boundingBox();
+  await p.mouse.move(op.x + 40, op.y + 20, { steps:4 }); await p.waitForTimeout(400);
+  console.log('opción de experiencia', await p.evaluate(() => 'vidrio ' + document.querySelector('#cr').className + ' · flecha ' + document.querySelector('#cd').className));
+  /* fuera del menú no debe cambiar nada */
+  await p.evaluate(() => document.querySelector('#cfgm [data-close]').click()); await p.waitForTimeout(700);
+  const sb = await (await p.$('#attachBtn')).boundingBox(); await p.mouse.move(sb.x + 10, sb.y + 10, { steps:3 }); await p.waitForTimeout(400);
+  console.log('botón fuera del menú', await p.evaluate(() => 'vidrio ' + document.querySelector('#cr').className + ' · flecha ' + document.querySelector('#cd').className));
+  console.log('ERRORS', JSON.stringify(errs));
+  await b.close();
+})();

@@ -1,0 +1,42 @@
+/* v1.7: sin cuenta solo 5 mensajes; luego «Para seguir FlowIAndo, entra a tu cuenta» */
+const { open } = require('../v15/h.js');
+const ok = (n, c, x) => console.log((c ? 'OK   ' : 'FALLA') + ' ' + n + (x !== undefined ? '  ' + JSON.stringify(x).slice(0, 240) : ''));
+const B = 'http://localhost:8765/api/';
+const call = async (path, body, tok) => (await fetch(B + path, { method:'POST', headers:Object.assign({ 'content-type':'application/json', 'x-forwarded-for':'7.7.7.' + Math.floor(Math.random() * 200) }, tok ? { authorization:'Bearer ' + tok } : {}), body:JSON.stringify(body) })).json();
+(async () => {
+  const W = +process.argv[2] || 1440, H = W < 600 ? 844 : 900, tag = W < 600 ? 'm' : 'd';
+  const own = await call('auth', { mode:'signup', user:'sammuersynth', pass:'luz-de-prime-1', setup:'codigo-de-dueno-123' });
+  const tok = own.token || (await call('auth', { mode:'login', user:'sammuersynth', pass:'luz-de-prime-1' })).token;
+  await call('trial', { action:'keys', groq:'gsk_prueba', mistral:'mstr_prueba' }, tok);
+  const { b, p, errs } = await open({ w:W, h:H, state:{ keys:{} }, init:"localStorage.setItem('mockPuter','0')", wait:4500 });
+  await p.evaluate(() => { try{ SZ.CFG.beginner = false; }catch(e){} });
+  const send = async (t) => { await p.fill('#inp', t); await p.keyboard.press('Enter'); await p.waitForTimeout(6500); };
+  for (let i = 1; i <= 5; i++) await send('hola número ' + i);
+  const q = await p.evaluate(() => SZ.SZQ.guest);
+  ok('después de 5 mensajes: 5/5', q && q.used === 5 && q.max === 5, q);
+  await p.waitForTimeout(1800);
+  const lk = await p.evaluate(() => ({ locked:document.body.classList.contains('locked'), t:document.querySelector('#lockT').textContent, acc:!document.querySelector('#lockCard [data-lk="acc"]').hidden, pu:!document.querySelector('#lockCard [data-lk="pu"]').hidden, ph:document.querySelector('#inp').placeholder }));
+  ok('el chat se bloquea con «entra para seguir FlowIAndo»', lk.locked && /FlowIAndo/.test(lk.t) && lk.acc && !lk.pu, lk);
+  await p.screenshot({ path:__dirname + '/' + tag + '-1-bloqueo.png' });
+  await p.click('#lockCard [data-lk="acc"]'); await p.waitForTimeout(1400);
+  const gate = await p.evaluate(() => { const g = document.querySelector('#szGate'); return g ? { h:g.querySelector('h3').textContent, signup:!!g.querySelector('input[name="name"]') } : null; });
+  ok('sale la ventana «Para seguir FlowIAndo» en «Crear cuenta»', gate && /FlowIAndo/.test(gate.h) && gate.signup, gate);
+  await p.screenshot({ path:__dirname + '/' + tag + '-2-ventana.png' });
+  const u = 'inv' + Date.now().toString(36).slice(-5);
+  await p.fill('#szGate input[name="user"]', u); await p.fill('#szGate input[name="pass"]', 'clave-larga-de-prueba-9');
+  await p.evaluate(() => document.querySelector('#szGate .lform').requestSubmit()); await p.waitForTimeout(3500); await p.screenshot({ path:__dirname + '/' + tag + '-2b-codigo.png' }); console.log(await p.evaluate(() => document.querySelector('#szGate') && document.querySelector('#gateBox').innerText.slice(0, 400)));
+  /* el código de recuperación puede salir: cerrarlo */
+  await p.evaluate(() => { const c = document.querySelector('#gateBox input[type=checkbox]'); if (c){ c.click(); } });
+  await p.waitForTimeout(400);
+  await p.evaluate(() => { const b = [...document.querySelectorAll('#gateBox button')].find(x => /Continuar/.test(x.textContent)); if (b) b.click(); });
+  await p.waitForTimeout(1500);
+  await p.waitForTimeout(1500);
+  const after = await p.evaluate(() => ({ acc:SZ.ACC.ready, guest:SZ.SZQ.guest, locked:document.body.classList.contains('locked'), gate:!!document.querySelector('#szGate') }));
+  ok('al crear la cuenta se desbloquea', after.acc && !after.guest && !after.locked && !after.gate, after);
+  await send('ya tengo cuenta, hola');
+  const last = await p.evaluate(() => { const m = [...document.querySelectorAll('.m.bot .body')].pop(); return m ? m.textContent.slice(0, 80) : ''; });
+  ok('y sigue FlowIAndo', /prueba/.test(last), last);
+  await p.screenshot({ path:__dirname + '/' + tag + '-3-sigue.png' });
+  ok('sin errores', !errs.length, errs);
+  await b.close();
+})();

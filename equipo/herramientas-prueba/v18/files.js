@@ -1,0 +1,33 @@
+/* v1.9: archivos como en Claude (tarjeta, lienzo, vista previa, descargar) */
+const { open } = require('../v15/h.js');
+const ok = (n, c, x) => console.log((c ? 'OK   ' : 'FALLA') + ' ' + n + (x !== undefined ? '  ' + JSON.stringify(x).slice(0, 260) : ''));
+const T = "Aquí tienes tu página:\n\n**index.html**\n```html\n<!doctype html>\n<html>\n<head>\n<link rel=\"stylesheet\" href=\"style.css\">\n</head>\n<body>\n<h1 id=\"t\">Hola</h1>\n<script src=\"script.js\"></script>\n</body>\n</html>\n```\n\n**style.css**\n```css\nbody{background:rgb(10,200,10)}\nh1{color:white}\nh1{font-size:40px}\nh1{margin:0}\nh1{padding:10px}\nh1{border:0}\n```\n\n**script.js**\n```js\ndocument.getElementById('t').textContent = 'Hola desde JS';\nconsole.log(1);\nconsole.log(2);\nconsole.log(3);\nconsole.log(4);\nconsole.log(5);\n```\n\n**main.cpp**\n```cpp\n#include <iostream>\nint main(){\n  std::cout << \"hola\";\n  return 0;\n}\n// fin\n```\n\nY un truco corto:\n```bash\nnpm i\n```";
+(async () => {
+  const W = +process.argv[2] || 1440, tag = W < 600 ? 'm' : 'd';
+  const { b, p, errs } = await open({ w:W, h:W < 600 ? 844 : 900, page:'chat.html', state:{ keys:{} }, init:"if(!localStorage.getItem('synthz:cfg'))localStorage.setItem('synthz:cfg',JSON.stringify({v:2,intro:'never',sound:false}))", wait:4500 });
+  await p.evaluate(T => { puter.ai.chat = async () => ({ message:{ role:'assistant', content:T } }); }, T);
+  await p.evaluate(() => { const i = document.querySelector('#inp'); i.value = 'hazme una página'; i.dispatchEvent(new Event('input', { bubbles:true })); document.querySelector('#sendBtn').click(); });
+  await p.waitForTimeout(9000);
+  const r = await p.evaluate(() => ({ cards:[...document.querySelectorAll('.fcard')].map(c => c.querySelector('.fc-t b').textContent + '|' + !!c.querySelector('[data-fv="prev"]')), mini:document.querySelectorAll('.cnv.mini').length, down:!!document.querySelector('.acts [data-a="down"]') }));
+  ok('cada archivo es una tarjeta (HTML con vista previa; CSS, JS y C++ sin)', JSON.stringify(r.cards) === JSON.stringify(['index.html|true', 'style.css|false', 'script.js|false', 'main.cpp|false']), r.cards);
+  ok('el trozo corto queda en el mensaje con «Copiar»', r.mini === 1, r.mini);
+  ok('ya no está «Descargar» en cada respuesta', !r.down);
+  await p.screenshot({ path:__dirname + '/fi-' + tag + '-1-tarjetas.png' });
+  await p.evaluate(() => document.querySelector('.fcard [data-fv="prev"]').click()); await p.waitForTimeout(1500);
+  const f = p.frames().find(x => x !== p.mainFrame());
+  const inside = f ? await f.evaluate(() => ({ t:document.getElementById('t').textContent, bg:getComputedStyle(document.body).backgroundColor, cookie:(() => { try{ return document.cookie; }catch(e){ return 'bloqueado'; } })(), ls:(() => { try{ return localStorage.length; }catch(e){ return 'bloqueado'; } })() })) : null;
+  ok('vista previa en vivo: usa su style.css y su script.js', inside && inside.t === 'Hola desde JS' && inside.bg === 'rgb(10, 200, 10)', inside);
+  ok('seguridad: la vista previa no puede leer tu cuenta ni tus datos', inside && inside.ls === 'bloqueado' && inside.cookie === 'bloqueado', inside);
+  await p.screenshot({ path:__dirname + '/fi-' + tag + '-2-vista.png' });
+  await p.evaluate(() => document.querySelector('.cvp [data-tab="code"]').click()); await p.waitForTimeout(400);
+  await p.screenshot({ path:__dirname + '/fi-' + tag + '-3-codigo.png' });
+  const [dl] = await Promise.all([p.waitForEvent('download', { timeout:5000 }).catch(() => null), p.evaluate(() => document.querySelector('.cvp [data-cv="down"]').click())]);
+  ok('descarga el archivo con su nombre', dl && dl.suggestedFilename() === 'index.html', dl && dl.suggestedFilename());
+  await p.keyboard.press('Escape'); await p.waitForTimeout(600);
+  ok('Esc cierra el lienzo', !(await p.$('.cvp')));
+  await p.evaluate(() => [...document.querySelectorAll('.fcard')].find(c => /main\.cpp/.test(c.textContent)).querySelector('[data-fv="open"]').click()); await p.waitForTimeout(800);
+  const cpp = await p.evaluate(() => ({ tabs:!!document.querySelector('.cvp-tabs'), code:document.querySelector('.cvp-code').textContent.slice(0, 20) }));
+  ok('un archivo sin vista previa solo muestra el código', !cpp.tabs && /#include/.test(cpp.code), cpp);
+  ok('sin errores', !errs.length, errs);
+  await b.close();
+})();
