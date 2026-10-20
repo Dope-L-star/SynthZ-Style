@@ -4,9 +4,49 @@ Escrito por Claude Opus el 20-oct-2026. **Tú eres el ejecutor; Opus es el revis
 Antes de nada lee `equipo/ENTREGA-OTRO-CLAUDE.md` (reglas, quién es Sammuel, estado). Este plan lo AMPLÍA y, si algo choca, **este plan manda**.
 
 ---
+
+---
+# ⚠️ ACTUALIZACIÓN URGENTE (20-oct, 18:50) — LEER ANTES QUE TODO LO DEMÁS
+**La interfaz de las vistas previas nuevas (`nueva-version` v2.3 y `alias-fase1`) está dañada según Sammuel. Este bloque MANDA sobre todo lo que sigue.** Cambia la rama de partida y pone una fase nueva (U) antes de cualquier función nueva.
+
+## U.0 Rama base nueva: `recuperacion-alias`
+- Ya existe en GitHub. Es `main` (v2.2B, interfaz buena y en producción) + **solo A.L.I.A.S. aislado** (página `/alias`, `api/alias.js`, build, `vercel.json`). El chat, la portada, Pulsem y el servidor existente son IDÉNTICOS a `main` (verificado con `git diff --stat origin/main`). Pruebas verificadas por Opus: servidor 70/70, contrato 12/12, pantalla 11/11.
+- **No partas de `alias-fase1` ni de `nueva-version`.** Crea `v2.4` desde `recuperacion-alias`. Las ramas `nueva-version`, `alias-fase1`, `respaldo-v2.3-20oct` se conservan SOLO como cantera: de ellas se re-introducen piezas una por una (U.3).
+- A.L.I.A.S. todavía no tiene entrada visible en el chat (por eso Sammuel no lo ve): se abre en `/alias`. Se añade enlace en U.2.
+
+## U.1 Lo que Sammuel reporta, tal cual (todo debe quedar demostrado como arreglado con prueba + captura)
+1. "Salen **bolitas por encima de toda la UI** del chat y de las pantallas; todo se ve feo."
+2. **Las IAs cambian solas.** "Cuando escojo una IA ya no puedo escogerla y se empiezan a cambiar solas. En 'cambiar de IA todas' le doy 'usar automática', queda automática, pero luego aparece la selección por todo el chat; cuando voy a escribir se cambia a DeepSeek 0813 y se sigue cambiando sin parar."
+3. **SuperiorSynth NO va en la barra superior junto a "Chats".** Va en la **sidebar**: sección "Mis chats" y, **debajo**, "SuperiorSynth". (Sammuel ya lo había pedido antes; la v2.3 lo dejó como pestaña y está mal.)
+4. **El agente A.L.I.A.S. no aparece** en ninguna parte de la UI.
+5. **La carita de SynthonIA desaparece** cuando se elige un tutorial y queda "un espacio blanco que no existe" (y el texto dice "selecciona acá").
+6. **El botón BETA** a veces desaparece y "hace como ruidos".
+7. "Todo está mal": revisar TODA la UI y el backend.
+
+## U.2 Qué debe hacer el ejecutor (en este orden)
+**a) Reproducir con el entorno de Sammuel, no con el mío.** Opus probó `nueva-version` y `alias-fase1` en Chromium con datos simulados, entrada limpia: sin errores de consola, sin elementos tapando, escribir y tocar funcionaban. Es decir: **Opus NO reprodujo** los síntomas 1, 2, 5 y 6 con un navegador limpio. Probablemente dependen del estado real de Sammuel (sesión iniciada, IAs conectadas activas `sz:`, Puter conectado, chats guardados, localStorage viejo, tutoriales). Por eso:
+   - Mejora el servidor simulado (`equipo/herramientas-prueba/be/dev.mjs`) para que active las "IAs conectadas" (`szOn()` verdadero, con `sz:auto` y varios modelos gratis) y permita sesión iniciada con chats guardados. Ese es el estado que hace falta para ver el síntoma 2.
+   - Prueba con `localStorage` "sucio" de versiones anteriores (v2.2B) cargado en la nueva (claves `synthz:*`).
+   - Si aun así no reproduces, pídele a Sammuel UNA captura de la pantalla con las bolitas y, si puede, la consola del navegador (F12 → Console). Una sola petición, simple.
+**b) Síntoma 2 (IAs que cambian solas), pistas de Opus (sin verificar):** el código que cambia el modelo sin que el usuario haga clic está en `src/chat/17-arranque.js` (~línea 36, `recommend(ik)` + `pickModel` si no está "fijado"), `src/chat/12-conexion-bloqueo-preocupada.js` (~líneas 186-222, elige "picks" cuando falta conexión) y `src/chat/00-inicio-catalogo-lista-ia.js` (`pickModel`: solo fija `st().pinned` si viene de un clic con `node`; `renderCPick` muestra "sugerida" cuando no hay `pinned`). Sospecha: "Usar automática" (`sz:auto`) deja `pinned` sin fijar o lo borra (`06-modo-agente-rescate.js` ~262: `if (st().pinned === id) delete st().pinned`), y a partir de ahí algún flujo (borrador, intención, reconexión, catálogo que se recarga) vuelve a elegir modelo. Define una regla clara y pruébala: **si el usuario elige una IA (incluida "Automática"), ningún código puede cambiarla hasta que el usuario la cambie, salvo el cambio de emergencia por límite agotado, que debe avisar con un mensaje visible.**
+**c) Síntoma 3 (SuperiorSynth):** quita SuperiorSynth de la barra de pestañas superior (`#cSeg`, en `chat.html`, y `01-cabecera.js`/`ssTopHtml` si aplica) y ponlo en la sidebar bajo "Mis chats". En `main` esa barra dice "Chats | Agente | Favoritos"; déjala como en `main`. Nombre visible: **SuperiorSynth** en vez de "Agente" donde corresponda, sin crear pestañas nuevas.
+**d) Síntoma 4:** añade la entrada de A.L.I.A.S. en la sidebar (ícono + nombre "A.L.I.A.S." + una línea) que abre `/alias`. Misma ubicación lógica: debajo de "Mis chats", junto a SuperiorSynth. Que funcione en celular (barra inferior: no añadas una pestaña si estorba; usa el menú).
+**e) Síntomas 5 y 6 (cara de SynthonIA y botón BETA):** revisa `src/core/20-…` (cara `face()`), `src/chat/10-guia-asistida-synthonia-ensena.js` (tutoriales: dónde se monta la cara y el hueco), `#betaBot` y el sonido (busca `AudioContext`/`beep`/`tone` en `src/`). Causa probable de "ruidos": un sonido/animación disparado en bucle. Arréglalo y pruébalo (abrir cada tutorial y ver que la cara se queda y no deja hueco; el BETA se queda visible 60 s sin sonidos).
+**f) Síntoma 1 (bolitas):** candidatas de Opus: (i) el cursor personalizado `#cr` (en pantalla táctil o con `nocur` no debe verse); (ii) el ícono animado de SuperiorSynth (`ssIco`, `animateMotion`, `.ssmount`); (iii) `.mt-bg i` del aviso de mantenimiento (solo debe existir si hay mantenimiento activo); (iv) ráfagas de partículas `burst()` / `11-escritura-brillo-golpe-cristal.js`; (v) los `i.pdot`. Busca elementos `position:fixed` redondos y pequeños en cualquier momento y en cualquier pantalla: crea una prueba que falle si aparece uno inesperado.
+**g) Regla de oro para esta fase:** cada arreglo lleva una prueba que falla antes y pasa después, MÁS una captura de pantalla antes/después (celular 390×844 y escritorio 1440×900) guardada en `equipo/capturas/`. Opus las revisará.
+
+## U.3 Re-introducir la cantera v2.3 SIN romper nada
+`nueva-version` trae cosas buenas que NO queremos perder (de `INFORME.md` v2.3): vincular cuenta Google en seguridad (`api/auth.js` modos `link`/`addpass`), roles por correo verificado (`emailRole`), aviso de mantenimiento con SynthonIA (`25e-mantenimiento-synthonia.js`, `api/config.js`, `api/trial.js`, `api/help.js`), medidor mensual de Redis (`api/_lib.js`, `health.js`, Pulsem), SynthonIA al día (nombres, Puter, app), app instalable (PWA, `sw.js`, `offline.html`, `synthflow.webmanifest`, íconos), estilo Simple, temas de color, barra a la izquierda, ícono animado de SuperiorSynth.
+Método: **una pieza por commit**, trayéndola con `git checkout origin/nueva-version -- <archivos>` o reescribiéndola, y después de CADA pieza: `node build.mjs --check`, todas las pruebas, y la prueba visual de U.2g. Si una pieza reintroduce un síntoma de U.1, se aísla y NO entra hasta arreglarla.
+Orden sugerido (de menos a más riesgo visual): 1) servidor puro (roles por correo, medidor, mantenimiento API, `link`/`addpass`); 2) textos de SynthonIA; 3) mantenimiento (overlay); 4) PWA/instalación (OJO: la ventana "Descarga nuestra app" sale a los 24 s solo en celular y debe poder cerrarse siempre; el video está pendiente de rehacer: déjalo fuera hasta que se rehaga); 5) seguridad/vincular Google (UI); 6) temas; 7) Simple; 8) barra a la izquierda; 9) ícono animado SuperiorSynth (el más sospechoso del síntoma 1: al final y con la prueba de bolitas).
+
+## U.4 Lo que sigue de este plan
+Las Fases 1 a 6 de abajo **siguen vigentes pero van DESPUÉS de U**, y se hacen sobre la rama `v2.4` (nacida de `recuperacion-alias`). En la Fase 1 (Puter y "De dónde") ten en cuenta que esos dos errores existen también en `main`. Nada de lo anterior se sube a `main` sin la Fase 7 (Opus + Sammuel).
+---
+
 ## 0. Reglas innegociables (resumen)
 1. **Jamás hagas push ni merge a `main`.** Tampoco borres ni cambies ramas `respaldo-*`. El paso a `main` (Fase 7) lo da Sammuel y lo confirma Opus; tú solo dejas todo listo.
-2. Trabajas en una rama NUEVA: `v2.4`, creada desde `alias-fase1` (que ya incluye `nueva-version` v2.3 y A.L.I.A.S.). Commits pequeños, uno por tarea, con mensaje claro en español.
+2. Trabajas en una rama NUEVA: `v2.4`, creada desde **`recuperacion-alias`** (ver bloque URGENTE; NO desde `alias-fase1`). Commits pequeños, uno por tarea, con mensaje claro en español.
 3. El código está en piezas: edita `src/…`, luego `node build.mjs`; verifica con `node build.mjs --check`. NO edites a mano los compilados (core.js, chat.js, index.js, pulsem.js, *.css de la raíz).
 4. **Usuarios registrados y datos:** no cambies el formato de lo que se guarda en Redis/Supabase (claves `u:`, `sess:`, chats, memoria, etc.). Si algo nuevo necesita guardar datos, usa claves NUEVAS con prefijo propio y que la ausencia de esos datos no rompa nada.
 5. Nunca pidas ni escribas claves/tokens. Variables de entorno: las pone Sammuel en Vercel; tú le dices cuáles, paso a paso.
@@ -26,7 +66,7 @@ Antes de nada lee `equipo/ENTREGA-OTRO-CLAUDE.md` (reglas, quién es Sammuel, es
 - Herramientas de prueba: `equipo/herramientas-prueba/` (léelo: `LEEME.md`). Adapta las rutas a tu entorno. No hay claves reales: usan un servidor simulado.
 
 ## 2. Fase 0 — Preparación (obligatoria, ~corta)
-1. `git clone https://github.com/Dope-L-star/SynthZ-Style && cd SynthZ-Style && git checkout alias-fase1 && git checkout -b v2.4`. Trae también `equipo/` con `git checkout origin/equipo-alias -- equipo` (sin commitearlo si no quieres; sí puedes commitearlo aparte).
+1. `git clone https://github.com/Dope-L-star/SynthZ-Style && cd SynthZ-Style && git checkout recuperacion-alias && git checkout -b v2.4`. Trae también `equipo/` con `git checkout origin/equipo-alias -- equipo` (sin commitearlo si no quieres; sí puedes commitearlo aparte).
 2. Lee: `INFORME.md`, `PENDIENTES.md`, `ALIAS.md`, `equipo/ENTREGA-OTRO-CLAUDE.md`, este plan, `equipo/herramientas-prueba/LEEME.md`.
 3. Línea base (anota los números en el informe): `node build.mjs --check`; `node src/alias/prueba-servidor.mjs` (esperado 70/70); `node t/alias/contrato.mjs` (esperado 12/12); `t/alias/ui.mjs` (esperado 11/11, requiere Playwright+Chromium: instálalo si no está). Si una línea base falla, avisa antes de seguir.
 4. Aplica los 2 parches de Abacus que revisó Opus (son seguros): están en el zip `Proyecto_SynthZ_SynthFlow.zip` que Sammuel tiene; si no lo tienes, rehaz a mano: en `src/alias/20-controles.js`, dentro de `cancelAll()`, justo después de `U.runSeq++; send({ a:'cancel' });` añade:
@@ -145,4 +185,4 @@ Al terminar cada fase (máx. 5 líneas, en español simple): qué quedó, qué d
 - No reescribas archivos enteros para cambiar 3 líneas; cambios mínimos y revisables.
 
 ## 12. Mensaje para pegar al abrir el chat con el Claude de pago
-"Eres el ejecutor del proyecto SynthZ/SynthFlow de Sammuel (hispanohablante, no programador). Clona https://github.com/Dope-L-star/SynthZ-Style, rama `alias-fase1`, trae la carpeta `equipo/` de la rama `equipo-alias`, y lee COMPLETOS `equipo/PLAN-MAESTRO-CLAUDE-PAGO.md` y `equipo/ENTREGA-OTRO-CLAUDE.md`. Ejecuta las fases 0 a 6 en orden, en la rama nueva `v2.4`, con commits pequeños y pruebas reales. Nunca toques `main` ni las ramas `respaldo-*`. Si te quedas sin presupuesto, deja el repo compilando y con pruebas en verde y anota dónde quedaste en `equipo/INFORME-DEL-RELEVO.md`. Al terminar, deja `t/aceptacion.sh` funcionando para que Opus lo verifique con un solo comando."
+"Eres el ejecutor del proyecto SynthZ/SynthFlow de Sammuel (hispanohablante, no programador). Clona https://github.com/Dope-L-star/SynthZ-Style, rama `recuperacion-alias`, trae la carpeta `equipo/` de la rama `equipo-alias`, y lee COMPLETOS `equipo/PLAN-MAESTRO-CLAUDE-PAGO.md` y `equipo/ENTREGA-OTRO-CLAUDE.md`. Lee primero el bloque URGENTE (fase U) y ejecútala; luego las fases 0 a 6 en orden, en la rama nueva `v2.4`, con commits pequeños y pruebas reales. Nunca toques `main` ni las ramas `respaldo-*`. Si te quedas sin presupuesto, deja el repo compilando y con pruebas en verde y anota dónde quedaste en `equipo/INFORME-DEL-RELEVO.md`. Al terminar, deja `t/aceptacion.sh` funcionando para que Opus lo verifique con un solo comando."
