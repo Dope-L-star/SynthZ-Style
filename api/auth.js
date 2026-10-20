@@ -9,7 +9,7 @@
    DELETE /api/auth                         → cierra esta sesión · DELETE /api/auth?all=1 → en todos tus dispositivos */
 import { route, body, json, fail, verifyGoogle, getJ, setJ, redis, rid, newSession, endSession, endAllSessions, auth, limit, cleanEmail, str,
          hasGoogle, hashPass, checkPass, passNeedsUpgrade, cleanUser, okUser, recoveryCode, codeHash, sameHash, SEED_ROLES, setupOk,
-         sbAccount, sbUser, sbGoogleOn, sbFindByUid, ipOf } from './_lib.js';
+         sbAccount, sbUser, sbGoogleOn, sbFindByUid, ipOf, emailRole } from './_lib.js';
 
 const err = (s, m) => Object.assign(new Error(m), { status:s });
 const okPass = p => typeof p === 'string' && p.length >= 8 && p.length <= 200;
@@ -112,7 +112,7 @@ export default route({
       const prev = await getJ('u:' + sub);
       if (prev && prev.blocked) throw err(403, 'Esta cuenta está suspendida. Escríbele al equipo de SynthZ.');
       /* se conserva lo que ya tenía la cuenta (rango, suspensión, fecha); solo se actualiza lo que viene de Google */
-      const user = Object.assign({}, prev || { sub, kind:'google', created:Date.now() }, { email, emailOk:!!g.email_verified, name:(prev && prev.name) || str(g.name || email.split('@')[0], 60), picture:str(g.picture, 400), seen:Date.now() });
+      const user = Object.assign({}, prev || { sub, kind:'google', created:Date.now() }, { email, emailOk:!!g.email_verified, name:(prev && prev.name) || str(g.name || email.split('@')[0], 60), picture:str(g.picture, 400), seen:Date.now() }, (email && g.email_verified === true && emailRole(email)) ? { role:emailRole(email) } : {});
       await setJ('u:' + sub, user);
       if (email && g.email_verified === true) await redis('SET', 'e:' + email, sub, 'NX');
       return signedIn(sub, !prev);
@@ -131,7 +131,7 @@ export default route({
       const prev = sub ? await getJ('u:' + sub) : null;
       if (prev && prev.blocked) throw err(403, 'Esta cuenta está suspendida. Escríbele al equipo de SynthZ.');
       if (!sub) sub = 's' + uid.replace(/-/g, '').slice(0, 20);
-      const user = Object.assign({}, prev || { sub, kind:'google', created:Date.now() }, { email:email || (prev && prev.email) || '', emailOk:!!g.email_confirmed_at, name:(prev && prev.name) || str(meta.full_name || meta.name || (email ? email.split('@')[0] : 'Synther'), 60), picture:str(meta.avatar_url || meta.picture || (prev && prev.picture) || '', 400), sbUid:uid, seen:Date.now() });
+      const user = Object.assign({}, prev || { sub, kind:'google', created:Date.now() }, { email:email || (prev && prev.email) || '', emailOk:!!g.email_confirmed_at, name:(prev && prev.name) || str(meta.full_name || meta.name || (email ? email.split('@')[0] : 'Synther'), 60), picture:str(meta.avatar_url || meta.picture || (prev && prev.picture) || '', 400), sbUid:uid, seen:Date.now() }, (email && verified && emailRole(email)) ? { role:emailRole(email) } : {});
       await setJ('u:' + sub, user);
       await redis('SET', 'sbu:' + uid, sub);
       if (email && verified) await redis('SET', 'e:' + email, sub, 'NX');

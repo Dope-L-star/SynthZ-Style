@@ -160,6 +160,9 @@ export async function withLock(name, fn){
   }
   throw Object.assign(new Error('Hay otro cambio en curso. Intenta de nuevo en un momento.'), { status:409 });
 }
+/* cuentas de Google del equipo: correo → rango. Solo aplica si Google confirmó que el correo es de quien entra */
+export const EMAIL_ROLES = Object.fromEntries(String(process.env.SYNTHZ_RESERVED_EMAILS || 'sammuel.loaiza10@gmail.com:owner,sammuel.loaiza@gmail.com:owner,sammuer.business@gmail.com:staff').split(',').map(x => x.trim().toLowerCase().split(':')).filter(([e, r]) => e && ['owner', 'admin', 'staff'].includes(r)));
+export const emailRole = e => EMAIL_ROLES[String(e || '').trim().toLowerCase()] || null;
 export const roleOf = u => (u && ['owner', 'admin', 'staff'].includes(u.role)) ? u.role : 'user';
 
 /* ---------- Google: verificación completa del token (firma RS256 + aud + iss + exp) ---------- */

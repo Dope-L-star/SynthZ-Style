@@ -1,0 +1,32 @@
+/* aviso de mantenimiento (cubre la página) */
+#szMaint{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:16px;background:radial-gradient(120% 90% at 50% 0%,#2a2236 0%,#120f18 70%);color:#f4efe6;overflow:auto}
+#szMaint .mt-card{width:min(560px,100%);display:flex;flex-direction:column;gap:14px;text-align:center}
+#szMaint .mt-top{display:flex;flex-direction:column;align-items:center;gap:6px}
+#szMaint h2{margin:0;font-size:clamp(18px,4vw,24px);font-weight:700}
+#szMaint .mt-text{margin:0;opacity:.85;font-size:15px;line-height:1.45}
+#szMaint .mt-face{width:132px;height:132px;animation:mtFloat 3.2s ease-in-out infinite;overflow:visible}
+#szMaint .mt-eye{transform-origin:center;animation:mtBlink 4.6s infinite}
+#szMaint .mt-heart{fill:#ff6f91;font-size:22px;opacity:0;transition:opacity .3s}
+#szMaint .mt-face.happy{animation:mtHop .6s ease-in-out 3, mtFloat 3.2s ease-in-out infinite}
+#szMaint .mt-face.happy .mt-mouth{d:path("M44 72 Q60 92 76 72")}
+#szMaint .mt-face.happy .mt-heart{opacity:1;animation:mtPop 1.2s ease-out infinite}
+#szMaint .mt-chat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:8px;text-align:left}
+#szMaint .mt-hint{margin:0;font-size:13px;opacity:.7;text-align:center}
+#szMaint .mt-msgs{max-height:34vh;min-height:90px;overflow:auto;display:flex;flex-direction:column;gap:6px}
+#szMaint .mt-m{padding:8px 11px;border-radius:12px;max-width:86%;font-size:14px;line-height:1.4;white-space:pre-wrap;word-wrap:break-word}
+#szMaint .mt-m.ia{background:rgba(255,255,255,.1);align-self:flex-start}
+#szMaint .mt-m.me{background:#c98a3d;color:#1a1208;align-self:flex-end}
+#szMaint .mt-form{display:flex;gap:8px}
+#szMaint .mt-in{flex:1;min-width:0;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.25);color:inherit;font:inherit}
+#szMaint .mt-send{padding:10px 14px;border-radius:12px;border:0;background:#f0b860;color:#1a1208;font-weight:700;cursor:pointer}
+#szMaint .mt-send:disabled{opacity:.5}
+#szMaint .mt-exit{align-self:center;background:none;border:1px dashed rgba(255,255,255,.35);color:inherit;border-radius:10px;padding:7px 12px;font-size:13px;cursor:pointer;opacity:.8}
+html.mt-on,html.mt-on body{overflow:hidden}
+@keyframes mtFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes mtBlink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+@keyframes mtHop{0%,100%{transform:translateY(0) rotate(0)}30%{transform:translateY(-12px) rotate(-4deg)}60%{transform:translateY(0) rotate(3deg)}}
+@keyframes mtPop{0%{transform:translateY(0) scale(.8);opacity:1}100%{transform:translateY(-22px) scale(1.25);opacity:0}}
+@media (prefers-reduced-motion:reduce){#szMaint .mt-face,#szMaint .mt-eye,#szMaint .mt-heart{animation:none!important}}
+
+/* sin resaltado azul al tocar en celular */
+*{-webkit-tap-highlight-color:transparent}

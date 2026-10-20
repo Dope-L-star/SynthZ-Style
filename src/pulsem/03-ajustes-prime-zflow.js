@@ -10,11 +10,16 @@ function renderSettings(){
   $('#setG').insertAdjacentHTML('beforeend', '<div class="set"><b>Supabase (base de datos)</b><p>' + (sp.on ? '✓ Conectada: cuentas, perfiles, chats, logros y opiniones se guardan también en Supabase.' : 'Aún no conectada. Falta poner la llave secreta de Supabase en Vercel (variable <code>SUPABASE_SECRET_KEY</code>) y volver a publicar.') + '</p><p>' + (sp.google ? '✓ «Entrar con Google» por Supabase: activo.' : '«Entrar con Google» por Supabase: apagado (se activa en Supabase › Authentication › Providers › Google).') + '</p>'
     + ((sp.errs || []).length ? '<p class="cnote">Últimos avisos: ' + sp.errs.slice(0, 3).map(x => esc(x.m)).join(' · ') + '</p>' : '')
     + (P.rank === 'Prime' && sp.on ? '<div class="acts" style="margin-top:8px"><button class="mini" type="button" data-set="sbsync">Copiar todo lo de antes a Supabase</button></div>' : '') + '</div>');
+  const mt = (T && T.maint) || {};
+  if (can) $('#setG').insertAdjacentHTML('beforeend', '<div class="set"><b>Aviso de mantenimiento</b><p>Cuando lo enciendes, la página entera se cubre con un aviso y SynthonIA en el centro para que la gente charle un rato. Prime y ZFlow siempre pueden entrar con «Entrar igual».</p>'
+    + '<label class="field"><span>Texto del aviso</span><textarea id="sMaint" rows="2" maxlength="300">' + esc(mt.text || 'Estamos presentando fallas o actualizaciones. Espera un momento.') + '</textarea></label>'
+    + '<div class="acts" style="margin-top:8px">' + (mt.on ? '<span class="tag bad">Encendido ahora</span> <button class="mini" type="button" data-set="maint" data-on="0">Apagar aviso</button>' : '<button class="mini" type="button" data-set="maint" data-on="1">Encender aviso</button>') + '</div></div>');
   $('#setNote').hidden = can;
 }
 $('#setG').addEventListener('click', async e => {
   const b = e.target.closest('[data-set]'); if (!b) return; const k = b.dataset.set, l = b.textContent; b.disabled = true; b.textContent = 'Guardando…';
   try{
+    if (k === 'maint'){ const on = b.dataset.on === '1'; const d = await api('trial', { method:'POST', body:{ action:'maint', on, text:($('#sMaint') ? $('#sMaint').value : '') }, keep:true }); T = Object.assign({}, T, { maint:d.maint }); toast(on ? 'Aviso encendido: la página ya muestra el mantenimiento.' : 'Aviso apagado.'); renderSettings(); return; }
     if (k === 'sbsync'){ let cur = 0, n = 0, c = 0; for (let i = 0; i < 200; i++){ const d = await api('trial', { method:'POST', body:{ action:'sbsync', cursor:cur }, keep:true }); n += d.accounts; c += d.chats; b.textContent = 'Copiando… ' + n + ' cuentas'; cur = d.cursor; if (d.done) break; } toast('Listo: copié ' + n + ' cuentas y ' + c + ' chats a Supabase.'); renderSettings(); return; }
     if (k === 'img'){ const d = await api('trial', { method:'POST', body:{ action:'limit', imgDay:+$('#sImg').value }, keep:true }); if (T) T.imgDay = d.imgDay; toast(d.imgDay ? 'Imágenes: ' + d.imgDay + ' al día por persona.' : 'Imágenes pausadas.'); }
     else if (k === 'limit'){ const d = await api('trial', { method:'POST', body:{ action:'limit', dayLimit:+$('#sLimit').value }, keep:true }); P.dayLimit = d.dayLimit; toast('Tope diario: ' + fmt(d.dayLimit) + ' por persona (unos ' + Math.round(d.dayLimit / 800) + ' mensajes).'); }

@@ -31,7 +31,8 @@ export default route({
     const [st, set, owners, cat, gg, dv] = await Promise.all([status(), settings(), ownersRaw(), models(false).catch(() => ({ list:[], provs:[] })), getJ('cfg:google'), getJ('cfg:drive')]);
     const mine = owners[me.sub] || { keys:{} };
     const genv = (process.env.GOOGLE_CLIENT_ID || '').trim(), denv = (process.env.GOOGLE_DRIVE_CLIENT_ID || '').trim();
-    return json({ rank:RANK[roleOf(me)], canEdit:boss(me), dayLimit:set.dayLimit,
+    const mt = await getJ('cfg:maint').catch(() => null);
+    return json({ rank:RANK[roleOf(me)], canEdit:boss(me), maint:mt || { on:false }, dayLimit:set.dayLimit,
       keys:st.map(k => Object.assign(k, { mine:!!(k.owner && k.owner.sub === me.sub) })),
       mine:Object.fromEntries(KEY_PROVS.map(p => [p, mine.keys && mine.keys[p] ? 'guardada' : ''])), cfAccount:mine.cfAccount || '',
       models:{ n:cat.list.length, byProv:ORDER.map(p => ({ id:p, name:PROV[p].name, n:cat.list.filter(m => m.prov === p).length })) }, imgDay:set.imgDay,
@@ -56,6 +57,12 @@ export default route({
       const res = await Promise.all(keys.map(async k => Object.assign({ id:k.id, prov:k.prov, provName:provName(k.prov), key:mask(k.key), owner:k.owner }, await checkKey(k))));
       await redis('DEL', 'pool:models');
       return json({ ok:true, keys:res });
+    }
+    if (a === 'maint'){
+      const me = await auth(req); if (!boss(me)) return fail(403, 'Solo Prime y ZFlow pueden poner el aviso de mantenimiento.');
+      const on = !!b.on; const cur = { on, text:String(b.text || '').trim().slice(0, 300) || 'Estamos presentando fallas o actualizaciones. Espera un momento.', t:Date.now(), by:RANK[roleOf(me)] || 'equipo' };
+      await setJ('cfg:maint', cur);
+      return json({ ok:true, maint:cur });
     }
     if (a === 'limit'){
       const me = await auth(req); if (!boss(me)) return fail(403, 'Solo Prime y ZFlow pueden cambiar el tope.');

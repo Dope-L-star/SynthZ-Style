@@ -9,7 +9,7 @@ function setAgent(on){
   if (mode !== 'solo'){ stopNow(); cmpRun++; cmpLast = null; mode = 'solo'; }
   st().agent = !!on; save(); paintAgent(); gen++;
   try{ renderMsgs(); updateHint(); renderTop(true); renderNow(); renderChats(false); }catch(e){}
-  toast(on ? 'Modo agente activado: tú escribes y el agente elige la IA que más sabe de eso.' : 'Modo agente apagado: ahora eliges tú la IA.');
+  toast(on ? 'Modo SuperiorSynth activado: tú escribes y SuperiorSynth elige la IA que más sabe de eso.' : 'Modo SuperiorSynth apagado: ahora eliges tú la IA.');
 }
 const AG_STEPS = ['Entendiendo tu pedido', 'Mejorando tu pedido para que la IA lo entienda mejor', 'Eligiendo la IA que más sabe de esto', 'Pasándole tu pedido a la IA'];
 const AG_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>';
