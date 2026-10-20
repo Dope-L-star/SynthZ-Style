@@ -101,6 +101,9 @@
   "functions": {
     "api/trial.js": {
       "maxDuration": 60
+    },
+    "api/alias.js": {
+      "maxDuration": 60
     }
   }
 }
