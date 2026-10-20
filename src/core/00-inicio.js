@@ -12,6 +12,10 @@ const cfgPreset = perf => CFG_KEYS.reduce((o, k) => (o[k] = perf !== 'speed', o)
 const CFG = (() => {
   let c = {}; try{ c = JSON.parse(localStorage.getItem('synthz:cfg')) || {}; }catch(e){}
   if (c.v !== 2) c = Object.assign(cfgPreset(c.perf), { perf:c.perf || 'visual' });   /* migración: los ajustes concuerdan con el modo */
+  /* primera visita desde un celular: arranca en el modo rápido (sin fondo animado ni vidrio, que son lo que más pesa); se cambia en Ajustes */
+  let fresh = false; try{ fresh = localStorage.getItem('synthz:cfg') === null; }catch(e){}
+  const phone = (() => { try{ return matchMedia('(pointer:coarse)').matches && Math.min(screen.width, screen.height) <= 820; }catch(e){ return false; } })();
+  if (fresh && phone) c = Object.assign(cfgPreset('speed'), { perf:'speed', anim:true });
   return Object.assign({ v:2, perf:'visual', intro:'always', sound:true }, cfgPreset(c.perf), c);
 })();
 const PERF = CFG.perf === 'speed';

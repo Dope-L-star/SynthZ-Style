@@ -86,6 +86,10 @@ function renderHealth(){
   const K = [[(P.online || []).length, 'en línea ahora'], [d0.req || 0, 'mensajes hoy'], [d0.tok || 0, 'palabras usadas hoy · IAs conectadas'], [(d0.err || 0) + (d0.fail || 0), 'errores de IA hoy'], [d0.req ? ((d0.ms || 0) / d0.req / 1000) : 0, 'segundos por respuesta']];
   $('#hKpi').innerHTML = K.map(([v, l], i) => '<div class="kpi"><b data-k="' + i + '">0</b><span>' + l + '</span></div>').join('');
   K.forEach(([v], i) => { const b = $('[data-k="' + i + '"]'); if (i === 4){ b.textContent = v ? v.toFixed(1).replace('.', ',') : '–'; } else SZ.countTo(b, v); });
+  { const U = P.use || {}, B = [['Vercel · llamadas al servidor', U.req || 0, 100000], ['Upstash · comandos de datos', U.cmd || 0, 500000]];
+    let m = $('#hUse'); if (!m){ m = document.createElement('div'); m.id = 'hUse'; m.className = 'use'; $('#hKpi').insertAdjacentElement('afterend', m); }
+    m.innerHTML = '<p class="usel">Lo gratis de este mes (' + esc(U.month || '') + ')</p>' + B.map(([l, v, mx]) => { const p = Math.min(100, v / mx * 100), col = p >= 90 ? '#ff8f7a' : p >= 70 ? '#f2b36b' : '#7fd6b8'; return '<div class="ub"><span>' + l + '</span><i><b style="width:' + p.toFixed(1) + '%;background:' + col + '"></b></i><em>' + fmt(v) + ' de ' + fmt(mx) + ' · ' + p.toFixed(p < 10 ? 1 : 0).replace('.', ',') + ' %</em></div>'; }).join('')
+      + (B.some(x => x[1] / x[2] >= .7) ? '<p class="usew">Ya pasaste el 70 %: cuando llegue al 100 % esa parte se detiene hasta el mes siguiente.</p>' : ''); }
   $('#pRank').textContent = P.rank; $('#pRank').className = 'rkp r-' + rc(P.rank);
 }
 

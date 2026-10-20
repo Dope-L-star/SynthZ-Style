@@ -10,7 +10,7 @@ function mtFace(happy){
     + '<defs><radialGradient id="mtG" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#ffe9b8"/><stop offset="1" stop-color="#c98a3d"/></radialGradient></defs>'
     + '<g class="mt-body"><circle cx="60" cy="60" r="46" fill="url(#mtG)"/>'
     + '<g class="mt-eyes"><ellipse class="mt-eye" cx="45" cy="54" rx="5" ry="6.5" fill="#2a1d0e"/><ellipse class="mt-eye" cx="75" cy="54" rx="5" ry="6.5" fill="#2a1d0e"/></g>'
-    + '<path class="mt-mouth" d="M46 74 Q60 84 74 74" fill="none" stroke="#2a1d0e" stroke-width="3.5" stroke-linecap="round"/></g>'
+    + '<path class="mt-mouth" d="' + (happy ? 'M42 70 Q60 96 78 70 Z' : 'M46 74 Q60 84 74 74') + '" fill="' + (happy ? '#7a2e2e' : 'none') + '" stroke="#2a1d0e" stroke-width="3.5" stroke-linecap="round"/></g>'
     + '<text class="mt-heart" x="92" y="28">♥</text></svg>';
 }
 

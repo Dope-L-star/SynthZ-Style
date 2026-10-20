@@ -1,3 +1,18 @@
+# SynthZ v2.3 (Fase 1) — en nueva-version
+
+**Hecho**
+- Cuentas de Google del equipo: por correo verificado reciben rango (sammuel.loaiza10@gmail.com y sammuel.loaiza@gmail.com = Prime/owner; sammuer.business@gmail.com = Symmetrix/staff). Se puede cambiar con la variable SYNTHZ_RESERVED_EMAILS (formato correo:rol,correo:rol). Ver `EMAIL_ROLES` en api/_lib.js. La foto de Google ya se guarda al entrar.
+- SynthonIA (api/help.js): ya no dice que Puter es opcional ni "datos de hoy".
+- Aviso de mantenimiento: Pulsem › Ajustes (solo Prime/ZFlow) → api/trial.js acción `maint`, estado público en /api/config (`maint`). Pantalla completa con SynthonIA que charla (usa /api/help, 15 al día por persona) y se pone feliz con palabras lindas. "Entrar igual" solo Prime/ZFlow. Archivos: src/core/27-mantenimiento-synthonia.js, src/core-css/08-mantenimiento.css.
+- Portada: sin selector de guía. Primera vez y botón de ayuda abren directo el recorrido corto; el último paso dice "Inicia sesión para que no tengas límites".
+- Chat: quitada la zona de temas (Escribir, Marketing…); "Modo SuperiorSynth activado"; sin resaltado azul al tocar; barra inferior del celular sin hueco (columnas automáticas).
+- Medidor de lo gratis en Pulsem: cuenta comandos de Redis y llamadas por mes (claves use:c:AAAA-MM y use:r:AAAA-MM), con avisos al 70 y 90 %.
+- Celular: primera visita arranca en modo rápido (sin fondo animado ni vidrio).
+
+**Falta (Fase 1)**: medir velocidad real en celular con números; probar Google admin en producción; el medidor cuenta desde que se publique (empieza en 0).
+
+**Plan siguiente**: ver PENDIENTES.md. Fase 2: SuperiorSynth (ícono, barrita de límite, quitar "Apagar" del chat), vincular cuentas en dos sentidos, barra del celular a la izquierda, versión simple tipo Claude, temas de color (solo SynthFlow), nombres de planes (Chispa / Syntonia / Timeless / Orquesta, sin activar). Fase 3: app instalable desde el navegador (sin tiendas) + video, nuevo nombre para SynthFlow.
+
 # SynthZ v2.2B — SynthFlow renovado (estilo Claude), arreglos y listo para main
 
 - **Diseño nuevo, más claro (se conservan el vidrio, el fondo y todas las animaciones):**

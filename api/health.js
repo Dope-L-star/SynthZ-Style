@@ -42,10 +42,11 @@ export default route({
       const feedback = (fbr || []).map(x => { try{ return x ? JSON.parse(x) : null; }catch(e){ return null; } }).filter(Boolean);
       const sbErr = ((await redis('LRANGE', 'sb:err', '0', '4')) || []).map(x => { try{ return JSON.parse(x); }catch(e){ return null; } }).filter(Boolean);
       const supa = { on:sbOn(), google:await sbGoogleOn().catch(() => false), errs:sbErr };
+      const mk = new Date().toISOString().slice(0, 7), uv = (await redis('MGET', 'use:c:' + mk, 'use:r:' + mk).catch(() => [])) || [], use = { month:mk, cmd:+uv[0] || 0, req:+uv[1] || 0 };
       const alertL = await alerts().catch(() => []);
       const hrows = hlist && hlist.length ? await pipe(hlist.map(x => ['GET', 'hq:' + x])) : [];
       const help = hrows.map(v => { try{ return v ? JSON.parse(v) : null; }catch(e){ return null; } }).filter(r => r && r.status !== 'done').map(r => ({ id:r.id, status:r.status, t:r.t, user:r.user, text:String(r.text || '').slice(0, 120), by:r.by, urgent:r.status === 'open' && now - r.t > 15 * 60e3 }));
-      return json({ now, supa, alerts:alertL, rank:RANK[roleOf(me)], canEdit:['owner', 'admin'].includes(roleOf(me)), online, events:evs, stat, perMin:mins.map(x => +x || 0).reverse(), dayLimit:set.dayLimit,
+      return json({ now, use, supa, alerts:alertL, rank:RANK[roleOf(me)], canEdit:['owner', 'admin'].includes(roleOf(me)), online, events:evs, stat, perMin:mins.map(x => +x || 0).reverse(), dayLimit:set.dayLimit,
         keys:keys.map(k => ({ id:k.id, prov:k.prov, provName:k.provName, owner:k.owner && { name:k.owner.name, rank:k.owner.rank }, n:k.n, cap:k.cap, tok:k.tok, down:k.down, check:k.check, src:k.src })), provs:ORDER.map(p => ({ id:p, name:PROV[p].name })), help, feedback });
     }
     const all = await redis('HGETALL', 'mh:bad') || [];

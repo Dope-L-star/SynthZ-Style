@@ -12,6 +12,10 @@ const cfgPreset = perf => CFG_KEYS.reduce((o, k) => (o[k] = perf !== 'speed', o)
 const CFG = (() => {
   let c = {}; try{ c = JSON.parse(localStorage.getItem('synthz:cfg')) || {}; }catch(e){}
   if (c.v !== 2) c = Object.assign(cfgPreset(c.perf), { perf:c.perf || 'visual' });   /* migración: los ajustes concuerdan con el modo */
+  /* primera visita desde un celular: arranca en el modo rápido (sin fondo animado ni vidrio, que son lo que más pesa); se cambia en Ajustes */
+  let fresh = false; try{ fresh = localStorage.getItem('synthz:cfg') === null; }catch(e){}
+  const phone = (() => { try{ return matchMedia('(pointer:coarse)').matches && Math.min(screen.width, screen.height) <= 820; }catch(e){ return false; } })();
+  if (fresh && phone) c = Object.assign(cfgPreset('speed'), { perf:'speed', anim:true });
   return Object.assign({ v:2, perf:'visual', intro:'always', sound:true }, cfgPreset(c.perf), c);
 })();
 const PERF = CFG.perf === 'speed';
@@ -3869,7 +3873,7 @@ function mtFace(happy){
     + '<defs><radialGradient id="mtG" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#ffe9b8"/><stop offset="1" stop-color="#c98a3d"/></radialGradient></defs>'
     + '<g class="mt-body"><circle cx="60" cy="60" r="46" fill="url(#mtG)"/>'
     + '<g class="mt-eyes"><ellipse class="mt-eye" cx="45" cy="54" rx="5" ry="6.5" fill="#2a1d0e"/><ellipse class="mt-eye" cx="75" cy="54" rx="5" ry="6.5" fill="#2a1d0e"/></g>'
-    + '<path class="mt-mouth" d="M46 74 Q60 84 74 74" fill="none" stroke="#2a1d0e" stroke-width="3.5" stroke-linecap="round"/></g>'
+    + '<path class="mt-mouth" d="' + (happy ? 'M42 70 Q60 96 78 70 Z' : 'M46 74 Q60 84 74 74') + '" fill="' + (happy ? '#7a2e2e' : 'none') + '" stroke="#2a1d0e" stroke-width="3.5" stroke-linecap="round"/></g>'
     + '<text class="mt-heart" x="92" y="28">♥</text></svg>';
 }
 

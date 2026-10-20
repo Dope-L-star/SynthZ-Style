@@ -49,7 +49,9 @@ export function route(handlers){
       if (!ready()) return fail(503, 'Las cuentas de SynthZ aún no están configuradas en el servidor.', { missing:missing() });
       const h = handlers[req.method]; if (!h) return fail(405, 'Método no permitido.');
       await loadKey();
-      return await h(req);
+      const res = await h(req);
+      await flushUse();
+      return res;
     }catch(e){
       const s = e && e.status ? e.status : 500;
       const known = !!(e && e.code);                       /* errores pensados (con código) se muestran tal cual, aunque sean 5xx */
@@ -60,7 +62,14 @@ export function route(handlers){
 }
 
 /* ---------- Redis por REST (Upstash) ---------- */
+let CMDN = 0;                                                /* comandos de Redis usados en esta llamada (para el medidor de lo gratis) */
+const monthKey = () => new Date().toISOString().slice(0, 7);
+async function flushUse(){
+  const n = CMDN; CMDN = 0;
+  try{ const m = monthKey(); await fetch(R_URL.replace(/\/$/, '') + '/pipeline', { method:'POST', headers:{ Authorization:'Bearer ' + R_TOK, 'content-type':'application/json' }, body:JSON.stringify([['INCRBY', 'use:c:' + m, n + 2], ['INCR', 'use:r:' + m]]) }); }catch(e){}
+}
 export async function redis(...cmd){
+  CMDN++;
   const r = await fetch(R_URL, { method:'POST', headers:{ Authorization:'Bearer ' + R_TOK, 'content-type':'application/json' }, body:JSON.stringify(cmd) });
   const d = await r.json().catch(() => ({}));
   if (d.error) throw new Error('Redis: ' + d.error);
@@ -68,6 +77,7 @@ export async function redis(...cmd){
 }
 export async function pipe(cmds){
   if (!cmds.length) return [];
+  CMDN += cmds.length;
   const r = await fetch(R_URL.replace(/\/$/, '') + '/pipeline', { method:'POST', headers:{ Authorization:'Bearer ' + R_TOK, 'content-type':'application/json' }, body:JSON.stringify(cmds) });
   const d = await r.json().catch(() => []);
   if (!Array.isArray(d)) throw new Error('Redis: respuesta inesperada');

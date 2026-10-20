@@ -8,7 +8,6 @@
 #szMaint .mt-eye{transform-origin:center;animation:mtBlink 4.6s infinite}
 #szMaint .mt-heart{fill:#ff6f91;font-size:22px;opacity:0;transition:opacity .3s}
 #szMaint .mt-face.happy{animation:mtHop .6s ease-in-out 3, mtFloat 3.2s ease-in-out infinite}
-#szMaint .mt-face.happy .mt-mouth{d:path("M44 72 Q60 92 76 72")}
 #szMaint .mt-face.happy .mt-heart{opacity:1;animation:mtPop 1.2s ease-out infinite}
 #szMaint .mt-chat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:8px;text-align:left}
 #szMaint .mt-hint{margin:0;font-size:13px;opacity:.7;text-align:center}

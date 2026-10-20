@@ -68,6 +68,7 @@ setInterval(() => {
   r.animate([{ opacity:1, transform:'none', filter:'blur(0)' }, { opacity:0, transform:'translateY(-6px)', filter:'blur(4px)' }], { duration:320, easing:'ease-in' }).onfinish = () => { r.innerHTML = exRowHtml(); r.animate([{ opacity:0, transform:'translateY(6px)', filter:'blur(4px)' }, { opacity:1, transform:'none', filter:'blur(0)' }], { duration:420, easing:'cubic-bezier(.22,1,.36,1)' }); };
 }, 7000);
 function topicsHtml(){
+  return '';   /* v2.3: se quitó la zona de temas (ya estaba en los filtros) */
   const L = topicsAll ? TOPICS : TOPICS.slice(0, TOPICS_SHOWN);
   return '<div class="topics" role="group" aria-label="¿Qué quieres hacer?">' + L.map(([k, e, l], i) => '<button type="button" class="tchip" data-topic="' + k + '" aria-pressed="' + (curTopic === k) + '" style="--i:' + i + '">' + esc(l) + '</button>').join('')
     + (topicsAll ? '<button type="button" class="tchip more" data-topics-less>Menos temas</button>' : '<button type="button" class="tchip more" data-topics-more>Más temas →</button>') + '</div>';
