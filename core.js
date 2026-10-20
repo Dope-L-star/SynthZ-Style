@@ -3853,9 +3853,9 @@ function appPromo(force){
   const o = document.createElement('div'); o.id = 'appPromo'; o.className = 'appp';
   const ios = appIOS(), canPrompt = !!APP.evt;
   o.innerHTML = '<div class="ap-card" role="dialog" aria-modal="true" aria-label="Descarga la app SynthFlow">'
-    + '<div class="ap-vid"><video src="/media/app/synthflow-demo.mp4" poster="/media/app/synthflow-demo.jpg" muted playsinline loop autoplay preload="metadata" aria-label="SynthFlow en acción"></video><span class="ap-badge"><img src="/media/app/sf-192.png" alt="" width="22" height="22">SynthFlow</span></div>'
+    + '<div class="ap-vid"><video poster="/media/app/synthflow-demo.jpg" muted playsinline loop autoplay preload="metadata" aria-label="SynthFlow en acción"><source src="/media/app/synthflow-demo.webm" type="video/webm"><source src="/media/app/synthflow-demo.mp4" type="video/mp4"></video><span class="ap-badge"><img src="/media/app/sf-192.png" alt="" width="22" height="22">SynthFlow</span></div>'
     + '<div class="ap-body"><span class="ap-kick">App gratis · sin tiendas</span><h3>Descarga nuestra app <em>SynthFlow</em></h3>'
-    + '<ul class="ap-why"><li><i>⚡</i><span><b>Va más fluida</b>: a pantalla completa, sin pestañas ni barra del navegador.</span></li><li><i>🌊</i><span><b>Más Flow</b>: tus chats y SuperiorSynth a un toque, desde tu pantalla de inicio.</span></li><li><i>🔒</i><span><b>Pesa casi nada</b> y siempre está al día: se instala desde aquí mismo.</span></li></ul>'
+    + '<ul class="ap-why"><li><i>⚡</i><span><b>Va más fluida</b>: a pantalla completa, sin pestañas ni barra del navegador.</span></li><li><i>🌊</i><span><b>Más Flow</b>: tus chats y SuperiorSynth a un toque, desde tu pantalla de inicio.</span></li><li><i>🪶</i><span><b>Pesa casi nada</b> y siempre está al día: se instala desde aquí mismo.</span></li></ul>'
     + '<div class="ap-how"></div>'
     + '<div class="ap-acts"><button type="button" class="lnk" data-ap="no">Ahora no</button><button type="button" class="btn" data-ap="go">' + (canPrompt ? 'Instalar SynthFlow' : ios ? 'Ver cómo instalarla' : 'Instalar SynthFlow') + '</button></div></div></div>';
   document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('on'));
