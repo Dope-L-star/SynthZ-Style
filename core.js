@@ -16,7 +16,7 @@ const CFG = (() => {
 })();
 const PERF = CFG.perf === 'speed';
 const reduce = !CFG.anim;
-function cfgClasses(){ const r = document.documentElement; r.classList.toggle('nocur', !CFG.cursor); r.classList.toggle('noglass', !CFG.glass); r.classList.toggle('nobg', !CFG.bg); r.classList.toggle('noanim', !CFG.anim); r.classList.remove('perf'); r.classList.toggle('pmode', CFG.perf === 'speed'); }
+function cfgClasses(){ const r = document.documentElement; r.classList.toggle('nocur', !CFG.cursor); if (!CFG.cursor) r.classList.remove('cursor-on'); r.classList.toggle('noglass', !CFG.glass); r.classList.toggle('nobg', !CFG.bg); r.classList.toggle('noanim', !CFG.anim); r.classList.remove('perf'); r.classList.toggle('pmode', CFG.perf === 'speed'); }
 cfgClasses();
 function saveCfg(){ try{ localStorage.setItem('synthz:cfg', JSON.stringify(CFG)); }catch(e){} }
 const today = () => new Date().toLocaleDateString('en-CA');
@@ -29,6 +29,7 @@ const Z_PATH = 'M13 4H44V12L18 36H49L39 40H45L35 44H4V36L30 12H-1L9 8H3Z';
 
 /* ---------- logos de cada IA ---------- */
 const ICONS = {
+  synthz: () => `<defs><linearGradient id="szig" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8fb0ff"/><stop offset=".55" stop-color="#c9566c"/><stop offset="1" stop-color="#e6b65f"/></linearGradient></defs><rect x="1" y="1" width="22" height="22" rx="7" fill="#15121c"/><path d="${Z_PATH}" transform="translate(4.4 4.4) scale(.32)" fill="url(#szig)"/>`,
   puter: () => `<rect x="1" y="1" width="22" height="22" rx="6" fill="#1e2a4a"/><text x="12" y="16.5" text-anchor="middle" font-family="Geist,system-ui,sans-serif" font-size="13" font-weight="700" fill="#fff">P</text><image href="${PUTER_LOGO}" x="0" y="0" width="24" height="24" preserveAspectRatio="xMidYMid meet" onerror="this.remove()"/>`,
   groq: (c, d) => `<path d="M19.2 7.2A8.6 8.6 0 1 0 20.6 12.9H12.6" fill="none" stroke="${c}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12.6" cy="12.9" r="1.7" fill="${d}"/>`,
   gemini: (c, d) => `<path d="M12 1.5C12.4 7.8 16.2 11.6 22.5 12C16.2 12.4 12.4 16.2 12 22.5C11.6 16.2 7.8 12.4 1.5 12C7.8 11.6 11.6 7.8 12 1.5Z" fill="${c}"/><path d="M19.5 2.5C19.6 4 20.5 4.9 22 5C20.5 5.1 19.6 6 19.5 7.5C19.4 6 18.5 5.1 17 5C18.5 4.9 19.4 4 19.5 2.5Z" fill="${d}"/>`,
@@ -43,13 +44,14 @@ const ICONS = {
 };
 const PUTER_LOGO = 'https://developer.puter.com/favicons/ms-icon-144x144.png';
 const puterLogo = cls => '<span class="pu-logo ' + (cls || '') + '"><img src="' + PUTER_LOGO + '" alt="Puter" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></span>';
-const ico = p => `<i class="lg" aria-hidden="true"><svg viewBox="0 0 24 24">${ICONS[p.id](p.c, p.d)}</svg></i>`;
+const ico = p => (typeof BRANDS !== 'undefined' && BRANDS[p.id === 'mistral' ? 'mistralai' : p.id]) ? glassIcon({ id:p.id, vendor:p.id === 'mistral' ? 'mistralai' : p.id }, 'lgi') : `<i class="lg" aria-hidden="true"><svg viewBox="0 0 24 24">${ICONS[p.id](p.c, p.d)}</svg></i>`;
 /* marca: en SynthFlow (html[data-brand=flow]) el logotipo es «SynthFlow» con destellos; en el resto, «Synth» + la Z */
 const isFlow = () => document.documentElement.dataset.brand === 'flow';
 const BRAND = () => isFlow() ? 'SynthFlow' : 'SynthZ';
 const SPARKS = '<i class="sp s1" aria-hidden="true"></i><i class="sp s2" aria-hidden="true"></i><i class="sp s3" aria-hidden="true"></i>';
-const flowWord = () => '<span class="flw-w">Synth<span class="flw">Flow' + SPARKS + '</span></span>';
-const zMark = (txt = 'Synth') => `${txt}<svg class="zb" viewBox="0 0 48 48" aria-hidden="true"><path d="${Z_PATH}" fill="url(#zgrad)"/></svg>`;
+const GS = '<span class="gS">S</span>ynth';
+const flowWord = () => '<span class="flw-w">' + GS + '<span class="flwg"><img class="flwi" src="media/flow-glass.webp" alt="Flow" draggable="false">' + SPARKS + '</span></span>';
+const zMark = (txt = 'Synth') => (txt === 'Synth' ? GS : txt) + '<img class="zb zg" src="media/z-glass.webp" alt="Z" draggable="false">';
 const zWord = (txt = 'Synth') => isFlow() && txt === 'Synth' ? flowWord() : zMark(txt);
 
 /* ---------- datos ---------- */
@@ -58,7 +60,9 @@ const API = [
     desc:'Conecta tu llave de OpenRouter y usa sus modelos gratuitos (etiqueta :free), incluido gpt-oss de OpenAI.', models:['openai/gpt-oss-20b:free','meta-llama/llama-3.3-70b-instruct:free'] }
 ];
 const MANUAL = [];
-const USAGE_EXTRA = [{ id:'puter', name:'Puter', c:'#6fd3d6', d:'#8fb0ff', est:true }, { id:'groq', name:'Groq', c:'#f55036', d:'#ffb36b' }];
+const USAGE_EXTRA = [{ id:'synthz', name:'IAs conectadas', c:'#e6b65f', d:'#c9566c' }, { id:'puter', name:'Puter', c:'#6fd3d6', d:'#8fb0ff', est:true }, { id:'groq', name:'Groq', c:'#f55036', d:'#ffb36b', hidden:true }];
+/* IA de SynthZ: las llaves gratis del equipo, compartidas con todos (nunca salen del servidor; cero cobros) */
+const SZ_P = { id:'synthz', name:'Las IAs conectadas', kind:'openai', url:'/api/ai', models:['sz:auto'] };
 /* Groq con la llave propia de cada persona (opcional): va directo del navegador a Groq, nunca pasa por SynthZ */
 const GROQ_P = { id:'groq', name:'Groq', kind:'openai', url:'https://api.groq.com/openai/v1', keyUrl:'https://console.groq.com/keys', models:[] };
 const ALL = [...API, ...MANUAL, ...USAGE_EXTRA];
@@ -141,6 +145,11 @@ function legacyRow(usage){
 }
 function readLedger(){ try{ const s = localStorage.getItem(LKEY); return s ? cleanLedger(JSON.parse(s)) : null; }catch(e){ return null; } }
 function writeLedger(){ try{ localStorage.setItem(LKEY, JSON.stringify(state.ledger)); }catch(e){} }
+function cleanWork(w){
+  if (!w || typeof w !== 'object') return undefined;
+  return { ms:num(w.ms), words:num(w.words), real:typeof w.real === 'string' ? w.real.slice(0, 80) : '', reason:typeof w.reason === 'string' ? w.reason.slice(0, 4000) : undefined,
+    steps:Array.isArray(w.steps) ? w.steps.slice(0, 12).filter(x => Array.isArray(x) && typeof x[1] === 'string').map(x => [num(x[0]), x[1].slice(0, 80)]) : [] };
+}
 function cleanChats(c){
   const out = {};
   if (!c || typeof c !== 'object') return out;
@@ -148,7 +157,10 @@ function cleanChats(c){
     if (!Array.isArray(c[k]) || !(byId(k) || /^openrouter::./.test(k))) return;
     out[k] = c[k].filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
       .map(m => ({ role:m.role, content:m.content, meta: typeof m.meta === 'string' ? m.meta : undefined, model: typeof m.model === 'string' ? m.model : undefined,
-        cont: m.cont ? true : undefined, star: m.star ? true : undefined, files: Array.isArray(m.files) ? m.files.slice(0, 8).map(f => ({ name:String((f && f.name) || ''), kind:String((f && f.kind) || ''), text: typeof (f && f.text) === 'string' ? f.text : undefined, thumb: typeof (f && f.thumb) === 'string' ? f.thumb : undefined })) : undefined }));
+        sources: Array.isArray(m.sources) ? m.sources.slice(0, 8).map(x => ({ t:String((x && x.t) || '').slice(0, 200), u:/^https?:\/\//.test(String(x && x.u)) ? String(x.u).slice(0, 500) : '' })).filter(x => x.u) : undefined, web: typeof m.web === 'string' ? m.web.slice(0, 20) : undefined,
+        imgId: typeof m.imgId === 'string' && /^i[\w]{4,40}$/.test(m.imgId) ? m.imgId : undefined, imgReq: m.imgReq ? true : undefined, ask: typeof m.ask === 'string' ? m.ask.slice(0, 4000) : undefined,
+        agent: m.agent && typeof m.agent === 'object' ? { pick:String(m.agent.pick || '').slice(0, 160), name:String(m.agent.name || '').slice(0, 80), tl:String(m.agent.tl || '').slice(0, 60), ask:String(m.agent.ask || '').slice(0, 4000) } : undefined,
+        cont: m.cont ? true : undefined, star: m.star ? true : undefined, again: m.again ? true : undefined, work: cleanWork(m.work), files: Array.isArray(m.files) ? m.files.slice(0, 8).map(f => ({ name:String((f && f.name) || ''), kind:String((f && f.kind) || ''), text: typeof (f && f.text) === 'string' ? f.text : undefined, thumb: typeof (f && f.thumb) === 'string' ? f.thumb : undefined })) : undefined }));
   });
   return out;
 }
@@ -167,6 +179,13 @@ function cleanModels(o){
 let state = Object.assign({ keys:{}, model:{}, models:{}, usage:{}, chats:{}, fav:[], cmp:[] }, load() || {});
 state.sx = Object.assign({ daily:0, saver:false, saved:0, hits:0, over:'', warned:'' }, state.sx && typeof state.sx === 'object' ? state.sx : {});
 const strList = (a, max) => Array.isArray(a) ? [...new Set(a.filter(x => typeof x === 'string' && x))].slice(0, max) : [];
+/* v2.1 · memoria: lo que la persona le pidió a SynthFlow que recuerde (máx. 40 cosas cortas) */
+function cleanMem(m){
+  m = m && typeof m === 'object' ? m : {};
+  const items = (Array.isArray(m.items) ? m.items : []).filter(x => x && typeof x.text === 'string' && x.text.trim()).slice(0, 40)
+    .map(x => ({ id:/^m[\w]{3,30}$/.test(x.id) ? x.id : 'm' + Math.random().toString(36).slice(2, 10), t:+x.t || Date.now(), text:x.text.replace(/\s+/g, ' ').trim().slice(0, 300) }));
+  return { on:m.on !== false, t:+m.t || 0, items };
+}
 function normalize(){
   state.keys = cleanStrMap(state.keys); state.model = cleanStrMap(state.model); state.models = cleanModels(state.models);
   state.chats = cleanChats(state.chats);
@@ -175,6 +194,7 @@ function normalize(){
   if (!L){ L = { ep:0, dev:{} }; const leg = legacyRow(state.usage); if (Object.keys(leg).length) L.dev.legacy = leg; }
   state.ledger = L; state.usage = usageOf(L); writeLedger();
   state.fav = strList(state.fav, 300); state.cmp = strList(state.cmp, 4);
+  state.mem = cleanMem(state.mem);
 }
 normalize();
 function syncLedger(){ const s = readLedger(); if (s){ state.ledger = mergeLedger(state.ledger, s); state.usage = usageOf(state.ledger); } }
@@ -192,12 +212,13 @@ const accHooks = [];
 const hashS = s => { let h = 5381; for (let i = 0; i < s.length; i++) h = (h * 33 + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); };
 var accSent = {}, accT = 0, accDelSent = new Set();
 let SESS = ''; try{ SESS = localStorage.getItem('synthz:sess') || ''; }catch(e){}
+if (SESS) document.documentElement.classList.add('signed');   /* con sesión: nada de «entra a tu cuenta» */
 function setSess(t){ SESS = t || ''; try{ if (SESS) localStorage.setItem('synthz:sess', SESS); else localStorage.removeItem('synthz:sess'); }catch(e){} }
 const accFire = k => accHooks.forEach(f => { try{ f(k); }catch(_){} });
 async function api(path, o = {}){
   const h = { 'content-type':'application/json' }; if (SESS) h.authorization = 'Bearer ' + SESS;
   let r; try{ r = await fetch('/api/' + path, { method:o.method || 'GET', headers:h, body:o.body ? JSON.stringify(o.body) : undefined, signal:o.signal }); }
-  catch(e){ throw Object.assign(new Error('No pude conectar con el servidor de ' + BRAND() + '.'), { net:true }); }
+  catch(e){ throw Object.assign(new Error('No pude comunicarme con ' + BRAND() + '.'), { net:true }); }
   let d = {}; try{ d = await r.json(); }catch(e){}
   if (r.status === 401 && SESS && !o.keep){ setSess(''); ACC.ready = false; ACC.user = null; ACC.profile = null; accFire('out'); }
   if (!r.ok) throw Object.assign(new Error(d.error || 'Error ' + r.status), { status:r.status, data:d });
@@ -205,7 +226,7 @@ async function api(path, o = {}){
 }
 async function accConfig(){
   if (ACC.avail !== null) return ACC.avail;
-  try{ const r = await fetch('/api/config'); const d = r.ok ? await r.json() : {}; ACC.cid = d.googleClientId || ''; ACC.dcid = d.driveClientId || ''; ACC.google = !!(d.google && ACC.cid); ACC.missing = d.missing || (r.ok ? [] : ['servidor']); ACC.avail = !!d.ok; }
+  try{ const r = await fetch('/api/config'); const d = r.ok ? await r.json() : {}; ACC.cid = d.googleClientId || ''; ACC.dcid = d.driveClientId || ''; ACC.sbg = !!d.sbGoogle; ACC.sb = d.sb || null; ACC.google = !!((d.google && ACC.cid) || ACC.sbg); ACC.missing = d.missing || (r.ok ? [] : ['servidor']); ACC.avail = !!d.ok; }
   catch(e){ ACC.avail = false; }
   return ACC.avail;
 }
@@ -216,7 +237,7 @@ function slimChat(arr){
 }
 function prefsOut(){
   return { v:2, t:Date.now(), model:state.model, fav:state.fav, cmp:state.cmp, sx:state.sx, pinned:state.pinned || '', threads:state.threads || {}, del:(state.del || []).slice(-300),
-    arena:state.arena || {}, survey:state.survey || null, useTeam:state.useTeam || '', battle:!!state.battle, cfg:CFG,
+    arena:state.arena || {}, survey:state.survey || null, useTeam:state.useTeam || '', battle:!!state.battle, cfg:CFG, mem:state.mem,
     chatKeys:Object.keys(state.chats).filter(k => Array.isArray(state.chats[k]) && state.chats[k].length) };
 }
 function mergeIn(p, chats){
@@ -232,6 +253,7 @@ function mergeIn(p, chats){
     if (p.arena && typeof p.arena === 'object'){ state.arena = state.arena || {}; Object.keys(p.arena).forEach(id => { const r = p.arena[id], l = state.arena[id]; if (r && typeof r === 'object' && (!l || (+r.t || 0) > (+l.t || 0))) state.arena[id] = { r:+r.r || 1000, w:+r.w || 0, l:+r.l || 0, t:+r.t || 0 }; }); }
     if (p.survey && typeof p.survey === 'object' && (!state.survey || (+p.survey.t || 0) > (+state.survey.t || 0))) state.survey = p.survey;
     if (p.battle) state.battle = true;
+    if (p.mem && typeof p.mem === 'object'){ const m = cleanMem(p.mem); if ((+m.t || 0) > (+(state.mem && state.mem.t) || 0)) state.mem = m; }
     if (p.ledger && typeof p.ledger === 'object'){ syncLedger(); state.ledger = mergeLedger(state.ledger, cleanLedger(p.ledger)); }
     else if (p.usage && typeof p.usage === 'object' && !state.ledger.ep){ const leg = legacyRow(p.usage); if (Object.keys(leg).length){ syncLedger(); state.ledger = mergeLedger(state.ledger, { ep:state.ledger.ep, dev:{ legacy:leg } }); } }
     state.usage = usageOf(state.ledger); writeLedger();
@@ -252,10 +274,10 @@ const driveLive = () => !!(DRV.tok && Date.now() < DRV.exp - 60000);
 /* pide el permiso (debe llamarse dentro de un clic: Google abre una ventanita) */
 function driveToken(prompt){
   return new Promise((ok, no) => {
-    if (!window.google || !google.accounts || !google.accounts.oauth2) return no(Object.assign(new Error('No pude cargar el acceso de Google. Revisa tu conexión o si un bloqueador lo impide.'), { gsi:true }));
+    if (!window.google || !google.accounts || !google.accounts.oauth2) return no(Object.assign(new Error('No pude abrir el botón de Google. Revisa tu internet o tu bloqueador de anuncios.'), { gsi:true }));
     DRV.tc = google.accounts.oauth2.initTokenClient({ client_id:DRV.cid, scope:DRIVE_SCOPE, include_granted_scopes:false,
       callback:r => { if (r && r.access_token && google.accounts.oauth2.hasGrantedAllScopes(r, DRIVE_SCOPE)){ DRV.tok = r.access_token; DRV.exp = Date.now() + (+r.expires_in || 3600) * 1000; ok(true); } else no(new Error('No diste permiso para la carpeta de SynthFlow en tu Drive.')); },
-      error_callback:e => no(new Error(e && e.type === 'popup_closed' ? 'Cerraste la ventana de Google antes de terminar.' : e && e.type === 'popup_failed_to_open' ? 'Tu navegador bloqueó la ventana de Google. Permite ventanas emergentes para este sitio.' : 'Google no completó el permiso.')) });
+      error_callback:e => no(new Error(e && e.type === 'popup_closed' ? 'Cerraste la ventana de Google antes de terminar.' : e && e.type === 'popup_failed_to_open' ? 'Tu navegador no dejó abrir la ventanita de Google. Permite las ventanitas de este sitio.' : 'Google no completó el permiso.')) });
     DRV.tc.requestAccessToken({ prompt:prompt == null ? '' : prompt });
   });
 }
@@ -301,7 +323,7 @@ async function drivePush(){
 async function driveSync(o = {}){
   if (DRV.busy) return { busy:true };
   DRV.cid = await driveCid();
-  if (!DRV.cid) throw Object.assign(new Error('Google Drive todavía no está activado en SynthZ. Prime o ZFlow lo activan pegando el «ID de cliente» de Google en su panel.'), { off:true });
+  if (!DRV.cid) throw Object.assign(new Error('Guardar en Google Drive todavía no está disponible. Muy pronto.'), { off:true });
   await loadGsi();
   if (!driveLive()) await driveToken(driveMeta() ? '' : 'consent');
   DRV.busy = true;
@@ -347,7 +369,7 @@ async function accPush(o){
     }
     ACC.t = Date.now(); ACC.err = '';
   }catch(e){
-    ACC.err = e.message || 'No pude sincronizar.';
+    ACC.err = e.message || 'No pude guardar en tu cuenta.';
     if (e.status === 413){ if (!ACC.full) toast(ACC.err); ACC.full = true; }                     /* nube llena: no reintenta hasta que liberes espacio */
     else if (e.status !== 401){ clearTimeout(accT); accT = setTimeout(accPush, 20000); }
   }
@@ -419,6 +441,9 @@ function avatarHtml(pf, user, cls){
 }
 const myAvatar = cls => avatarHtml(ACC.profile, ACC.user, cls);
 if (SESS) setTimeout(accStart, 0);
+/* «Pulsem» en la barrita: solo para Prime, ZFlow y Symmetrix */
+const paintPulse = () => { const b = document.getElementById('railPulse'); if (b) b.hidden = !(ACC.ready && ACC.user && ['owner', 'admin', 'staff'].includes(ACC.user.role)); };
+accHooks.push(paintPulse);
 
 /* ---------- icono de la pestaña: los 3 círculos como péndulo de Newton ---------- */
 function cradleAngles(t, A){
@@ -510,7 +535,59 @@ function inl(h){
      .replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>')
      .replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')).join('');
 }
+/* ---------- markdown completo (tablas, citas, listas anidadas, títulos) y matemáticas bien escritas ----------
+   Usa marked + DOMPurify + Temml (carpeta lib/). Si no cargan, queda el markdown pequeño de siempre. */
+const MDLIB = { ok:false, p:null };
+function mdLoad(){
+  if (MDLIB.p) return MDLIB.p;
+  const js = src => new Promise(res => { const s = document.createElement('script'); s.src = src; s.async = true; s.onload = () => res(true); s.onerror = () => res(false); document.head.appendChild(s); });
+  if (!document.querySelector('link[href="lib/temml.css"]')){ const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'lib/temml.css'; document.head.appendChild(l); }
+  MDLIB.p = Promise.all([js('lib/marked.min.js'), js('lib/purify.min.js'), js('lib/temml.min.js')]).then(() => {
+    MDLIB.ok = !!(window.marked && window.DOMPurify);
+    if (MDLIB.ok){
+      try{ marked.setOptions({ gfm:true, breaks:true, headerIds:false, mangle:false }); }catch(e){}
+      DOMPurify.addHook('afterSanitizeAttributes', n => { if (n.tagName === 'A'){ n.setAttribute('target', '_blank'); n.setAttribute('rel', 'noopener noreferrer'); } });
+    }
+    try{ hooks.md && hooks.md(); }catch(e){}
+    return MDLIB.ok;
+  });
+  return MDLIB.p;
+}
+if (document.readyState !== 'loading') setTimeout(mdLoad, 300); else document.addEventListener('DOMContentLoaded', () => setTimeout(mdLoad, 300));
+const MCACHE = new Map();
+function texHtml(tex, display){
+  const k = (display ? 'D' : 'I') + tex; if (MCACHE.has(k)) return MCACHE.get(k);
+  let h;
+  try{ h = window.temml ? temml.renderToString(tex.trim(), { displayMode:display, throwOnError:false, annotate:true }) : null; }catch(e){ h = null; }
+  if (!h) h = '<code class="tex">' + esc(tex) + '</code>';
+  if (display) h = '<div class="mathd">' + h + '</div>';
+  if (MCACHE.size > 400) MCACHE.clear(); MCACHE.set(k, h); return h;
+}
 function md(src){
+  src = String(src || '');
+  if (!MDLIB.ok) return mdLite(src);
+  /* 1) el código se aparta (ahí no se toca nada) */
+  const code = [];
+  let t = src.replace(/```[\s\S]*?(```|$)|`[^`\n]+`/g, m => { code.push(m); return '\u0001C' + (code.length - 1) + '\u0001'; });
+  /* 2) las fórmulas se apartan: \[ \], $$ $$, \( \), $ $ */
+  const math = [];
+  const keep = (tex, d) => { math.push([tex, d]); return d ? '\n\n\u0002M' + (math.length - 1) + '\u0002\n\n' : '\u0002M' + (math.length - 1) + '\u0002'; };
+  t = t.replace(/\$\$([\s\S]+?)\$\$/g, (m, x) => keep(x, true))
+       .replace(/\\\[([\s\S]+?)\\\]/g, (m, x) => keep(x, true))
+       .replace(/\\\(([\s\S]+?)\\\)/g, (m, x) => keep(x, false))
+       .replace(/(^|[^\\$\w])\$(?!\s)([^$\n]{1,200}?[^\s\\])\$(?![\w$])/g, (m, pre, x) => /^\d+([.,]\d+)?$/.test(x) ? m : pre + keep(x, false));
+  /* sin cerrar todavía (mientras llega en vivo): se muestra como texto tranquilo, sin barras raras */
+  t = t.replace(/\\\(([^\n]*)$/, (m, x) => x).replace(/\\\[([\s\S]*)$/, (m, x) => x);
+  t = t.replace(/\u0001C(\d+)\u0001/g, (m, i) => code[+i]);
+  let h;
+  try{ h = marked.parse(t); }catch(e){ return mdLite(src); }
+  h = h.replace(/\u0002M(\d+)\u0002/g, (m, i) => texHtml(math[+i][0], math[+i][1]));
+  h = h.replace(/<p>\s*(<div class="mathd">[\s\S]*?<\/div>)\s*<\/p>/g, '$1');
+  h = h.replace(/<table>/g, '<div class="tbw"><table>').replace(/<\/table>/g, '</table></div>');
+  return DOMPurify.sanitize(h, { ADD_TAGS:['math', 'semantics', 'annotation', 'mrow', 'mi', 'mn', 'mo', 'msup', 'msub', 'msubsup', 'mfrac', 'msqrt', 'mroot', 'mtext', 'mspace', 'mtable', 'mtr', 'mtd', 'munder', 'mover', 'munderover', 'mstyle', 'mpadded', 'menclose', 'mphantom', 'merror'], ADD_ATTR:['target', 'display', 'mathvariant', 'stretchy', 'fence', 'separator', 'lspace', 'rspace', 'columnalign', 'rowspacing', 'columnspacing', 'displaystyle', 'scriptlevel', 'encoding', 'accent', 'accentunder', 'movablelimits', 'notation', 'width', 'height', 'depth', 'voffset', 'linethickness', 'minsize', 'maxsize', 'symmetric', 'largeop'] });
+}
+function mdLite(src){
+  src = src.replace(/\\[()[\]]/g, '').replace(/\\sqrt\{([^}]*)\}/g, '√$1').replace(/\\(times|cdot)/g, (m, k) => k === 'times' ? '×' : '·');
   return src.split('```').map((seg, i) => {
     if (i % 2){ const nl = seg.indexOf('\n'); const code = nl > -1 ? seg.slice(nl + 1) : seg; return '<pre><code>' + esc(code.replace(/\n$/, '')) + '</code></pre>'; }
     const h = esc(seg);
@@ -532,6 +609,118 @@ function md(src){
   }).join('');
 }
 
+/* =====================================================================
+   Identidad de cada IA: su icono real (vidrio líquido) y sus colores en el chat
+   ===================================================================== */
+const BRANDS = {
+  openai:['openai', 'OpenAI', '#10a37f', '#7fe0c4'], anthropic:['claude-color', 'Claude (Anthropic)', '#d97757', '#f4b48f'], google:['gemini-color', 'Google Gemini', '#4c8df6', '#b39cff'],
+  gemma:['gemma-color', 'Google Gemma', '#4c8df6', '#7fd6f0'], 'meta-llama':['meta-color', 'Meta Llama', '#0866ff', '#7fb0ff'], mistralai:['mistral-color', 'Mistral', '#fa520f', '#ffc06b'],
+  deepseek:['deepseek-color', 'DeepSeek', '#4d6bfe', '#93a6ff'], qwen:['qwen-color', 'Qwen', '#6c5cf0', '#b5aaff'], 'x-ai':['grok', 'xAI Grok', '#d9d9de', '#8e8e96'],
+  moonshotai:['kimi-color', 'Kimi (Moonshot)', '#1d7bff', '#8fc0ff'], nvidia:['nvidia-color', 'NVIDIA', '#76b900', '#c3f06b'], microsoft:['microsoft-color', 'Microsoft', '#22a6f0', '#ffb900'],
+  'z-ai':['zhipu-color', 'Z.ai (GLM)', '#3859ff', '#8aa0ff'], ai21:['ai21', 'AI21', '#f3a6c8', '#ffd1e4'], cohere:['cohere-color', 'Cohere', '#d18ee2', '#ff9d7a'], nousresearch:['nousresearch', 'Nous', '#c9c9cf', '#8e8e96'],
+  ibm:['ibm', 'IBM Granite', '#4589ff', '#a6c8ff'], minimax:['minimax-color', 'MiniMax', '#f23f5d', '#ff9e7a'], inception:['inception', 'Inception', '#a3a3ff', '#d6d6ff'], liquid:['liquid', 'Liquid', '#5b8cff', '#9fd0ff'],
+  baidu:['baidu-color', 'Baidu', '#2932e1', '#7a82ff'], tencent:['tencent-color', 'Tencent', '#0052d9', '#6fa0ff'], bytedance:['bytedance-color', 'ByteDance', '#3c8cff', '#00c8d2'], 'stepfun-ai':['stepfun-color', 'StepFun', '#22c1c3', '#8ff0e6'],
+  perplexity:['perplexity-color', 'Perplexity', '#20b8cd', '#9ff0f6'], allenai:['ai2-color', 'Ai2', '#f0529c', '#ff9fc8'], groq:['groq', 'Groq', '#f55036', '#ffb36b'], cloudflare:['cloudflare-color', 'Cloudflare', '#f6821f', '#ffc46b'],
+  openrouter:['openrouter', 'OpenRouter', '#6467f2', '#a5a7ff'], synthz:['', 'SynthZ', '#e6b65f', '#c9566c'], puter:['', 'Puter', '#3b82f6', '#6fd3d6']
+};
+const BALIAS = { meta:'meta-llama', llama:'meta-llama', mistral:'mistralai', claude:'anthropic', xai:'x-ai', grok:'x-ai', moonshot:'moonshotai', kimi:'moonshotai', zhipu:'z-ai', thudm:'z-ai', glm:'z-ai', stepfun:'stepfun-ai', ai2:'allenai', gemini:'google', 'openai-completion':'openai', 'ibm-granite':'ibm', 'nous':'nousresearch' };
+function brandOf(m){
+  if (!m) return BRANDS.synthz;
+  const id = String(m.id || ''), v = String(m.vendor || '').toLowerCase().replace(/-completion$/, '');
+  if (id === 'sz:auto' || v === 'synthz') return BRANDS.synthz;
+  let k = BALIAS[v] || v;
+  if (k === 'google' && /gemma/i.test(id)) k = 'gemma';
+  if (!BRANDS[k]){ const g = Object.keys(BRANDS).find(b => new RegExp(b.replace(/-.*/, ''), 'i').test(id.split(':').pop())) || Object.keys(BALIAS).find(a => new RegExp('\\b' + a, 'i').test(id)); k = BRANDS[g] ? g : BALIAS[g] || ''; }
+  return BRANDS[k] || null;
+}
+const ZMINI = '<svg viewBox="-4 -4 56 56" aria-hidden="true"><defs><linearGradient id="gzm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8fb0ff"/><stop offset=".55" stop-color="#c9566c"/><stop offset="1" stop-color="#e6b65f"/></linearGradient></defs><path d="' + Z_PATH + '" fill="url(#gzm)"/></svg>';
+/* icono de vidrio líquido: baldosa translúcida con brillo especular y el logo real adentro */
+function glassIcon(m, cls){
+  const b = brandOf(m), c1 = b ? b[2] : vendorColor(m && m.vendor), c2 = b ? b[3] : '#ffffff';
+  const inner = b && b[0] ? '<img src="ico/' + b[0] + '.svg" alt="" loading="lazy" decoding="async" onerror="this.replaceWith(document.createTextNode(\'' + esc(((m && (m.vlabel || m.name)) || '?').charAt(0).toUpperCase()).replace(/'/g, '') + '\'))">'
+    : b === BRANDS.synthz ? ZMINI : b === BRANDS.puter ? '<img src="' + PUTER_LOGO + '" alt="" referrerpolicy="no-referrer" loading="lazy">' : '<b>' + esc(((m && (m.vlabel || m.name)) || '?').charAt(0).toUpperCase()) + '</b>';
+  return '<span class="gico' + (cls ? ' ' + cls : '') + '" style="--b1:' + c1 + ';--b2:' + c2 + '" title="' + esc(b ? b[1] : (m && m.vlabel) || '') + '">' + inner + '</span>';
+}
+
+/* =====================================================================
+   Carga de las IA: un cuadradito de 8×8 píxeles de vidrio que va armando 10 dibujos
+   mientras la IA trabaja, y al lado lo que está haciendo (con flechita para ver el detalle)
+   ===================================================================== */
+const PIXART = [
+  ['Corazón', '.11..11.|11111111|11111111|11111111|.111111.|..1111..|...11...|........'],
+  ['Rayo', '....111.|...111..|..111...|.111111.|...111..|..111...|.111....|.1......'],
+  ['Estrella', '...11...|...11...|11111111|.111111.|..1111..|.111111.|.11..11.|11....11'],
+  ['Idea', '..1111..|.111111.|.112211.|.112211.|..1111..|..2222..|..2222..|...22...'],
+  ['Cohete', '...11...|..1111..|..1221..|..1111..|.111111.|11.11.11|...22...|..2..2..'],
+  ['Gatito', '1......1|11....11|11111111|12111121|11111111|1112 111|.111111.|..1111..'],
+  ['Nota', '...11111|...11111|...1...1|...1...1|...1...1|.111.111|1111.111|.11...1.'],
+  ['Planeta', '........|..1111..|.111111.|22222222|.111111.|..1111..|........|........'],
+  ['SynthonIA', '..1111..|.111111.|11211211|11111111|12111121|11222211|.111111.|..1111..'],
+  ['Z', '11111111|11111111|.....111|....111.|...111..|..111...|11111111|11111111']
+].map(([n, s]) => [n, s.split('|').join('').replace(/ /g, '.')]);
+const WORDS = ['Leyendo tu mensaje', 'Pensando', 'Sopesando ideas', 'Aclarando', 'Ordenando las ideas', 'Buscando las palabras', 'Revisando', 'Casi listo'];
+const pixelGrid = () => '<span class="pxg" aria-hidden="true">' + '<i></i>'.repeat(64) + '</span>';
+/* motor del dibujo: se enciende píxel a píxel; al completarse brilla, se deshace y empieza otro */
+function pixelRun(host, startAt){
+  const cells = [...host.querySelectorAll('.pxg i')]; if (!cells.length) return { stop(){}, speed(){} };
+  let art = (startAt == null ? Math.floor(Math.random() * PIXART.length) : startAt) % PIXART.length, order = [], k = 0, hold = 0, fast = 1, stopped = false, t = 0;
+  const load = () => { const s = PIXART[art][1]; order = []; for (let i = 0; i < 64; i++) if (s[i] !== '.') order.push(i); order.sort(() => Math.random() - .5); k = 0; host.dataset.art = PIXART[art][0]; cells.forEach(c => { c.className = ''; }); };
+  load();
+  const tick = () => {
+    if (stopped) return;
+    if (hold > 0){ hold--; if (!hold){ cells.forEach(c => { if (c.className) c.className += ' out'; }); setTimeout(() => { art = (art + 1) % PIXART.length; load(); }, 260); } }
+    else if (k < order.length){ for (let n = 0; n < fast && k < order.length; n++, k++){ const i = order[k]; cells[i].className = 'on c' + PIXART[art][1][i]; } if (k >= order.length){ hold = 7; host.classList.remove('done'); void host.offsetWidth; host.classList.add('done'); } }
+    t = setTimeout(tick, 70);
+  };
+  t = setTimeout(tick, 60);
+  return { stop(){ stopped = true; clearTimeout(t); }, speed(n){ fast = Math.max(1, Math.min(4, n | 0)); }, get art(){ return art; } };
+}
+/* «qué está haciendo la IA»: frases que cambian, segundos, palabras y el detalle real (si la IA lo comparte) */
+function workView(o = {}){
+  const el = document.createElement('div'); el.className = 'work';
+  el.innerHTML = '<button type="button" class="wk-row" aria-expanded="false"><span class="pxw">' + pixelGrid() + '</span><span class="wk-t"><b class="wk-w">Leyendo tu mensaje</b><small class="wk-s"></small></span><svg class="wk-c" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button><div class="wk-d" hidden><ol class="wk-steps"></ol><div class="wk-r" hidden><b>Lo que pensó la IA</b><p></p></div></div>';
+  const S = { t0:performance.now(), phase:'read', words:0, reason:'', steps:[], wi:0, done:false };
+  const px = pixelRun($('.pxw', el), o.art);
+  const w = $('.wk-w', el), sm = $('.wk-s', el), row = $('.wk-row', el), det = $('.wk-d', el);
+  const secs = () => ((performance.now() - S.t0) / 1000).toFixed(1).replace('.', ',') + ' s';
+  const step = txt => { S.steps.push([performance.now() - S.t0, txt]); if (!det.hidden) paintSteps(); };
+  const paintSteps = () => { $('.wk-steps', el).innerHTML = S.steps.map(([ms, x]) => '<li><em>' + (ms / 1000).toFixed(1).replace('.', ',') + ' s</em>' + esc(x) + '</li>').join(''); const r = $('.wk-r', el); r.hidden = !S.reason; if (S.reason) $('p', r).textContent = S.reason.slice(-4000); };
+  const setW = (txt) => { if (w.textContent === txt) return; w.classList.remove('sw'); void w.offsetWidth; w.textContent = txt; w.classList.add('sw'); };
+  let iv = setInterval(() => {
+    if (S.done) return;
+    if (S.phase === 'read' && performance.now() - S.t0 > 700){ S.phase = 'think'; step('Leyó tu mensaje'); }
+    if (S.phase === 'think'){ const n = Math.floor((performance.now() - S.t0 - 700) / 1700); setW(WORDS[1 + (n % (WORDS.length - 1))]); }
+    sm.textContent = S.phase === 'write' ? secs() + ' · ' + fmt(S.words) + (S.words === 1 ? ' palabra' : ' palabras') : S.phase === 'reason' ? secs() + ' · pensando antes de responder' : secs();
+  }, 250);
+  row.addEventListener('click', () => { const on = det.hidden; det.hidden = !on; row.setAttribute('aria-expanded', String(on)); el.classList.toggle('open', on); if (on) paintSteps(); });
+  if (o.model) step('Eligió ' + o.model);
+  return {
+    el, state:S,
+    reason(txt){ if (S.done) return; if (!S.reason) step('Empezó a razonar'); S.reason = txt; if (S.phase !== 'write'){ S.phase = 'reason'; setW('Razonando'); } px.speed(2); if (!det.hidden) paintSteps(); },
+    write(txt){ if (S.done) return; if (S.phase !== 'write'){ step('Empezó a escribir'); S.phase = 'write'; setW('Escribiendo'); } S.words = (String(txt).match(/\S+/g) || []).length; px.speed(1 + Math.floor(S.words / 120)); },
+    note(txt){ step(txt); },
+    finish(r = {}){
+      if (S.done) return; S.done = true; clearInterval(iv); px.stop();
+      step(r.error ? 'No pudo responder' : r.aborted ? 'La detuviste' : 'Terminó');
+      const t = ((r.ms != null ? r.ms : performance.now() - S.t0) / 1000).toFixed(1).replace('.', ',');
+      w.textContent = r.error ? 'No respondió' : S.reason ? 'Pensó y respondió en ' + t + ' s' : 'Respondió en ' + t + ' s';
+      sm.textContent = fmt(S.words) + (S.words === 1 ? ' palabra' : ' palabras') + (r.real ? ' · ' + r.real : '');
+      el.classList.add('fin'); if (!det.hidden) paintSteps();
+    },
+    stop(){ S.done = true; clearInterval(iv); px.stop(); }
+  };
+}
+
+/* resumen guardado de una respuesta vieja: «Respondió en 2,1 s · 120 palabras ▸» con su detalle */
+function workSaved(sum){
+  const el = document.createElement('div'); el.className = 'work fin';
+  const t = ((sum.ms || 0) / 1000).toFixed(1).replace('.', ',');
+  el.innerHTML = '<button type="button" class="wk-row" aria-expanded="false"><span class="wk-t"><b class="wk-w">' + (sum.reason ? 'Pensó y respondió en ' : 'Respondió en ') + t + ' s</b><small class="wk-s">' + fmt(sum.words || 0) + ((sum.words || 0) === 1 ? ' palabra' : ' palabras') + (sum.real ? ' · ' + esc(sum.real) : '') + '</small></span><svg class="wk-c" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button><div class="wk-d" hidden><ol class="wk-steps">' + (sum.steps || []).map(([ms, x]) => '<li><em>' + (ms / 1000).toFixed(1).replace('.', ',') + ' s</em>' + esc(x) + '</li>').join('') + '</ol><div class="wk-r"' + (sum.reason ? '' : ' hidden') + '><b>Lo que pensó la IA</b><p></p></div></div>';
+  if (sum.reason) $('.wk-r p', el).textContent = sum.reason;
+  const row = $('.wk-row', el), det = $('.wk-d', el);
+  row.addEventListener('click', () => { const on = det.hidden; det.hidden = !on; row.setAttribute('aria-expanded', String(on)); el.classList.toggle('open', on); });
+  return el;
+}
 /* ---------- números que suben ---------- */
 function countTo(el, val){
   const from = el._v || 0; el._v = val;
@@ -622,13 +811,13 @@ function friendly(status, data, p){
   if (status === 401 || status === 403 || (status === 400 && /api key/i.test(m))) return 'La llave de ' + p.name + ' no es válida o no tiene permiso. Revísala y vuelve a pegarla.';
   if (status === 402) return p.id === 'openrouter' ? 'Tu saldo de OpenRouter está en negativo o ese modelo no es gratis. Elige un modelo gratis o cambia a Puter.' : 'Ese modelo necesita crédito en ' + p.name + '. Elige uno marcado como gratis.';
   if (status === 404) return 'Ese modelo no está disponible ahora mismo en ' + p.name + '. Elige otro de la lista.';
-  if (status === 429) return p.id === 'openrouter' ? 'Llegaste al límite gratis de OpenRouter: 20 mensajes por minuto y 50 al día (1.000 al día si compraste 10 créditos o más). Espera un poco o cambia a Puter.' : 'Llegaste al límite gratuito de ' + p.name + '. Espera un minuto o elige otro modelo.';
-  if (status === 408 || status >= 500) return p.name + ' o ese modelo están saturados. Prueba de nuevo en un momento o elige otro.';
+  if (status === 429) return p.id === 'openrouter' ? 'Llegaste al límite gratis de OpenRouter: 20 mensajes por minuto y 50 al día (1.000 al día si compraste 10 créditos o más). Espera un poco o cambia a Puter.' : 'Llegaste al límite gratuito de ' + p.name + '. Espera un minuto o elige otra IA.';
+  if (status === 408 || status >= 500) return p.name + ' o esa IA están muy ocupadas. Prueba de nuevo en un momento o elige otra.';
   /* lo técnico no se muestra: solo un mensaje corto y entendible */
   const human = m && m.length < 140 && !/[{}<>\[\]]|stack|exception|undefined|null/i.test(m);
-  return p.name + ' no pudo responder' + (human ? ': ' + m : ' (código ' + status + ')') + '. Prueba de nuevo o elige otro modelo.';
+  return p.name + ' no pudo responder' + (human ? ': ' + m : ' (código ' + status + ')') + '. Prueba de nuevo o elige otra IA.';
 }
-const netMsg = p => 'No pude conectar con ' + p.name + '. Revisa tu conexión a internet y vuelve a intentarlo. Si usas un bloqueador de anuncios, desactívalo para este sitio.';
+const netMsg = p => 'No pude conectar con ' + p.name + '. Revisa tu internet y vuelve a intentarlo. Si usas un bloqueador de anuncios, apágalo para este sitio.';
 
 async function fetchModels(p, key){
   let list = [];
@@ -664,7 +853,7 @@ async function refreshModels(p){
 async function verify(p){
   if (p.id === 'openrouter' && !state.keys.openrouter){
     if (!window.puter) throw new Error('No pude cargar Puter. Revisa tu internet.');
-    try{ if (!puter.auth.isSignedIn()) await puter.auth.signIn({ attempt_temp_user_creation:true }); }catch(e){ throw new Error(e && (e.error === 'popup_blocked' || e.code === 'popup_blocked') ? 'Tu navegador bloqueó la ventana de Puter. Permite las ventanas emergentes de este sitio (icono al final de la barra de direcciones) y vuelve a intentar.' : 'No se completó el inicio de sesión de Puter.'); }
+    try{ if (!puter.auth.isSignedIn()) await puter.auth.signIn({ attempt_temp_user_creation:true }); }catch(e){ throw new Error(e && (e.error === 'popup_blocked' || e.code === 'popup_blocked') ? 'Tu navegador no dejó abrir la ventanita de Puter. Permite las ventanitas de este sitio (el icono al final de la barra de arriba) y vuelve a intentar.' : 'No terminaste de entrar a Puter. Inténtalo otra vez.'); }
     return (await fetchCatalog()).list.length;
   }
   const key = state.keys[p.id];
@@ -721,8 +910,8 @@ async function ask(p, messages, opts = {}){
 /* SynXCoin's: la moneda de SynthZ. 1 SynXCoin = 1 token */
 const MARK_HTML = '<svg class="mark" viewBox="0 0 44 30" fill="none" aria-hidden="true"><g class="sw sw1"><circle class="b1" cx="11" cy="15" r="10" fill="#8fb0ff" fill-opacity=".85"/></g><g class="sw sw2"><circle class="b2" cx="22" cy="15" r="10" fill="#c9566c" fill-opacity=".8"/></g><g class="sw sw3"><circle class="b3" cx="33" cy="15" r="10" fill="#ff8f7a" fill-opacity=".75"/></g><text class="mk-s" x="22" y="21.4" text-anchor="middle">S</text><text class="mk-z" x="28" y="26" text-anchor="middle">z</text></svg>';
 const SXC = '<svg class="sxc" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="sxg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8fb0ff"/><stop offset=".55" stop-color="#c9566c"/><stop offset="1" stop-color="#e6b65f"/></linearGradient></defs><circle cx="12" cy="12" r="10.5" fill="url(#sxg)"/><circle cx="12" cy="12" r="7.6" fill="none" stroke="rgba(11,12,16,.32)" stroke-width="1.1"/><path d="M14.7 9.3c-.5-.8-1.5-1.4-2.8-1.4-1.6 0-2.7.8-2.7 2 0 2.7 5.7 1.4 5.7 4.1 0 1.3-1.2 2.2-2.9 2.2-1.3 0-2.5-.6-3-1.6" transform="translate(-1.4 -1.3)" fill="none" stroke="#0b0c10" stroke-width="1.8" stroke-linecap="round"/><path d="M14.7 14.6l2.4 2.4M17.1 14.6l-2.4 2.4" stroke="#0b0c10" stroke-width="1.35" stroke-linecap="round"/></svg>';
-const coins = n => fmt(n) + ' SynXCoin' + (Math.round(n) === 1 ? '' : "'s");
-const metaOf = r => r.cached ? 'desde caché · 0 SynXCoin\'s' : (r.est ? '≈ ' : '') + coins(r.prompt + r.completion) + ' · ' + (r.ms / 1000).toFixed(1).replace('.', ',') + ' s' + (r.ttft ? ' · empezó en ' + (r.ttft / 1000).toFixed(1).replace('.', ',') + ' s' : '') + (r.completion > 0 && r.ms - (r.ttft || 0) > 300 ? ' · ' + Math.round(r.completion / ((r.ms - (r.ttft || 0)) / 1000)) + '/s' : '');
+const coins = n => fmt(n);   /* v1.3: ya no existen las monedas; queda solo el número */
+const metaOf = r => r.cached ? 'respuesta guardada · no gastó nada' : 'tardó ' + (r.ms / 1000).toFixed(1).replace('.', ',') + ' s';
 /* últimos 20 mensajes, siempre empezando por uno del usuario (Gemini y otras APIs lo exigen) */
 function history(chat){
   const h = chat.slice(-20).map(m => ({ role:m.role, content:m.content }));
@@ -756,8 +945,103 @@ function markGood(id){
 const SRV_BAD = new Set();
 const badReady = fetch('/api/health').then(r => r.ok ? r.json() : { bad:[] }).then(d => { (d.bad || []).forEach(x => { if (x && typeof x.id === 'string'){ SRV_BAD.add(x.id); if (!BAD[x.id]) BAD[x.id] = +x.t || Date.now(); } }); saveBad(); return SRV_BAD; }).catch(() => SRV_BAD);
 const groqName = id => String(id).replace(/^[^/]+\//, '').split(/[-_]/).map(w => /^gpt$/i.test(w) ? 'GPT' : /^oss$/i.test(w) ? 'OSS' : /^\d+(\.\d+)?b$/i.test(w) ? w.toUpperCase() : /^[a-z]/.test(w) ? w[0].toUpperCase() + w.slice(1) : w).join(' ');
+/* ===== IA de SynthZ: modelos gratis compartidos, con un tope diario por persona ===== */
+const DEVH = (/^[\w-]{12,48}$/.test(DEV) ? DEV : (String(DEV).replace(/[^\w-]/g, '') + 'synthzdevice').slice(0, 24));
+const SZQ = { on:null, used:0, limit:20000, n:0, t:0, guest:null };
+function szqSet(o){ Object.assign(SZQ, o); try{ dispatchEvent(new CustomEvent('synthz-szq', { detail:SZQ })); }catch(e){} }
+const szHeaders = () => { const h = { 'content-type':'application/json', 'x-sz-device':DEVH }; if (SESS) h.authorization = 'Bearer ' + SESS; return h; };
+const SZ_VEND = [[/llama|meta/i, 'meta-llama'], [/gemma|gemini/i, 'google'], [/mistral|mixtral|codestral|ministral|magistral|devstral|pixtral|open-mi/i, 'mistralai'], [/qwen|qwq/i, 'qwen'], [/deepseek/i, 'deepseek'], [/gpt-oss|openai/i, 'openai'], [/kimi|moonshot/i, 'moonshotai'], [/glm|z-ai/i, 'z-ai'], [/nemotron|nvidia/i, 'nvidia'], [/phi-|microsoft/i, 'microsoft'], [/granite|ibm/i, 'ibm'], [/hermes|nous/i, 'nousresearch']];
+const szVendor = (mid, prov) => (SZ_VEND.find(([rx]) => rx.test(mid)) || [0, prov])[1];
+const SZ_AUTO = { id:'sz:auto', name:'Automática', vendor:'synthz', vlabel:'Elige sola la mejor', ctx:0, free:true, created:4e9, vision:false, reasoning:true, tools:false, desc:'Elige sola la mejor IA que esté libre en este momento. Si una se llena, pasa a otra sin que hagas nada.' };
+/* ---------- límite de hoy: se muestra en mensajes (más fácil que contar «tokens») ---------- */
+const MSG_TOK = 800;
+/* sin cuenta: unos pocos mensajes de prueba al día; luego hay que entrar (gratis) */
+/* con sesión guardada (o volviendo de Google) ya cuentas como persona con cuenta, aunque tu cuenta tarde un segundo en cargar */
+const signedish = () => !!(ACC && (ACC.ready || ACC.joining || (SESS && !ACC.err)));
+const isGuestQ = () => !!(SZQ.guest && !signedish());
+const guestFull = () => isGuestQ() && (SZQ.guest.used || 0) >= (SZQ.guest.max || 5);
+const limPct = () => Math.max(SZQ.limit ? Math.min(1, (SZQ.used || 0) / SZQ.limit) : 0, isGuestQ() ? Math.min(1, (SZQ.guest.used || 0) / (SZQ.guest.max || 5)) : 0);
+const msgsLeft = () => Math.max(0, Math.floor(((SZQ.limit || 25000) - (SZQ.used || 0)) / MSG_TOK));
+const msgsTotal = () => Math.max(1, Math.round((SZQ.limit || 25000) / MSG_TOK));
+/* v1.4: no se dice cuántos mensajes quedan (la gente lo prefiere así): solo si hay, si queda poco o si se acabó */
+const limTxt = () => SZQ.on === false ? 'Las IAs gratis están descansando' : guestFull() ? 'Entra a tu cuenta para seguir FlowIAndo' : limPct() >= 1 ? 'Usaste tu límite de hoy' : limPct() >= .8 ? 'Te queda poco por hoy' : 'Tu límite gratis está disponible';
+const limShort = () => SZQ.on === false ? 'Descansando' : guestFull() ? 'Entra para seguir' : limPct() >= 1 ? 'Agotado por hoy' : limPct() >= .8 ? 'Queda poco' : 'Disponible';
+const limLvl = () => { const k = limPct(); return k >= 1 ? 'full' : k >= .8 ? 'warn' : 'ok'; };
+/* anillo de vidrio que se va vaciando */
+function limRing(size){ const k = 1 - limPct(), r = 15.5, c = 2 * Math.PI * r; return '<svg class="lring ' + limLvl() + '" viewBox="0 0 36 36" width="' + (size || 22) + '" height="' + (size || 22) + '" aria-hidden="true"><circle cx="18" cy="18" r="' + r + '" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="4"/><circle cx="18" cy="18" r="' + r + '" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="' + c.toFixed(1) + '" stroke-dashoffset="' + (c * (1 - k)).toFixed(1) + '" transform="rotate(-90 18 18)"/></svg>'; }
+function limBar(o = {}){
+  const k = 1 - limPct();
+  return '<div class="lbar ' + limLvl() + '"><div class="lb-h"><b>' + (o.title || 'Tu límite de hoy') + '</b><span>' + limTxt() + '</span></div><div class="lb-t"><i style="transform:scaleX(' + k.toFixed(3) + ')"></i></div>' + (o.small === false ? '' : '<small>' + (isGuestQ() ? 'Sin cuenta tienes ' + (SZQ.guest.max || 5) + ' mensajes de prueba al día. Con tu cuenta gratis tienes mucho más. ' : '') + 'Gratis. A medianoche se llena otra vez.' + (o.puter ? ' Si se acaba, puedes seguir con Puter: tu versión pro de las IAs más usadas.' : '') + '</small>') + '</div>';
+}
+async function szCatalog(){
+  let r; try{ r = await fetch('/api/ai', { headers:szHeaders() }); }catch(e){ throw Object.assign(new Error('net'), { net:true }); }
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok){ szqSet({ on:false, t:Date.now() }); return []; }
+  const arr = Array.isArray(d.models) ? d.models : [];
+  szqSet({ on:arr.length > 0, used:+d.used || 0, limit:+d.limit || 20000, guest:d.guest && d.guest.max ? { used:+d.guest.used || 0, max:+d.guest.max } : null, img:d.img || null, alert:!!d.alert, alertN:+d.alertN || 0, n:arr.length, t:Date.now() });
+  if (!arr.length) return [];
+  const out = arr.filter(m => m && typeof m.id === 'string' && /^sz:/.test(m.id) && !/allam|infron|openrouter\/(free|auto)|models?[-_ ]router/i.test(m.id) && !/free models router|router/i.test(String(m.name || ''))).map(m => {
+    const mid = m.id.split(':').slice(2).join(':'), vendor = szVendor(mid, m.prov);
+    return { id:m.id, name:String(m.name || mid).replace(/\s*\(free\)\s*$/i, ''), vendor, vlabel:vendorLabel(vendor) + ' · SynthZ', ctx:num(m.ctx), free:true, created:0, vision:false,
+      reasoning:/gpt-oss|qwen3|qwq|r1|reason|think|magistral|kimi|deepseek/i.test(mid), tools:false, desc:'Gratis: no necesitas cuenta ni nada.' };
+  });
+  return [SZ_AUTO, ...out];
+}
+/* créditos de Puter: si ya no te quedan, ni lo intento (así Puter no muestra su ventana de «saldo bajo») */
+let puC = { t:0, out:false };
+async function puterOut(force){
+  if (!force && Date.now() - puC.t < 300000) return puC.out;
+  try{
+    if (!(window.puter && puter.auth && typeof puter.auth.getMonthlyUsage === 'function' && puter.auth.isSignedIn())) return false;
+    const u = await Promise.race([puter.auth.getMonthlyUsage(), sleepRaw(2500).then(() => null)]); if (!u) return puC.out;
+    const a = u.allowanceInfo || {}, tot = +a.monthUsageAllowance || 0, rem = +a.remaining;
+    puC = { t:Date.now(), out:tot > 0 && Number.isFinite(rem) && rem < Math.max(1, tot * .01) };
+  }catch(e){ puC = { t:Date.now(), out:puC.out }; }
+  return puC.out;
+}
+const puterSetOut = () => { puC = { t:Date.now(), out:true }; };
+let puOutNoted = false;
+function puterOutNote(){ if (puOutNoted) return; puOutNoted = true; toast('Usaste el saldo de este mes de Puter: sigo con las IAs conectadas'); telEv('puter_out', ''); try{ dispatchEvent(new CustomEvent('synthz-puter-out')); }catch(e){} }
+/* Puter abre su propia ventana de «Low Balance / Upgrade Now»: en SynthZ no se muestra (pasamos a las IAs conectadas sin cobrar nada) */
+(function noPuterUpsell(){
+  const RX = /low balance|upgrade now|insufficient funds|out of credits|add credits|top.?up/i;
+  const txt = n => { try{ return (n.textContent || '') + ' ' + (n.shadowRoot ? n.shadowRoot.textContent || '' : ''); }catch(e){ return ''; } };
+  const STRONG = /low balance|upgrade now/i;
+  const check = n => { if (!n || n.nodeType !== 1 || !n.isConnected || n.closest('#szBotP,.szm,#portal')) return; const tag = n.tagName || '', t = txt(n), theirs = /^PUTER|DIALOG/.test(tag) || /puter/i.test(n.id || '') || /puter/i.test(String(n.className || '')); if (STRONG.test(t) || (theirs && RX.test(t))){ n.remove(); puterSetOut(); } };
+  const start = () => { try{ new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => { check(n); [60, 300, 1200].forEach(t => setTimeout(() => check(n), t)); }))).observe(document.body, { childList:true }); }catch(e){} };
+  if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+})();
+
+/* ===== pulso de SynthZ: «sigo aquí» cada 3 min y avisos cortos cuando algo falla (sin mensajes ni chats) ===== */
+const TEL = { since:Date.now(), msgs:0, errs:0, ai:'', locked:false, last:{} };
+const telPage = () => (location.pathname.split('/').pop() || 'index.html').replace(/\.html$/, '') || 'index';
+function telEv(kind, detail){
+  try{
+    const now = Date.now(); if (now - (TEL.last[kind] || 0) < 60000) return; TEL.last[kind] = now;
+    if (kind === 'error' || kind === 'jserror') TEL.errs++;
+    fetch('/api/health', { method:'POST', headers:szHeaders(), body:JSON.stringify({ action:'ev', kind, page:telPage(), detail:String(detail || '').slice(0, 160) }), keepalive:true }).catch(() => {});
+  }catch(e){}
+}
+let beatT = 0, beatAt = 0;
+async function telBeat(){
+  clearTimeout(beatT); beatT = setTimeout(telBeat, 180000);
+  if (document.hidden) return; beatAt = Date.now();
+  try{
+    const r = await fetch('/api/health', { method:'POST', headers:szHeaders(), body:JSON.stringify({ action:'beat', page:telPage(), state:{ since:TEL.since, msgs:TEL.msgs, ai:TEL.ai, locked:TEL.locked, mobile:matchMedia('(max-width:760px)').matches, errs:TEL.errs } }) });
+    const d = r.ok ? await r.json() : {};
+    if (d.help) try{ dispatchEvent(new CustomEvent('synthz-help-ping')); }catch(e){}
+  }catch(e){}
+}
+setTimeout(telBeat, 4000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - beatAt > 170000) telBeat(); });
+addEventListener('error', e => { if (!e || !e.message || /ResizeObserver|Script error/i.test(e.message)) return; telEv('jserror', e.message + ' @' + String(e.filename || '').split('/').pop() + ':' + (e.lineno || 0)); });
+addEventListener('unhandledrejection', e => { const m = e && e.reason && (e.reason.message || String(e.reason)); if (!m || /abort|Detenido|net|Failed to fetch|NetworkError|load failed/i.test(m)) return; telEv('jserror', 'promesa: ' + m); });
+try{ const nv = performance.getEntriesByType('navigation')[0]; if (nv && nv.type === 'reload') setTimeout(() => telEv('reload', 'recargó la página'), 2500); }catch(e){}
+
 /* ===== catálogo de modelos de OpenRouter, en vivo (la lista es pública: no necesita llave) ===== */
-const CAT_KEY = 'synthz:catalog-v3';
+const CAT_KEY = 'synthz:catalog-v5';
+/* «Qwen: Qwen3 235B (free)» → «Qwen3 235B»: solo el nombre */
+const cleanName = n => String(n || '').replace(/\s*\([^)]*\)\s*/g, ' ').replace(/^[^:]{1,24}:\s*/, '').replace(/\s+/g, ' ').trim() || String(n || '');
 const VENDORS = { 'meta-llama':'Meta', google:'Google', mistralai:'Mistral', openai:'OpenAI', qwen:'Qwen', deepseek:'DeepSeek', nvidia:'NVIDIA', microsoft:'Microsoft', moonshotai:'Moonshot', 'z-ai':'Z.ai', 'x-ai':'xAI', anthropic:'Anthropic', cohere:'Cohere', nousresearch:'Nous', thudm:'THUDM', tngtech:'TNG', minimax:'MiniMax', inception:'Inception', liquid:'Liquid', allenai:'Ai2', ai21:'AI21', amazon:'Amazon', baidu:'Baidu', tencent:'Tencent', bytedance:'ByteDance', 'stepfun-ai':'StepFun', cognitivecomputations:'Cognitive', rekaai:'Reka', arliai:'ArliAI', 'shisa-ai':'Shisa' };
 const vendorLabel = v => VENDORS[v] || (v ? v.charAt(0).toUpperCase() + v.slice(1) : 'Otro');
 function vendorColor(v){ let h = 0; for (const ch of String(v)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return 'hsl(' + (h % 360) + ' 72% 74%)'; }
@@ -784,7 +1068,7 @@ function loadCatalog(){
   try{
     const s = JSON.parse(localStorage.getItem(CAT_KEY));
     if (s && Array.isArray(s.list) && s.list.length)
-      return { t:num(s.t), list:s.list.filter(m => m && typeof m.id === 'string' && typeof m.name === 'string').map(m => ({ id:m.id, name:m.name, vendor:String(m.vendor || m.id.split('/')[0]), vlabel:String(m.vlabel || vendorLabel(m.vendor)), ctx:num(m.ctx), free:!!m.free, created:num(m.created), vision:!!m.vision, reasoning:!!m.reasoning, tools:!!m.tools, desc:String(m.desc || '') })) };
+      return { t:num(s.t), list:s.list.filter(m => m && typeof m.id === 'string' && typeof m.name === 'string').map(m => ({ id:m.id, name:m.name, vendor:String(m.vendor || m.id.split('/')[0]), vlabel:String(m.vlabel || vendorLabel(m.vendor)), ctx:num(m.ctx), free:!!m.free, created:num(m.created), vision:!!m.vision, reasoning:!!m.reasoning, tools:!!m.tools, spend:Math.max(0, Math.min(3, num(m.spend))), desc:String(m.desc || '') })) };
   }catch(e){}
   return null;
 }
@@ -796,7 +1080,10 @@ async function fetchCatalog(){
       if (!m || !m.id || seen.has(m.id) || /image|dall|tts|whisper|embed|moderat|video|sora|imagen|flux|stable|transcri|speech|rerank|lyria|music|audio/i.test(m.id) || /:(batch|flex|priority)$/i.test(m.id)) return;
       seen.add(m.id);
       const vendor = String(m.provider || String(m.id).split('/')[0] || 'otro').replace(/-completion$/, '');
-      out.push({ id:'pu:' + m.id, name:String(m.name || m.id), vendor, vlabel:vendorLabel(vendor) + ' · Puter', ctx:num(m.context), free:true, created:0,
+      /* cuánto gasta de tu Puter: según su precio por millón de palabras (input + output) */
+      const c = m.cost || {}, per = +c.tokens > 0 ? 1e6 / +c.tokens : 1, price = ((+c.output || 0) * 3 + (+c.input || 0)) / 4 * per;   /* centavos de dólar por millón (más peso a lo que responde) */
+      const spend = !c.output && !c.input ? 0 : price <= 120 ? 1 : price <= 1000 ? 2 : 3;
+      out.push({ id:'pu:' + m.id, name:String(m.name || m.id), vendor, vlabel:vendorLabel(vendor) + ' · Puter', ctx:num(m.context), free:true, created:0, spend,
         vision:/gpt-4|gpt-5|gemini|claude|vision|pixtral|llava|-vl|grok|llama-4/i.test(m.id), reasoning:/reason|think|r1|o1|o3|o4|gpt-5|gemini-(2\.5|3)|claude|qwq|gpt-oss/i.test(m.id), tools:true, desc:'' });
     });
     if (!out.length) [['gpt-5.4-nano', 'GPT 5.4 Nano', 'openai'], ['gpt-5.6-luna', 'GPT 5.6 Luna', 'openai'], ['gemini-3.5-flash-lite', 'Gemini 3.5 Flash Lite', 'google']].forEach(([id, name, v]) => out.push({ id:'pu:' + id, name, vendor:v, vlabel:vendorLabel(v) + ' · Puter', ctx:0, free:true, created:0, vision:true, reasoning:/gpt-5/.test(id), tools:true, desc:'' }));
@@ -812,9 +1099,11 @@ async function fetchCatalog(){
       return { id:'gq:' + m.id, name:groqName(m.id), vendor, vlabel:vendorLabel(vendor) + ' · Groq', ctx:num(m.context_window), free:true, created:num(m.created), vision:/vision|llama-4|scout|maverick/i.test(m.id), reasoning:/gpt-oss|qwen3|r1|reason|kimi/i.test(m.id), tools:true, desc:'Muy rápida: corre en los chips de Groq con tu propia llave.' };
     });
   };
-  const [a, b, g] = await Promise.allSettled([orr(), pu(), gq()]);
-  const list = [...(g.status === 'fulfilled' ? g.value : []), ...(a.status === 'fulfilled' ? a.value : []), ...(b.status === 'fulfilled' ? b.value : [])].filter(m => !isBad(m.id));
-  if (!list.length) throw Object.assign(new Error('vacío'), (a.reason && a.reason.net) ? { net:true } : { empty:true });
+  /* beta 2: nadie tiene que pegar llaves. OpenRouter y Groq solo aparecen si ya tenías tu llave (o tu equipo) de antes */
+  const legacyOr = false;          /* beta 2: OpenRouter y Groq nunca se muestran a las personas */
+  const [s, a, b, g] = await Promise.allSettled([szCatalog(), legacyOr ? orr() : Promise.resolve([]), pu(), Promise.resolve([])]);
+  const list = [...(s.status === 'fulfilled' ? s.value : []), ...(g.status === 'fulfilled' ? g.value : []), ...(a.status === 'fulfilled' ? a.value : []), ...(b.status === 'fulfilled' ? b.value : [])].filter(m => !isBad(m.id) && !/allam|infron/i.test(m.id + ' ' + m.vendor + ' ' + m.name)).map(m => Object.assign(m, { name:cleanName(m.name) }));
+  if (!list.length) throw Object.assign(new Error('vacío'), ((s.reason && s.reason.net) || (a.reason && a.reason.net)) ? { net:true } : { empty:true });
   const t = Date.now();
   try{ localStorage.setItem(CAT_KEY, JSON.stringify({ t, list })); }catch(e){}
   return { t, list };
@@ -840,9 +1129,9 @@ if (matchMedia('(pointer: fine)').matches && CFG.cursor){
     '<div id="cd"><svg id="ca" viewBox="0 0 22 30" fill="none"><path d="M2.5 2.2V23L8 18.1L11.6 26.4L15.2 24.9L11.7 16.9L19 16.6Z" fill="#0d0e12" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg><svg id="chd" viewBox="0 0 24 28" fill="none" aria-hidden="true"><path d="M9 2.6c1.1 0 2 .9 2 2V12h.6V9.9c0-1 .8-1.8 1.8-1.8s1.8.8 1.8 1.8V12h.5v-1.2c0-1 .8-1.8 1.8-1.8s1.8.8 1.8 1.8V13h.2c.9 0 1.7.8 1.7 1.7v4.4c0 4.5-3.3 7.8-7.6 7.8h-1.5c-2.4 0-4.4-1.2-5.6-3.2l-4.4-7.2c-.5-.9-.2-2 .7-2.5.8-.5 1.9-.2 2.4.6L7 17V4.6c0-1.1.9-2 2-2z" fill="#0d0e12" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg><i id="cs"><svg viewBox="0 0 24 24"><path d="M6 5.5h12"/><path d="M12 9.5v9M8.5 15l3.5 3.5 3.5-3.5"/></svg></i><i id="cw"></i><i id="ci"></i><i id="cm"><svg viewBox="0 0 30 30" fill="none"><circle cx="15" cy="15" r="13" fill="rgba(13,14,18,.55)" stroke="#fff" stroke-width="1.4"/><path d="M15 5.5l3.2 3.6h-6.4zM15 24.5l3.2-3.6h-6.4z" fill="#fff"/><circle cx="15" cy="15" r="2" fill="#b8c4ff"/></svg></i></div><div id="cr"></div><div id="cl"></div>');
   const cd = $('#cd'), ca = $('#ca'), cr = $('#cr'), cl = $('#cl'), cs = $('#cs');
   const TEXT = 'input:not([type=checkbox]):not([type=file]), textarea, [contenteditable=true]';
-  const LINK = 'a[href], button, select, summary, .chip, [role=tab], [data-hover]';
+  const LINK = 'a[href], button, select, summary, label.ckb, input[type=checkbox], input[type=radio], .chip, [role=tab], [data-hover]';
   /* en toda la web lo que se puede tocar muestra la manita; los switches van sin vidrio encima para que se vea su animación */
-  const NOGLASS = '.cfgsw, .sxsw, [role=switch], .sfb';
+  const NOGLASS = '.cfgsw, .sxsw, [role=switch], .sfb, #szBot, .mi, .mi *, .rcard, .rcard *, input[type=checkbox], label.ckb, .cnv-b, .flowbtn, .flowbtn *';   /* v1.8: «Empezar a FlowIA’r» tiene su propio efecto (la copia de vidrio lo partía en dos y escondía la carita) */   /* v1.4: en la lista de IA el vidrio tapaba «Comparar» y la estrella */
   let px = -100, py = -100, ax = -100, ay = -100, rx = -100, ry = -100, rw = 34, rh = 34, rr = 17;
   let cm = 'idle', hov = null, lblEl = null, lx = 0, ly = 0, down = false, active = false, clT = 0;
   let lastX = ax, lastY2 = ay, vx = 0, vy = 0, ang = 0, angV = 0, sc = 1, fl = performance.now();
@@ -865,6 +1154,10 @@ if (matchMedia('(pointer: fine)').matches && CFG.cursor){
     const cs = getComputedStyle(o);
     PROPS.forEach(k => { c.style[k] = cs[k]; });
     c.style.margin = '0'; c.style.position = 'static'; c.style.transform = 'none'; c.style.transition = 'none';
+    /* las piezas escondidas o puestas encima (p. ej. el numerito de comparar, en escala 0) se copian igual: si no, salía una «bolita blanca» debajo del icono */
+    if (!isRoot){
+      if ((cs.position === 'absolute' || cs.position === 'fixed') && (/^matrix\(0, 0, 0, 0/.test(cs.transform) || +cs.opacity === 0 || cs.display === 'none')) c.style.display = 'none';
+    }
     c.style.animation = 'none'; c.style.pointerEvents = 'none'; c.style.visibility = 'visible'; c.style.translate = 'none';
     if (isRoot){
       ['Top','Right','Bottom','Left'].forEach(s => { c.style['border' + s + 'Width'] = cs['border' + s + 'Width']; c.style['border' + s + 'Style'] = cs['border' + s + 'Style']; });
@@ -927,6 +1220,7 @@ if (matchMedia('(pointer: fine)').matches && CFG.cursor){
 
   addEventListener('pointermove', e => {
     if (e.pointerType !== 'mouse') return;
+    if (!CFG.cursor){ if (active){ active = false; root.classList.remove('cursor-on', 'cursor-bar'); } return; }   /* v1.8: apagado en Ajustes → vuelve el cursor normal al instante */
     if (down && !e.buttons) down = false;                 /* soltaste el botón donde la página no lo vio */
     if (!active){ active = true; ax = rx = lastX = e.clientX; ay = ry = lastY2 = e.clientY; root.classList.add('cursor-on'); }
     px = e.clientX; py = e.clientY;
@@ -1015,27 +1309,66 @@ function mirrorType(ta){
   const fld = ta.closest('.field'); if (!fld) return;
   const m = document.createElement('div'); m.className = 'mir'; m.setAttribute('aria-hidden', 'true');
   fld.classList.add('mw'); fld.insertBefore(m, ta);
-  let prev = '';
+  /* v1.3: el dueño prefirió la rayita normal del navegador (la propia se quitó) */
+  let prev = '', kind = '';
   const css = () => { const c = getComputedStyle(ta); ['font', 'padding', 'lineHeight', 'letterSpacing', 'textIndent', 'tabSize'].forEach(k => { m.style[k] = c[k]; }); };
   const spans = s => [...s].map((ch, i) => '<span class="nw" style="animation-delay:' + Math.min(i * 12, 420) + 'ms">' + esc(ch) + '</span>').join('');
+  /* dónde queda la letra número «off» dentro del espejo */
+  function rectAt(off){
+    const w = document.createTreeWalker(m, NodeFilter.SHOW_TEXT); let n, left = off;
+    while ((n = w.nextNode())){
+      const L = n.nodeValue.length;
+      if (left <= L && !(left === L && n.nodeValue !== '​' && w.nextNode && false)){
+        const r = document.createRange();
+        if (left < L){ r.setStart(n, left); r.setEnd(n, left + 1); const rs = r.getClientRects(); if (rs.length) return { x:rs[0].left, y:rs[0].top, h:rs[0].height }; }
+        if (left > 0){ r.setStart(n, left - 1); r.setEnd(n, left); const rs = r.getClientRects(); if (rs.length){ const q = rs[rs.length - 1]; return { x:q.right, y:q.top, h:q.height }; } }
+      }
+      left -= L; if (left < 0) break;
+    }
+    const fr = m.getBoundingClientRect(), c = getComputedStyle(ta);
+    return { x:fr.left + parseFloat(c.paddingLeft), y:fr.top + parseFloat(c.paddingTop), h:parseFloat(c.lineHeight) || 20 };
+  }
+  function placeCaret(){}
+  /* al borrar: las letras se desprenden, flotan y se desvanecen */
+  function ghosts(txt, from){
+    if (!txt || root.classList.contains('noanim')) return;
+    const fr = fld.getBoundingClientRect(), list = [...txt].slice(-36);
+    list.forEach((ch, i) => {
+      if (!ch.trim()) return;
+      const p = rectAt(from + (txt.length - list.length) + i), g = document.createElement('span');
+      g.className = 'mghost'; g.textContent = ch; g.style.font = getComputedStyle(ta).font;
+      g.style.left = (p.x - fr.left) + 'px'; g.style.top = (p.y - fr.top) + 'px'; fld.appendChild(g);
+      const dx = (Math.random() - .5) * 26, rot = (Math.random() - .5) * 50, d = Math.min(i, 20) * 14;
+      g.animate([{ transform:'translate(0,0) rotate(0)', opacity:1, filter:'blur(0)', color:'#ecebe7' }, { transform:'translate(' + (dx * .4) + 'px,-6px) rotate(' + (rot * .3) + 'deg) scale(1.15)', opacity:1, color:'#ff8f7a', offset:.25 }, { transform:'translate(' + dx + 'px,-26px) rotate(' + rot + 'deg) scale(.4)', opacity:0, filter:'blur(4px)', color:'#c9566c' }], { duration:620, delay:d, easing:'cubic-bezier(.22,1,.36,1)', fill:'both' }).onfinish = () => g.remove();
+    });
+  }
   const sync = () => {
     const v = ta.value;
-    if (v === prev){ m.scrollTop = ta.scrollTop; return; }
+    if (v === prev){ m.scrollTop = ta.scrollTop; placeCaret(false); return; }
     css();
     let a = 0; while (a < prev.length && a < v.length && prev[a] === v[a]) a++;
     let b = 0; while (b < prev.length - a && b < v.length - a && prev[prev.length - 1 - b] === v[v.length - 1 - b]) b++;
-    const mid = v.slice(a, v.length - b);
+    const mid = v.slice(a, v.length - b), gone = prev.slice(a, prev.length - b);
+    if (gone && /^delete/.test(kind)) ghosts(gone, a);
     if (b === 0 && a === prev.length && m.lastChild && m.lastChild.nodeType === 3 && prev){
       const t = document.createElement('template'); t.innerHTML = spans(mid); m.insertBefore(t.content, m.lastChild);
     } else {
       m.innerHTML = esc(v.slice(0, a)) + spans(mid) + esc(v.slice(v.length - b));
       m.appendChild(document.createTextNode('​'));
     }
-    prev = v; m.scrollTop = ta.scrollTop;
+    prev = v; m.scrollTop = ta.scrollTop; kind = '';
+    placeCaret(mid.length > 0 && mid.length < 4);
+    /* cuando terminan las animaciones, el espejo vuelve a ser texto normal (corta las palabras igual que la caja) */
+    clearTimeout(m._n); m._n = setTimeout(() => { if (ta.value === prev && m.querySelector('.nw')){ m.textContent = prev; m.appendChild(document.createTextNode('\u200b')); m.scrollTop = ta.scrollTop; placeCaret(false); } }, 900);
   };
   ta._sync = sync;
+  ta.addEventListener('beforeinput', e => { kind = e.inputType || ''; });
   ta.addEventListener('input', sync);
-  ta.addEventListener('scroll', () => { m.scrollTop = ta.scrollTop; });
+  ta.addEventListener('scroll', () => { m.scrollTop = ta.scrollTop; placeCaret(false); });
+  ['focus', 'click', 'keyup', 'select'].forEach(ev => ta.addEventListener(ev, () => requestAnimationFrame(() => placeCaret(false))));
+  /* (sin rayita propia) */
+  document.addEventListener('selectionchange', () => { if (document.activeElement === ta) placeCaret(false); });
+  addEventListener('resize', () => placeCaret(false));
   m.appendChild(document.createTextNode('​')); sync();
 }
 /* golpe suave de cristal: como el clic del mouse pero más lento, borroso y con efecto glass */
@@ -1064,45 +1397,67 @@ function portalReveal(p){
   if (!p) return; const K = zoomK(), t0 = performance.now(), D = 950;
   (function f(now){ const e = Math.min(1, (now - t0) / D); portalPaint(p, K * Math.pow(2.4, e)); if (e < 1) requestAnimationFrame(f); })(t0);
 }
-/* ---------- portal SynthZ ⇄ SynthFlow ----------
-   ida:   «SynthZ» sale de su esquina y crece al centro → la Z se reescribe en cursiva → «Flow» se escribe con su
-          línea blanca (sin pasarse de la línea de escritura) → una barrita se come «Synth» → la cámara entra en la «o»
-   vuelta: lo mismo al revés y «SynthZ» vuelve a su esquina */
-const ZCUR = 'M7 13c3-4 9-5 15-4.4 6 .6 12 1.6 18-.4-6 7-15 15-24 24-3.4 3.4-6 6.6-8.4 9.8 6.4-2.6 12-3.4 18-2 4.6 1.1 8.6 3.4 10.4 6.8 1.7 3.4.2 7.6-3.6 8.8-3.6 1.2-7-1.3-6.4-5 .8-4.6 7.6-6.6 15.4-5.4';
+/* ---------- portal SynthZ ⇄ SynthFlow (v1.3: en tiempo real, con los logos de vidrio) ----------
+   ida:   «SynthZ» sale de su esquina y llega al centro → la Z de vidrio se derrite en vivo y se vuelve «Flow»
+          (queda «SynthFlow») → la barrita de luz se come «Synth» → la cámara entra en la «o»
+   vuelta: lo mismo al revés y «SynthZ» vuelve a su esquina
+   mientras dura, la página no se puede tocar (ni con el ratón ni con el teclado) */
+const FO = { x:.517, y:.62, w:.085 };      /* el hueco de la «o» dentro de la imagen «Flow» */
+const glassS = t => t === 'Synth' ? '<span class="gS">S</span>ynth' : esc(t);
+const MELT_SVG = '<svg class="szpdefs" width="0" height="0" aria-hidden="true"><filter id="szMelt" x="-20%" y="-30%" width="140%" height="160%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="0.012 0.03" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="0" xChannelSelector="R" yChannelSelector="G"/></filter></svg>';
 function portalStage(){
   const o = document.createElement('div'); o.id = 'portal'; o.className = 'szportal';
-  o.innerHTML = '<i class="pg"></i><div class="szpw"><span class="szps"><span>Synth</span></span><span class="szpslot">'
-    + '<svg class="szpz" viewBox="0 0 48 48" aria-hidden="true"><path d="' + Z_PATH + '" fill="url(#szpzg)"/></svg>'
-    + '<svg class="szpcur" viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="szpzg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8fb0ff"/><stop offset=".5" stop-color="#c9566c"/><stop offset="1" stop-color="#e6b65f"/></linearGradient><linearGradient id="szpcg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4d6"/><stop offset=".55" stop-color="#e6b65f"/><stop offset="1" stop-color="#c9566c"/></linearGradient></defs><path d="' + ZCUR + '" pathLength="1" fill="none" stroke="url(#szpcg)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-    + '<span class="szpf"><span>F</span><span>l</span><span class="szpo">o</span><span>w</span></span><i class="szpbar"></i><i class="szpcaret"></i></span></div>';
+  o.innerHTML = MELT_SVG + '<i class="pg"></i><div class="szpw"><span class="szps"><span>' + glassS('Synth') + '</span></span><span class="szpslot">'
+    + '<span class="szpm"><img class="szpz" src="media/z-glass.webp" alt="" draggable="false"><img class="szpfl" src="media/flow-glass.webp" alt="" draggable="false"></span><i class="szpbar"></i></span></div>';
   document.body.appendChild(o);
-  const q = c => o.querySelector(c), W = q('.szpw'), SY = q('.szps'), SL = q('.szpslot'), ZZ = q('.szpz'), CU = q('.szpcur path'), F = q('.szpf'), BAR = q('.szpbar'), CAR = q('.szpcaret'), PG = q('.pg');
-  const L = [...F.children], O = q('.szpo');
-  /* medidas reales de la letra: línea de escritura, altura de la F y hueco de la «o» */
-  const cs = getComputedStyle(W), fs = parseFloat(cs.fontSize) || 120;
-  let asc = fs * .8, capH = fs * .62, oA = fs * .42, oD = fs * .01;
-  try{ const c = document.createElement('canvas').getContext('2d'); c.font = cs.fontStyle + ' ' + cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
-    const mF = c.measureText('F'), mo = c.measureText('o'); if (mF.fontBoundingBoxAscent) asc = mF.fontBoundingBoxAscent; if (mF.actualBoundingBoxAscent) capH = mF.actualBoundingBoxAscent; if (mo.actualBoundingBoxAscent){ oA = mo.actualBoundingBoxAscent; oD = mo.actualBoundingBoxDescent || 0; } }catch(e){}
-  const wS = SY.firstChild.getBoundingClientRect().width, wZ = ZZ.getBoundingClientRect().width + fs * .08, wF = F.getBoundingClientRect().width;
-  const fr = F.getBoundingClientRect(), base = L[0].getBoundingClientRect().top - fr.top + asc;    /* la línea de escritura, dentro de «Flow» */
-  const edges = L.map(x => x.getBoundingClientRect().right - fr.left);
-  const line = (el, extra) => { el.style.top = (base - capH - (extra || 0)).toFixed(1) + 'px'; el.style.height = (capH + (extra || 0) * 1.6).toFixed(1) + 'px'; };
-  line(CAR, fs * .02); line(BAR, fs * .07);
+  const q = c => o.querySelector(c), W = q('.szpw'), SY = q('.szps'), SL = q('.szpslot'), M = q('.szpm'), ZZ = q('.szpz'), FL = q('.szpfl'), BAR = q('.szpbar'), PG = q('.pg');
+  const DM = q('feDisplacementMap'), TB = q('feTurbulence');
+  const fs = parseFloat(getComputedStyle(W).fontSize) || 120;
+  const wS = SY.firstChild.getBoundingClientRect().width;
+  const wZ = fs * .84 * (284 / 256) + fs * .1, wF = fs * .8 * (412 / 200) + fs * .12;
   SY.style.width = wS + 'px'; SL.style.width = wZ + 'px';
-  const reveal = x => { F.style.clipPath = 'inset(-20% ' + Math.max(0, wF - x).toFixed(1) + 'px -30% -2px)'; CAR.style.transform = 'translateX(' + x.toFixed(1) + 'px)'; };
-  return { o, W, SY, SL, ZZ, CU, F, BAR, CAR, PG, L, O, fs, asc, oA, oD, wS, wZ, wF, edges, reveal };
+  return { o, W, SY, SL, M, ZZ, FL, BAR, PG, DM, TB, fs, wS, wZ, wF };
+}
+/* la Z se derrite y se vuelve «Flow» (o al revés), en vivo: el vidrio se ondula, cambia de forma y se aquieta */
+function melt(P, toFlow, D){
+  P.M.style.filter = 'url(#szMelt)';
+  P.SL.style.transition = 'width ' + (D * .55 / 1000).toFixed(2) + 's ' + PE; P.SL.style.width = (toFlow ? P.wF : P.wZ) + 'px';
+  const a = toFlow ? P.ZZ : P.FL, b = toFlow ? P.FL : P.ZZ, s0 = Math.random() * 50;
+  return tween(D, (e, k) => {
+    const w = Math.sin(Math.PI * k);                                  /* sube y baja la ola */
+    P.DM.setAttribute('scale', (w * P.fs * .42).toFixed(1));
+    P.TB.setAttribute('baseFrequency', (0.010 + w * .006).toFixed(4) + ' ' + (0.028 + w * .02).toFixed(4));
+    P.TB.setAttribute('seed', String(Math.round(s0 + k * 14)));
+    const m = Math.min(1, Math.max(0, (k - .32) / .36));             /* el cambio de forma, en el medio */
+    a.style.opacity = (1 - m).toFixed(3); b.style.opacity = m.toFixed(3);
+    a.style.transform = 'scale(' + (1 + w * .06).toFixed(3) + ',' + (1 - w * .1).toFixed(3) + ')';
+    b.style.transform = 'scale(' + (1 + w * .04).toFixed(3) + ',' + (1 - w * .06).toFixed(3) + ')';
+    P.M.style.setProperty('--glow', w.toFixed(3));
+  }).then(() => { P.M.style.filter = 'none'; P.DM.setAttribute('scale', '0'); a.style.transform = b.style.transform = 'none'; });
+}
+/* bloquea ratón, toque y teclado mientras se ve la transición */
+let lockOff = null;
+function portalLock(on){
+  if (lockOff){ lockOff(); lockOff = null; }
+  if (!on) return;
+  const stop = e => { if (e.key === 'F5' || (e.key === 'r' && (e.ctrlKey || e.metaKey))) return; e.preventDefault(); e.stopPropagation(); };
+  const ev = ['keydown', 'keypress', 'wheel', 'touchmove', 'mousedown', 'click', 'pointerdown'];
+  ev.forEach(t => addEventListener(t, stop, { capture:true, passive:false }));
+  lockOff = () => ev.forEach(t => removeEventListener(t, stop, { capture:true }));
 }
 const PE = 'cubic-bezier(.65,0,.35,1)', PEO = 'cubic-bezier(.22,1,.36,1)';
 const tween = (D, fn, ease) => new Promise(res => { const t0 = performance.now(); (function f(now){ const k = Math.min(1, (now - t0) / D); fn(ease ? ease(k) : k, k); if (k < 1) requestAnimationFrame(f); else res(); })(t0); });
 const eio = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2, eout = k => 1 - Math.pow(1 - k, 3);
-/* el centro del hueco de la «o» (para entrar o salir por ahí) */
-function oCenter(P){ const r = P.O.getBoundingClientRect(); return { x:r.left + r.width / 2, y:r.top + P.asc - (P.oA - P.oD) / 2, d:Math.max(8, (P.oA + P.oD) * .5) }; }
-function zoomIO(P, into, D){
-  const c = oCenter(P), wr = P.W.getBoundingClientRect(), cx = innerWidth / 2, cy = innerHeight / 2;
-  P.W.style.transformOrigin = (c.x - wr.left).toFixed(1) + 'px ' + (c.y - wr.top).toFixed(1) + 'px';
-  const K = Math.hypot(innerWidth, innerHeight) / c.d * 2.4, tx = cx - c.x, ty = cy - c.y;
-  const at = q => { const z = Math.exp(Math.log(K) * q), m = Math.min(1, q * 1.6); P.W.style.transform = 'translate(' + (tx * m).toFixed(1) + 'px,' + (ty * m).toFixed(1) + 'px) scale(' + z.toFixed(4) + ')'; };
-  return tween(D, (e, k) => at(into ? e : 1 - e), eio);
+/* entra (o sale) por el hueco de la «o» de «Flow» */
+function zoomO(P, into, D){
+  P.W.style.transform = 'none'; P.W.style.transformOrigin = '0 0';
+  const r = P.FL.getBoundingClientRect(), wr = P.W.getBoundingClientRect();
+  const cx = r.left + r.width * FO.x, cy = r.top + r.height * FO.y, d = Math.max(6, r.width * FO.w);
+  P.W.style.transformOrigin = (cx - wr.left).toFixed(1) + 'px ' + (cy - wr.top).toFixed(1) + 'px';
+  const K = Math.min(60, Math.hypot(innerWidth, innerHeight) / d * 2.2), tx = innerWidth / 2 - cx, ty = innerHeight / 2 - cy;
+  P.o.classList.add('zooming');      /* sin sombras ni brillos mientras se agranda: así no se traba en celulares */
+  const at = q => { const z = Math.exp(Math.log(K) * q), m = Math.min(1, q * 1.6); P.W.style.transform = 'translate(' + (tx * m).toFixed(1) + 'px,' + (ty * m).toFixed(1) + 'px) scale(' + z.toFixed(4) + ')'; P.W.style.opacity = q > .82 ? Math.max(0, 1 - (q - .82) / .18).toFixed(3) : '1'; };
+  return tween(D, e => at(into ? e : 1 - e), eio).then(() => { if (!into) P.o.classList.remove('zooming'); });
 }
 function logoRect(){
   const n = document.querySelector('#navWord');
@@ -1120,87 +1475,88 @@ function flyWord(P, toCorner, D){
   at(0);
   return tween(D, e => at(e), eio).then(() => { W.style.filter = 'none'; });
 }
-/* el portal es la animación del logo de SynthFlow: se ve siempre, también en modo Rendimiento (solo se acorta si el sistema pide «reducir movimiento») */
-const PCALM = false;   /* el dueño pidió que el portal se vea SIEMPRE (también con «reducir movimiento» del sistema) */
+const imgsReady = P => Promise.race([Promise.all([P.ZZ, P.FL].map(i => i.decode ? i.decode().catch(() => {}) : Promise.resolve())), sleepRaw(1500)]);
+/* el portal es la animación del logo: se ve siempre, también en modo Rendimiento */
+const PCALM = false;
+/* v1.8: con «Animaciones» apagado no hay película: un fundido corto y listo (los logos siempre se ven) */
+function quickGo(href, back){
+  if (document.getElementById('portal')) return;
+  try{ sessionStorage.setItem(back ? 'synthz:back' : 'synthz:portal', 'fade'); }catch(e){}
+  const v = document.createElement('div'); v.id = 'portal'; v.style.cssText = 'position:fixed;inset:0;z-index:2147483000;background:#0b0c10;opacity:0;transition:opacity .18s ease';
+  document.body.appendChild(v); requestAnimationFrame(() => { v.style.opacity = '1'; });
+  setTimeout(() => { location.href = href; }, 200);
+}
 async function portalOut(href){
   if (document.getElementById('portal')) return;
+  if (reduce && !(typeof EV !== 'undefined' && EV.pending())) return quickGo(href, false);
   let gone = false; const go = () => { if (gone) return; gone = true; location.href = href; };
-  root.classList.add('leaving'); S.busy(true); setTimeout(go, 9000);
+  root.classList.add('leaving'); S.busy(true); portalLock(true); setTimeout(go, 12000);
   try{ const R = logoRect(); sessionStorage.setItem('synthz:logo', JSON.stringify(R)); }catch(e){}
-  if (PCALM){ try{ sessionStorage.setItem('synthz:portal', 'fade'); }catch(e){} const o = document.createElement('div'); o.id = 'portal'; o.className = 'szportal'; document.body.appendChild(o); o.animate([{ opacity:0 }, { opacity:1 }], { duration:280, fill:'forwards' }).onfinish = go; return; }
   try{ sessionStorage.setItem('synthz:portal', 'o'); }catch(e){}
   try{
     const P = portalStage(), nav = document.querySelector('#nav .logo');
-    P.o.classList.add('clear');
+    P.o.classList.add('clear'); await imgsReady(P);
     await new Promise(r => requestAnimationFrame(r));
     /* 1 · «SynthZ» sale de su esquina, crece y llega al centro */
     if (nav) nav.style.visibility = 'hidden';
     P.o.animate([{ backgroundColor:'rgba(11,12,16,0)' }, { backgroundColor:'rgba(11,12,16,1)' }], { duration:900, easing:'ease-out', fill:'forwards' });
-    await flyWord(P, false, 1150);
-    await sleepRaw(140);
-    /* 2 · la Z se reescribe en cursiva */
-    P.ZZ.animate([{ opacity:1, filter:'blur(0)', transform:'none' }, { opacity:0, filter:'blur(4px)', transform:'scale(.9) rotate(-6deg)' }], { duration:700, easing:PE, fill:'forwards' });
-    P.CU.parentNode.style.opacity = '1';
-    await tween(820, e => { P.CU.style.strokeDashoffset = (1 - e).toFixed(4); }, eio);
-    await sleepRaw(120);
-    /* 3 · «Flow» se escribe con su línea blanca; la Z en cursiva se disuelve en tinta */
-    P.CU.parentNode.animate([{ opacity:1, filter:'blur(0)' }, { opacity:0, filter:'blur(6px)' }], { duration:520, easing:'ease-out', fill:'forwards' });
-    P.CAR.classList.add('on'); P.reveal(0); P.F.style.opacity = '1';
-    P.SL.style.transition = 'width .75s ' + PE; P.SL.style.width = P.wF + 'px';
+    await flyWord(P, false, 1100);
+    /* evento especial: en vez del portal normal, la página «se reprograma» y luego carga el chat */
+    const evn = typeof EV !== 'undefined' && EV.pending();
+    if (evn){ await EV.play(evn); portalLock(true); go(); return; }
+    P.W.style.transition = 'transform .5s ' + PEO; P.W.style.transform = 'none';
+    await sleepRaw(200); P.W.style.transition = '';
+    /* 2 · la Z de vidrio se derrite y se vuelve «Flow»: queda «SynthFlow» */
+    SND.shimmer(); await melt(P, true, 1500);
+    P.M.classList.add('shine'); await sleepRaw(520);
+    /* 3 · la barrita de luz se come «Synth» */
+    P.BAR.classList.add('on'); await sleepRaw(160);
+    P.SY.style.transition = 'width .85s ' + PE; P.SY.style.width = '0px';
+    await sleepRaw(880); P.BAR.classList.remove('on');
     await sleepRaw(180);
-    for (const x of P.edges){ P.reveal(x); await sleepRaw(150); }
-    P.F.classList.add('shine');
-    await sleepRaw(380);
-    P.CAR.classList.remove('on');
-    /* 4 · la barrita se come «Synth» (Synth se corre a la derecha y desaparece en la barra) */
-    P.BAR.classList.add('on');
-    await sleepRaw(160);
-    P.SY.style.transition = 'width .9s ' + PE; P.SY.style.width = '0px';
-    await sleepRaw(940);
-    P.BAR.classList.remove('on');
-    await sleepRaw(160);
-    /* 5 · la cámara entra en la «o» */
-    await zoomIO(P, true, 1350);
+    /* 4 · la cámara entra en la «o» */
+    P.PG.animate([{ opacity:0 }, { opacity:.5 }, { opacity:0 }], { duration:1200, easing:'ease-out' }); SND.warp();
+    await zoomO(P, true, 1300);
     go();
-  }catch(e){ console.error('[synthz] portal', e && e.message); go(); }
+  }catch(e){
+    console.error('[synthz] portal', e && e.message);
+    const p = document.getElementById('portal'); if (p){ p.style.background = '#0b0c10'; p.style.opacity = '1'; }
+    setTimeout(go, 200);
+  }
 }
 /* de vuelta a SynthZ: la misma película al revés */
 async function portalBack(href){
   if (document.getElementById('portal')) return;
+  if (reduce) return quickGo(href, true);
   let gone = false; const go = () => { if (gone) return; gone = true; location.href = href; };
-  S.busy(true); setTimeout(go, 9000);
-  try{ sessionStorage.setItem('synthz:back', PCALM ? 'fade' : 'o'); }catch(e){}
-  if (PCALM){ const o = document.createElement('div'); o.id = 'portal'; o.className = 'szportal'; document.body.appendChild(o); o.animate([{ opacity:0 }, { opacity:1 }], { duration:280, fill:'forwards' }).onfinish = go; return; }
+  S.busy(true); portalLock(true); setTimeout(go, 12000);
+  try{ sessionStorage.setItem('synthz:back', 'o'); }catch(e){}
   try{
     const P = portalStage();
-    /* empieza como terminó la ida: «Flow» escrito, sin «Synth», dentro de la «o» */
-    P.SY.style.width = '0px'; P.SL.style.width = P.wF + 'px'; P.ZZ.style.opacity = '0'; P.F.style.opacity = '1'; P.reveal(P.wF);
+    /* empieza como terminó la ida: «Flow» sin «Synth», dentro de la «o» */
+    P.SY.style.width = '0px'; P.SL.style.width = P.wF + 'px'; P.ZZ.style.opacity = '0'; P.FL.style.opacity = '1';
+    await imgsReady(P);
     await new Promise(r => requestAnimationFrame(r));
-    await zoomIO(P, true, 1);
-    await P.o.animate([{ opacity:0 }, { opacity:1 }], { duration:380, easing:'ease-out', fill:'forwards' }).finished;
-    await zoomIO(P, false, 1250);
+    await zoomO(P, true, 1);
+    P.o.animate([{ opacity:0 }, { opacity:1 }], { duration:380, easing:'ease-out', fill:'forwards' }); await sleepRaw(380);
+    await zoomO(P, false, 1200);
     P.W.style.transform = 'none';
     await sleepRaw(140);
     /* la barrita devuelve «Synth» */
     P.BAR.classList.add('on'); await sleepRaw(140);
-    P.SY.style.transition = 'width .85s ' + PE; P.SY.style.width = P.wS + 'px';
-    await sleepRaw(900); P.BAR.classList.remove('on'); await sleepRaw(120);
-    /* la línea blanca borra «Flow» letra por letra */
-    P.CAR.classList.add('on');
-    const back = [P.wF, ...P.edges.slice(0, -1).reverse(), 0];
-    for (const x of back){ P.reveal(x); await sleepRaw(120); }
-    P.CAR.classList.remove('on');
-    P.SL.style.transition = 'width .6s ' + PE; P.SL.style.width = P.wZ + 'px';
-    /* la Z en cursiva se des-escribe y vuelve la Z */
-    P.CU.parentNode.style.opacity = '1'; P.CU.style.strokeDashoffset = '0';
-    await tween(700, e => { P.CU.style.strokeDashoffset = e.toFixed(4); }, eio);
-    P.CU.parentNode.style.opacity = '0';
-    P.ZZ.animate([{ opacity:0, filter:'blur(4px)', transform:'scale(.9) rotate(-6deg)' }, { opacity:1, filter:'blur(0)', transform:'none' }], { duration:620, easing:PEO, fill:'forwards' });
-    await sleepRaw(680);
+    P.SY.style.transition = 'width .8s ' + PE; P.SY.style.width = P.wS + 'px';
+    await sleepRaw(840); P.BAR.classList.remove('on'); await sleepRaw(200);
+    /* «Flow» se derrite y vuelve a ser la Z */
+    SND.shimmer(); await melt(P, false, 1400);
+    await sleepRaw(260);
     /* «SynthZ» vuelve a su esquina */
-    await flyWord(P, true, 1050);
+    await flyWord(P, true, 1000);
     go();
-  }catch(e){ console.error('[synthz] portal', e && e.message); go(); }
+  }catch(e){
+    console.error('[synthz] portal', e && e.message);
+    try{ sessionStorage.setItem('synthz:back', 'fade'); }catch(x){}
+    setTimeout(go, 200);
+  }
 }
 /* llegada a SynthFlow desde el portal: el hueco de la «o» se abre y deja ver el chat */
 function portalArrive(veil){
@@ -1231,22 +1587,67 @@ function waterIn(el){
   })(t0);
 }
 
-function ctxMenu(getItems){
-  let m = null; const close = () => { if (m){ m.remove(); m = null; } };
-  addEventListener('contextmenu', e => {
-    if (e.target.closest && e.target.closest('input,textarea')) return;
-    e.preventDefault(); close();
-    const sel = String(getSelection() || '').trim();
-    const items = [...(sel ? [{ label:'Copiar selección', fn:() => navigator.clipboard && navigator.clipboard.writeText(sel) }] : []), ...getItems(e)];
-    m = document.createElement('div'); m.className = 'ctxm'; m.setAttribute('role', 'menu');
-    items.forEach(it => { const b = document.createElement('button'); b.type = 'button'; b.textContent = it.label; b.addEventListener('click', ev => { ev.stopPropagation(); close(); it.fn(); }); m.appendChild(b); });
-    document.body.appendChild(m);
-    m.style.left = Math.max(8, Math.min(e.clientX, innerWidth - m.offsetWidth - 10)) + 'px'; m.style.top = Math.max(8, Math.min(e.clientY, innerHeight - m.offsetHeight - 10)) + 'px';
-    m.animate([{ opacity:0, transform:'scale(.9) translateY(6px)', filter:'blur(6px)' }, { opacity:1, transform:'none', filter:'blur(0)' }], { duration:380, easing:'cubic-bezier(.22,1,.36,1)' });
+/* v2.2 · menús limpios: íconos, grupos (separados con «—»), atajos y lo peligroso en rojo. Se usan con el clic derecho y con «⋯» */
+const MI = (d) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
+const MICO = {
+  copy:MI('<rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>'),
+  new:MI('<path d="M12 20h8"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'),
+  search:MI('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'),
+  cog:MI('<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>'),
+  help:MI('<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/>'),
+  star:MI('<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9 6.8 19.7l1-5.9L3.5 9.7l5.9-.8z"/>'),
+  sound:MI('<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/>'),
+  regen:MI('<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>'),
+  trash:MI('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'),
+  down:MI('<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>'),
+  quote:MI('<path d="M7 7h4v4H7zM13 7h4v4h-4z"/><path d="M9 11c0 3-1 5-3 6M15 11c0 3-1 5-3 6"/>'),
+  home:MI('<path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-6h4v6"/>'),
+  brain:MI('<path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 3 3h1V4z"/><path d="M15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-3 3h-1V4z"/>'),
+  chats:MI('<path d="M4 5h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/>'),
+  ai:MI('<path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z"/>'),
+  up:MI('<path d="M12 19V5M5 12l7-7 7 7"/>'),
+  user:MI('<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'),
+  open:MI('<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'),
+  chart:MI('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'),
+  reload:MI('<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>'),
+  stop:MI('<rect x="6" y="6" width="12" height="12" rx="2"/>'),
+  cmp:MI('<rect x="3" y="5" width="7.5" height="14" rx="2"/><rect x="13.5" y="5" width="7.5" height="14" rx="2"/>'),
+  trophy:MI('<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8"/>'),
+  exit:MI('<path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/>')
+};
+/* arma un menú (para el clic derecho o para un botón) en la posición x, y */
+function menuBuild(items, x, y, cls){
+  const m = document.createElement('div'); m.className = 'ctxm ' + (cls || ''); m.setAttribute('role', 'menu');
+  items.filter(Boolean).forEach((it, i, L) => {
+    if (it === '—'){ if (i && i < L.length - 1 && L[i - 1] !== '—') m.appendChild(document.createElement('hr')); return; }
+    if (it.head){ const h = document.createElement('div'); h.className = 'mhd'; h.textContent = it.head; m.appendChild(h); return; }
+    const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'menuitem'); if (it.danger) b.className = 'dng';
+    b.innerHTML = '<i class="mico">' + (MICO[it.ico] || '') + '</i><span></span>' + (it.key ? '<kbd>' + esc(it.key) + '</kbd>' : '') + (it.on != null ? '<em class="mck" aria-hidden="true">' + (it.on ? '✓' : '') + '</em>' : '');
+    $('span', b).textContent = it.label; if (it.on != null) b.setAttribute('aria-checked', String(!!it.on));
+    b.addEventListener('click', ev => { ev.stopPropagation(); menuClose(); it.fn(); });
+    m.appendChild(b);
   });
-  addEventListener('pointerdown', e => { if (m && !m.contains(e.target)) close(); });
-  addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
-  addEventListener('scroll', close, true); addEventListener('resize', close);
+  document.body.appendChild(m);
+  m.style.left = Math.max(8, Math.min(x, innerWidth - m.offsetWidth - 10)) + 'px'; m.style.top = Math.max(8, Math.min(y, innerHeight - m.offsetHeight - 10)) + 'px';
+  if (!reduce) m.animate([{ opacity:0, transform:'scale(.94) translateY(4px)', filter:'blur(4px)' }, { opacity:1, transform:'none', filter:'blur(0)' }], { duration:260, easing:'cubic-bezier(.22,1,.36,1)' });
+  m.addEventListener('keydown', e => { const B = $$('button', m), i = B.indexOf(document.activeElement); if (e.key === 'ArrowDown' || e.key === 'ArrowUp'){ e.preventDefault(); B[(i + (e.key === 'ArrowDown' ? 1 : B.length - 1)) % B.length].focus(); } });
+  return m;
+}
+let MENU = null;
+function menuClose(){ if (!MENU) return; const m = MENU; MENU = null; if (reduce){ m.remove(); return; } m.animate([{ opacity:1 }, { opacity:0, transform:'scale(.97)' }], { duration:140 }).onfinish = () => m.remove(); }
+function menuOpen(items, x, y, cls){ menuClose(); MENU = menuBuild(items, x, y, cls); return MENU; }
+addEventListener('pointerdown', e => { if (MENU && !MENU.contains(e.target) && !(e.target.closest && e.target.closest('[data-menu-owner]'))) menuClose(); });
+addEventListener('keydown', e => { if (e.key === 'Escape' && MENU){ e.preventDefault(); menuClose(); } });
+addEventListener('scroll', e => { if (MENU && !(e.target && e.target.nodeType === 1 && MENU.contains(e.target))) menuClose(); }, true); addEventListener('resize', () => menuClose());
+/* clic derecho: getItems(e, sel) arma lo que corresponde según dónde hiciste clic */
+function ctxMenu(getItems){
+  addEventListener('contextmenu', e => {
+    if (e.target.closest && e.target.closest('input,textarea,[contenteditable],a[href]')) return;
+    const sel = String(getSelection() || '').trim();
+    const items = [...(sel ? [{ label:'Copiar', ico:'copy', key:'Ctrl+C', fn:() => { navigator.clipboard && navigator.clipboard.writeText(sel); toast('Copiado.'); } }] : []), ...(getItems(e, sel) || [])];
+    if (!items.length) return;
+    e.preventDefault(); menuOpen(items, e.clientX, e.clientY);
+  });
 }
 if (matchMedia('(pointer: fine)').matches && !reduce){ let ax = 0, ay = 0, aq = 0; addEventListener('pointermove', e => { ax = e.clientX; ay = e.clientY; if (aq) return; aq = requestAnimationFrame(() => { aq = 0; const a = $('.aurora'); if (!a) return; a.style.setProperty('--mx', ((ax / innerWidth - .5) * 70).toFixed(1)); a.style.setProperty('--my', ((ay / innerHeight - .5) * 70).toFixed(1)); }); }, { passive:true }); }
 addEventListener('scroll', e => { const t = e.target; if (t && t !== document && t.scrollTop != null){ extraY += t.scrollTop - (t._lt || 0); t._lt = t.scrollTop; } }, true);
@@ -1266,8 +1667,8 @@ if (matchMedia('(pointer: fine)').matches){
 { const au = $('.aurora'); if (au && au.children.length < 4) au.appendChild(document.createElement('i')); }
 const errText = e => typeof e === 'string' ? e : !e ? '' : (e.message || e.msg || (e.error && (typeof e.error === 'string' ? e.error : e.error.message || e.error.code)) || e.code || '');
 async function askPuter(messages, opts){
-  if (!window.puter) throw new Error('No pude cargar Puter. Revisa tu internet o desactiva el bloqueador de anuncios para esta página.');
-  if (!puter.auth.isSignedIn()) throw Object.assign(new Error('Conecta tu cuenta de Puter para usar este modelo.'), { needLogin:true });
+  if (!window.puter) throw new Error('No pude abrir Puter. Revisa tu internet o apaga el bloqueador de anuncios para esta página.');
+  if (!puter.auth.isSignedIn()) throw Object.assign(new Error('Conecta tu cuenta de Puter para usar esta IA.'), { needLogin:true });
   const model = String(opts.model || state.model.openrouter).replace(/^pu:/, ''), t0 = performance.now();
   const inChars = messages.reduce((n, m) => n + (typeof m.content === 'string' ? m.content.length : 200), 0);
   let resp;
@@ -1275,10 +1676,10 @@ async function askPuter(messages, opts){
   catch(e){
     if (e && e.aborted) throw e;
     const m = errText(e), code = String((e && (e.code || (e.error && e.error.code) || e.status)) || '') + ' ' + m;
-    if (/insufficient_funds|402/i.test(code)) throw Object.assign(new Error('Se acabaron tus créditos gratis de Puter. Se renuevan cada mes (también puedes comprar créditos en puter.com). Mientras tanto, usa un modelo de OpenRouter.'), { switchTo:'or', limit:true });
-    if (/too_many_requests|429|rate.?limit/i.test(code)) throw Object.assign(new Error('Puter te pidió ir más despacio: máximo 30 mensajes cada 10 segundos y 3 a la vez. Espera unos segundos y vuelve a intentar.'), { limit:true });
-    if (/auth|token|sign.?in|login|401|403/i.test(m)) throw Object.assign(new Error('Tu sesión de Puter expiró. Conéctala otra vez.'), { needLogin:true });
-    throw new Error(m === 'timeout' ? 'El modelo tardó demasiado. Intenta de nuevo.' : 'Puter: ' + (m || 'no pudo responder con este modelo. Prueba con otro.'));
+    if (/insufficient_funds|insufficient funds|low balance|402/i.test(code)){ puterSetOut(); throw Object.assign(new Error('Usaste el saldo de este mes de Puter. Se llena otra vez el próximo mes; mientras tanto sigue con las IAs conectadas, que son gratis.'), { switchTo:'sz', limit:true }); }
+    if (/too_many_requests|429|rate.?limit/i.test(code)) throw Object.assign(new Error('Vas muy rápido para Puter. Espera unos segundos y vuelve a intentar.'), { limit:true });
+    if (/auth|token|sign.?in|login|401|403/i.test(m)) throw Object.assign(new Error('Se cerró tu cuenta de Puter. Entra otra vez.'), { needLogin:true });
+    throw new Error(m === 'timeout' ? 'La IA tardó demasiado. Intenta de nuevo.' : 'Puter: ' + (m || 'no pudo responder con esta IA. Prueba con otra.'));
   }
   const c = resp && resp.message ? resp.message.content : resp;
   const text = (typeof c === 'string' ? c : Array.isArray(c) ? c.map(x => (x && x.text) || '').join('') : String(c || '')).trim() || '(La IA devolvió una respuesta vacía.)';
@@ -1346,11 +1747,33 @@ function loadGsi(){ return gsiP || (gsiP = new Promise((ok, no) => { const s = d
 async function signedIn(d){
   setSess(d.token); ACC.user = d.user; ACC.profile = d.profile || null; ACC.ready = false;
   await accStart();
+  try{ dispatchEvent(new Event('synthz-acc')); }catch(e){}
   toast(d.isNew ? '¡Bienvenido a ' + BRAND() + ', ' + accName() + '!' : '¡Hola de nuevo, ' + accName() + '!');
 }
+/* al volver de Google por Supabase: el token llega en la dirección (#access_token=…), se cambia por tu sesión de SynthZ y se borra de la barra */
+(async function sbReturn(){
+  const h = location.hash || ''; if (!/access_token=|error_description=/.test(h)) return;
+  const p = new URLSearchParams(h.slice(1)); try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){}
+  if (p.get('access_token')){ ACC.joining = true; root.classList.add('joining'); }
+  if (p.get('error_description')){ setTimeout(() => toast('No se pudo entrar con Google: ' + p.get('error_description')), 800); return; }
+  try{ const d = await api('auth', { method:'POST', body:{ mode:'supabase', token:p.get('access_token') } }); await signedIn(d); askDrive(); }
+  catch(e){ ACC.joining = false; root.classList.remove('joining'); setTimeout(() => toast((e && e.message) || 'No pude entrar con Google. Intenta de nuevo.'), 800); }
+})();
 async function onGoogle(resp){
-  try{ const d = await api('auth', { method:'POST', body:{ credential:resp.credential } }); await signedIn(d); if (gsiDone) gsiDone(d.isNew ? 'new' : 'in'); }
+  try{ const d = await api('auth', { method:'POST', body:{ credential:resp.credential } }); await signedIn(d); if (gsiDone) gsiDone(d.isNew ? 'new' : 'in'); askDrive(); }
   catch(e){ toast(e.message || 'No pude entrar. Intenta de nuevo.'); }
+}
+/* después de entrar con Google: «¿Quieres conectar Drive?» sí / no (una sola vez por dispositivo) */
+async function askDrive(){
+  try{
+    if (!(await driveCid())) return;
+    const m = driveMeta(); if (m && m.linked) return;
+    try{ if (localStorage.getItem('synthz:askdrive')) return; localStorage.setItem('synthz:askdrive', String(Date.now())); }catch(e){}
+    await sleepRaw(900);
+    const ok = await szConfirm('¿Quieres conectar tu Google Drive?', 'Guardo una copia de tus chats en una carpeta privada dentro de tu Google Drive, para que tengas más espacio. No puedo ver ni tocar tus otros archivos. Puedes cambiarlo cuando quieras.', 'Sí, conectar', false, 'No, gracias');
+    if (!ok){ toast('Listo. Si cambias de idea, está en Ajustes › IAs y memoria › Google Drive.'); return; }
+    const r = await DRIVE.sync(); if (r && !r.busy) toast('¡Listo! Tus chats también quedan en tu Google Drive.');
+  }catch(e){ toast((e && e.message) || 'No pude conectar tu Drive. Inténtalo luego en Ajustes › IAs y memoria › Google Drive.'); }
 }
 const EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
 function passStrength(p, u){
@@ -1378,8 +1801,8 @@ function recoveryPanel(box, code, user, onOk, again){
   go.addEventListener('click', onOk);
   box.animate([{ opacity:0, transform:'translateY(10px)', filter:'blur(6px)' }, { opacity:1, transform:'none', filter:'blur(0)' }], { duration:450, easing:'cubic-bezier(.22,1,.36,1)' });
 }
-function authBox(box, done, onBlocked){
-  let mode = 'login';
+function authBox(box, done, onBlocked, start){
+  let mode = start === 'signup' ? 'signup' : 'login';
   const say = h => { box.innerHTML = '<p class="gmsg">' + h + '</p>'; };
   box.innerHTML = '<div class="gbox"><span class="gload">Preparando…</span></div>';
   accConfig().then(ok => {
@@ -1402,7 +1825,7 @@ function authBox(box, done, onBlocked){
       + (L ? '<button class="lnk lforgot" type="button" data-forgot>¿Olvidaste tu contraseña?</button>' : '')
       + '</form>'
       + (ACC.google && !R ? '<div class="lor"><span>o</span></div><div class="gbtn" aria-live="polite"><span class="gload">Cargando Google…</span></div>' : '')
-      + '<p class="cnote">' + (N ? 'No necesitas correo. Tu contraseña se guarda protegida (ni ' + BRAND() + ' puede leerla). Al crear la cuenta te damos un código para recuperarla.' : R ? 'Es el código que guardaste al crear tu cuenta. Al cambiar la contraseña se cierra tu sesión en los demás dispositivos.' : 'Tus chats, favoritos y SynXCoin\'s te siguen a cualquier dispositivo.') + '</p>'
+      + '<p class="cnote">' + (N ? 'No necesitas correo. Tu contraseña se guarda protegida (ni ' + BRAND() + ' puede leerla). Al crear la cuenta te damos un código para recuperarla.' : R ? 'Es el código que guardaste al crear tu cuenta. Al cambiar la contraseña, tu cuenta se cierra en los demás dispositivos.' : 'Tus chats y favoritos te siguen a cualquier dispositivo.') + ' Al entrar aceptas los <a href="terminos.html" target="_blank" rel="noopener">Términos</a> y la <a href="privacidad.html" target="_blank" rel="noopener">Privacidad</a>.</p>'
       + '</div>';
     const f = $('.lform', box), err = $('.lerr', box), go = $('.lgo', box), uIn = f.elements.user, pIn = f.elements.pass;
     $$('[data-m]', box).forEach(b => b.addEventListener('click', () => { if (b.dataset.m !== mode){ const u = uIn.value; mode = b.dataset.m; paint(); $('.lform', box).elements.user.value = u; } }));
@@ -1442,6 +1865,15 @@ function authBox(box, done, onBlocked){
   }
 }
 async function googleBtn(slot, done, onBlocked){
+  /* v1.4: si Supabase tiene Google activado, se entra por Supabase (sin ventanitas que los navegadores bloquean) */
+  if (ACC.sbg && ACC.sb && ACC.sb.url){
+    slot.innerHTML = '<button type="button" class="sbg"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continuar con Google</button>';
+    slot.querySelector('.sbg').addEventListener('click', () => {
+      try{ sessionStorage.setItem('synthz:sbback', location.pathname + location.search); }catch(e){}
+      location.href = ACC.sb.url + '/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent(location.origin + location.pathname);
+    });
+    return;
+  }
   try{ await loadGsi(); }catch(e){ slot.innerHTML = '<p class="gmsg">No pude cargar el botón de Google. Puedes entrar con usuario y contraseña.</p>'; if (onBlocked) onBlocked('script'); return; }
   gsiDone = done;
   google.accounts.id.initialize({ client_id:ACC.cid, callback:onGoogle, auto_select:false, cancel_on_tap_outside:true, context:'signin', itp_support:true });
@@ -1465,7 +1897,7 @@ function securityModal(){
       + '<label>Contraseña nueva <small>(déjala vacía si solo quieres un código nuevo)</small><span class="lin"><input name="pass" type="password" autocomplete="new-password" maxlength="200"></span></label>'
       + '<p class="lerr" role="alert"></p>'
       + '<div class="aact"><button class="btn sm" type="submit" data-k="change">Cambiar contraseña</button><button class="btn sm ghost" type="button" data-k="code">Código de recuperación nuevo</button></div>'
-      + '<p class="cnote">Cambiar la contraseña cierra tu sesión en los demás dispositivos. Un código nuevo invalida el anterior.</p></form>';
+      + '<p class="cnote">Al cambiar la contraseña, tu cuenta se cierra en los demás dispositivos. Si pides un código nuevo, el anterior deja de servir.</p></form>';
     const f = $('form', box), err = $('.lerr', box);
     const run = async k => {
       err.textContent = '';
@@ -1488,38 +1920,86 @@ const lowEnd = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMem
 const miniPage = kind => '<div class="mp ' + kind + '"><i class="bl"></i><i class="bl"></i><i class="bl"></i><div class="gl"></div><div class="nv"><i></i><b></b><b></b><b></b></div><div class="h1"></div><div class="h2"></div><div class="cds"><b></b><b></b><b></b></div><span class="cu"></span><em>así se verá</em></div>';
 function cfgChooser(box, cur, onPick){
   const paint = sel => {
-    box.innerHTML = '<div class="cfgo"><button type="button" data-v="visual" aria-pressed="' + (sel === 'visual') + '"><b>Priorizar visuales</b><span>SynthZ-Style completo: vidrio, fondo vivo, cursor propio y animaciones.</span></button>'
-      + '<button type="button" data-v="speed" aria-pressed="' + (sel === 'speed') + '">' + (lowEnd ? '<i class="rec">Recomendado</i>' : '') + '<b>Priorizar rendimiento</b><span>Para PCs modestos: sin desenfoques, fondo quieto y respuestas al instante.</span></button></div>'
+    box.innerHTML = '<div class="cfgo"><button type="button" data-v="visual" aria-pressed="' + (sel === 'visual') + '"><b>Más bonito</b><span>Con todos los efectos: vidrio, fondo que se mueve, cursor propio y animaciones.</span></button>'
+      + '<button type="button" data-v="speed" aria-pressed="' + (sel === 'speed') + '">' + (lowEnd ? '<i class="rec">Recomendado</i>' : '') + '<b>Más rápido</b><span>Para computadores o celulares lentos: menos efectos y todo responde al instante.</span></button></div>'
       + miniPage(sel);
     $$('[data-v]', box).forEach(b => b.addEventListener('click', () => { paint(b.dataset.v); if (onPick) onPick(b.dataset.v); }));
   };
   paint(cur);
 }
-const CFG_ROWS = [['cursor', 'Cursor ' + BRAND(), 'El cursor de vidrio con viento.'], ['smooth', 'Desplazamiento suave', 'La ruedita baja la página sin saltos.'], ['bg', 'Fondo animado', 'Los colores se mueven y giran al bajar.'], ['glass', 'Efecto vidrio', 'Desenfoques en ventanas y paneles.'], ['anim', 'Animaciones', 'Escritura letra por letra, golpe de cristal y agua.'], ['favAnim', 'Icono animado', 'El péndulo (o el destello de Flow) en el icono de la pestaña.'], ['sound', 'Sonidos de SynthonIA', 'Su voz, su manita y cuando escribe en la guía.']];
-function cfgModal(){
+const CFG_ROWS = [['cursor', 'Cursor ' + BRAND(), 'El cursor de vidrio con viento.'], ['smooth', 'Desplazamiento suave', 'La ruedita baja la página sin saltos.'], ['bg', 'Fondo animado', 'Los colores se mueven y giran al bajar.'], ['glass', 'Efecto vidrio', 'Ventanas y paneles que parecen de vidrio.'], ['anim', 'Animaciones', 'Escritura letra por letra, golpe de cristal y agua.'], ['favAnim', 'Icono animado', 'El péndulo (o el destello de Flow) en el icono de la pestaña.'], ['sound', 'Sonidos', 'La voz de SynthonIA, las teclas, las transiciones y los avisos. Apágalos si te molestan.'], ['beginner', 'Modo principiante', 'Las IA te responden con palabras sencillas, paso a paso y con ejemplos.']];
+/* v2.2 · Ajustes con 2 pestañas: «Página» (cómo se ve y se siente) e «IAs y memoria» (cómo te responden y qué recuerdan de ti) */
+const CFG_PAGE = CFG_ROWS.filter(r => r[0] !== 'beginner');
+const CFG_IA = [['beginner', 'Modo principiante', 'Te responden con palabras sencillas, paso a paso y con ejemplos.'], ['autoWeb', 'Buscar en internet cuando haga falta', 'Si preguntas por algo de hoy (precios, noticias, el clima…), la IA busca sola y te muestra sus fuentes.'], ['saver', 'Respuestas cortas', 'Respuestas más breves: gastas menos de tu límite de hoy.']];
+const memSt0 = () => state.mem || (state.mem = { on:true, t:0, items:[] });
+function memTouch(){ const m = memSt0(); m.t = Date.now(); save(); try{ if (ACC.ready) accPush(); }catch(e){} }
+function memAddCore(text){
+  const m = memSt0(), t = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 300); if (t.length < 3) return false;
+  if (!m.items.some(x => x.text.toLowerCase() === t.toLowerCase())) m.items.unshift({ id:'m' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), t:Date.now(), text:t });
+  m.items = m.items.slice(0, 40); memTouch(); return true;
+}
+/* la lista de «Lo que recuerdo de ti»: se ve, se agrega, se olvida */
+function memPanel(host){
+  const paint = () => {
+    const m = memSt0();
+    host.innerHTML = '<div class="cfgrow"><p>Usar mi memoria<small>Las IAs usan esto para responderte mejor. Si la apagas, no se usa (pero no se borra).</small></p><button class="cfgsw" type="button" role="switch" data-mem="on" aria-checked="' + m.on + '" aria-pressed="' + m.on + '" aria-label="Usar mi memoria"><i></i></button></div>'
+      + '<ul class="meml">' + (m.items.length ? m.items.map(x => '<li><span></span><button type="button" class="lnk" data-del="' + x.id + '">Olvidar</button></li>').join('') : '<li class="memnone">Todavía no recuerdo nada. Escribe «recuerda que…» en el chat o agrégalo aquí.</li>') + '</ul>'
+      + '<form class="memadd"><label class="field"><input type="text" maxlength="300" placeholder="Ej.: Me llamo Ana y estudio diseño gráfico" aria-label="Algo para recordar"></label><button class="btn sm" type="submit">Agregar</button></form>'
+      + (m.items.length ? '<button class="lnk memclr" type="button" data-mem="clear">Olvidar todo</button>' : '');
+    const L = $$('.meml li span', host); m.items.forEach((x, i) => { if (L[i]) L[i].textContent = x.text; });
+  };
+  paint();
+  host.addEventListener('submit', e => { e.preventDefault(); const i = $('.memadd input', host); if (memAddCore(i.value)){ paint(); toast('Agregado a tu memoria.'); } });
+  host.addEventListener('click', async e => {
+    const d = e.target.closest('[data-del]'); if (d){ const m = memSt0(); m.items = m.items.filter(x => x.id !== d.dataset.del); memTouch(); paint(); return; }
+    const t = e.target.closest('[data-mem]'); if (!t) return; const m = memSt0();
+    if (t.dataset.mem === 'on'){ m.on = !m.on; memTouch(); paint(); }
+    else if (t.dataset.mem === 'clear' && await szConfirm('¿Olvidar todo?', 'Borro todo lo que recuerdo de ti. No se puede deshacer.', 'Olvidar todo', true)){ m.items = []; memTouch(); paint(); }
+  });
+}
+/* cada página agrega aquí sus atajos de «Tus IAs» (elegir IA ideales, conectar, Drive…) */
+const cfgLinks = [];
+function cfgModal(tab){
   if ($('#cfgm')) return;
-  const draft = Object.assign({}, CFG);
+  const draft = Object.assign({ autoWeb:true }, CFG); draft.saver = !!(state.sx && state.sx.saver);
   const o = document.createElement('div'); o.id = 'cfgm'; o.className = 'szm';
   const row = ([k, t, s]) => '<div class="cfgrow"><p>' + t + '<small>' + s + '</small></p><button class="cfgsw" type="button" role="switch" data-k="' + k + '" aria-checked="' + !!draft[k] + '" aria-pressed="' + !!draft[k] + '" aria-label="' + t + '"></button></div>';
-  const IN = [['always', 'Cada vez'], ['session', 'Una vez por sesión'], ['never', 'Nunca']];
-  o.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="Configuración"><div class="word">' + zWord('Synth') + '</div><div class="tn">CONFIGURACIÓN</div><div class="tb"><h3>Configuración</h3><p>Elige un punto de partida y ajusta cada detalle a tu gusto, también en modo rendimiento.</p></div>'
-    + '<div class="cfglbl">Experiencia</div><div id="cfgCh"></div>'
-    + '<div class="cfglbl">Detalles</div><div id="cfgRows">' + CFG_ROWS.map(row).join('') + '</div>'
-    + '<div class="cfglbl">Intro de la página</div><div class="cfgseg" id="cfgIn">' + IN.map(([v, l]) => '<button type="button" data-in="' + v + '" aria-pressed="' + (draft.intro === v) + '">' + l + '</button>').join('') + '</div><p class="cnote">El portal hacia el chat siempre se muestra.</p>'
-    + '<div class="tbtn" style="margin-top:18px"><button class="lnk" type="button" data-close>Cerrar</button><button class="btn sm" type="button" id="cfgOk">Guardar</button></div></div>';
+  const IN = [['always', 'Cada vez'], ['session', 'Una vez por visita'], ['never', 'Nunca']];
+  const ia = tab === 'ia' || tab === 'mem';
+  o.innerHTML = '<div class="tcard cfgcard" role="dialog" aria-modal="true" aria-label="Ajustes"><div class="cfghead"><h3>Ajustes</h3>'
+    + '<div class="cfgtabs" role="tablist"><span class="pill"></span><button type="button" role="tab" data-tab="page" aria-selected="' + !ia + '">Página</button><button type="button" role="tab" data-tab="ia" aria-selected="' + ia + '">IAs y memoria</button></div></div>'
+    + '<div class="cfgbody">'
+    + '<section class="cfgpane" data-pane="page"' + (ia ? ' hidden' : '') + '>'
+    + '<div class="cfglbl">Cómo se ve</div><div id="cfgCh"></div>'
+    + '<div class="cfglbl">Detalles</div><div id="cfgRows">' + CFG_PAGE.map(row).join('') + '</div>'
+    + '<div class="cfglbl">Intro de la página</div><div class="cfgseg" id="cfgIn">' + IN.map(([v, l]) => '<button type="button" data-in="' + v + '" aria-pressed="' + (draft.intro === v) + '">' + l + '</button>').join('') + '</div><p class="cnote">La animación al entrar al chat siempre se ve.</p>'
+    + '</section>'
+    + '<section class="cfgpane" data-pane="ia"' + (ia ? '' : ' hidden') + '>'
+    + '<div class="cfglbl">Cómo te responden</div>' + CFG_IA.map(row).join('')
+    + '<div class="cfglbl" id="cfgMemL">Lo que recuerdo de ti</div><div id="szMem" class="cfgmem"></div>'
+    + (cfgLinks.length ? '<div class="cfglbl">Tus IAs</div><div class="cfglinks">' + cfgLinks.map(([l, , d], i) => '<button type="button" class="cfglk" data-lk="' + i + '"><b>' + esc(l) + '</b><small>' + esc(d || '') + '</small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>').join('') + '</div>' : '')
+    + '</section></div>'
+    + '<div class="tbtn cfgfoot"><button class="lnk" type="button" data-close>Cerrar</button><button class="btn sm" type="button" id="cfgOk">Guardar</button></div></div>';
   document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('on'));
-  $('.tcard', o).animate([{ transform:'scale(.92) translateY(20px)', opacity:0, filter:'blur(8px)' }, { transform:'none', opacity:1, filter:'blur(0)' }], { duration:600, easing:'cubic-bezier(.22,1,.36,1)' });
-  const paintRows = () => $$('.cfgsw', o).forEach(b => { b.setAttribute('aria-pressed', String(!!draft[b.dataset.k])); b.setAttribute('aria-checked', String(!!draft[b.dataset.k])); });
+  $('.tcard', o).animate([{ transform:'scale(.94) translateY(16px)', opacity:0, filter:'blur(8px)' }, { transform:'none', opacity:1, filter:'blur(0)' }], { duration:560, easing:'cubic-bezier(.22,1,.36,1)' });
+  const paintRows = () => $$('.cfgsw[data-k]', o).forEach(b => { b.setAttribute('aria-pressed', String(!!draft[b.dataset.k])); b.setAttribute('aria-checked', String(!!draft[b.dataset.k])); });
   cfgChooser($('#cfgCh', o), draft.perf, v => { draft.perf = v; Object.assign(draft, cfgPreset(v)); paintRows(); });
-  $$('.cfgsw', o).forEach(b => b.addEventListener('click', () => { draft[b.dataset.k] = !draft[b.dataset.k]; paintRows(); }));
+  memPanel($('#szMem', o));
+  $$('.cfgsw[data-k]', o).forEach(b => b.addEventListener('click', () => { draft[b.dataset.k] = !draft[b.dataset.k]; paintRows(); }));
   $$('[data-in]', o).forEach(b => b.addEventListener('click', () => { draft.intro = b.dataset.in; $$('[data-in]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
+  const tabs = $('.cfgtabs', o), pill = $('.pill', tabs);
+  const show = k => { $$('[role=tab]', tabs).forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === k))); $$('.cfgpane', o).forEach(p => { p.hidden = p.dataset.pane !== k; }); const b = $('[data-tab="' + k + '"]', tabs); if (b && pill){ pill.style.width = b.offsetWidth + 'px'; pill.style.transform = 'translateX(' + (b.offsetLeft - 4) + 'px)'; } $('.cfgbody', o).scrollTop = 0; };
+  tabs.addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) show(b.dataset.tab); });
+  requestAnimationFrame(() => show(ia ? 'ia' : 'page'));
+  if (tab === 'mem') setTimeout(() => { const l = $('#cfgMemL', o); if (l) l.scrollIntoView({ block:'start', behavior:reduce ? 'auto' : 'smooth' }); }, 350);
   const close = () => { o.classList.remove('on'); setTimeout(() => o.remove(), 450); };
+  $$('.cfglk', o).forEach(b => b.addEventListener('click', () => { const L = cfgLinks[+b.dataset.lk]; close(); if (L) setTimeout(L[1], 200); }));
   $('[data-close]', o).addEventListener('click', close);
   o.addEventListener('pointerdown', e => { if (e.target === o) close(); });
-  $('#cfgOk', o).addEventListener('click', () => applyCfg(draft, close));
+  $('#cfgOk', o).addEventListener('click', () => { state.sx = state.sx || {}; if (!!state.sx.saver !== !!draft.saver){ state.sx.saver = !!draft.saver; save(); try{ hooks.usage(); }catch(e){} try{ dispatchEvent(new Event('synthz-saver')); }catch(e){} } const d = Object.assign({}, draft); delete d.saver; applyCfg(d, close); });
 }
 function applyCfg(draft, close){
-  const reload = draft.anim !== CFG.anim || (draft.cursor && !document.getElementById('cd') && matchMedia('(pointer: fine)').matches) || (draft.bg && !!$('.aurora') && !$('.aurora .orbit'));
+  const reload = draft.anim !== CFG.anim || (draft.cursor !== CFG.cursor && matchMedia('(pointer: fine)').matches) || (draft.bg && !!$('.aurora') && !$('.aurora .orbit'));
   Object.assign(CFG, draft, { v:2 }); saveCfg(); cfgClasses();
   if (CFG.favAnim && window.__favStart) window.__favStart();
   if (close) close();
@@ -1529,7 +2009,7 @@ function applyCfg(draft, close){
 /* Esc cierra la ventana flotante que esté arriba */
 addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
-  const c = [...document.querySelectorAll('.szm [data-close], #blk #bClose, #acc #aClose, #sx #sxClose, #conn #cClose')].pop();
+  const c = [...document.querySelectorAll('.szm [data-close], .szm [data-d="x"], #blk #bClose, #acc #aClose, #sx #sxClose, #conn #cClose, #szChat [data-cx]')].filter(x => x.isConnected && !x.closest('.bye')).pop();
   if (c){ e.preventDefault(); c.click(); }
 });
 
@@ -1560,20 +2040,35 @@ if (document.getElementById('cm')){
 let ridN = 0;
 const newRid = () => DEV + ':' + Date.now().toString(36) + ':' + (++ridN);
 async function askStream(p, messages, opts = {}, onDelta){
-  const sig = opts.signal, t0 = performance.now(); let acc = '', ttft = 0, usage = null, fin = '', cut = '', via = '';
-  const push = d => { if (!d) return; if (!ttft) ttft = performance.now() - t0; acc += d; if (onDelta) onDelta(acc); };
+  const sig = opts.signal, t0 = performance.now(); let acc = '', ttft = 0, usage = null, fin = '', cut = '', via = '', provX = '', real = '';
+  /* lo que la IA «piensa» (campo reasoning o etiquetas <think>) se separa de la respuesta y se muestra aparte */
+  let raw = '', tagR = '', fieldR = '';
+  const emitR = () => { if (opts.onReason) try{ opts.onReason(fieldR + tagR); }catch(e){} };
+  const push = d => {
+    if (!d) return; raw += d; let vis = raw;
+    const lead = raw.replace(/^\s+/, ''), i = raw.indexOf('<think>');
+    if (i >= 0){ const j = raw.indexOf('</think>', i), r = raw.slice(i + 7, j < 0 ? undefined : j); if (r !== tagR){ tagR = r; emitR(); } vis = raw.slice(0, i) + (j < 0 ? '' : raw.slice(j + 8).replace(/^\s+/, '')); }
+    else if (lead.length < 7 && '<think>'.startsWith(lead)) vis = '';
+    if (vis === acc) return;
+    if (!ttft && vis) ttft = performance.now() - t0; acc = vis; if (onDelta) onDelta(acc);
+  };
+  const pushR = d => { if (!d || typeof d !== 'string') return; fieldR += d; emitR(); };
   const inChars = messages.reduce((n, m) => n + (typeof m.content === 'string' ? m.content.length : 200), 0);
   const done = aborted => {
     if (!acc && aborted) throw Object.assign(new Error('Detenido.'), { aborted:true });
     const text = acc.trim() || '(La IA devolvió una respuesta vacía.)';
     const prompt = usage && usage.prompt_tokens != null ? usage.prompt_tokens : Math.ceil(inChars / 4);
     const completion = usage && usage.completion_tokens != null ? usage.completion_tokens : est(text);
-    return { text, prompt, completion, ms:performance.now() - t0, ttft, model:opts.model, aborted:!!aborted, est:!usage, finish:fin, cut, rid:newRid(), via };
+    return { text, prompt, completion, ms:performance.now() - t0, ttft, model:opts.model, aborted:!!aborted, est:!usage, finish:fin, cut, rid:newRid(), via, prov:provX || undefined, real, reasoning:(fieldR + tagR).trim().slice(0, 8000) };
   };
   const model0 = String(opts.model || state.model[p.id] || '');
+  /* sin créditos de Puter: pasa sola a las IAs conectadas (el único aviso es «Usaste el saldo de este mes de Puter: sigo con las IAs conectadas») */
+  const flat = ms => ms.map(m => typeof m.content === 'string' ? m : { role:m.role, content:(m.content || []).map(x => x.type === 'text' ? x.text : '[imagen]').join('\n') });
+  const fallSz = () => { puterOutNote(); return askStream(SZ_P, flat(messages), Object.assign({}, opts, { model:'sz:auto', _noFall:true }), onDelta).then(r => Object.assign(r, { swapped:true })); };
   if (/^pu:/.test(model0)){
-    if (!window.puter) throw new Error('No pude cargar Puter. Revisa tu internet o desactiva el bloqueador de anuncios para esta página.');
-    if (!puter.auth.isSignedIn()) throw Object.assign(new Error('Conecta tu cuenta de Puter para usar este modelo.'), { needLogin:true });
+    if (!window.puter) throw new Error('No pude abrir Puter. Revisa tu internet o apaga el bloqueador de anuncios para esta página.');
+    if (!puter.auth.isSignedIn()) throw Object.assign(new Error('Conecta tu cuenta de Puter para usar esta IA.'), { needLogin:true });
+    if (!opts._noFall && SZQ.on !== false && await puterOut()) return fallSz();
     let resp;
     const stop = new Promise(res => { if (sig){ if (sig.aborted) res({ stop:true }); else sig.addEventListener('abort', () => res({ stop:true }), { once:true }); } });
     try{
@@ -1591,32 +2086,35 @@ async function askStream(p, messages, opts = {}, onDelta){
         if (part.finish_reason) fin = part.finish_reason;
         if (part.usage) usage = { prompt_tokens:part.usage.input_tokens ?? part.usage.prompt_tokens, completion_tokens:part.usage.output_tokens ?? part.usage.completion_tokens };
         if ((!part.type || part.type === 'text') && typeof part.text === 'string') push(part.text);
+        else if (part.type === 'reasoning') pushR(part.reasoning || part.text);
       }
     }catch(e){
       if (e && e.aborted) throw e;
       const m = errText(e), code = String((e && (e.code || (e.error && e.error.code))) || '') + ' ' + m;
-      if (/insufficient_funds|402/i.test(code)) throw Object.assign(new Error('Se acabaron tus créditos gratis de Puter. Se renuevan cada mes (también puedes comprar créditos en puter.com). Mientras tanto, usa un modelo de OpenRouter.'), { switchTo:'or', limit:true });
-      if (/too_many_requests|429/i.test(code)) throw Object.assign(new Error('Puter te pidió ir más despacio: máximo 30 mensajes cada 10 segundos y 3 a la vez. Espera unos segundos.'), { limit:true });
-      if (/auth|token|sign.?in|login|401|403/i.test(m)) throw Object.assign(new Error('Tu sesión de Puter expiró. Conéctala otra vez.'), { needLogin:true });
+      if (/insufficient_funds|insufficient funds|low balance|402/i.test(code)){ puterSetOut(); if (!acc && !opts._noFall && SZQ.on !== false) return fallSz(); if (acc) return done(false); throw Object.assign(new Error('Usaste el saldo de este mes de Puter. Se llena otra vez el próximo mes; mientras tanto sigue con las IAs conectadas, que son gratis.'), { switchTo:'sz', limit:true }); }
+      if (/too_many_requests|429/i.test(code)) throw Object.assign(new Error('Vas muy rápido para Puter. Espera unos segundos y vuelve a intentar.'), { limit:true });
+      if (/auth|token|sign.?in|login|401|403/i.test(m)) throw Object.assign(new Error('Se cerró tu cuenta de Puter. Entra otra vez.'), { needLogin:true });
       if (acc) return done(false);
-      throw Object.assign(new Error('Puter: ' + (m || 'no pudo responder con este modelo. Prueba con otro.')), { raw:m, gone:/model.{0,30}(not found|not available|does not exist|unknown|unsupported|invalid)|no (such|valid) model|model_not_found/i.test(m) });
+      throw Object.assign(new Error('Puter: ' + (m || 'no pudo responder con esta IA. Prueba con otra.')), { raw:m, gone:/model.{0,30}(not found|not available|does not exist|unknown|unsupported|invalid)|no (such|valid) model|model_not_found/i.test(m) });
     }
     return done(false);
   }
+  const viaSz = /^sz:/.test(model0); if (viaSz){ p = SZ_P; provX = 'synthz'; }
   const viaGroq = /^gq:/.test(model0); if (viaGroq) p = GROQ_P;
   if (p.kind !== 'openai'){ const r = await ask(p, messages, opts); push(r.text); return Object.assign(r, { ttft:r.ms, rid:newRid() }); }
   const viaTrial = /^tr:/.test(model0);
   const viaTeam = !viaTrial && !viaGroq && p.id === 'openrouter' && !state.keys.openrouter && !!state.useTeam && !!SESS;
   const key = state.keys[p.id];
-  if (!key && !viaTeam && !viaTrial) throw new Error('Falta la llave de ' + p.name + '.');
-  const body = viaGroq ? { model:model0.replace(/^gq:/, ''), messages, stream:true, stream_options:{ include_usage:true } } : { model:model0.replace(/^or:/, ''), messages, stream:true, usage:{ include:true } };
+  if (!key && !viaTeam && !viaTrial && !viaSz) throw new Error('Falta la llave de ' + p.name + '.');
+  const body = viaSz ? { messages:flat(messages), model:model0, turn:opts.turn || (TURN && Date.now() - TURN.at < 120000 ? TURN.id : turnId(messages)) } : viaGroq ? { model:model0.replace(/^gq:/, ''), messages, stream:true, stream_options:{ include_usage:true } } : { model:model0.replace(/^or:/, ''), messages, stream:true, usage:{ include:true } };
   if (viaTeam) body.teamId = state.useTeam;
   if (opts.maxTokens) body.max_tokens = opts.maxTokens;
   const ctl = new AbortController(); let idle = 0;
   const bump = () => { clearTimeout(idle); idle = setTimeout(() => ctl.abort(), 70000); };
   if (sig){ if (sig.aborted) ctl.abort(); else sig.addEventListener('abort', () => ctl.abort(), { once:true }); }
   let res; bump();
-  try{ res = viaTrial ? await fetch('/api/trial', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify({ action:'chat', token:(trialGet() || {}).token || '', messages }), signal:ctl.signal })
+  try{ res = viaSz ? await fetch('/api/ai', { method:'POST', headers:szHeaders(), body:JSON.stringify(body), signal:ctl.signal })
+     : viaTrial ? await fetch('/api/trial', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify({ action:'chat', token:(trialGet() || {}).token || '', messages }), signal:ctl.signal })
      : viaTeam ? await fetch('/api/chat', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer ' + SESS }, body:JSON.stringify(body), signal:ctl.signal })
                      : await fetch(p.url + '/chat/completions', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer ' + key }, body:JSON.stringify(body), signal:ctl.signal }); }
   catch(e){ clearTimeout(idle); if (sig && sig.aborted) throw Object.assign(new Error('Detenido.'), { aborted:true }); throw new Error(e && e.name === 'AbortError' ? p.name + ' tardó demasiado en responder. Intenta de nuevo.' : netMsg(p)); }
@@ -1625,6 +2123,15 @@ async function askStream(p, messages, opts = {}, onDelta){
     if (data.code === 'trial_done' || data.code === 'trial_bad'){ const t = trialGet() || {}; t.left = 0; if (data.code === 'trial_bad') t.token = ''; trialSet(t); }
     throw Object.assign(new Error(typeof data.error === 'string' ? data.error : 'La prueba no respondió. Intenta de nuevo.'), { status:res.status, trial:data.code || 'trial_err', limit:data.code === 'trial_done' });
   }
+  if (!res.ok && viaSz){
+    clearTimeout(idle); const data = await res.json().catch(() => ({})), code = data.code || '';
+    if (code === 'sz_guest'){ szqSet({ guest:{ max:(SZQ.guest && SZQ.guest.max) || 5, used:(SZQ.guest && SZQ.guest.max) || 5 } }); telEv('limit', code); setTimeout(() => guestGate(), 350); }
+    else if (/^sz_limit/.test(code)){ szqSet({ used:SZQ.limit }); telEv('limit', code); }
+    else if (code === 'sz_off'){ szqSet({ on:false }); telEv('noai', 'las IAs conectadas no tienen llaves'); }
+    else telEv('error', 'IAs conectadas ' + res.status + ' ' + code);
+    throw Object.assign(new Error(typeof data.error === 'string' ? data.error : 'La IA no respondió. Intenta de nuevo en un momento.'), { status:res.status, sz:code || 'sz_err', limit:/^sz_limit/.test(code) || code === 'sz_guest', guest:code === 'sz_guest', raw:code, gone:code === 'sz_model' && model0 !== 'sz:auto', switchTo:code === 'sz_down' || code === 'sz_off' ? 'pu' : null });
+  }
+  if (viaSz){ try{ real = decodeURIComponent(res.headers.get('x-sz-name') || ''); }catch(e){ real = ''; } const u = +res.headers.get('x-sz-used'), l = +res.headers.get('x-sz-limit'), gq = /^(\d+)\/(\d+)$/.exec(res.headers.get('x-sz-guest') || ''); if (l) szqSet(Object.assign({ on:true, used:u || 0, limit:l }, gq ? { guest:{ used:+gq[1], max:+gq[2] } } : {})); }
   if (viaTrial){ const t = trialGet() || {}; const l = res.headers.get('x-trial-left'); if (l != null){ t.left = +l; trialSet(t); } via = res.headers.get('x-trial-provider') || ''; }
   if (!res.ok){ clearTimeout(idle); const data = await res.json().catch(() => ({})); if (viaTeam && typeof data.error === 'string') throw Object.assign(new Error('Equipo: ' + data.error), { status:res.status, switchTo:res.status === 429 ? 'pu' : null }); const raw = data && data.error ? String(data.error.message || data.error) : ''; throw Object.assign(new Error(friendly(res.status, data, p)), { status:res.status, raw, gone:modelGone(res.status, raw), switchTo: p.id === 'openrouter' && (res.status === 429 || res.status === 402) ? 'pu' : null }); }
   if (!/event-stream/.test(res.headers.get('content-type') || '') || !res.body){
@@ -1643,9 +2150,10 @@ async function askStream(p, messages, opts = {}, onDelta){
         if (!line.startsWith('data:')) continue;
         const d = line.slice(5).trim(); if (d === '[DONE]') continue;
         let j; try{ j = JSON.parse(d); }catch(e){ continue; }
+        if (j.sz){ szqSet({ used:+j.sz.used || SZQ.used, limit:+j.sz.limit || SZQ.limit }); if (!usage && j.sz.spent) usage = { prompt_tokens:Math.ceil(inChars / 4), completion_tokens:Math.max(0, j.sz.spent - Math.ceil(inChars / 4)) }; continue; }
         if (j.error){ if (acc){ cut = String(j.error.message || 'error'); return done(false); } const raw = String(j.error.message || ''); throw Object.assign(new Error(friendly(+j.error.code || 502, j, p)), { status:+j.error.code || 502, raw, gone:modelGone(+j.error.code || 502, raw) }); }
         if (j.usage) usage = j.usage; else if (j.x_groq && j.x_groq.usage) usage = j.x_groq.usage;
-        const ch = (j.choices || [])[0]; if (ch && ch.delta && typeof ch.delta.content === 'string') push(ch.delta.content);
+        const ch = (j.choices || [])[0]; if (ch && ch.delta){ pushR(ch.delta.reasoning); pushR(ch.delta.reasoning_content); if (typeof ch.delta.content === 'string') push(ch.delta.content); }
         if (ch && ch.finish_reason) fin = ch.finish_reason;
       }
     }
@@ -1698,7 +2206,7 @@ function idbFlush(){
     const tx = IDB.db.transaction('chats', 'readwrite'), os = tx.objectStore('chats');
     Object.keys(state.chats).forEach(k => { const a = state.chats[k]; if (!Array.isArray(a)) return; const L = a[a.length - 1], h = a.length + ':' + (L ? (L.content || '').length + ':' + hashS(String(L.content || '').slice(-200)) + ':' + (L.meta || '') : ''); if (idbHash[k] !== h){ if (a.length) os.put(a, k); else os.delete(k); idbHash[k] = h; } });
     Object.keys(idbHash).forEach(k => { if (!(k in state.chats)){ os.delete(k); delete idbHash[k]; } });
-    tx.onerror = () => toast('No pude guardar tus chats: el almacenamiento del navegador está lleno. Exporta o borra conversaciones viejas.');
+    tx.onerror = () => toast('No pude guardar tus chats: se llenó el espacio en este equipo. Borra chats viejos o descarga una copia.');
   }catch(e){}
 }
 const chatsReady = idbOpen().then(async ok => {
@@ -1713,7 +2221,7 @@ const chatsReady = idbOpen().then(async ok => {
   return true;
 });
 /* ---------- consumo por proveedor ---------- */
-const provOf = id => /^pu:/.test(String(id)) ? 'puter' : /^tr:/.test(String(id)) ? 'trial' : /^gq:/.test(String(id)) ? 'groq' : 'openrouter';
+const provOf = id => /^sz:/.test(String(id)) ? 'synthz' : /^pu:/.test(String(id)) ? 'puter' : /^tr:/.test(String(id)) ? 'trial' : /^gq:/.test(String(id)) ? 'groq' : 'openrouter';
 /* ---------- prueba guiada que paga SynthZ: 5 mensajes, solo para aprender en la guía ---------- */
 const TRIAL_KEY = 'synthz:trial';
 function trialGet(){ try{ return JSON.parse(localStorage.getItem(TRIAL_KEY) || 'null'); }catch(e){ return null; } }
@@ -1751,29 +2259,23 @@ function balanceHtml(b, extra){
   const row = (ico, name, main, sub) => '<div class="bl-row">' + ico + '<div><b>' + name + '</b><span>' + main + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</div></div>';
   let h = '';
   const pu = b.puter;
-  h += row(puterLogo(), 'Puter', pu && pu.pct != null ? 'Te queda <em>' + Math.round(pu.pct * 100) + '%</em> de tu crédito gratis de este mes' : pu && pu.err ? 'Puter no respondió con tu saldo. Intenta más tarde.' : window.puter && puter.auth && puter.auth.isSignedIn && puter.auth.isSignedIn() ? 'Puter no informó tu saldo.' : 'Conecta Puter para ver tu saldo.', 'Dato de Puter · se renueva cada mes');
+  h += row(puterLogo(), 'Puter (opcional)', pu && pu.pct != null ? 'Te queda <em>' + Math.round(pu.pct * 100) + '%</em> de tu crédito gratis de este mes' : pu && pu.err ? 'Puter no respondió con tu saldo. Intenta más tarde.' : window.puter && puter.auth && puter.auth.isSignedIn && puter.auth.isSignedIn() ? 'Puter todavía no nos dice cuánto saldo te queda.' : 'Puter es opcional. Conecta tu versión pro de las IAs más usadas.', 'Saldo de Puter · se llena otra vez cada mes');
   const or = b.openrouter, fr = todayReq('openrouter', true);
   const orMain = or && !or.err
     ? 'Modelos gratis: <em>' + fmt(fr) + '</em> de ' + (or.freeTier ? '50' : '50 (o 1.000 si compraste 10 créditos o más)') + ' mensajes hoy'
     : or && or.err === 401 ? 'OpenRouter dice que tu llave no es válida.' : or && or.err ? 'OpenRouter no respondió con tu saldo.' : state.useTeam ? 'Usas el OpenRouter de tu equipo (mira el límite abajo).' : 'Pega tu llave de OpenRouter para ver tus límites.';
   const orSub = or && !or.err ? (or.limit != null && or.left != null ? 'Crédito de tu llave: quedan $' + or.left.toFixed(2) + ' de $' + or.limit.toFixed(2) + ' · ' : 'Tu llave no tiene tope de crédito · ') + 'los mensajes de hoy los cuenta SynthZ en tus dispositivos' : '';
-  h += row('<span class="bl-ico or">OR</span>', 'OpenRouter', orMain, orSub);
+  void orMain; void orSub;
   if (extra) h += extra;
   return '<div class="bl">' + h + '</div>';
 }
 /* desglose: confirmado (lo reportó el proveedor) vs estimado (≈, SynthZ lo calculó por el largo del texto) */
-function splitHtml(){
-  const tot = totalAll(), e = estAll(), d = today(), tdy = todayAll(), te = todayEst();
-  return '<div class="sxsplit">'
-    + '<div><b>' + fmt(tot - e) + '</b><span>confirmados</span><small>los reportó el proveedor</small></div>'
-    + '<div><b>≈ ' + fmt(e) + '</b><span>estimados</span><small>el proveedor no dio el número</small></div>'
-    + '<div><b>' + fmt(tdy) + '</b><span>hoy</span><small>' + (te ? '≈ ' + fmt(te) + ' estimados' : 'todos confirmados') + '</small></div></div>';
-}
+function splitHtml(){ return limBar({ puter:true }); }
 function syncNote(){
-  if (!ACC.ready) return '<p class="cnote">Se guardan en este navegador. Entra a tu cuenta para sumarlos entre tus dispositivos.</p>';
+  if (!ACC.ready) return signedish() ? '<p class="cnote">Abriendo tu cuenta…</p>' : '<p class="cnote">Tus chats se guardan en este equipo. Entra a tu cuenta para verlos también en tu celular o en otro computador.</p>';
   if (ACC.full) return '<p class="sxerr">⚠ ' + esc(ACC.err) + '</p>';
-  if (ACC.err) return '<p class="sxerr">⚠ No pude sincronizar tus SynXCoin\'s (' + esc(ACC.err) + '). Siguen guardados aquí y se suben solos cuando vuelva la conexión.</p>';
-  return '<p class="cnote">Sumados entre todos tus dispositivos' + (ACC.t ? ' · sincronizado hace ' + Math.max(1, Math.round((Date.now() - ACC.t) / 1000)) + ' s' : '') + '.</p>';
+  if (ACC.err) return '<p class="sxerr">⚠ No pude guardar en tu cuenta (' + esc(ACC.err) + '). Todo sigue aquí y se sube solo cuando vuelva la conexión.</p>';
+  return '<p class="cnote">Guardado en tu cuenta' + (ACC.t ? ' · guardado hace ' + Math.max(1, Math.round((Date.now() - ACC.t) / 1000)) + ' s' : '') + '.</p>';
 }
 
 /* secciones que se abren y cierran suave (alto + desenfoque), SynthZ Style */
@@ -1800,13 +2302,16 @@ function helpGuide(opts){
   const old = $('#szHelp'); if (old){ old.classList.remove('on'); setTimeout(() => old.remove(), 380); return; }
   const back = document.activeElement;
   const S = [
-    ['¿Qué es SynthZ?', 'Tu espacio para explorar la IA: hablas con cientos de modelos gratis (de Puter y OpenRouter), los comparas y ves cuánto gastas. Todo desde un solo lugar.'],
-    ['Cómo usar SynthFlow', 'SynthFlow es la conversación. Escribe abajo y pulsa Enter (Mayús + Enter para otra línea). Si no sabes qué pedir, toca un tema: te recomiendo IA expertas y ejemplos que se escriben en la caja sin enviarse. Tus chats y tus mensajes favoritos están en la barrita de la izquierda (en el celular, abajo).'],
-    ['Varias IA a la vez', 'Hay más de mil IA y cada una es buena en algo. Arriba eliges con cuál hablas; con «+» sumas otra (hasta 4; de OpenRouter, máximo 2) y todas responden la misma pregunta. Aparecen en el orden en que llegan y con «Esta tiene más Flow» sigues solo con la que más te gustó.'],
-    ['Quién paga', 'Siempre lo ves junto a la caja de escribir: con tu llave de OpenRouter (gratis con límites), con tu cuenta de Puter (créditos gratis cada mes) o con la prueba guiada de SynthZ (5 mensajes, solo para aprender). SynthZ nunca te cobra nada.'],
-    ['Archivos', 'Con el clip eliges «Archivo o PDF» o «Imagen» (hasta 6 por mensaje). Los PDF y textos se leen como texto; las imágenes solo las ven las IA con «Visión». También puedes arrastrarlos o pegarlos.'],
-    ['SynXCoin\'s', '1 SynXCoin = 1 token, lo que la IA lee y escribe. Los «confirmados» los reporta el proveedor; los «≈ estimados» los calcula SynthZ cuando el proveedor no da el número. No son dinero: tu saldo real lo da cada proveedor y lo ves en el panel de SynXCoin\'s.'],
-    ['Configuración', 'El botón de ajustes cambia entre «Priorizar visuales» y «Priorizar rendimiento», y enciende o apaga cada detalle: cursor, fondo, vidrio, animaciones, sonidos e intro.']
+    ['¿Qué es SynthZ?', 'Un lugar para hablar con muchas IA, gratis. Escribes lo que necesitas y una IA te responde. No tienes que configurar nada.'],
+    ['¿Cómo lo uso?', 'Entra a SynthFlow, escribe tu pregunta abajo y pulsa Enter. Si no sabes qué pedir, toca un ejemplo. Tus chats quedan en la barrita de la izquierda (en el celular, abajo).'],
+    ['¿Qué son las IAs conectadas?', 'Las IAs conectadas son IAs gratis que ya vienen listas en SynthZ. No tienes que configurar nada ni dar tarjeta: solo escribes. Sin cuenta pruebas con 5 mensajes al día; con tu cuenta gratis, mucho más.'],
+    ['¿Qué es el límite de hoy?', 'Cada día tienes un límite gratis para usar las IAs conectadas. A medianoche se vuelve a llenar. El anillo se va vaciando mientras chateas.'],
+    ['¿Qué es Puter? Es opcional', 'Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.'],
+    ['Varias IA a la vez', 'Con «+» sumas otra IA (hasta 4). Todas responden lo mismo y tú eliges la que más te gusta con «Esta tiene más Flow».'],
+    ['Archivos', 'Con el «+» agregas un archivo, un PDF o una foto (hasta 6 por mensaje). Todas las IA leen textos y PDF; las fotos solo las entienden las IA que «ven fotos». También puedes arrastrarlos o pegarlos.'],
+    ['Modo principiante', 'En Ajustes puedes activar el modo principiante: las IA te responden con palabras sencillas, paso a paso y con ejemplos.'],
+    ['Modo agente', 'En la barra de la izquierda, «Modo agente»: una IA entiende lo que escribiste, lo mejora y se lo pasa a la IA que más sabe de ese tema. Luego decides si te quedas con esa IA. Esos chats se guardan aparte.'],
+    ['Configuración', 'En Ajustes eliges si lo quieres «Más bonito» o «Más rápido», y enciendes o apagas cada detalle: cursor, fondo, vidrio, animaciones, sonidos e intro.']
   ];
   const o = document.createElement('aside'); o.id = 'szHelp'; o.setAttribute('aria-label', 'Guía rápida de SynthZ');
   o.innerHTML = '<div class="hh"><b>Guía rápida</b><button type="button" class="hx" data-hclose aria-label="Cerrar la guía">✕</button></div>'
@@ -1852,10 +2357,46 @@ function szPrompt(title, text, ok, o){
 }
 
 /* ---------- confirmación con vidrio (en vez del confirm() del navegador) ---------- */
-function szConfirm(title, text, ok, danger){
+/* un «mensaje» = lo que escribes una vez (comparar 3 IA o que el agente piense antes sigue siendo 1) */
+let TURN = null;
+const setTurn = text => { TURN = { id:turnId([{ role:'user', content:String(text || '') }]), at:Date.now() }; };
+function turnId(messages){
+  const u = [...(messages || [])].reverse().find(m => m && m.role === 'user'); let t = u ? (typeof u.content === 'string' ? u.content : JSON.stringify(u.content)) : '';
+  let h = 5381; for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0;
+  return 't' + (h >>> 0).toString(36) + '-' + Math.floor(Date.now() / 600000).toString(36);
+}
+/* sin cuenta, después de los mensajes de prueba: «Para seguir FlowIAndo, entra o crea tu cuenta» */
+let gateOpen = false;
+function guestGate(o = {}){
+  if (gateOpen || signedish() || document.querySelector('#authm,#acc,#szGate')) return;
+  gateOpen = true;
+  const g = SZQ.guest || { max:5 }, pu = !!(window.puter && puter.auth && puter.auth.isSignedIn && (() => { try{ return puter.auth.isSignedIn(); }catch(e){ return false; } })());
+  const el = document.createElement('div'); el.id = 'szGate'; el.className = 'szm';
+  el.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="Entra para seguir"><div class="word">' + zWord('Synth') + '</div><div class="tn">SIGUE FLOWIANDO</div>'
+    + '<div class="tb"><div class="gtface" aria-hidden="true">' + face('guino', 64) + '</div><h3>Para seguir FlowIAndo, entra a tu cuenta</h3>'
+    + '<p>Ya usaste tus ' + (g.max || 5) + ' mensajes de prueba de hoy sin cuenta. Crear tu cuenta es <b>gratis</b>, no pide correo ni tarjeta, y te da mucho más límite cada día. Además tus chats te siguen a cualquier celular o computador.</p>'
+    + '<div id="gateBox"></div></div><div class="tbtn" style="margin-top:14px"><button class="lnk" type="button" data-close>Ahora no</button>' + (pu ? '<button class="lnk" type="button" data-pu>Seguir con mi Puter</button>' : '') + '</div></div>';
+  document.body.appendChild(el); requestAnimationFrame(() => el.classList.add('on'));
+  $('.tcard', el).animate([{ transform:'scale(.92) translateY(20px)', opacity:0, filter:'blur(8px)' }, { transform:'none', opacity:1, filter:'blur(0)' }], { duration:650, easing:'cubic-bezier(.22,1,.36,1)' });
+  const out = () => { gateOpen = false; el.classList.remove('on'); setTimeout(() => el.remove(), 450); };
+  $('[data-close]', el).addEventListener('click', () => { out(); if (o.onClose) o.onClose(); });
+  const pb = $('[data-pu]', el); if (pb) pb.addEventListener('click', () => { out(); try{ dispatchEvent(new CustomEvent('synthz-useputer')); }catch(e){} });
+  el.addEventListener('pointerdown', e => { if (e.target === el){ out(); if (o.onClose) o.onClose(); } });
+  authBox($('#gateBox', el), () => { out(); szqSet({ guest:null }); szCatalog().catch(() => {}); toast('¡Listo! Ya puedes seguir FlowIAndo.'); if (o.done) o.done(); }, () => {}, o.mode || 'signup');
+}
+/* apenas tu cuenta está lista: se cierra todo lo que te pedía entrar */
+function accSettled(){
+  if (!(ACC && ACC.ready)) return;
+  szqSet({ guest:null }); szCatalog().catch(() => {});
+  document.querySelectorAll('#szGate').forEach(g => { gateOpen = false; g.classList.remove('on'); setTimeout(() => g.remove(), 450); });
+  ACC.joining = false; root.classList.add('signed'); root.classList.remove('joining');
+}
+accHooks.push(k => { if (k === 'out') root.classList.remove('signed'); });
+addEventListener('synthz-acc', accSettled); accHooks.push(k => { if (k === 'pull') accSettled(); });
+function szConfirm(title, text, ok, danger, no){
   return new Promise(res => {
     const o = document.createElement('div'); o.className = 'szm szc';
-    o.innerHTML = '<div class="tcard" role="alertdialog" aria-modal="true" aria-label="' + esc(title) + '"><div class="word">' + zWord('Synth') + '</div><div class="tb"><h3>' + esc(title) + '</h3><p>' + esc(text) + '</p></div><div class="tbtn" style="margin-top:16px"><button class="lnk" type="button" data-close>Cancelar</button><button class="btn sm' + (danger ? ' warn' : '') + '" type="button" data-ok>' + esc(ok || 'Aceptar') + '</button></div></div>';
+    o.innerHTML = '<div class="tcard" role="alertdialog" aria-modal="true" aria-label="' + esc(title) + '"><div class="word">' + zWord('Synth') + '</div><div class="tb"><h3>' + esc(title) + '</h3><p>' + esc(text) + '</p></div><div class="tbtn" style="margin-top:16px"><button class="lnk" type="button" data-close>' + esc(no || 'Cancelar') + '</button><button class="btn sm' + (danger ? ' warn' : '') + '" type="button" data-ok>' + esc(ok || 'Aceptar') + '</button></div></div>';
     document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('on'));
     const back = document.activeElement; let gone = false;
     const out = v => { if (gone) return; gone = true; removeEventListener('keydown', key, true); o.classList.remove('on'); setTimeout(() => o.remove(), 400); try{ if (back && back.focus) back.focus(); }catch(e){} res(v); };
@@ -1871,7 +2412,7 @@ function szConfirm(title, text, ok, danger){
 /* ---------- en qué es experta cada IA (con lo que dice el catálogo y su nombre) ---------- */
 const EXP = [
   ['code', 'código', /coder|code|codestral|devstral|starcoder|qwen.?3.*coder|deepseek.?(v3|v4|coder)|claude|gpt-?5|kimi|glm|grok.*code/i],
-  ['reason', 'razonar paso a paso', /r1\b|reason|think|qwq|\bo[134]\b|o[34]-|gpt-oss|apodex|magistral|sonar-reasoning|deepseek-r/i],
+  ['reason', 'pensar con calma antes de responder', /r1\b|reason|think|qwq|\bo[134]\b|o[34]-|gpt-oss|apodex|magistral|sonar-reasoning|deepseek-r/i],
   ['write', 'escribir y redactar', /claude|mistral|hermes|llama|gpt-?[45]|gemini.*pro|kimi|nova|command|gemma|writer|palmyra/i],
   ['fast', 'respuestas rápidas', /mini|nano|flash|lite|small|haiku|\b[1-9]b\b|instant|fast|mercury|tiny/i],
   ['vision', 'ver imágenes y PDF', null],
@@ -1897,7 +2438,7 @@ const SURVEY = [
   { k:'uses', get q(){ return '¿Para qué vas a usar ' + BRAND() + '?'; }, sub:'Elige todas las que quieras.', multi:true, o:[['code', '💻', 'Programar'], ['write', '✍️', 'Escribir y redactar'], ['study', '📚', 'Estudiar y tareas'], ['ideas', '💡', 'Ideas y trabajo'], ['vision', '🖼️', 'Imágenes y PDF'], ['chat', '💬', 'Charlar']] },
   { k:'pace', q:'¿Qué prefieres?', o:[['fast', '⚡', 'Respuestas al instante'], ['mid', '⚖️', 'Equilibrio'], ['deep', '🧠', 'Que piense bien antes']] },
   { k:'lang', q:'¿En qué idioma vas a hablar más?', o:[['es', '🇨🇴', 'Español'], ['en', '🇺🇸', 'Inglés'], ['both', '🌎', 'Los dos']] },
-  { k:'key', q:'¿Tienes llave de OpenRouter?', sub:'Si no sabes qué es, elige «No»: empiezas con Puter y te explico después.', o:[['yes', '🔑', 'Sí, ya tengo'], ['no', '🙅', 'No'], ['team', '👥', 'Mi equipo me comparte']] }
+  { k:'key', q:'¿Tienes cuenta de Puter?', sub:'Conecta tu versión pro de las IAs más usadas. Es opcional.', o:[['pu', '✨', 'Sí, o quiero conectarla'], ['no', '🙅', 'No, por ahora no'], ['idk', '🤔', 'No sé qué es']] }
 ];
 function surveyScore(m, s){
   if (!s || !s.a) return 0;
@@ -1907,7 +2448,9 @@ function surveyScore(m, s){
   if (a.pace === 'fast' && has('fast')) sc += 22; if (a.pace === 'fast' && has('reason')) sc -= 6;
   if (a.pace === 'deep' && has('reason')) sc += 22; if (a.pace === 'deep' && has('fast')) sc -= 8;
   if ((a.lang === 'es' || a.lang === 'both') && has('lang')) sc += 8;
-  if (a.key === 'no' && !/^pu:/.test(m.id)) sc -= 60;
+  if (a.key === 'no' && /^pu:/.test(m.id)) sc -= 20;
+  if (a.key === 'pu' && /^pu:/.test(m.id)) sc += 8;
+  if (/^sz:/.test(m.id)) sc += 6;
   if (/apodex|gpt-5\.6-luna/i.test(m.id)) sc += 6;
   return sc;
 }
@@ -2061,6 +2604,9 @@ const FACE = (() => {
     preocupada:{ e:open(0, 2), b:'M33 45l11-5M67 45l-11-5', m:'M42 70q4-4 8-1t8-1', drop:1 }
   };
 })();
+/* v1.4: caras nuevas: triste (si todo salió mal) y «¡ay!» (si le tocas el ojo) */
+FACE.triste = { e:['M40 53v4', 'M60 53v4'], ew:6, b:'M32 47l11-5M68 47l-11-5', m:'M41 72q9-8 18 0' };
+FACE.auch = { e:['M34 49l10 4-10 4', 'M55 53q5-4 10 0'], ew:3.4, b:'M32 43l12 5M57 45l10-3', m:'M41 70q4.5-4 9 0q4.5 4 9 0', x:'M78 30l4-6M84 36l6-2' };
 const FACE_GOOD = ['feliz', 'riendo', 'guino', 'encantada', 'celebrando', 'flow'];
 function face(mood, size, cls){
   const f = FACE[mood] || FACE.feliz, z = size || 40, G = FACE_G;
@@ -2075,11 +2621,78 @@ function face(mood, size, cls){
     + (f.ck ? '<circle cx="31" cy="64" r="4.5" fill="#c9566c" fill-opacity=".55"/><circle cx="69" cy="64" r="4.5" fill="#c9566c" fill-opacity=".55"/>' : '')
     + P(f.b, 'stroke="' + G + '" stroke-width="2.6" stroke-linecap="round" fill="none"')
     + '<g class="fe">' + eyes + '</g>'
-    + P(f.m, 'stroke="' + G + '" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" fill="' + (f.mf ? G : 'none') + '"')
+    + P(f.m, 'class="fm" stroke="' + G + '" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" fill="' + (f.mf ? G : 'none') + '"')
     + P(f.x, 'stroke="#e6b65f" stroke-width="' + (f.xw || 2.4) + '" stroke-linecap="round" stroke-linejoin="round" fill="none"')
     + (f.drop ? '<path class="fdrop" d="M83 28q-6 9-1 12.5q6 2.5 7-3.5q0-3-6-9z" fill="#8fd3e8" fill-opacity=".9"/>' : '')
     + '</svg>';
 }
+/* v1.9 · SynthonIA mueve la boca con cada letra que dice: a (abierta), e/i (ancha), o/u (redonda), m/b/p (cerrada) */
+const VIS = { a:['M42 61.5q8-2 16 0q-1 9-8 9q-7 0-8-9z', 1], e:['M40.5 62.5q9.5-1.5 19 0q-2 5.5-9.5 5.5q-7.5 0-9.5-5.5z', 1], o:['M45.5 60.5q4.5-2 9 0q2.5 4.5 0 9q-4.5 2-9 0q-2.5-4.5 0-9z', 1], m:['M43 65h14', 0], c:['M42.5 63q7.5 4.5 15 0', 0] };
+function visOf(ch){ const c = String(ch || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); return c === 'a' ? 'a' : (c === 'e' || c === 'i' || c === 'y') ? 'e' : (c === 'o' || c === 'u') ? 'o' : 'mbpfv'.includes(c) && c ? 'm' : /[a-zñ0-9]/.test(c) ? 'c' : 'm'; }
+function mouthSet(svgs, v){
+  svgs.forEach(s => { const m = s && s.querySelector && s.querySelector('.fm'); if (!m) return;
+    if (m._d0 == null){ m._d0 = m.getAttribute('d'); m._f0 = m.getAttribute('fill'); }
+    if (v === null){ m.setAttribute('d', m._d0); m.setAttribute('fill', m._f0); return; }
+    m.setAttribute('d', VIS[v][0]); m.setAttribute('fill', VIS[v][1] ? FACE_G : 'none'); });
+}
+/* v2.2 · habla de verdad: la frase se parte en sílabas y la boca las «dice» a ritmo de voz (≈7 por segundo),
+   con la forma de cada vocal (a abierta, e/i ancha, o/u redonda), labios cerrados en m/b/p y paso suave entre una y otra.
+   Devuelve el «onFrame» para typeIn: arranca al primer cuadro y termina poco después de que se escribe todo. */
+const MOUTH = { a:[7.2, 6.4], e:[9, 3.6], i:[8.4, 2.8], o:[4.8, 5.6], u:[3.8, 4.4], m:[7, .5], f:[6.4, 1.6], c:[6, 2.4], r:[5.4, 0] };
+function syllables(text){
+  const t = String(text || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zñ\s]/g, ' ');
+  const out = [];
+  for (const w of t.split(/\s+/).filter(Boolean)){
+    const parts = w.match(/[^aeiou]*[aeiou]+/g) || [w];
+    for (const s of parts){
+      const v = (s.match(/[aeiou]/) || ['a'])[0], c = s.replace(/[aeiou]+$/, '').slice(-1);
+      if (c && 'mbp'.includes(c)) out.push('m'); else if (c && 'fv'.includes(c)) out.push('f');
+      out.push(v);
+    }
+    out.push('r');                                   /* respiro entre palabras */
+  }
+  return out;
+}
+function talkEls(svg){
+  if (svg._talk) return svg._talk;
+  const NS = 'http://www.w3.org/2000/svg', g = document.createElementNS(NS, 'g'); g.setAttribute('class', 'ftalk');
+  const mo = document.createElementNS(NS, 'ellipse'), tg = document.createElementNS(NS, 'ellipse');
+  mo.setAttribute('cx', '50'); mo.setAttribute('cy', '65'); mo.setAttribute('fill', '#2a0d18'); mo.setAttribute('stroke', FACE_G); mo.setAttribute('stroke-width', '3');
+  tg.setAttribute('cx', '50'); tg.setAttribute('fill', '#e07a93');
+  g.appendChild(mo); g.appendChild(tg); svg.appendChild(g);
+  return (svg._talk = { g, mo, tg });
+}
+function lipSync(svgs, text){
+  svgs = (svgs || []).filter(Boolean); if (!svgs.length || reduce) return undefined;
+  const seq = syllables(text); if (!seq.length) return undefined;
+  let raf = 0, t0 = 0, doneAt = 0, rx = 6, ry = 0, i = 0;
+  const fm = svg => svg.querySelector('.fm');
+  const L = svgs.map(el => ({ el, ball:!!(el.closest && el.closest('#szBot')) }));
+  const live = () => L.map(o => { if (!o.el.isConnected && o.ball) o.el = ballFace() || o.el; return o.el; }).filter(e => e.isConnected);
+  const paint = () => live().forEach(svg => { const T = talkEls(svg), m = fm(svg);
+    if (m) m.style.opacity = '0';
+    T.mo.setAttribute('rx', rx.toFixed(2)); T.mo.setAttribute('ry', Math.max(.4, ry).toFixed(2));
+    T.tg.setAttribute('rx', (rx * .55).toFixed(2)); T.tg.setAttribute('ry', Math.max(0, ry * .32).toFixed(2)); T.tg.setAttribute('cy', (65 + ry * .55).toFixed(2));
+    T.g.style.opacity = '1'; });
+  const stop = () => { cancelAnimationFrame(raf); raf = 0; L.map(o => o.el).forEach(svg => { const T = svg._talk, m = fm(svg); if (T) T.g.style.opacity = '0'; if (m) m.style.opacity = ''; }); };
+  const SYL = 140;                                    /* ms por sílaba: ritmo de voz */
+  function loop(now){
+    if (!t0) t0 = now;
+    i = Math.floor((now - t0) / SYL);
+    const ending = doneAt && (now - doneAt > 1100 || i >= seq.length);
+    const v = ending ? 'r' : seq[Math.min(i, seq.length - 1)], tgt = MOUTH[v] || MOUTH.c;
+    const ph = ((now - t0) % SYL) / SYL, open = v === 'r' || v === 'm' ? 1 : Math.sin(Math.min(1, ph * 1.6) * Math.PI) * .35 + .75;
+    rx += (tgt[0] - rx) * .35; ry += (tgt[1] * open - ry) * .38;
+    paint();
+    if (ending && ry < .6){ stop(); return; }
+    raf = requestAnimationFrame(loop);
+  }
+  return k => {
+    if (!raf && !doneAt) raf = requestAnimationFrame(loop);
+    if (k >= 1 && !doneAt) doneAt = performance.now();
+  };
+}
+const ballFace = () => { const b = document.getElementById('szBot'); return b ? (b.querySelector('.bf > :last-child .szface') || b.querySelector('.bf .szface')) : null; };
 const randomGoodFace = (not) => { const L = FACE_GOOD.filter(m => !(not && not.has && not.has(m))); return L[Math.floor(Math.random() * L.length)] || 'feliz'; };
 
 /* ---------- sonidos SynthZ: sintetizados en vivo (Web Audio), sin archivos; se apagan en Ajustes ---------- */
@@ -2130,6 +2743,14 @@ const SND = (() => {
     expand(){ play((c, t) => { hiss(c, t, 'bandpass', 300, .9, .25, .1, .35, 4200); [523, 659, 784].forEach((f, i) => tone(c, t + .12 + i * .04, 'sine', f, f, .05, .07, .7)); }); },
     /* terminó la guía: arpegio corto */
     done(){ play((c, t) => { [523, 659, 784, 1047].forEach((f, i) => tone(c, t + i * .085, 'triangle', f, f, .006, .1, .35)); hiss(c, t + .3, 'highpass', 6000, .5, .02, .03, .4); }); },
+    /* v1.4 · sonidos de transición futuristas y suaves: un brillo de cristal que respira (sin golpes) */
+    shimmer(){ play((c, t) => {
+      const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(900, t); lp.frequency.exponentialRampToValueAtTime(5200, t + 1.1); lp.frequency.exponentialRampToValueAtTime(1800, t + 2.2); lp.Q.value = .7; lp.connect(out);
+      [[392, .045], [587.3, .035], [880, .025], [1174.7, .018], [1760, .01]].forEach(([f, p], i) => { tone(c, t + i * .06, 'sine', f, f * 1.004, .5, p, 1.6, lp); tone(c, t + i * .06 + .02, 'sine', f * 1.006, f * 1.01, .55, p * .6, 1.5, lp); });
+      hiss(c, t + .1, 'bandpass', 5200, 3, .6, .012, 1.2, 9000);
+    }); },
+    /* entrar por la «o»: un aire que sube, muy bajito */
+    warp(){ play((c, t) => { hiss(c, t, 'lowpass', 300, .8, .9, .05, .6, 4200); tone(c, t, 'sine', 196, 392, .8, .03, .5); tone(c, t + .05, 'sine', 294, 588, .8, .02, .5); }); },
     get enabled(){ return on(); }
   };
 })();
@@ -2139,11 +2760,12 @@ const HAND_SVG = {
   arrow:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 3l20 11.2-8.6 2.2L12 25.5z" fill="url(#hgd)" stroke="#1a0f08" stroke-width="1.6" stroke-linejoin="round"/><path d="M8.6 8.3l11.3 6.3" stroke="#fff4d6" stroke-opacity=".7" stroke-width="1.2" stroke-linecap="round"/><circle cx="12.6" cy="17.6" r="1.6" fill="#c9566c" stroke="#1a0f08" stroke-width=".8"/></svg>',
   point:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="14.6" y="10.6" width="3.9" height="7" rx="1.95" fill="url(#hgd)" stroke="#1a0f08" stroke-width="1.3"/><rect x="18.3" y="11.6" width="3.7" height="6.4" rx="1.85" fill="url(#hgd)" stroke="#1a0f08" stroke-width="1.3"/><rect x="21.8" y="13" width="3.4" height="5.6" rx="1.7" fill="url(#hgd)" stroke="#1a0f08" stroke-width="1.3"/><path d="M7.4 17.4c0-1.8 1.3-3 3-3h11.6c2 0 3.4 1.4 3.4 3.4v3.4c0 4.2-3.2 7.4-7.4 7.4h-3.2c-4.2 0-7.4-3.2-7.4-7.4z" fill="url(#hgd)" stroke="#1a0f08" stroke-width="1.4" stroke-linejoin="round"/><path d="M7.6 18.6c-1.9-1.2-4-.2-3.9 1.7.1 1.3 1.3 2.2 3 3.4l2.8 1.6" fill="url(#hgd)" stroke="#1a0f08" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><rect x="9.2" y="1.4" width="5.4" height="17.4" rx="2.7" fill="url(#hgd)" stroke="#1a0f08" stroke-width="1.4"/><path d="M10 7h3.8M10 11.6h3.8" stroke="#1a0f08" stroke-opacity=".45" stroke-width="1" stroke-linecap="round"/><path d="M10.6 3.4v2" stroke="#fff4d6" stroke-opacity=".75" stroke-width="1.1" stroke-linecap="round"/><rect x="10" y="26.6" width="12.6" height="3.6" rx="1.6" fill="#c9566c" stroke="#1a0f08" stroke-width="1.2"/><circle cx="18.6" cy="21.6" r="1.5" fill="#c9566c"/></svg>',
   grab:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7.4 13.6c0-1.8 1.4-3 3-3h10.8c2.6 0 4.4 1.8 4.4 4.4v5.6c0 4.4-3.4 7.8-7.8 7.8h-2.6c-4.4 0-7.8-3.4-7.8-7.8z" fill="url(#hgd)" stroke="#1a0f08" stroke-width="1.4"/><path d="M11 10.8v4M14.8 10.6v4.4M18.6 10.6v4.4M22.2 11.2v4" stroke="#1a0f08" stroke-opacity=".55" stroke-width="1.1" stroke-linecap="round"/><rect x="10.2" y="26.2" width="12.6" height="3.6" rx="1.6" fill="#c9566c" stroke="#1a0f08" stroke-width="1.2"/></svg>',
+  palm:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="8.4" y="4.2" width="3.7" height="12.6" rx="1.85" fill="url(#hgd)" stroke="#1a0f08" stroke-width="1.3"/><rect x="12.4" y="1.6" width="3.8" height="15" rx="1.9" fill="url(#hgd)" stroke="#1a0f08" stroke-width="1.3"/><rect x="16.5" y="2.4" width="3.7" height="14.4" rx="1.85" fill="url(#hgd)" stroke="#1a0f08" stroke-width="1.3"/><rect x="20.4" y="5.2" width="3.4" height="11.8" rx="1.7" fill="url(#hgd)" stroke="#1a0f08" stroke-width="1.3"/><path d="M7.8 15.2c0-1.5 1.1-2.5 2.6-2.5h11.6c1.8 0 3 1.2 3 3v4.6c0 4.3-3.3 7.6-7.6 7.6h-2.6c-4.2 0-7-3.3-7-7.6z" fill="url(#hgd)" stroke="#1a0f08" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 17.6c-1.6-2-4.4-1.6-4.3.4.1 1.4 1.5 2.4 3.3 3.6l2.2 1.4" fill="url(#hgd)" stroke="#1a0f08" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.2 4v2.2M17.3 4.6v2" stroke="#fff4d6" stroke-opacity=".75" stroke-width="1.1" stroke-linecap="round"/><rect x="10" y="26.6" width="12.6" height="3.6" rx="1.6" fill="#c9566c" stroke="#1a0f08" stroke-width="1.2"/><circle cx="18.4" cy="20.6" r="1.5" fill="#c9566c"/></svg>',
   text:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M11 4.5c2.4 0 4 .8 5 2 1-1.2 2.6-2 5-2M11 27.5c2.4 0 4-.8 5-2 1 1.2 2.6 2 5 2M16 6.5v19M13.2 16h5.6" fill="none" stroke="#1a0f08" stroke-width="4" stroke-linecap="round"/><path d="M11 4.5c2.4 0 4 .8 5 2 1-1.2 2.6-2 5-2M11 27.5c2.4 0 4-.8 5-2 1 1.2 2.6 2 5 2M16 6.5v19M13.2 16h5.6" fill="none" stroke="url(#hgd)" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="16" r="1.4" fill="#c9566c"/></svg>'
 };
-const HAND_HOT = { arrow:[5, 3], point:[11.9, 1.8], grab:[16, 12], text:[16, 16] };
+const HAND_HOT = { arrow:[5, 3], point:[11.9, 1.8], grab:[16, 12], text:[16, 16], palm:[16, 14] };
 const HAND = (() => {
-  let el = null, spot = null, say = null, x = -80, y = -80, shape = 'arrow', alive = false, raf = 0, sayTok = 0;
+  let el = null, spot = null, say = null, x = -80, y = -80, shape = 'arrow', alive = false, raf = 0, sayTok = 0, wraf = 0, wArea = null;
   const fast = () => !CFG.anim || PERF;
   function build(){
     if (el) return;
@@ -2159,12 +2781,13 @@ const HAND = (() => {
   const rectOf = t => { const n = typeof t === 'string' ? $(t) : t; if (!n) return null; if (n.getBoundingClientRect){ const r = n.getBoundingClientRect(); return r.width || r.height ? r : null; } return { left:t.x, top:t.y, width:0, height:0, right:t.x, bottom:t.y }; };
   const visible = t => { const n = typeof t === 'string' ? $(t) : t; return !!(n && n.getBoundingClientRect && n.getClientRects().length && getComputedStyle(n).visibility !== 'hidden'); };
   function show(from){ build(); alive = true; if (from){ x = from.x; y = from.y; } paint(); el.classList.add('on'); spot.classList.add('ready'); }
-  function hide(){ alive = false; cancelAnimationFrame(raf); if (!el) return; el.classList.remove('on'); spot.classList.remove('on'); say.classList.remove('on'); const a = el, b = spot, c = say; el = spot = say = null; setTimeout(() => { a.remove(); b.remove(); c.remove(); }, 600); }
+  function hide(){ alive = false; cancelAnimationFrame(raf); stopWander(); if (!el) return; el.classList.remove('on'); spot.classList.remove('on'); say.classList.remove('on'); const a = el, b = spot, c = say; el = spot = say = null; setTimeout(() => { a.remove(); b.remove(); c.remove(); }, 600); }
   /* se mueve en una curva suave, con un poquito de inclinación según la velocidad */
   function moveTo(t, o = {}){
     build(); const r = rectOf(t); if (!r) return Promise.resolve(false);
     const tx = o.x != null ? o.x : r.left + r.width * (o.fx != null ? o.fx : .5), ty = o.y != null ? o.y : r.top + r.height * (o.fy != null ? o.fy : .5);
     if (o.shape) setShape(o.shape);
+    if (!o._w) stopWander();
     const x0 = x, y0 = y, d = Math.hypot(tx - x0, ty - y0);
     const D = fast() ? Math.min(380, 160 + d * .25) : Math.min(1150, 380 + d * .55);
     const bend = fast() ? 0 : Math.min(90, d * .18) * (o.bend || (tx > x0 ? -1 : 1));
@@ -2183,13 +2806,15 @@ const HAND = (() => {
     });
   }
   /* aro de luz alrededor de lo que explica; el resto se oscurece un poco */
+  let spotT = null;
   function spotOn(t, pad){
-    build(); const r = rectOf(t); if (!r){ spot.classList.remove('on'); return; }
+    build(); if (spotT && spotT.removeAttribute) spotT.removeAttribute('data-guide-ok'); spotT = t && t.nodeType === 1 ? t : null; if (spotT) spotT.setAttribute('data-guide-ok', '');
+    const r = rectOf(t); if (!r){ spot.classList.remove('on'); return; }
     const p = pad == null ? 8 : pad, rad = Math.min(26, (r.height + p * 2) / 2);
     Object.assign(spot.style, { left:(r.left - p) + 'px', top:(r.top - p) + 'px', width:(r.width + p * 2) + 'px', height:(r.height + p * 2) + 'px', borderRadius:rad + 'px' });
     spot.classList.add('on');
   }
-  const spotOff = () => { if (spot) spot.classList.remove('on'); };
+  const spotOff = () => { if (spot) spot.classList.remove('on'); if (spotT && spotT.removeAttribute) spotT.removeAttribute('data-guide-ok'); spotT = null; };
   /* clic con la manita: se aprieta, sale una onda y (si se pide) hace el clic de verdad */
   async function click(t, o = {}){
     if (t && !(await moveTo(t, Object.assign({ shape:'point' }, o)))) return false;
@@ -2232,7 +2857,7 @@ const HAND = (() => {
     say.style.left = lx + 'px'; say.style.top = ly + 'px';
     requestAnimationFrame(() => say && say.classList.add('on'));
     SND.blip(mood);
-    if (!fast()) typeIn(p, { cps:62, max:1.4 }).catch(() => { p.textContent = text; });
+    if (!fast()) typeIn(p, { cps:48, max:4, onFrame:lipSync([$('.sf .szface', say), ballFace()], text) }).catch(() => { p.textContent = text; });
     return new Promise(res => {
       if (!btns.length){ res(-1); return; }
       $$('[data-sb]', say).forEach(b => b.addEventListener('click', () => { if (tok === sayTok) res(+b.dataset.sb); }));
@@ -2240,7 +2865,46 @@ const HAND = (() => {
     });
   }
   const quiet = () => { if (say) say.classList.remove('on'); };
-  return { show, hide, moveTo, click, type, talk, quiet, spot:spotOn, unspot:spotOff, shape:setShape, visible, get alive(){ return alive; }, get pos(){ return { x, y }; } };
+  /* mientras eliges algo (p. ej. los temas), la manita no se queda quieta tapando opciones:
+     flota suave por fuera del panel, arriba y abajo, sin ponerse encima de nada */
+  function stopWander(){ cancelAnimationFrame(wraf); wraf = 0; wArea = null; }
+  function spotFor(r){
+    const W = innerWidth, Hh = innerHeight, m = 46;
+    if (r.right + m + 30 < W) return { x:r.right + m, y:r.top + r.height * .45, ax:'y', amp:Math.min(120, r.height * .3) };
+    if (r.left - m - 30 > 0) return { x:r.left - m, y:r.top + r.height * .45, ax:'y', amp:Math.min(120, r.height * .3) };
+    if (r.bottom + 56 < Hh) return { x:r.left + r.width * .5, y:r.bottom + 34, ax:'x', amp:Math.min(140, r.width * .3) };
+    if (r.top - 56 > 0) return { x:r.left + r.width * .5, y:r.top - 30, ax:'x', amp:Math.min(140, r.width * .3) };
+    return { x:clamp(r.right - 28, 30, W - 30), y:clamp(r.bottom - 22, 30, Hh - 30), ax:'y', amp:16 };
+  }
+  async function wander(area){
+    stopWander(); if (!area) return; build(); wArea = area;
+    const r0 = rectOf(area); if (!r0) return;
+    const s0 = spotFor(r0); setShape('arrow');
+    await moveTo({ x:s0.x, y:s0.y }, { shape:'arrow', _w:true });
+    if (wArea !== area || !el) return;
+    const t0 = performance.now(); let last = 0;
+    (function f(now){
+      if (wArea !== area || !el || !area.isConnected){ wraf = 0; return; }
+      wraf = requestAnimationFrame(f);
+      if (fast() && now - last < 50) return; last = now;
+      const r = rectOf(area); if (!r) return; const sp = spotFor(r), t = (now - t0) / 1000;
+      const a = Math.sin(t * .55) * sp.amp + Math.sin(t * 1.3) * 10, b = Math.sin(t * .9 + 1) * 12;
+      const nx = sp.ax === 'y' ? sp.x + b : sp.x + a, ny = sp.ax === 'y' ? sp.y + a : sp.y + b;
+      const vx = nx - x; x += (nx - x) * .08; y += (ny - y) * .08;
+      paint(clamp(vx * .4, -8, 8) + Math.sin(t * 1.7) * 4);
+    })(t0);
+  }
+  /* «¡hola!»: la manita se abre y saluda */
+  async function wave(n){
+    build(); stopWander(); const prev = shape; setShape('palm');
+    const hs = $('.hs', el); if (!hs) return;
+    hs.style.transformOrigin = '50% 92%';
+    const a = hs.animate([{ transform:'rotate(0)' }, { transform:'rotate(-20deg)' }, { transform:'rotate(18deg)' }, { transform:'rotate(-16deg)' }, { transform:'rotate(14deg)' }, { transform:'rotate(-8deg)' }, { transform:'rotate(0)' }], { duration:(n || 1) * 1300, easing:'ease-in-out' });
+    SND.blip('feliz');
+    await new Promise(r => { a.onfinish = r; a.oncancel = r; setTimeout(r, (n || 1) * 1300 + 200); });
+    if (el && shape === 'palm') setShape(prev === 'palm' ? 'arrow' : prev);
+  }
+  return { show, hide, moveTo, click, type, talk, quiet, wander, wave, spot:spotOn, unspot:spotOff, shape:setShape, visible, get alive(){ return alive; }, get pos(){ return { x, y }; } };
 })();
 
 /* =====================================================================
@@ -2250,28 +2914,36 @@ const HAND = (() => {
    3) «Hablar con el equipo»: una persona (Prime, ZFlow o Symmetrix) te responde aquí mismo
    ===================================================================== */
 const BOT_FAQ = [
-  { k:'conectar conecto conexion conecta puter openrouter groq llave key activar bloqueado bloqueo desbloquear', a:'Para chatear necesitas una IA conectada. Lo más fácil es Puter: es gratis y entras con un clic. También puedes pegar tu llave de OpenRouter o de Groq (opcional y muy rápida).', go:['#lockCard [data-lk="pu"]', '[data-conn]', '#cPick', '#curChip'], act:'conn', lbl:'Conectar ahora' },
-  { k:'cambiar elegir escoger ia modelo cual otra seleccionar', a:'Tocas el nombre de la IA y se abre «¿Con quién fluyes hoy?»: ahí buscas por tema, ves cuáles te recomiendo y eliges con «Usar».', go:['#cPick', '#curChip', '[data-tab="ia"]'] },
-  { k:'comparar comparacion varias dos lado mismo tiempo', a:'Con «Comparar con otra IA» sumas hasta 4. Todas responden la misma pregunta y aparecen en el orden en que llegan. Ojo: cada una gasta lo suyo (comparar, no unir).', go:['#cCmp', '#pickRow [data-add]'] },
-  { k:'guia tutorial aprender enseñar como funciona ayuda', a:'La Guía te enseña todo paso a paso: Asistida (yo te llevo con mi manita y tienes 5 mensajes de prueba) o Lectura (a tu ritmo).', go:['#guideTop', '#helpBtn'], act:'guide', lbl:'Abrir la Guía' },
-  { k:'synxcoin synxcoins coins monedas gasto consumo tokens cuanto', a:'Los SynXCoin\'s miden lo que gastas: 1 SynXCoin = 1 token (lo que la IA lee y escribe). SynthZ nunca te cobra; el consumo lo pone tu Puter o tu llave.', go:['#railCoin', '#tabCoin', '.foot .sxcoin', '#sxPill'] },
-  { k:'pagar cobro cobran gratis precio plata dinero costo tarjeta', a:'SynthZ es gratis y nunca te cobra solo. Puter te da créditos gratis cada mes; OpenRouter y Groq tienen modelos gratis con límites. Siempre ves quién paga junto a la IA.', go:['#payPill', '#payL', '#payM'] },
-  { k:'chats historial conversaciones anteriores guardados donde estan mis', a:'Tus chats están en «Mis chats», arriba en la barrita (en el celular, la pestaña Chats). Se guardan en tu dispositivo y en tu cuenta si entras.', go:['#railChats', '[data-r="chats"]', '[data-tab="chats"]'] },
-  { k:'drive google espacio guardar copia respaldo', a:'En «⋯ › Google Drive» vinculas tu Drive y guardo una copia de tus chats en una carpeta privada de SynthFlow. No puedo ver tus otros archivos.', go:['#moreBtn'] },
-  { k:'adjuntar archivo pdf imagen foto subir documento clip', a:'Con el clip adjuntas archivos, PDF o imágenes (también puedes arrastrarlos o pegarlos). Para imágenes elige una IA con «Visión».', go:['#attachBtn'] },
-  { k:'cuenta registrar registro entrar iniciar sesion perfil usuario contraseña', a:'Con tu cuenta tus chats, favoritos y SynXCoin\'s te siguen a cualquier dispositivo, y puedes personalizar tu perfil. Entra desde tu foto en la barrita.', go:['#accBtn', '[data-tab="me"]'] },
-  { k:'ajustes rendimiento lento animaciones configuracion sonido cursor', a:'En Ajustes puedes activar el modo Rendimiento, apagar mis sonidos o el cursor especial. Las animaciones del logo se quedan siempre.', go:['#cfgBtn', '[data-tab="cfg"]'] },
-  { k:'favorito favoritos estrella guardar mensaje', a:'Con la estrella guardas una IA o un mensaje en favoritos. Los mensajes favoritos están en la barrita, en la estrella.', go:['[data-r="fav"]', '#railFav'] },
-  { k:'limite agotado 429 espera error no responde falla', a:'Si una IA llega a su límite gratis, espera un poco o cambia a otra (Puter suele tener más). Si una IA deja de funcionar, la escondo sola y te paso a otra.' },
-  { k:'privacidad zdr data policy openrouter bloqueo guardrail', a:'Si OpenRouter dice que la privacidad bloquea los modelos gratis: entra a openrouter.ai/settings/privacy, permite los modelos gratis (los que pueden guardar datos) y apaga «solo ZDR».' },
-  { k:'hola buenas hey saludos holi', a:'¡Hola! Soy SynthonIA. Pregúntame lo que quieras sobre SynthFlow o toca una de las preguntas de abajo.' },
-  { k:'gracias genial perfecto listo vale', a:'¡Con gusto! Aquí estoy cuando me necesites. ✨', mood:'encantada' }
+  { k:'conectar conecto conexion conecta llave key activar bloqueado bloqueo desbloquear funciona', a:'¡No tienes que conectar nada! Ya puedes escribir: las IAs conectadas son IAs gratis que ya vienen listas en SynthZ. No tienes que configurar nada ni dar tarjeta: solo escribes. Sin cuenta pruebas con 5 mensajes al día; con tu cuenta gratis, mucho más. Si un día usas todos tus mensajes, puedes seguir con Puter.', go:['#payPill', '#payL', '#payM', '#cPick', '#curChip'] },
+  { k:'ias conectadas que son las ias conectadas gratis listas', a:'Las IAs conectadas son IAs gratis que ya vienen listas en SynthZ. No tienes que configurar nada ni dar tarjeta: solo escribes. Sin cuenta pruebas con 5 mensajes al día; con tu cuenta gratis, mucho más. Cada día tienes un límite gratis para usar las IAs conectadas. A medianoche se vuelve a llenar.', mood:'feliz' },
+  { k:'puter que es puter creditos personales cuenta', a:'Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic. Es opcional. Al lado de cada IA de Puter verás rayitas: verdes gasta poco, amarillas normal y rojas gasta mucho.', act:'conn', lbl:'Conectar mi Puter' },
+  { k:'cambiar elegir escoger ia modelo cual otra seleccionar', a:'Toca el nombre de la IA que estás usando y se abre «¿Con quién fluyes hoy?». Primero eliges para qué la quieres y luego aparecen las IA. Tocas «Usar» y listo.', go:['#cPick', '#curChip', '[data-tab="ia"]'] },
+  { k:'comparar comparacion varias dos lado mismo tiempo', a:'Con «Comparar con otra IA» sumas hasta 4. Todas responden lo mismo y aparecen en el orden en que llegan.', go:['#cCmp', '#pickRow [data-add]'] },
+  { k:'guia tutorial aprender enseñar como funciona', a:'En la Guía rápida te pregunto si la quieres completa o qué quieres ver: eliges uno o varios temas y te los muestro con mi manita, en ese orden.', go:['#guideTop', '#helpBtn'], act:'guide', lbl:'Abrir la Guía' },
+  { k:'limite cuanto queda quedan mensajes barra uso gasto consumo synxcoin coins', a:'Cada día tienes un límite gratis para usar las IAs conectadas. A medianoche se vuelve a llenar. Sin cuenta son 5 mensajes de prueba al día; con tu cuenta gratis tienes mucho más. El anillo se va vaciando mientras chateas: te muestro dónde está.', go:['#railCoin', '#tabCoin', '#navTotal', '.pill-total'], tour:'coins' },
+  { k:'pagar cobro cobran gratis precio plata dinero costo tarjeta', a:'SynthZ es gratis y nunca te cobra. Las IAs conectadas son gratis, y Puter también tiene su parte gratis cada mes.' },
+  { k:'chats historial conversaciones anteriores guardados donde estan mis', a:'Tus chats están en «Mis chats», en la barrita (en el celular, la pestaña Chats). Se guardan en tu dispositivo y en tu cuenta si entras.', go:['#railChats', '[data-r="chats"]', '[data-tab="chats"]'] },
+  { k:'drive google espacio guardar copia respaldo', a:'En Ajustes › IAs y memoria › Google Drive vinculas tu Drive y guardo una copia de tus chats en una carpeta privada. No puedo ver tus otros archivos.', go:['#moreBtn'] },
+  { k:'adjuntar archivo pdf imagen foto subir documento clip', a:'Con el «+» agregas archivos, PDF o fotos (también puedes arrastrarlos). Para fotos elige una IA que «ve fotos».', go:['#attachBtn'] },
+  { k:'cuenta registrar registro entrar iniciar sesion perfil usuario contraseña', a:'Crear tu cuenta es gratis y no pide correo ni tarjeta. Sin cuenta puedes probar con 5 mensajes al día; con cuenta tienes mucho más, y tus chats y favoritos te siguen a cualquier dispositivo. Entra desde tu foto en la barrita.', go:['#accBtn', '[data-tab="me"]'] },
+  { k:'ajustes rendimiento lento animaciones configuracion sonido sonidos cursor principiante', a:'En Ajustes puedes poner la página «más rápida», activar el modo principiante o apagar mis sonidos.', go:['#cfgBtn', '[data-tab="cfg"]'] },
+  { k:'favorito favoritos estrella guardar mensaje', a:'Con la estrella guardas un mensaje en favoritos. Están en la barrita, en la estrella.', go:['[data-r="fav"]', '#railFav'] },
+  { k:'error no responde falla lenta demora', a:'Si una IA falla, te ofrezco una parecida que sí funcione, con tu mensaje listo para reenviar.' },
+  { k:'agente modo agente mejorar prompt', a:'En el modo agente no eliges IA: tú escribes, el agente entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso. Al final decides si te quedas con esa IA o sigues en modo agente. Lo activas en la barra de la izquierda, debajo de «Mis chats».', go:['#railAgent', '#cSeg [data-v="agents"]'] },
+  /* charla sencilla */
+  { k:'hola buenas hey saludos holi buenos dias tardes noches', a:'¡Hola! Soy SynthonIA 😊 ¿En qué te ayudo con SynthZ?', wave:true },
+  { k:'como estas andas va todo bien que tal', a:'¡Muy bien, gracias por preguntar! Aquí, lista para ayudarte. ¿Y tú cómo vas?', mood:'encantada' },
+  { k:'como te llamas quien eres tu nombre eres', a:'Me llamo SynthonIA. Soy la ayudante de SynthZ: te explico la página, te muestro dónde están las cosas y, de vez en cuando, te cuento un dato curioso.', mood:'guino' },
+  { k:'chiste broma cuentame algo gracioso risa', a:'', joke:true, mood:'riendo' },
+  { k:'dato curioso sabias algo interesante', a:'', fact:true, mood:'sorprendida' },
+  { k:'gracias genial perfecto listo vale chevere bacano', a:'¡Con gusto! Aquí estoy cuando me necesites. ✨', mood:'encantada' },
+  { k:'adios chao nos vemos hasta luego', a:'¡Chao! Que tengas un día con mucho Flow. 👋', wave:true }
 ];
-const BOT_QUICK = [[0, '¿Cómo conecto una IA?'], [1, '¿Cómo cambio de IA?'], [2, '¿Cómo comparo IA?'], [4, '¿Qué son los SynXCoin\'s?'], [6, '¿Dónde están mis chats?'], [3, 'Ver la Guía']];
+const BOT_QUICK = [[1, '¿Qué son las IAs conectadas?'], [2, '¿Qué es Puter?'], [3, '¿Cómo cambio de IA?'], [4, '¿Cómo comparo IA?'], [6, '¿Qué es el límite de hoy?'], [19, 'Cuéntame un chiste']];
 const fold = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9ñ\s]/g, ' ');
 function botMatch(q){
   const STOP = /^(que|como|donde|cual|para|por|con|una|uno|los|las|del|mis|tus|sus|esta|este|esto|eso|hay|hago|hacer|puedo|quiero|tengo|necesito|sobre|algo|the|and|how|can|what|where|synthflow|synthz|pagina|favor|porfa|ayuda|ayudame)$/;
-  const w = fold(q).split(/\s+/).filter(x => (x.length > 2 || /^(ia|ai)$/.test(x)) && !STOP.test(x)); if (!w.length) return /ayuda|help/i.test(q) ? BOT_FAQ[3] : null;
+  const w = fold(q).split(/\s+/).filter(x => (x.length > 2 || /^(ia|ai)$/.test(x)) && !STOP.test(x)); if (!w.length) return /ayuda|help/i.test(q) ? BOT_FAQ[5] : null;
   let best = null, bs = 0;
   BOT_FAQ.forEach(f => { const K = fold(f.k).split(/\s+/); let sc = 0; w.forEach(x => { if (K.includes(x)) sc += 1; else if (K.some(k => k.length > 4 && (k.startsWith(x) || x.startsWith(k)))) sc += .6; }); if (sc > bs){ bs = sc; best = f; } });
   return bs >= Math.max(.6, w.length * .45) ? best : null;
@@ -2295,22 +2967,75 @@ function botMount(){
     try{ const pos = JSON.parse(localStorage.getItem('synthz:botpos') || 'null'); if (pos && pos.x > 0 && pos.y > 0){ b.style.right = 'auto'; b.style.bottom = 'auto'; b.style.left = Math.min(innerWidth - 70, pos.x) + 'px'; b.style.top = Math.min(innerHeight - 70, pos.y) + 'px'; } }catch(e){}
   }
   BOT.el = b;
-  requestAnimationFrame(() => b.classList.add('on'));
+  requestAnimationFrame(() => { b.classList.add('on'); betaBot(); });
   /* se puede arrastrar (en computador); un toque la abre */
   let drag = null;
   b.addEventListener('pointerdown', e => { if (b.classList.contains('inhead') || e.button) return; drag = { x:e.clientX, y:e.clientY, l:b.getBoundingClientRect().left, t:b.getBoundingClientRect().top, moved:false }; b.setPointerCapture(e.pointerId); });
-  b.addEventListener('pointermove', e => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (!drag.moved && Math.hypot(dx, dy) < 6) return; drag.moved = true; b.classList.add('drag'); b.style.right = 'auto'; b.style.bottom = 'auto'; b.style.left = clamp(drag.l + dx, 6, innerWidth - 66) + 'px'; b.style.top = clamp(drag.t + dy, 6, innerHeight - 66) + 'px'; if (BOT.open) botPlace(); });
-  b.addEventListener('pointerup', () => { if (!drag) return; const m = drag.moved; drag = null; b.classList.remove('drag'); if (m){ const r = b.getBoundingClientRect(); try{ localStorage.setItem('synthz:botpos', JSON.stringify({ x:r.left, y:r.top })); }catch(e){} b._skip = true; setTimeout(() => { b._skip = false; }, 50); } });
-  b.addEventListener('click', () => { if (b._skip) return; botToggle(); });
+  b.addEventListener('pointermove', e => { if (!drag) return; if (BOT.betaPut) requestAnimationFrame(BOT.betaPut); const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (!drag.moved && Math.hypot(dx, dy) < 6) return; drag.moved = true; b.classList.add('drag'); b.style.right = 'auto'; b.style.bottom = 'auto'; b.style.left = clamp(drag.l + dx, 6, innerWidth - 66) + 'px'; b.style.top = clamp(drag.t + dy, 6, innerHeight - 66) + 'px'; if (BOT.open) botPlace(); });
+  b.addEventListener('pointerup', () => { if (BOT.betaPut) setTimeout(BOT.betaPut, 50); if (!drag) return; const m = drag.moved; drag = null; b.classList.remove('drag'); if (m){ const r = b.getBoundingClientRect(); try{ localStorage.setItem('synthz:botpos', JSON.stringify({ x:r.left, y:r.top })); }catch(e){} b._skip = true; setTimeout(() => { b._skip = false; }, 50); } });
+  b.addEventListener('click', e => {
+    if (b._skip) return;
+    BOT.lostN = 0; b.classList.remove('g1', 'g2');
+    /* según dónde la toques, hace una cara distinta */
+    const z = e.detail ? botZone(e) : '';
+    if (z === 'eye'){ SND.blip('auch'); botFace('auch', true); botBubble('¡Ay! Ese es mi ojo.', 2200); setTimeout(() => botFace('feliz', true), 1900); return; }
+    if (z === 'top'){ botFace('sorprendida', true); botBubble('¡Uy, mi antena! Me haces cosquillas.', 2200); setTimeout(() => botFace('feliz', true), 1900); return; }
+    if (z === 'cheek'){ botFace('encantada', true); setTimeout(() => botFace('feliz'), 1600); }
+    else if (z === 'mouth'){ botFace('riendo', true); setTimeout(() => botFace('feliz'), 1600); }
+    botToggle();
+  });
   setTimeout(botSync, 1200);
 }
-function botFace(mood){ if (BOT.el) $('.bf', BOT.el).innerHTML = face(mood, 40); }
+/* v1.4: la carita cambia suave (una se desvanece y la otra aparece), y si está «pegada» (triste) no cambia */
+function botZone(e){
+  const r = BOT.el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+  const fx = (x - .5) / .667 + .5, fy = (y - .5) / .667 + .5;          /* a coordenadas de la carita (0–1) */
+  if (Math.hypot(fx - .40, fy - .52) < .085 || Math.hypot(fx - .60, fy - .52) < .085) return 'eye';
+  if (fy < .22) return 'top';
+  if (fy > .58 && fy < .72 && (fx < .38 || fx > .62)) return 'cheek';
+  if (fy > .6 && fy < .8) return 'mouth';
+  return '';
+}
+function botFace(mood, force){
+  if (!BOT.el) return;
+  if (BOT.sticky && !force && mood !== BOT.sticky) return;
+  if (BOT.el.classList.contains('pix') && !force){ BOT.mood = mood; return; }
+  const bf = $('.bf', BOT.el); if (!bf) return;
+  if (BOT.mood === mood && !force && bf.querySelector('.szface')) return;
+  BOT.mood = mood;
+  const old = [...bf.children], n = document.createElement('span'); n.className = 'bfl in'; n.innerHTML = face(FACE[mood] ? mood : 'feliz', 40); bf.appendChild(n);
+  old.forEach(o => { o.classList.add('out'); setTimeout(() => o.remove(), 380); });
+  requestAnimationFrame(() => requestAnimationFrame(() => n.classList.remove('in')));
+}
+/* las caras las hace ella: los emojis de sus frases se quitan y se vuelven su expresión */
+const EMO = [[/[😂🤣😄😆😁😅😹]/u, 'riendo'], [/[😴💤]/u, 'dormida'], [/[👀😮😲🤯✨]/u, 'sorprendida'], [/[😕😔😢🙏]/u, 'disculpa'], [/[😎💪🔥]/u, 'flow'], [/[💛❤️😍🥰]/u, 'encantada'], [/[😉😜]/u, 'guino'], [/[⏳🤔]/u, 'pensando'], [/[👋🙂😊]/u, 'feliz']];
+function demoji(t){ let mood = null; for (const [rx, m] of EMO) if (rx.test(t)){ mood = m; break; } const E = '(?:\\p{Extended_Pictographic}|\\p{Emoji_Presentation}|[\\u2600-\\u27BF])(?:\\uFE0F|\\u20E3|\\u200D(?:\\p{Extended_Pictographic}|[\\u2600-\\u27BF])\\uFE0F?)*';
+  t = String(t).replace(new RegExp('([^\\s.!?…:,;])\\s*(?:' + E + ')+\\s+(?=[A-ZÁÉÍÓÚÑ¿¡])', 'gu'), '$1. ');
+  return { text:String(t).replace(/\s*(?:\p{Extended_Pictographic}|\p{Emoji_Presentation}|[\u2600-\u27BF])(?:\uFE0F|\u20E3|\u200D(?:\p{Extended_Pictographic}|[\u2600-\u27BF])\uFE0F?)*/gu, '').replace(/[ \t]{2,}/g, ' ').replace(/\s+([.,!?…])/g, '$1').trim(), mood }; }
+/* mientras piensa, su carita se vuelve píxeles y dibuja 2 o 3 pixel arts */
+function pixFace(on){
+  if (!BOT.el) return;
+  if (BOT.pxb){ BOT.pxb.stop(); BOT.pxb = null; }
+  const bf = $('.bf', BOT.el);
+  if (on){ BOT.el.classList.add('pix'); const n = document.createElement('span'); n.className = 'bfl pxface in'; n.innerHTML = pixelGrid(); [...bf.children].forEach(o => { o.classList.add('out'); setTimeout(() => o.remove(), 380); }); bf.appendChild(n); requestAnimationFrame(() => requestAnimationFrame(() => n.classList.remove('in'))); BOT.pxb = pixelRun(n); BOT.pxb.speed(3); }
+  else { BOT.el.classList.remove('pix'); const m = BOT.mood || 'feliz'; BOT.mood = null; botFace(m, true); }
+}
+async function botThink(work){
+  const ms = 3000 + Math.random() * 2000;
+  BOT.think = true; BOT.zen = false; pixFace(true); botRender();
+  try{ const [r] = await Promise.all([work ? work() : Promise.resolve(null), sleepRaw(ms)]); return r; }
+  finally{ BOT.think = false; if (BOT.pxm){ BOT.pxm.stop(); BOT.pxm = null; } pixFace(false); }
+}
 function botBubble(text, ms){
-  if (!BOT.el || BOT.open) return; let bb = $('#szBotB'); if (!bb){ bb = document.createElement('div'); bb.id = 'szBotB'; document.body.appendChild(bb); }
-  bb.textContent = text; const r = BOT.el.getBoundingClientRect(), W = Math.min(260, innerWidth - 24);
+  if (!BOT.el || BOT.open || document.querySelector('#vintro,#intro,#portal')) return; let bb = $('#szBotB'); if (!bb){ bb = document.createElement('div'); bb.id = 'szBotB'; document.body.appendChild(bb); }
+  const D = demoji(text), md = D.mood || BOT.mood || 'feliz';
+  bb.innerHTML = '<span class="bbf">' + face(md, 52) + '</span><p></p>'; $('p', bb).textContent = D.text;
+  bb.classList.toggle('big', BOT.el.classList.contains('g2'));
+  const r = BOT.el.getBoundingClientRect(), W = Math.min(BOT.el.classList.contains('g2') ? 380 : 330, innerWidth - 24);
   bb.style.width = W + 'px'; bb.style.left = clamp(r.left + r.width / 2 - W / 2, 12, innerWidth - W - 12) + 'px';
   const up = r.top > 140; bb.style.top = up ? 'auto' : (r.bottom + 12) + 'px'; bb.style.bottom = up ? (innerHeight - r.top + 12) + 'px' : 'auto'; bb.classList.toggle('dn', !up);
-  bb.classList.remove('on'); void bb.offsetWidth; bb.classList.add('on'); clearTimeout(bb._t); bb._t = setTimeout(() => bb.classList.remove('on'), ms || 5200);
+  bb.classList.remove('on'); void bb.offsetWidth; bb.classList.add('on'); clearTimeout(bb._t); bb._t = setTimeout(() => bb.classList.remove('on'), (ms || 5200) + Math.min(3000, D.text.length * 18));
+  typeIn($('p', bb), { cps:45, max:4, onFrame:lipSync([$('.bbf .szface', bb), ballFace()], D.text) }).catch(() => {});
 }
 function botPlace(){
   const P = BOT.panel, b = BOT.el; if (!P || !b) return;
@@ -2330,20 +3055,20 @@ function botOpen(){
     + '<div class="btabs" hidden><button type="button" data-bt="chat" aria-selected="true">Pregúntame</button><button type="button" data-bt="inbox" aria-selected="false">Bandeja <em class="bn"></em></button></div>'
     + '<div class="bl" aria-live="polite"></div><div class="bq"></div>'
     + '<form class="bin"><input type="text" maxlength="600" placeholder="Pregúntame lo que quieras…" aria-label="Pregúntale a SynthonIA" autocomplete="off"><button type="submit" class="bs" aria-label="Enviar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></form>'
-    + '<div class="bfoot"><button type="button" class="lnk" data-b="team">Hablar con el equipo</button><button type="button" class="lnk" data-b="hide">Esconder</button></div>';
+    + '<div class="bfoot"><button type="button" class="lnk" data-b="team">Hablar con el equipo</button><button type="button" class="lnk" data-b="fb">Cuéntanos qué mejorar</button><button type="button" class="lnk" data-b="hide">Esconder</button></div>';
   document.body.appendChild(P); BOT.panel = P; BOT.open = true; botPlace();
   requestAnimationFrame(() => P.classList.add('on'));
   P.addEventListener('click', botClick);
   $('.bin', P).addEventListener('submit', e => { e.preventDefault(); const i = $('.bin input', P), v = i.value.trim(); if (!v) return; i.value = ''; BOT.mode === 'team' || BOT.mode === 'reply' ? botTeamSay(v) : botAsk(v); });
   addEventListener('resize', botPlace);
   botRender();
-  if (!BOT.hist.length) botSay('¡Hola! Soy SynthonIA ✨ Pregúntame cómo hacer algo y te lo muestro. Si es algo que no sé, lo pienso con una IA gratis; y si necesitas a una persona, te conecto con el equipo.', 'feliz');
+  if (!BOT.hist.length) botSay('¡Hola! Soy SynthonIA. Estoy aquí para que nunca te pierdas: pregúntame cómo se hace algo o dónde está, y te lo explico fácil o te lo señalo con mi manita.', 'feliz');
 }
-function botClose(){ BOT.open = false; if (BOT.panel) BOT.panel.classList.remove('on'); }
+function botClose(){ BOT.open = false; if (BOT.think) BOT.zen = true; if (BOT.panel) BOT.panel.classList.remove('on'); }
 function botMsgHtml(m){
   if (m.role === 'user') return '<div class="bm u"><p>' + esc(m.content) + '</p></div>';
   if (m.role === 'team') return '<div class="bm t"><span class="rk r-' + esc(String(m.rank || '').toLowerCase()) + '">' + esc(m.rank || 'Equipo') + '</span><b>' + esc(m.name || '') + '</b><p>' + esc(m.content) + '</p></div>';
-  return '<div class="bm a"><span class="mf">' + face(m.mood || 'feliz', 28) + '</span><div><p>' + esc(m.content) + '</p>' + (m.btn ? '<button type="button" class="btn sm ghost" data-ba="' + esc(m.btn[0]) + '">' + esc(m.btn[1]) + '</button>' : '') + '</div></div>';
+  return '<div class="bm a"><span class="mf">' + face(m.mood || 'feliz', 36) + '</span><div><p>' + esc(m.content) + '</p>' + (m.btn ? '<button type="button" class="btn sm ghost" data-ba="' + esc(m.btn[0]) + '">' + esc(m.btn[1]) + '</button>' : '') + '</div></div>';
 }
 function botRender(){
   const P = BOT.panel; if (!P) return;
@@ -2361,7 +3086,7 @@ function botRender(){
     L.innerHTML = '<div class="bctx"><button type="button" class="lnk" data-b="back">← Bandeja</button><span>@' + esc(r.user.username || r.user.name) + (r.page ? ' · ' + esc(r.page) : '') + '</span>' + (r.status !== 'done' ? '<button type="button" class="lnk" data-b="done">Terminar</button>' : '') + '</div>'
       + r.msgs.map(m => botMsgHtml(m.from === 'team' ? { role:'team', name:m.name, rank:m.rank, content:m.text } : { role:'user', content:m.text })).join('');
     Q.innerHTML = ''; inp.placeholder = 'Responde como ' + (SZ_RANK() || 'equipo') + '…';
-  } else if (BOT.mode === 'team' && BOT.help){
+  } else if (BOT.mode === 'team' && BOT.help && !CW.el){
     const r = BOT.help;
     L.innerHTML = '<div class="bctx"><button type="button" class="lnk" data-b="ia">← SynthonIA</button><span>' + (r.status === 'open' ? (r.urgent ? 'Contactando a un Prime, ZFlow o Symmetrix…' : 'El equipo ya recibió tu mensaje') : r.status === 'taken' ? 'Te atiende ' + esc((r.by || {}).name || '') + ' (' + esc((r.by || {}).rank || '') + ')' : 'Conversación terminada') + '</span>' + (r.status !== 'done' ? '<button type="button" class="lnk" data-b="end">Terminar</button>' : '') + '</div>'
       + r.msgs.map(m => botMsgHtml(m.from === 'team' ? { role:'team', name:m.name, rank:m.rank, content:m.text } : { role:'user', content:m.text })).join('')
@@ -2369,18 +3094,31 @@ function botRender(){
     Q.innerHTML = ''; inp.placeholder = r.status === 'done' ? 'Escribe para abrir una conversación nueva…' : 'Escríbele al equipo…';
   } else {
     BOT.mode = 'chat';
-    L.innerHTML = BOT.hist.map(botMsgHtml).join('') + (BOT.think ? '<div class="bm a"><span class="mf">' + face('pensando', 28) + '</span><div><p class="dots"><i></i><i></i><i></i></p></div></div>' : '');
+    L.innerHTML = BOT.hist.map(botMsgHtml).join('') + (BOT.think ? '<div class="bm a"><span class="mf pxmf">' + pixelGrid() + '</span><div><p class="dots"><i></i><i></i><i></i></p></div></div>' : '');
     Q.innerHTML = BOT.hist.length > 6 ? '' : BOT_QUICK.map(([i, l]) => '<button type="button" data-bf="' + i + '">' + esc(l) + '</button>').join('');
     inp.placeholder = 'Pregúntame lo que quieras…';
   }
   L.scrollTop = L.scrollHeight;
+  if (BOT.pxm){ BOT.pxm.stop(); BOT.pxm = null; }
+  const pm = BOT.think && $('.pxmf', L); if (pm){ BOT.pxm = pixelRun(pm); BOT.pxm.speed(3); }
 }
 const SZ_RANK = () => { const r = ACC.user && ACC.user.role; return { owner:'Prime', admin:'ZFlow', staff:'Symmetrix' }[r] || ''; };
 const agoS = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'ahora' : m < 60 ? 'hace ' + m + ' min' : m < 1440 ? 'hace ' + Math.round(m / 60) + ' h' : 'hace ' + Math.round(m / 1440) + ' d'; };
-function botSay(text, mood, btn){ BOT.hist.push({ role:'assistant', content:text, mood, btn }); BOT.hist = BOT.hist.slice(-30); botFace(mood || 'feliz'); SND.blip(mood || 'feliz'); botRender(); }
+function botSay(text, mood, btn){
+  const D = demoji(text); mood = mood || D.mood || 'feliz';
+  BOT.hist.push({ role:'assistant', content:D.text, mood, btn }); BOT.hist = BOT.hist.slice(-30); botFace(mood); SND.blip(mood); botRender();
+  /* en la ventanita, su último mensaje se escribe mientras mueve la boca */
+  if (BOT.open && BOT.panel){ const L = $$('.bl .bm.a', BOT.panel), last = L[L.length - 1], p = last && $('p', last); if (p) setTimeout(() => typeIn(p, { cps:45, max:4.5, onFrame:lipSync([$('.mf .szface', last), ballFace()], D.text) }).catch(() => {}), 80); }
+  /* si cerraste la ventanita mientras pensaba: «Ten paciencia… modo zen…» y luego la respuesta */
+  if (!BOT.open && BOT.zen){ BOT.zen = false; botFace('dormida', true); botBubble('Ten paciencia… modo zen…', 1900); setTimeout(() => { botFace(mood, true); botBubble(D.text.length > 240 ? D.text.slice(0, 236) + '…' : D.text, 8000); }, 2000); }
+}
 /* respuesta guardada: si dice «dónde», la manita lo señala */
 async function botAnswer(f){
+  if (f.joke || f.fact){ const t = await botThink(() => f.joke ? BOTAPI.joke() : BOTAPI.fact()); return botSay((f.fact ? '¿Sabías que…? ' : '') + t, f.joke ? 'riendo' : 'sorprendida'); }
+  await botThink();
   botSay(f.a, f.mood || (f.go ? 'senalando' : 'feliz'), f.act ? [f.act, f.lbl] : null);
+  if (f.wave && HAND && BOT.el){ const r0 = BOT.el.getBoundingClientRect(); HAND.show({ x:r0.left + r0.width / 2, y:r0.top - 10 }); await HAND.moveTo({ x:clamp(r0.left - 40, 40, innerWidth - 40), y:clamp(r0.top - 50, 40, innerHeight - 40) }, { shape:'palm' }); await HAND.wave(2); HAND.hide(); return; }
+  if (f.tour === 'coins' && HAND && $('#railTog') && $('#railCoin') && !matchMedia('(max-width:760px)').matches) return coinsTour();
   const t = f.go && vis(f.go);
   if (t && HAND){
     await sleepRaw(500);
@@ -2392,39 +3130,98 @@ async function botAnswer(f){
     if (wasOpen && !BOT.open) botOpen();
   }
 }
+/* «¿Dónde están los SynXCoin's?»: con la barrita cerrada están abajo (solo el icono); al abrirla se ve cuántos llevas */
+async function coinsTour(){
+  const tog = $('#railTog'), coin = $('#railCoin'), rail = $('#rail'), wasOpen = rail && rail.classList.contains('open');
+  await sleepRaw(500);
+  const wasBot = BOT.open; botClose();
+  const r0 = BOT.el ? BOT.el.getBoundingClientRect() : { left:innerWidth / 2, top:innerHeight / 2, width:0, height:0 };
+  HAND.show({ x:r0.left + r0.width / 2, y:r0.top + r0.height / 2 });
+  const point = async (txt, mood) => { await sleepRaw(80); HAND.spot(coin, 6); await HAND.moveTo(coin, { shape:'point', fx:wasOpenNow() ? .2 : .5 }); await HAND.click(null); await HAND.talk(txt, { near:coin, side:true, mood:mood || 'senalando', buttons:[{ label:'Siguiente' }], auto:5200 }); HAND.unspot(); };
+  const wasOpenNow = () => rail && rail.classList.contains('open');
+  const flip = async () => { HAND.quiet(); await HAND.moveTo(tog, { shape:'point' }); await HAND.click(tog, { real:true }); await sleepRaw(720); };
+  if (!wasOpen){
+    await point('Con la barrita cerrada, tu límite de hoy está aquí abajo: el anillo se va vaciando mientras chateas.');
+    await flip(); await point('Y si abres la barrita, lo ves con palabras. Tócalo para ver el detalle.', 'guino');
+    await flip();
+  } else {
+    await point('Aquí, en la barrita, ves cómo va tu límite de hoy. Tócalo para ver el detalle.');
+    await flip(); await point('Y con la barrita cerrada sigue aquí abajo: el anillo se va vaciando.', 'guino');
+    await flip();
+  }
+  HAND.quiet(); HAND.hide();
+  if (wasBot && !BOT.open) botOpen();
+}
+const TASKY = /\b(escrib[ea]me|redacta|resuelve|resolver|calcula|codigo|programa(me)?|funcion|script|python|javascript|html|css|sql|tarea|deberes|ensayo|resumen de|resume|traduce|traducir|corrige|ecuacion|derivada|integral|examen|plan de|haz(me)? un|crea(me)? un|genera)\b/;
 async function botAsk(q){
   BOT.hist.push({ role:'user', content:q }); botRender();
-  const f = botMatch(q); if (f){ await sleepRaw(380); return botAnswer(f); }
-  BOT.think = true; botFace('pensando'); botRender();
+  const f = botMatch(q); if (f) return botAnswer(f);
+  /* SynthonIA no hace tareas, código ni trabajos: eso es para las IAs del chat */
+  if (TASKY.test(fold(q)) || q.length > 220){ BOT.pendingQ = q; await botThink(); return botSay('Eso es trabajo para las IAs de SynthFlow 💪 Yo te ayudo con la página, y con chistes o datos curiosos. ¿Te lo dejo listo en la caja del chat?', 'guino', ['tochat', 'Sí, llévalo al chat']); }
   try{
-    const r = await fetch('/api/help', { method:'POST', headers:Object.assign({ 'content-type':'application/json' }, SESS ? { authorization:'Bearer ' + SESS } : {}), body:JSON.stringify({ action:'ask', q, hist:BOT.hist.slice(-7, -1).filter(m => m.role === 'user' || m.role === 'assistant').map(m => ({ role:m.role, content:m.content })) }) });
-    const d = await r.json().catch(() => ({}));
-    BOT.think = false;
+    const res = await botThink(async () => { const r = await fetch('/api/help', { method:'POST', headers:Object.assign({ 'content-type':'application/json' }, SESS ? { authorization:'Bearer ' + SESS } : {}), body:JSON.stringify({ action:'ask', q, hist:BOT.hist.slice(-7, -1).filter(m => m.role === 'user' || m.role === 'assistant').map(m => ({ role:m.role, content:m.content })) }) });
+    const d = await r.json().catch(() => ({})); return { r, d }; });
+    const { r, d } = res;
     if (!r.ok) return botSay(d.error || 'No pude pensar una respuesta ahora. Mira la Guía o habla con el equipo.', 'disculpa', ['team', 'Hablar con el equipo']);
     botSay(d.text + (d.left <= 3 ? '\n\n(Te quedan ' + d.left + ' preguntas nuevas hoy.)' : ''), 'feliz');
-  }catch(e){ BOT.think = false; botSay('No pude conectarme. Revisa tu internet e intenta otra vez.', 'disculpa'); }
+  }catch(e){ botSay('No pude conectarme. Revisa tu internet e intenta otra vez.', 'disculpa'); }
 }
 function botAct(a){
+  if (BOT.acts && BOT.acts[a]){ const fn = BOT.acts[a]; delete BOT.acts[a]; botClose(); try{ fn(); }catch(e){} return; }
+  if (a === 'tochat'){ const q = BOT.pendingQ || ''; botClose(); if (isFlow()){ const i = document.getElementById('inp'); if (i){ i.value = q; i.dispatchEvent(new Event('input', { bubbles:true })); i.focus(); } } else { try{ sessionStorage.setItem('synthz:q', JSON.stringify({ q, t:Date.now() })); }catch(e){} portalOut('chat.html'); } return; }
   if (a === 'guide'){ botClose(); const g = $('#guideTop') || $('#helpBtn'); if (g) g.click(); }
-  else if (a === 'conn'){ botClose(); const c = $('#lockCard [data-lk="or"]'); if (c) c.click(); else { const x = document.createElement('a'); x.setAttribute('data-conn', ''); document.body.appendChild(x); x.click(); x.remove(); } }
+  else if (a === 'conn'){ botClose(); const x = document.createElement('a'); x.setAttribute('data-conn', ''); document.body.appendChild(x); x.click(); x.remove(); }
   else if (a === 'team') botTeam();
   else if (a === 'login'){ botClose(); const b = $('#accBtn') || $('[data-tab="me"]'); if (b) b.click(); }
 }
 /* ---- ayuda de personas ---- */
 async function helpApi(o){ return api('help' + (o && o.q ? o.q : ''), o && o.body ? { method:'POST', body:o.body, keep:true } : { keep:true }); }
 async function botTeam(){
-  if (!ACC.ready){ botSay('Para hablar con una persona del equipo necesitas tu cuenta de SynthZ (es gratis). Así te pueden responder aunque cierres la página.', 'guino', ['login', 'Entrar o crear cuenta']); return; }
-  if (BOT.help && BOT.help.status !== 'done'){ BOT.mode = 'team'; botRender(); return; }
-  BOT.mode = 'team'; BOT.help = { status:'new', msgs:[] };
-  const L = $('.bl', BOT.panel); L.innerHTML = '<div class="bctx"><button type="button" class="lnk" data-b="ia">← SynthonIA</button><span>Hablar con el equipo</span></div>' + botMsgHtml({ role:'assistant', mood:'feliz', content:'Cuéntame en qué te ayudamos y se lo paso a un Prime, ZFlow o Symmetrix. Nadie ve tus chats: solo lo que escribas aquí.' });
-  $('.bq', BOT.panel).innerHTML = ''; const i = $('.bin input', BOT.panel); i.placeholder = 'Escríbele al equipo…'; i.focus();
+  if (!ACC.ready){ if (!BOT.open) botOpen(); botSay('Para hablar con una persona del equipo necesitas tu cuenta de SynthZ (es gratis). Así te pueden responder aunque cierres la página.', 'guino', ['login', 'Entrar o crear cuenta']); return; }
+  if (!(BOT.help && BOT.help.status !== 'done')) BOT.help = { status:'new', msgs:[] };
+  BOT.mode = 'chat'; botClose(); chatOpen();
+}
+/* ---- «Chat con …»: ventana aparte que entra de derecha a izquierda (la persona que te atiende y su rango) ---- */
+const CW = { el:null };
+function chatTitle(r){ return r && r.by && r.by.name ? 'Chat con ' + r.by.name : 'Chat con el equipo de SynthZ'; }
+function chatOpen(){
+  if (!CW.el){
+    const w = document.createElement('aside'); w.id = 'szChat'; w.setAttribute('role', 'dialog'); w.setAttribute('aria-label', 'Chat con el equipo');
+    w.innerHTML = '<div class="cwh"><span class="cwa"></span><div class="cwt"><b></b><small></small></div><button type="button" class="cwx" data-cx aria-label="Cerrar">×</button></div><div class="cwl" aria-live="polite"></div>'
+      + '<form class="cwin"><input type="text" maxlength="1000" placeholder="Escríbele al equipo…" aria-label="Escríbele al equipo" autocomplete="off"><button type="submit" class="bs" aria-label="Enviar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></form>'
+      + '<div class="cwf"><span>Nadie ve tus chats: solo lo que escribes aquí.</span><button type="button" class="lnk" data-cend>Terminar</button></div>';
+    document.body.appendChild(w); CW.el = w;
+    $('[data-cx]', w).addEventListener('click', chatClose);
+    $('[data-cend]', w).addEventListener('click', async () => { const r = BOT.help; if (!r || !r.id || r.status === 'done'){ chatClose(); return; } try{ const d = await helpApi({ body:{ action:'close', id:r.id } }); BOT.help = d.item; chatRender(); toast('Terminaste la conversación con el equipo.'); setTimeout(chatClose, 900); }catch(er){ toast(er.message); } });
+    $('.cwin', w).addEventListener('submit', async e => { e.preventDefault(); const i = $('.cwin input', w), v = i.value.trim(); if (!v) return; i.value = ''; const r = BOT.help; if (r && r.status === 'done') BOT.help = { status:'new', msgs:[] }; BOT.mode = 'team'; await botTeamSay(v); BOT.mode = 'chat'; chatRender(); });
+  }
+  chatRender(); SND.expand && SND.expand();
+  requestAnimationFrame(() => requestAnimationFrame(() => CW.el && CW.el.classList.add('on')));
+  setTimeout(() => { const i = CW.el && $('.cwin input', CW.el); if (i && matchMedia('(pointer: fine)').matches) i.focus(); }, 520);
+  if (BOT.el){ const dot = $('.bdot', BOT.el); if (dot && !BOT.team) dot.hidden = true; }
+}
+function chatClose(){ if (CW.el) CW.el.classList.remove('on'); }
+const chatIsOpen = () => !!(CW.el && CW.el.classList.contains('on'));
+function chatRender(){
+  const w = CW.el; if (!w) return; const r = BOT.help || { status:'new', msgs:[] };
+  $('.cwt b', w).textContent = chatTitle(r);
+  $('.cwt small', w).innerHTML = r.by && r.by.rank ? '<span class="rk r-' + esc(String(r.by.rank).toLowerCase()) + '">' + esc(r.by.rank) + '</span> te está atendiendo' : r.status === 'open' ? (r.urgent ? 'Avisando otra vez a un Prime, ZFlow o Symmetrix…' : 'Esperando a un Prime, ZFlow o Symmetrix…') : r.status === 'done' ? 'Conversación terminada' : 'Un Prime, ZFlow o Symmetrix te responde aquí';
+  $('.cwa', w).innerHTML = r.by && r.by.name ? '<i class="cwi r-' + esc(String(r.by.rank || '').toLowerCase()) + '">' + esc(String(r.by.name).replace(/^@/, '').charAt(0).toUpperCase()) + '</i>' : face(r.status === 'open' ? 'esperando' : 'feliz', 40);
+  const L = $('.cwl', w);
+  const intro = botMsgHtml({ role:'assistant', mood:'feliz', content:'Cuéntame en qué te ayudamos y se lo paso a un Prime, ZFlow o Symmetrix. Te responden aquí mismo, aunque cierres la página.' });
+  L.innerHTML = (!(r.msgs || []).length ? intro : '') + (r.msgs || []).map(m => botMsgHtml(m.from === 'team' ? { role:'team', name:m.name, rank:m.rank, content:m.text } : { role:'user', content:m.text })).join('')
+    + (r.status === 'open' ? botMsgHtml({ role:'assistant', mood:r.urgent ? 'pensando' : 'esperando', content:r.urgent ? 'Ya pasaron más de 15 minutos: estoy avisando otra vez al equipo. ¡No te vas a quedar sin respuesta!' : 'Le avisé al equipo. Te respondo aquí apenas escriban (puedes seguir usando SynthZ).' }) : '')
+    + (r.status === 'done' ? '<p class="bempty">Conversación terminada. Escribe para abrir una nueva.</p>' : '');
+  $('[data-cend]', w).hidden = !r.id || r.status === 'done';
+  L.scrollTop = L.scrollHeight;
 }
 async function botTeamSay(text){
+  if (CW.el && BOT.mode !== 'reply') BOT.mode = 'team';
   try{
     if (BOT.mode === 'reply' && BOT.cur){ const d = await helpApi({ body:{ action:'say', id:BOT.cur.id, text } }); BOT.cur = d.item; botRender(); botSyncSoon(); return; }
     const r = BOT.help;
     const d = r && r.id && r.status !== 'done' ? await helpApi({ body:{ action:'say', id:r.id, text } }) : await helpApi({ body:{ action:'open', text, page:document.title.slice(0, 60) } });
-    BOT.help = d.item; BOT.mode = 'team'; BOT.seen = (d.item.msgs || []).length; botRender(); botSyncSoon();
+    BOT.help = d.item; BOT.mode = CW.el ? 'chat' : 'team'; BOT.seen = (d.item.msgs || []).length; if (CW.el) chatRender(); else botRender(); botSyncSoon();
   }catch(e){ toast(e.message || 'No pude enviar tu mensaje.'); }
 }
 function botSyncSoon(){ clearTimeout(BOT.poll); BOT.poll = setTimeout(botSync, 1500); }
@@ -2435,12 +3232,17 @@ async function botSync(){
     const d = await helpApi();
     const prev = BOT.help, mine = d.mine;
     if (mine){
-      const newTeam = (mine.msgs || []).filter(m => m.from === 'team').length, oldTeam = prev && prev.msgs ? prev.msgs.filter(m => m.from === 'team').length : 0;
-      if (prev && prev.id === mine.id && newTeam > oldTeam){
+      const newTeam = (mine.msgs || []).filter(m => m.from === 'team').length;
+      let seenN = 0; try{ seenN = +localStorage.getItem('synthz:hseen:' + mine.id) || 0; }catch(e){}
+      if (prev && prev.id === mine.id && prev.msgs) seenN = Math.max(seenN, prev.msgs.filter(m => m.from === 'team').length);
+      if (newTeam > seenN){
+        try{ localStorage.setItem('synthz:hseen:' + mine.id, String(newTeam)); }catch(e){}
         const m = mine.msgs.filter(x => x.from === 'team').pop();
         SND.expand(); botFace('dormida');
-        botBubble(oldTeam ? m.name + ' (' + m.rank + ') te respondió.' : '¡Llegó ' + m.name + ' (' + m.rank + ')! Me tomo una siestita 😴 mientras te ayuda.', 7000);
-        if (BOT.el){ const dot = $('.bdot', BOT.el); dot.hidden = BOT.open && BOT.mode === 'team'; }
+        if (!chatIsOpen()) botBubble(seenN ? m.name + ' (' + m.rank + ') te respondió.' : '¡Llegó ' + m.name + ' (' + m.rank + ')! Me tomo una siestita 😴 mientras te ayuda.', 7000);
+        BOT.help = mine;
+        if (!document.documentElement.classList.contains('guiding') && !document.querySelector('.szm')) chatOpen();
+        else if (BOT.el){ const dot = $('.bdot', BOT.el); dot.hidden = false; }
       }
       if (prev && prev.status === 'open' && !prev.urgent && mine.urgent) botBubble('Estoy contactando a un Prime, ZFlow o Symmetrix… ¡ya casi!', 6000);
       BOT.help = mine;
@@ -2457,10 +3259,14 @@ async function botSync(){
       if (BOT.mode === 'reply' && BOT.cur){ const s = BOT.inbox.find(r => r.id === BOT.cur.id); if (s && s.n !== BOT.cur.msgs.length){ const x = await helpApi({ q:'?id=' + encodeURIComponent(BOT.cur.id) }); BOT.cur = x.item; } }
     }
     if (BOT.open) botRender();
+    if (CW.el) chatRender();
   }catch(e){}
   const active = (BOT.help && BOT.help.status && BOT.help.status !== 'done') || BOT.team;
-  BOT.poll = setTimeout(botSync, document.hidden ? 60000 : active ? (BOT.open ? 8000 : 20000) : 45000);
+  /* sin conversación abierta no se pregunta cada rato (ahorra Redis): el «sigo aquí» de cada 3 min avisa si el equipo te escribió */
+  if (!active){ BOT.poll = 0; return; }
+  BOT.poll = setTimeout(botSync, document.hidden ? 60000 : BOT.open ? 8000 : 20000);
 }
+addEventListener('synthz-help-ping', () => { if (!BOT.poll) botSyncSoon(); });
 async function botClick(e){
   const t = e.target;
   const bf = t.closest('[data-bf]'); if (bf){ const f = BOT_FAQ[+bf.dataset.bf]; BOT.hist.push({ role:'user', content:bf.textContent }); botRender(); await sleepRaw(300); return botAnswer(f); }
@@ -2472,19 +3278,68 @@ async function botClick(e){
   if (k === 'min') botClose();
   else if (k === 'hide'){ botClose(); try{ sessionStorage.setItem('synthz:bothide', '1'); }catch(er){} const el = BOT.el; BOT.el = null; if (el){ el.classList.remove('on'); setTimeout(() => el.remove(), 400); } toast('SynthonIA se escondió hasta que vuelvas a abrir la página.'); }
   else if (k === 'team') botTeam();
+  else if (k === 'fb'){ botClose(); feedbackModal(); }
   else if (k === 'ia'){ BOT.mode = 'chat'; botRender(); }
   else if (k === 'back'){ BOT.mode = 'inbox'; botRender(); }
   else if (k === 'end' || k === 'done'){ const id = k === 'end' ? BOT.help && BOT.help.id : BOT.cur && BOT.cur.id; if (!id) return; try{ const d = await helpApi({ body:{ action:'close', id } }); if (k === 'end'){ BOT.help = d.item; botFace('feliz'); } else BOT.cur = d.item; botRender(); }catch(er){ toast(er.message); } }
 }
+/* ---------- BETA: «Cuéntanos qué mejorar» (llega a Pulsem) ---------- */
+function feedbackModal(){
+  if ($('#szFb')) return;
+  const o = document.createElement('div'); o.id = 'szFb'; o.className = 'szm';
+  const C = [['idea', '💡', 'Una idea'], ['error', '🐞', 'Algo falló'], ['confuso', '🤔', 'No entendí algo'], ['otro', '💬', 'Otra cosa']];
+  o.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="Cuéntanos qué mejorar"><div class="word">' + zWord('Synth') + '</div><div class="tn">BETA · TU OPINIÓN</div><div class="tb"><h3>Cuéntanos qué mejorar</h3><p>Lo lee el equipo de SynthZ. No hace falta saber de tecnología: escríbelo como se lo dirías a un amigo.</p></div>'
+    + '<div class="fbc" role="radiogroup">' + C.map(([k, e, l], i) => '<button type="button" role="radio" data-c="' + k + '" aria-checked="' + (i === 0) + '"><span>' + e + '</span>' + l + '</button>').join('') + '</div>'
+    + '<label class="fbt"><textarea maxlength="1000" rows="4" placeholder="Por ejemplo: no encontré dónde cambiar de IA…"></textarea></label>'
+    + '<div class="tbtn" style="margin-top:14px"><button class="lnk" type="button" data-close>Cancelar</button><button class="btn sm" type="button" data-send>Enviar</button></div></div>';
+  document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('on'));
+  let cat = 'idea';
+  const close = () => { o.classList.remove('on'); setTimeout(() => o.remove(), 420); };
+  $('[data-close]', o).addEventListener('click', close); o.addEventListener('pointerdown', e => { if (e.target === o) close(); });
+  $$('[data-c]', o).forEach(b => b.addEventListener('click', () => { cat = b.dataset.c; $$('[data-c]', o).forEach(x => x.setAttribute('aria-checked', String(x === b))); SND.tap(); }));
+  setTimeout(() => $('textarea', o).focus(), 120);
+  $('[data-send]', o).addEventListener('click', async e => {
+    const t = $('textarea', o).value.trim(); if (t.length < 3){ toast('Cuéntanos un poquito más.'); return; }
+    e.currentTarget.disabled = true;
+    try{ await api('help', { method:'POST', body:{ action:'feedback', cat, text:t, page:telPage() }, keep:true }); close(); toast('¡Gracias! El equipo ya lo recibió. 💛'); SND.done(); }
+    catch(er){ e.currentTarget.disabled = false; toast(er.message || 'No pude enviarlo. Intenta de nuevo.'); }
+  });
+}
+function betaMk(){
+  const t = document.createElement('button'); t.type = 'button'; t.className = 'beta-tag'; t.textContent = 'BETA'; t.title = 'Estamos en beta: cuéntanos qué mejorar'; t.dataset.tip = 'Cuéntanos qué mejorar';
+  t.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); feedbackModal(); });
+  return t;
+}
+/* SynthZ: el BETA va al lado del logo pero FUERA del enlace (antes a veces no se podía tocar) */
+function betaTags(){
+  if (isFlow()) return betaBot();
+  const a = document.querySelector('#nav .logo'); if (!a || document.querySelector('#nav .beta-tag')) return;
+  const w = document.createElement('div'); w.className = 'logow'; a.before(w); w.append(a, betaMk());
+}
+/* SynthFlow: el BETA va pegadito a la bolita de SynthonIA y la sigue si la mueves */
+function betaBot(){
+  const b = BOT.el; if (!b || !isFlow()) return;
+  let t = document.getElementById('betaBot');
+  if (!t){ t = betaMk(); t.id = 'betaBot'; t.classList.add('bb'); (b.classList.contains('inhead') ? b.parentNode : document.body).appendChild(t); }
+  const put = () => {
+    const r = b.getBoundingClientRect(); if (!r.width) return;
+    if (b.classList.contains('inhead')){ t.style.position = 'absolute'; t.style.zIndex = '3'; t.style.left = (b.offsetLeft + b.offsetWidth + 8) + 'px'; t.style.top = (b.offsetTop + b.offsetHeight / 2 - t.offsetHeight / 2) + 'px'; return; }
+    const w = t.offsetWidth || 46, h = t.offsetHeight || 18, left = r.left - w - 10 < 8 ? r.right + 10 : r.left - w - 10;
+    t.style.left = left.toFixed(0) + 'px'; t.style.top = (r.top + r.height / 2 - h / 2).toFixed(0) + 'px';
+  };
+  BOT.betaPut = put; put(); requestAnimationFrame(put); setTimeout(put, 700); setTimeout(put, 1600);
+  if (!t._w){ t._w = 1; addEventListener('resize', put); if (document.fonts) document.fonts.ready.then(put); }
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(betaTags, 400)); else setTimeout(betaTags, 400);
 addEventListener('synthz-ready-bot', botMount);
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(botMount, 900)); else setTimeout(botMount, 900);
-const BOTAPI = { open:botOpen, close:botClose, mount:botMount, say:botSay, sync:botSync, match:q => { const f = botMatch(q); return f ? BOT_FAQ.indexOf(f) : -1; }, get el(){ return BOT.el; } };
+const BOTAPI = { open:botOpen, close:botClose, mount:botMount, say:botSay, sync:botSync, team:botTeam, chatOpen, chatClose, match:q => { const f = botMatch(q); return f ? BOT_FAQ.indexOf(f) : -1; }, get el(){ return BOT.el; } };
 /* ---------- Guía: elegir cómo aprender (Asistida con SynthonIA o Lectura) ---------- */
 function guideChooser(o = {}){
   if ($('#szGch')) return;
   const w = document.createElement('div'); w.id = 'szGch'; w.className = 'szm';
   w.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="Guía"><div class="word">' + zWord('Synth') + '</div><div class="tn">GUÍA</div><div class="tb"><h3>¿Cómo quieres aprender?</h3><p>' + esc(o.lead || 'Te muestro ' + (isFlow() ? 'SynthFlow' : 'SynthZ') + ' como prefieras. Puedes volver aquí cuando quieras con el botón «Guía».') + '</p></div>'
-    + '<div class="gch"><button type="button" class="gco a" data-g="a"><span class="gf">' + face('senalando', 54) + '</span><b>Asistida</b><small>SynthonIA te lo muestra con su manita, paso a paso: temas, IA recomendadas, comparar 2 y ' + (o.trial === false ? 'cómo conectar.' : '5 mensajes de prueba gratis.') + '</small><em>Unos 2 minutos</em></button>'
+    + '<div class="gch"><button type="button" class="gco a" data-g="a"><span class="gf">' + face('senalando', 54) + '</span><b>Asistida</b><small>SynthonIA te lo muestra con su manita, paso a paso: temas, IA recomendadas, comparar 2 y ' + (o.trial === false ? 'cómo conectar.' : 'tu primer chat con las IAs conectadas.') + '</small><em>Unos 2 minutos</em></button>'
     + '<button type="button" class="gco l" data-g="l"><span class="gf"><svg viewBox="0 0 48 48" width="54" height="54" aria-hidden="true"><path d="M8 11c6-2 12-1 16 3 4-4 10-5 16-3v26c-6-2-12-1-16 3-4-4-10-5-16-3z" fill="rgba(184,196,255,.12)" stroke="#b8c4ff" stroke-width="2" stroke-linejoin="round"/><path d="M24 14v26" stroke="#b8c4ff" stroke-width="2"/><path d="M12 18h7M12 23h7M29 18h7M29 23h7" stroke="#b8c4ff" stroke-opacity=".6" stroke-width="1.6" stroke-linecap="round"/></svg></span><b>Lectura</b><small>Una guía corta para leer a tu ritmo, con todo lo importante.</small><em>A tu ritmo</em></button></div>'
     + '<div class="tbtn" style="margin-top:14px"><button class="lnk" type="button" data-close>Ahora no</button></div></div>';
   document.body.appendChild(w); requestAnimationFrame(() => w.classList.add('on'));
@@ -2533,8 +3388,472 @@ function welcomeBack(opts){
   return o;
 }
 
+/* ===== v1.3: mientras corre una guía o un recorrido, solo se puede tocar la guía y «Saltar guía» ===== */
+(function guideLock(){
+  const OK = '#szgHud,#szgPanel,#szSay,#szHand,#ptour,#tour,.szm,#toast,#szChat,.tcard,[data-guide-ok]';
+  const on = () => root.classList.contains('guiding') || !!document.getElementById('ptour') || !!document.getElementById('tour');
+  let warnT = 0;
+  const stop = e => {
+    if (!e.isTrusted || !on()) return;
+    const t = e.target, el = t && t.nodeType === 1 ? t : t && t.parentElement;
+    if (el && el.closest && el.closest(OK)) return;
+    if (e.type === 'keydown'){
+      if (e.key === 'Escape' || e.key === 'Tab' || e.key === 'F5') return;
+      const a = document.activeElement; if (a && a.closest && a.closest(OK)) return;
+    }
+    if (e.type === 'wheel' || e.type === 'touchmove') return;      /* mirar (desplazarse) sí se puede */
+    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+    if ((e.type === 'pointerdown' || e.type === 'keydown') && Date.now() - warnT > 2600){ warnT = Date.now(); try{ toast('Estás en la guía. Sigue con los botones de SynthonIA o toca «Saltar guía».'); }catch(x){} const h = document.querySelector('#szgHud .gh-x'); if (h){ h.classList.remove('nudge'); void h.offsetWidth; h.classList.add('nudge'); } }
+  };
+  ['pointerdown', 'mousedown', 'mouseup', 'click', 'dblclick', 'contextmenu', 'keydown', 'submit'].forEach(t => addEventListener(t, stop, { capture:true, passive:false }));
+})();
+/* ===== v1.3 · en el celular, cada toque deja una onda de vidrio ===== */
+addEventListener('pointerdown', e => {
+  if (e.pointerType !== 'touch' || reduce || root.classList.contains('noanim') || document.getElementById('portal')) return;
+  const r = document.createElement('i'); r.className = 'tapr'; r.style.left = e.clientX + 'px'; r.style.top = e.clientY + 'px';
+  document.body.appendChild(r); setTimeout(() => r.remove(), 600);
+}, { capture:true, passive:true });
+/* ===== v1.3 · SynthonIA con vida: chistes, datos curiosos que no se repiten, siesta, reacciones y ayuda si te pierdes ===== */
+(function botLife(){
+  const JOKES = [
+    '¿Por qué la computadora fue al médico? Porque tenía un virus… y no quería compartirlo. 🤒',
+    '¿Qué le dijo un bit a otro bit? «Nos vemos en el bus». 🚌',
+    'Le pedí a una IA que me contara un chiste de memoria… y se le olvidó. 😅',
+    '¿Cuál es el colmo de un programador? Que su perro se llame «Error 404»… y nunca lo encuentre. 🐶',
+    '¿Por qué el libro de matemáticas estaba triste? Porque tenía demasiados problemas. 📘',
+    '¿Qué hace una abeja en el gimnasio? ¡Zumba! 🐝',
+    'Mi wifi y yo tenemos algo en común: los dos nos desconectamos los lunes. 📶',
+    '¿Qué le dice un semáforo a otro? «No me mires, que me estoy cambiando». 🚦',
+    'Intenté hacer un chiste sobre la nube… pero se fue volando. ☁️',
+    '¿Cuál es el café más peligroso del mundo? El ex-preso. ☕',
+    '¿Qué le dijo el 0 al 8? «¡Qué buen cinturón!» 0️⃣',
+    'Soy SynthonIA y no duermo… bueno, solo cuando te vas. 😴',
+    '¿Qué hace un pez en internet? Navega. 🐟',
+    '¿Cómo se despiden los químicos? Ácido un placer. 🧪',
+    '¿Qué le dijo una impresora a otra? «¿Ese papel es tuyo o es impresión mía?» 🖨️',
+    '¿Por qué la escoba llegó tarde? Porque se quedó barriendo. 🧹',
+    'Mi contraseña es «incorrecta»: así, cuando la olvido, la página me la recuerda. 🔐',
+    '¿Por qué el tomate se puso rojo? Porque vio a la ensalada sin aderezo. 🍅',
+    '¿Cuál es el animal más antiguo? La cebra, porque está en blanco y negro. 🦓',
+    'Le dije a mi IA que era graciosa… y me respondió con una tabla de 5 columnas. 📊',
+    '¿Qué hace una vaca pensando? Leche concentrada. 🐄',
+    '¿Por qué el mar es tan amable? Porque siempre te saluda con una ola. 🌊',
+    '¿Qué le dijo la luna al sol? «Tú tan grande y no te dejan salir de noche». 🌙',
+    '¿Cómo se llama el campeón de buceo japonés? Tokofondo. 🤿',
+    '¿Qué le dijo el café al azúcar? «Sin ti mi vida es amarga». ☕'
+  ];
+  const FACTS = [
+    'SynthFlow puede poner varias IA a responder la misma pregunta al mismo tiempo. Así ves cuál lo explica mejor.',
+    'Si tocas «Otra vez» en una respuesta, la IA lo intenta de nuevo con otras palabras.',
+    'Tus chats se guardan en tu dispositivo, y si entras con tu cuenta también te siguen a tu celular.',
+    'Con el modo agente, una IA mejora lo que escribes y se lo pasa a la IA que más sabe de ese tema.',
+    'La «Automática» elige sola una IA que esté funcionando bien en ese momento.',
+    'Puedes adjuntar fotos y PDF: algunas IA los leen y te los explican.',
+    'Los pulpos tienen tres corazones y sangre azul. 🐙',
+    'La miel bien guardada casi no se daña: se ha encontrado miel comestible de miles de años. 🍯',
+    'Un día en Venus dura más que un año en Venus. 🪐',
+    'Los flamencos son rosados por lo que comen: algas y camarones. 🦩',
+    'Las nutrias se toman de la mano al dormir para no separarse con la corriente. 🦦',
+    'El corazón de una ballena azul es tan grande como un carro pequeño. 🐋',
+    'La Torre Eiffel puede crecer unos centímetros en verano por el calor. 🗼',
+    'Las abejas pueden reconocer caras humanas. 🐝',
+    'Un rayo es unas cinco veces más caliente que la superficie del Sol. ⚡',
+    'Los caracoles pueden dormir hasta tres años seguidos. 🐌',
+    'Las vacas tienen mejores amigas y se estresan si las separan. 🐄',
+    'El ojo del avestruz es más grande que su cerebro. 👁️',
+    'Hay más árboles en la Tierra que estrellas en la Vía Láctea. 🌳',
+    'Al primer error de computador se le dijo «bug» porque una polilla de verdad se metió en una máquina en 1947. 🦋',
+    'Los koalas duermen hasta 20 horas al día. 🐨',
+    'La Gran Muralla China no se ve a simple vista desde el espacio: es un mito. 🧱',
+    'Las jirafas solo duermen unos minutos seguidos, y a veces de pie. 🦒',
+    'Colombia es uno de los países con más especies de aves del mundo. 🐦',
+    'Los delfines se llaman entre sí con silbidos que funcionan como nombres. 🐬',
+    'La palabra «robot» viene del checo y significa «trabajo forzado». 🤖',
+    'Las estrellas de mar no tienen cerebro… ¡y aun así se las arreglan! ⭐',
+    'Los gatos pasan cerca del 70 % de su vida durmiendo. 🐈',
+    'El sonido viaja unas cuatro veces más rápido en el agua que en el aire. 🔊',
+    'Una cucharadita de una estrella de neutrones pesaría millones de toneladas. ✨'
+  ];
+  const K = 'synthz:botseen';
+  const seen = () => { try{ return Object.assign({ j:[], f:[], x:[] }, JSON.parse(localStorage.getItem(K)) || {}); }catch(e){ return { j:[], f:[], x:[] }; } };
+  const keep = s => { try{ localStorage.setItem(K, JSON.stringify(s)); }catch(e){} };
+  const hash = t => { let h = 0; for (const c of String(t)) h = (h * 31 + c.charCodeAt(0)) | 0; return String(h); };
+  /* nunca repite: cuando se acaban los guardados, le pide uno nuevo a la IA y recuerda lo que ya dijo */
+  async function next(kind){
+    const s = seen(), L = kind === 'j' ? JOKES : FACTS, used = new Set(s[kind]);
+    const left = L.map((t, i) => i).filter(i => !used.has(i));
+    if (left.length){ const i = left[Math.floor(Math.random() * left.length)]; s[kind] = [...used, i]; keep(s); return L[i]; }
+    for (let k = 0; k < 2; k++){
+      try{
+        const q = kind === 'j' ? 'Cuéntame un chiste corto, blanco y nuevo, de una o dos líneas.' : 'Dime un dato curioso corto y verdadero del mundo, de una línea.';
+        const r = await fetch('/api/help', { method:'POST', headers:Object.assign({ 'content-type':'application/json' }, SESS ? { authorization:'Bearer ' + SESS } : {}), body:JSON.stringify({ action:'ask', q, hist:[] }) });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok && d.text && !s.x.includes(hash(d.text))){ s.x = [...s.x, hash(d.text)].slice(-500); keep(s); return d.text; }
+      }catch(e){ break; }
+    }
+    return kind === 'j' ? 'Ya te conté todos mis chistes… ¡estoy escribiendo nuevos! 😄' : 'Ya te conté todos mis datos curiosos por ahora. Vuelve luego y tendré más. ✨';
+  }
+  BOTAPI.joke = () => next('j'); BOTAPI.fact = () => next('f');
+
+  /* ---- actividad: ¿la persona está aquí? ---- */
+  let last = Date.now(), asleep = false;
+  const active = () => Date.now() - last < 25000 && !document.hidden;
+  const busyUI = () => root.classList.contains('guiding') || root.classList.contains('lock') || root.classList.contains('leaving') || !root.classList.contains('ready') && !isFlow() || !!document.querySelector('#ptour,#tour,.szm,#vintro,#intro,#portal,.hackev') || BOT.open;
+  function wake(){
+    last = Date.now();
+    if (!asleep) return; asleep = false;
+    root.classList.remove('idle-sleep');
+    if (BOT.el){ botFace('sorprendida'); try{ SND.blip('sorprendida'); }catch(e){} if (!busyUI()) botBubble(['¡Ah! ¡Volviste! 👀', '¡Uy, me quedé dormida! Ya estoy aquí.', '¡Hola otra vez! Te estaba esperando.'][Math.floor(Math.random() * 3)], 3200); setTimeout(() => { if (!asleep) botFace('feliz'); }, 2200); }
+  }
+  ['pointermove', 'pointerdown', 'keydown', 'wheel', 'touchstart', 'scroll'].forEach(t => addEventListener(t, wake, { capture:true, passive:true }));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) wake(); });
+  /* 1 minuto sin moverte: SynthonIA se duerme y la página baja el ritmo para ahorrar batería */
+  setInterval(() => {
+    if (asleep || Date.now() - last < 60000 || busyUI()) return;
+    if (document.querySelector('.work:not(.fin)')) return;     /* no se duerme mientras una IA responde */
+    asleep = true; root.classList.add('idle-sleep'); if (BOT.el) botFace('dormida');
+  }, 5000);
+  BOTAPI.sleeping = () => asleep;
+
+  /* ---- de vez en cuando (solo si estás activo): un dato curioso o un chiste ---- */
+  let lastTalk = Date.now();
+  setInterval(async () => {
+    if (!BOT.el || asleep || !active() || busyUI() || Date.now() - lastTalk < 240000) return;
+    const a = document.activeElement; if (a && /INPUT|TEXTAREA/.test(a.tagName) && a.value) return;   /* no interrumpe si estás escribiendo */
+    if (Math.random() > .35) return;
+    lastTalk = Date.now();
+    const j = Math.random() < .4, t = await next(j ? 'j' : 'f');
+    botFace(j ? 'riendo' : 'sorprendida'); botBubble((j ? '' : '¿Sabías que…? ') + t, 7500); setTimeout(() => { if (!asleep) botFace('feliz'); }, 7600);
+  }, 30000);
+
+  /* ---- reacciones que la página le pide (respuestas, lentitud, límite…) ---- */
+  const said = {};
+  BOTAPI.react = (kind, o = {}) => {
+    if (!BOT.el || asleep || busyUI() || !active()) return;
+    const now = Date.now(); if (said[kind] && now - said[kind] < (o.cool || 90000)) return;
+    if (kind === 'done' && !o.text && Math.random() > .25) return;
+    said[kind] = now; lastTalk = now;
+    const M = {
+      slow:['pensando', 'Esta IA se está tomando su tiempo… ⏳ Si se demora mucho, prueba la «Automática».'],
+      done:['feliz', ['¡Listo! ¿Te sirvió?', '¡Eso tiene mucho Flow! ✨', 'Si quieres otra versión, toca «Otra vez».'][Math.floor(Math.random() * 3)]],
+      limit:['preocupada', 'Te queda poco de tu límite de hoy. Si se acaba, puedes seguir con Puter: tu versión pro de las IAs más usadas.'],
+      lost:['confundida', '¿Te ayudo a encontrar algo? Tócame y pregúntame. 🙂']
+    };
+    if (kind === 'lost'){ BOT.lostN = (BOT.lostN || 0) + 1; BOT.el.classList.toggle('g1', BOT.lostN === 1); BOT.el.classList.toggle('g2', BOT.lostN >= 2); clearTimeout(BOT.gT); BOT.gT = setTimeout(() => BOT.el && BOT.el.classList.remove('g1', 'g2'), 25000); BOTAPI.problem('lost'); }
+    const m = o.text ? [o.mood || 'feliz', o.text] : M[kind]; if (!m) return;
+    botFace(m[0]); botBubble(m[1], o.ms || 5200); setTimeout(() => { if (!asleep) botFace('feliz'); }, (o.ms || 5200) + 200);
+  };
+  /* un mensaje con botón dentro del panel de SynthonIA (rescatar un error, cambiar de IA…) */
+  BOT.acts = BOT.acts || {};
+  BOTAPI.offer = (text, mood, label, fn) => { const id = 'x' + Date.now().toString(36); BOT.acts[id] = fn; if (!BOT.open) botOpen(); botSay(text, mood || 'feliz', label ? [id, label] : null); };
+
+  /* ---- demasiados problemas seguidos: saca su manita, pide perdón y señala el botón para contarnos qué pasó ---- */
+  let probs = [], sorryAt = 0;
+  BOTAPI.problem = kind => {
+    const now = Date.now(); probs = probs.filter(t => now - t < 600000); probs.push(now);
+    if (probs.length >= 4 && now - sorryAt > 1800000 && BOT.el && !root.classList.contains('guiding')){ sorryAt = now; probs = []; setTimeout(sorry, 900); }
+  };
+  async function sorry(){
+    const t = document.querySelector('#betaBot') || [...document.querySelectorAll('.beta-tag')].find(x => x.getClientRects().length);
+    BOT.sticky = 'triste'; botFace('triste', true); if (BOT.open) botClose();
+    const unstick = e => { if (e.target.closest && e.target.closest('#szSay,#szHand,#szBot,.szm')) return; if (e.type === 'pointerdown' && e.pointerType === 'mouse' && e.button) return; BOT.sticky = null; botFace('feliz', true); removeEventListener('keydown', unstick, true); removeEventListener('pointerdown', unstick, true); };
+    setTimeout(() => { addEventListener('keydown', unstick, true); addEventListener('pointerdown', unstick, true); }, 2500);
+    if (!t || !HAND){ botBubble('Perdónanos por tu mala experiencia. Toca «BETA» para contarnos cuál fue el problema.', 9000); return; }
+    const r0 = BOT.el.getBoundingClientRect(); HAND.show({ x:r0.left + r0.width / 2, y:r0.top + r0.height / 2 });
+    await HAND.moveTo(t, { shape:'point' }); HAND.spot(t, 8);
+    const k = await HAND.talk('Perdónanos por tu mala experiencia. Aquí está nuestro botón para que nos cuentes cuál fue el problema.', { near:t, mood:'triste', buttons:[{ label:'Contarles' }, { label:'Ahora no', ghost:true }], auto:14000 });
+    HAND.unspot(); HAND.quiet(); HAND.hide();
+    if (k === 0) feedbackModal();
+  }
+  /* ---- ¿perdido? muchos clics que no hacen nada o subir y bajar sin parar ---- */
+  let clicks = [], dirs = [], lastY = scrollY, lastDir = 0;
+  addEventListener('pointerdown', e => {
+    if (!e.isTrusted || busyUI()) return;
+    const dead = !(e.target.closest && e.target.closest('button,a,input,textarea,select,label,[role=button],[data-hover],.mi,.hex,.tchip,.m'));
+    const now = Date.now(); clicks = clicks.filter(c => now - c.t < 5000); clicks.push({ t:now, x:e.clientX, y:e.clientY, dead });
+    const near = clicks.filter(c => Math.hypot(c.x - e.clientX, c.y - e.clientY) < 60).length, deadN = clicks.filter(c => c.dead).length;
+    if (near >= 6 || deadN >= 4){ clicks = []; BOTAPI.react('lost', { cool:40000 }); }
+  }, { capture:true, passive:true });
+  addEventListener('scroll', () => {
+    const y = scrollY, d = Math.sign(y - lastY); lastY = y; if (!d || d === lastDir) return; lastDir = d;
+    const now = Date.now(); dirs = dirs.filter(t => now - t < 9000); dirs.push(now);
+    if (dirs.length >= 8 && !busyUI()){ dirs = []; BOTAPI.react('lost', { cool:40000 }); }
+  }, { passive:true });
+})();
+
+/* ===== v2.0 · Guía rápida con SynthonIA: «¿La quieres completa o qué quieres ver?»
+   Eliges uno o varios temas (en el orden que los toques) y te los muestra con su manita.
+   Además: «¡Descubriste algo nuevo!» la primera vez que usas algo, y «Qué hay de nuevo» contado por ella ===== */
+const GTOPICS = [
+  ['chat', 'Escribir y enviar', 'Dónde escribes y cómo envías.'],
+  ['ia', 'Elegir la IA', 'Cambiar de IA y ver para qué sirve cada una.'],
+  ['comparar', 'Comparar IAs', 'Varias IA responden lo mismo, lado a lado.'],
+  ['agente', 'Modo agente', 'Escribes y el agente elige la IA por ti.'],
+  ['archivos', 'Archivos y vista previa', 'Adjuntar archivos y ver los que te da la IA.'],
+  ['extras', 'Internet y memoria', 'Buscar datos de hoy y que la IA te recuerde.'],
+  ['chats', 'Mis chats y favoritos', 'Dónde quedan tus conversaciones.'],
+  ['limite', 'Tu límite gratis', 'Cuánto te queda hoy y cuándo se llena.'],
+  ['cuenta', 'Tu cuenta y Puter', 'Guardar tus chats y la versión pro de las IA.'],
+  ['ajustes', 'Ajustes', 'Más bonito, más rápido, sonidos y más.'],
+  ['synthonia', 'SynthonIA', 'Cómo pedirme ayuda cuando quieras.']
+];
+function guideAsk(o = {}){
+  if ($('#szGq')) return;
+  const L = (o.topics || GTOPICS), picked = [];
+  const w = document.createElement('div'); w.id = 'szGq'; w.className = 'szm';
+  w.innerHTML = '<div class="tcard gq" role="dialog" aria-modal="true" aria-label="Guía rápida">'
+    + '<div class="gq-say"><span class="gq-f">' + face('feliz', 64) + '</span><div><b>SynthonIA</b><p></p></div></div>'
+    + '<button type="button" class="gq-full" data-gq="full"><span>Completa</span><small>' + esc(o.fullTxt || 'Te muestro todo, paso a paso (unos 2 minutos).') + '</small></button>'
+    + '<p class="gq-or">o elige lo que quieres ver <small>(puedes elegir varios; los veremos en el orden en que los toques)</small></p>'
+    + '<div class="gq-chips">' + L.map(t => '<button type="button" class="gq-c" data-t="' + t[0] + '" aria-pressed="false" title="' + esc(t[2]) + '"><i></i>' + esc(t[1]) + '</button>').join('') + '</div>'
+    + '<div class="tbtn gq-b"><button class="lnk" type="button" data-close>Ahora no</button>' + (o.read ? '<button class="lnk" type="button" data-gq="read">Leer a mi ritmo</button>' : '') + '<button class="btn sm flow" type="button" data-gq="go" disabled>Muéstrame lo que elegí</button></div></div>';
+  document.body.appendChild(w); requestAnimationFrame(() => w.classList.add('on'));
+  $('.tcard', w).animate([{ transform:'scale(.92) translateY(20px)', opacity:0, filter:'blur(8px)' }, { transform:'none', opacity:1, filter:'blur(0)' }], { duration:600, easing:'cubic-bezier(.22,1,.36,1)' });
+  const say = '¡Hola! ¿Quieres ver la guía completa o qué quieres aprender?';
+  const p = $('.gq-say p', w); p.textContent = say; SND.blip('feliz');
+  typeIn(p, { cps:46, max:3, onFrame:lipSync([$('.gq-f .szface', w), ballFace()], say) }).catch(() => {});
+  const go = $('[data-gq="go"]', w);
+  const paint = () => { $$('.gq-c', w).forEach(b => { const i = picked.indexOf(b.dataset.t); b.setAttribute('aria-pressed', String(i >= 0)); $('i', b).textContent = i >= 0 ? String(i + 1) : ''; }); go.disabled = !picked.length; go.textContent = picked.length ? 'Muéstrame ' + (picked.length === 1 ? 'eso' : 'estos ' + picked.length) : 'Muéstrame lo que elegí'; };
+  const close = then => { w.classList.remove('on'); setTimeout(() => w.remove(), 420); if (then) setTimeout(then, 280); };
+  w.addEventListener('click', e => {
+    const c = e.target.closest('.gq-c');
+    if (c){ const k = c.dataset.t, i = picked.indexOf(k); if (i >= 0) picked.splice(i, 1); else picked.push(k); SND.tap && SND.tap(); paint(); return; }
+    const b = e.target.closest('[data-gq]');
+    if (b){ const a = b.dataset.gq; if (a === 'full') close(o.full); else if (a === 'read') close(o.read); else if (a === 'go' && picked.length) close(() => o.pick && o.pick(picked.slice())); return; }
+    if (e.target === w || e.target.closest('[data-close]')) close(o.later);
+  });
+  setTimeout(() => { const b = $('.gq-full', w); if (b) b.focus(); }, 80);
+}
+
+/* «¡Descubriste algo nuevo!»: la primera vez que usas algo, SynthonIA te cuenta en una línea para qué sirve */
+const DISC = [
+  ['#cCmp, #pickRow [data-add], [data-add-cmp]', 'comparar', 'Comparar IAs', 'Ahora varias IA responden lo mismo y ves cuál lo hace mejor.'],
+  ['#railAgent, #cSeg [data-v="agents"]', 'agente', 'Modo agente', 'Tú escribes; el agente mejora tu pedido y elige la IA que más sabe de eso.'],
+  ['.fcard [data-fv]', 'archivos', 'Archivos de la IA', 'Puedes ver el código, su vista previa y descargarlo con su nombre.'],
+  ['[data-a="star"]', 'favoritos', 'Favoritos', 'Las respuestas que guardas con la estrella quedan en «Favoritos».'],
+  ['#attachBtn', 'adjuntar', 'Adjuntar archivos', 'Le puedes dar a la IA fotos, PDF o archivos de texto para que los lea.'],
+  ['.tchip[data-topic]', 'temas', 'Temas', 'Cada tema te recomienda las IA que mejor lo hacen.'],
+  ['[data-r="search"], #thQ', 'buscar', 'Buscar en tus chats', 'Busco dentro de todos tus mensajes, no solo en los títulos.'],
+  ['[data-a="regen"]', 'otra', 'Otra vez', 'La IA vuelve a responder lo mismo, con otras palabras.'],
+  ['#agPill', 'agente-off', 'Apagar el agente', 'Vuelves a elegir tú la IA.']
+];
+const DISC_KEY = 'synthz:disc';
+let discSeen = {}; try{ discSeen = JSON.parse(localStorage.getItem(DISC_KEY) || '{}') || {}; }catch(e){}
+let discQ = [], discOn = false;
+function discShow(){
+  if (discOn || !discQ.length) return;
+  if (document.querySelector('#szgHud, #szGq, #szWelcome, #vintro, #intro, #portal, .hackev') || root.classList.contains('guiding')){ setTimeout(discShow, 2500); return; }
+  discOn = true; const [, , name, text] = discQ.shift();
+  const d = document.createElement('div'); d.className = 'szdisc'; d.setAttribute('role', 'status');
+  d.innerHTML = '<span class="dc-f">' + face('sorprendida', 46) + '</span><div><small>¡Descubriste algo nuevo!</small><b></b><p></p></div><button type="button" class="dc-x" aria-label="Cerrar">✕</button>';
+  $('b', d).textContent = name; $('p', d).textContent = text;
+  document.body.appendChild(d); requestAnimationFrame(() => d.classList.add('on')); SND.blip && SND.blip('sorprendida');
+  typeIn($('p', d), { cps:44, max:3, onFrame:lipSync([$('.dc-f .szface', d)], text) }).catch(() => {});
+  const bye = () => { if (!d.isConnected) return; d.classList.remove('on'); setTimeout(() => { d.remove(); discOn = false; setTimeout(discShow, 600); }, 400); };
+  $('.dc-x', d).addEventListener('click', bye); setTimeout(bye, 6500);
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest) return;
+  for (const D of DISC){
+    if (discSeen[D[1]] || !e.target.closest(D[0])) continue;
+    discSeen[D[1]] = Date.now(); try{ localStorage.setItem(DISC_KEY, JSON.stringify(discSeen)); }catch(x){}
+    discQ.push(D); setTimeout(discShow, 900); break;
+  }
+}, true);
+
+/* «Qué hay de nuevo»: SynthonIA te lo cuenta una vez por versión (y está en el menú cuando quieras) */
+const WHATSNEW = { v:'2.2', items:[
+  ['chat', 'SynthFlow se renovó: más limpio y fácil. Todo para escribir está en una sola caja, y el «+» trae archivos, crear imagen, buscar en internet y respuestas cortas.'],
+  ['extras', 'Busca en internet: «+» › «Buscar en internet». La IA responde con datos de hoy y te muestra sus fuentes (y si preguntas algo de hoy, busca sola).'],
+  ['archivos', 'Pídele «hazme una presentación de…» y te la entrega lista para descargar en PowerPoint.'],
+  ['ajustes', 'Ajustes ahora tiene 2 pestañas: «Página» e «IAs y memoria» (lo que recuerdo de ti, respuestas cortas, tus IA ideales y más).'],
+  ['synthonia', '¡Y ahora hablo de verdad: muevo la boca con cada sílaba! Cuando haya novedades verás un «!» sobre mi cabeza.']
+] };
+function newsBang(onShow){
+  const b = $('#szBot'); if (!b){ setTimeout(() => newsBang(onShow), 600); return; }
+  if ($('.nwbang', b)) return;
+  const x = document.createElement('span'); x.className = 'nwbang'; x.setAttribute('role', 'button'); x.setAttribute('tabindex', '0'); x.setAttribute('aria-label', '¿Qué hay de nuevo?'); x.dataset.tip = '¿Qué hay de nuevo?'; x.textContent = '!';
+  const go = e => { e.preventDefault(); e.stopPropagation(); whatsNew(true, onShow); };
+  x.addEventListener('click', go); x.addEventListener('pointerdown', e => e.stopPropagation()); x.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') go(e); });
+  b.appendChild(x); b.setAttribute('aria-label', 'SynthonIA · hay novedades');
+  try{ SND.blip('celebrando'); }catch(e){}
+}
+function whatsNew(force, onShow){
+  let seen = ''; try{ seen = localStorage.getItem('synthz:newv') || ''; }catch(e){}
+  const visited = (() => { try{ return !!localStorage.getItem('synthz:visited'); }catch(e){ return false; } })();
+  if (!force && (seen === WHATSNEW.v || !visited)){ try{ localStorage.setItem('synthz:newv', WHATSNEW.v); }catch(e){} return false; }
+  /* v2.2 · ya no se abre sola: sale un «!» sobre la cabeza de SynthonIA (una vez por versión) y se abre al tocarlo */
+  if (!force){ newsBang(onShow); return false; }
+  try{ localStorage.setItem('synthz:newv', WHATSNEW.v); }catch(e){}
+  $$('.nwbang').forEach(x => { x.classList.add('out'); setTimeout(() => x.remove(), 400); }); const sb = $('#szBot'); if (sb) sb.setAttribute('aria-label', 'SynthonIA');
+  if ($('#szNew')) return true;
+  const w = document.createElement('div'); w.id = 'szNew'; w.className = 'szm';
+  w.innerHTML = '<div class="tcard gq" role="dialog" aria-modal="true" aria-label="Qué hay de nuevo"><div class="gq-say"><span class="gq-f">' + face('celebrando', 64) + '</span><div><b>SynthonIA · Qué hay de nuevo</b><p></p></div></div>'
+    + '<ul class="nw-l">' + WHATSNEW.items.map((x, i) => '<li style="--i:' + i + '">' + esc(x[1]) + '</li>').join('') + '</ul>'
+    + '<div class="tbtn gq-b"><button class="lnk" type="button" data-close>Luego</button>' + (onShow ? '<button class="btn sm flow" type="button" data-nw="show">Muéstramelo</button>' : '') + '</div></div>';
+  document.body.appendChild(w); requestAnimationFrame(() => w.classList.add('on'));
+  const say = '¡Hay cosas nuevas en ' + BRAND() + '! Te cuento rapidito:';
+  const p = $('.gq-say p', w); p.textContent = say; SND.blip('celebrando');
+  typeIn(p, { cps:44, max:3, onFrame:lipSync([$('.gq-f .szface', w), ballFace()], say) }).catch(() => {});
+  const close = then => { w.classList.remove('on'); setTimeout(() => w.remove(), 420); if (then) setTimeout(then, 280); };
+  w.addEventListener('click', e => { if (e.target.closest('[data-nw="show"]')) return close(() => onShow(WHATSNEW.items.map(x => x[0]).filter((k, i, a) => a.indexOf(k) === i && GTOPICS.some(t => t[0] === k)))); if (e.target === w || e.target.closest('[data-close]')) close(); });
+  return true;
+}
+
+/* ===== v2.0 · MODO ALERTA: si los proveedores dejan de ser gratis (todas las IAs conectadas piden pago),
+   la página lo dice claro y espera; apenas vuelvan, te lleva de nuevo solita ===== */
+let alertEl = null, alertT = 0;
+function alertMode(on){
+  if (on && !alertEl){
+    if (document.querySelector('#vintro, #intro, #portal')){ setTimeout(() => alertMode(!!SZQ.alert), 3000); return; }
+    const pu = (() => { try{ return !!(window.puter && puter.auth && puter.auth.isSignedIn()); }catch(e){ return false; } })();
+    const o = document.createElement('div'); o.id = 'szAlert'; o.setAttribute('role', 'alertdialog'); o.setAttribute('aria-live', 'assertive');
+    o.innerHTML = '<div class="al-in"><span class="al-f">' + face('preocupada', 84) + '</span><b class="al-t">Error: no podemos continuar</b>'
+      + '<p>Las IAs gratis dejaron de responder por un cambio de los servicios que usamos. No es tu culpa y nadie te va a cobrar nada.</p>'
+      + '<p class="al-w"><i></i>En cuanto volvamos a estar en línea, te redirigimos solito. No cierres la página.</p>'
+      + (pu ? '<button type="button" class="btn sm flow" data-al="pu">Mientras tanto, seguir con mi Puter</button>' : '') + '</div>';
+    document.body.appendChild(o); alertEl = o; requestAnimationFrame(() => o.classList.add('on'));
+    const pb = $('[data-al="pu"]', o); if (pb) pb.addEventListener('click', () => { alertDismissed = true; alertMode(false); try{ dispatchEvent(new CustomEvent('synthz-useputer')); }catch(e){} });
+    try{ telEv('noai', 'modo alerta: ninguna IA gratis responde'); }catch(e){}
+    clearInterval(alertT); alertT = setInterval(async () => { try{ await szCatalog(); }catch(e){} if (!SZQ.alert) alertBack(); }, 30000);
+  } else if (!on && alertEl){ const o = alertEl; alertEl = null; clearInterval(alertT); o.classList.remove('on'); setTimeout(() => o.remove(), 500); }
+}
+let alertDismissed = false;
+function alertBack(){
+  if (!alertEl) return; clearInterval(alertT);
+  const o = alertEl; $('.al-f', o).innerHTML = face('celebrando', 84); $('.al-t', o).textContent = '¡Volvimos!'; $$('p, button', o).forEach(x => x.remove());
+  o.querySelector('.al-in').insertAdjacentHTML('beforeend', '<p>Ya todo funciona. Te llevo de vuelta…</p>');
+  setTimeout(() => location.reload(), 1800);
+}
+addEventListener('synthz-szq', () => {
+  if (SZQ.alert && !alertDismissed) alertMode(true); else if (!SZQ.alert && alertEl) alertBack();
+  /* al equipo: SynthonIA avisa una vez por sesión que hay alertas en Pulsem */
+  if (SZQ.alertN > 0 && ACC && ACC.user && ['owner', 'admin', 'staff'].includes(ACC.user.role)){
+    let seen = false; try{ seen = sessionStorage.getItem('synthz:alertn') === String(SZQ.alertN); sessionStorage.setItem('synthz:alertn', String(SZQ.alertN)); }catch(e){}
+    if (!seen) setTimeout(() => { try{ BOTAPI.offer && BOTAPI.offer('Ojo, equipo: hay ' + SZQ.alertN + (SZQ.alertN === 1 ? ' alerta' : ' alertas') + ' de las IAs (un proveedor pidió pago o cambió su plan gratis). Nada se cobró. Revísalo en Pulsem.', 'preocupada', 'Abrir Pulsem', () => { location.href = 'pulsem.html'; }); }catch(e){} }, 4000);
+  }
+});
+/* ---------- v2.2 · la app instalable se quitó por ahora (vuelve más adelante, hecha 100 % nuestra).
+   Si alguien la alcanzó a instalar en pruebas, aquí se borra su copia guardada. ---------- */
+try{
+  if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())).catch(() => {});
+  if (window.caches) caches.keys().then(ks => ks.filter(k => /^synthz-/.test(k)).forEach(k => caches.delete(k))).catch(() => {});
+}catch(e){}
+/* ---------- v2.2 · etiquetas al pasar el mouse: cada botón con ícono dice qué hace (como en Claude) ---------- */
+if (matchMedia('(hover: hover) and (pointer: fine)').matches){
+  let tipEl = null, tipT = 0, tipFor = null;
+  const hide = () => { clearTimeout(tipT); tipFor = null; if (tipEl) tipEl.classList.remove('on'); };
+  addEventListener('pointerover', e => {
+    const t = e.target.closest && e.target.closest('[data-tip]');
+    if (!t || t === tipFor) return;
+    if (t.closest('.rail:not(.open)') || t.closest('.ctxm')) return hide();
+    hide(); tipFor = t;
+    tipT = setTimeout(() => {
+      if (!t.isConnected || tipFor !== t) return;
+      if (!tipEl){ tipEl = document.createElement('div'); tipEl.className = 'sztip'; tipEl.setAttribute('role', 'tooltip'); document.body.appendChild(tipEl); }
+      tipEl.textContent = t.dataset.tip; tipEl.classList.remove('on');
+      const r = t.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+      let y = r.top - h - 8; if (y < 6) y = r.bottom + 8;
+      tipEl.style.left = Math.max(6, Math.min(innerWidth - w - 6, r.left + r.width / 2 - w / 2)) + 'px'; tipEl.style.top = y + 'px';
+      requestAnimationFrame(() => tipEl && tipEl.classList.add('on'));
+    }, 380);
+  });
+  addEventListener('pointerout', e => { if (tipFor && !(e.relatedTarget && tipFor.contains(e.relatedTarget))) hide(); });
+  addEventListener('pointerdown', hide, true); addEventListener('scroll', hide, true); addEventListener('keydown', hide);
+}
+/* ===== v1.4 · eventos especiales: a las 50, 100 y 500 visitas la página «se hackea» y das un logro ===== */
+const EV = (() => {
+  const K = 'synthz:visits', A = 'synthz:ach';
+  let visits = 0; try{ visits = +localStorage.getItem(K) || 0; if (!sessionStorage.getItem('synthz:vcount')){ visits++; localStorage.setItem(K, String(visits)); sessionStorage.setItem('synthz:vcount', '1'); } }catch(e){}
+  const ach = () => { try{ return JSON.parse(localStorage.getItem(A)) || {}; }catch(e){ return {}; } };
+  const force = (() => { try{ return new URLSearchParams(location.search).get('evento'); }catch(e){ return null; } })();
+  const pending = () => { if (force && /^(50|100|500)$/.test(force)) return +force; const a = ach(); return [500, 100, 50].find(n => visits >= n && !a[n]) || 0; };
+  const mark = n => { const a = ach(); a[n] = Date.now(); try{ localStorage.setItem(A, JSON.stringify(a)); }catch(e){} push(); };
+  /* si tienes cuenta, el logro queda guardado en ella (así cuenta para los descuentos de 100 y 500) */
+  const push = () => { const a = ach(); if (!SESS || !Object.keys(a).length) return; api('me', { method:'PUT', body:{ ach:a }, keep:true }).catch(() => {}); };
+  addEventListener('synthz-acc', push);
+  const CODE = ['import { flow } from "synthz/core"', 'const z = await vidrio.fundir("Z")', 'synthonia.despertar({ modo:"hack" })', 'for (const ia of IAs_conectadas) ia.sincronizar()', '[OK] compilando SynthFlow…', 'reconstruyendo vidrio líquido ████████░░', 'flow.calibrar(0.9998)', 'if (usuario.visitas > LIMITE) desbloquear(logro)', '[OK] núcleo de Flow estable', 'cargando la página otra vez…', 'z.render({ brillo:true })', 'SynthZ.reiniciar() // no te asustes 😉'];
+  function overlay(kind){
+    const o = document.createElement('div'); o.className = 'hackev k' + kind; o.setAttribute('aria-hidden', 'true');
+    o.innerHTML = '<canvas></canvas><div class="hk-code"></div><div class="hk-bar"><i></i></div><div class="hk-t"></div>';
+    document.body.appendChild(o); return o;
+  }
+  /* lluvia de código (verde o roja) o viaje por las estrellas (500) */
+  function sky(o, kind){
+    const c = $('canvas', o), x = c.getContext('2d'); let W, H, run = true;
+    const fit = () => { W = c.width = innerWidth * (devicePixelRatio > 1 ? 1.5 : 1); H = c.height = innerHeight * (devicePixelRatio > 1 ? 1.5 : 1); c.style.width = innerWidth + 'px'; c.style.height = innerHeight + 'px'; };
+    fit();
+    if (kind === 500){
+      const S = Array.from({ length:420 }, () => ({ a:Math.random() * Math.PI * 2, r:Math.random() * 40, v:.6 + Math.random() * 3.4, h:Math.random() < .5 ? 42 : Math.random() < .5 ? 300 : 340 }));
+      (function f(){ if (!run) return; x.fillStyle = 'rgba(6,4,14,.24)'; x.fillRect(0, 0, W, H); const cx = W / 2, cy = H / 2;
+        S.forEach(s => { const r0 = s.r; s.r += s.v * (1 + s.r / 80); if (s.r > Math.hypot(W, H) / 1.6){ s.r = Math.random() * 20; s.a = Math.random() * Math.PI * 2; }
+          x.strokeStyle = 'hsla(' + s.h + ',90%,72%,' + Math.min(1, s.r / 200) + ')'; x.lineWidth = 1 + s.r / 300; x.beginPath(); x.moveTo(cx + Math.cos(s.a) * r0, cy + Math.sin(s.a) * r0); x.lineTo(cx + Math.cos(s.a) * s.r, cy + Math.sin(s.a) * s.r); x.stroke(); });
+        requestAnimationFrame(f); })();
+    } else {
+      const fs = 16, cols = Math.ceil(W / fs), drops = Array.from({ length:cols }, () => Math.random() * -40), col = kind === 100 ? '255,70,70' : '80,255,140';
+      (function f(){ if (!run) return; x.fillStyle = 'rgba(0,0,0,.12)'; x.fillRect(0, 0, W, H); x.font = fs + 'px monospace';
+        drops.forEach((d, i) => { x.fillStyle = 'rgba(' + col + ',' + (.35 + Math.random() * .65) + ')'; x.fillText(String.fromCharCode(0x30A0 + Math.random() * 96 | 0), i * fs, d * fs); drops[i] = d * fs > H && Math.random() > .975 ? 0 : d + 1; });
+        requestAnimationFrame(f); })();
+    }
+    return () => { run = false; };
+  }
+  async function typeCode(o, kind){
+    const box = $('.hk-code', o), bar = $('.hk-bar i', o), lines = kind === 100 ? ['⚠ ALERTA: el núcleo de Flow se sobrecalentó', 'desviando energía a SynthonIA…', ...CODE.slice(2, 9), '[OK] temperatura normal'] : CODE;
+    for (let i = 0; i < lines.length; i++){
+      const ln = document.createElement('div'); box.appendChild(ln);
+      for (const ch of lines[i]){ ln.textContent += ch; if (Math.random() < .5) await sleepRaw(6); }
+      bar.style.transform = 'scaleX(' + ((i + 1) / lines.length).toFixed(3) + ')';
+      await sleepRaw(90);
+      if (box.children.length > 14) box.firstChild.remove();
+    }
+  }
+  /* el «error»: la página se distorsiona un momento */
+  async function glitch(ms, kind){
+    root.classList.add('glitching'); if (kind === 100) root.classList.add('glitch-red');
+    await sleepRaw(ms); root.classList.remove('glitching', 'glitch-red');
+  }
+  function botBig(on, mood){ const b = BOT.el; if (!b) return; b.classList.toggle('g2', on); b.classList.toggle('evfront', on); if (on){ BOT.sticky = null; botFace(mood || 'sorprendida', true); } else botFace('feliz', true); }
+  async function play(n){
+    mark(n);
+    try{ sessionStorage.setItem('synthz:achShow', String(n)); }catch(e){}
+    portalLock(true); botBig(true, 'sorprendida');
+    await glitch(n === 500 ? 500 : 1100, n);
+    const o = overlay(n); requestAnimationFrame(() => o.classList.add('on'));
+    const stop = sky(o, n);
+    if (n === 500){
+      $('.hk-t', o).innerHTML = '<img src="media/z-glass.webp" alt=""><b>MODO GALAXIA</b><small>Viajaste 500 veces por SynthZ</small>';
+      botFace('encantada', true); await sleepRaw(4200);
+    } else {
+      $('.hk-t', o).textContent = n === 100 ? 'SISTEMA SOBRECARGADO' : 'SYNTHZ SE ESTÁ REPROGRAMANDO';
+      botFace(n === 100 ? 'preocupada' : 'pensando', true); await typeCode(o, n); await sleepRaw(400);
+    }
+    o.classList.add('out'); botFace('celebrando', true);
+    await sleepRaw(700); stop(); o.remove(); portalLock(false); setTimeout(() => botBig(false), 2500);
+  }
+  /* el logro: entra deslizándose por arriba a la derecha */
+  function badge(n){
+    const t = { 50:['50', 'Has entrado más de 50 veces a la página.', ''], 100:['100', 'Has entrado más de 100 veces a la página.', 'Se te tendrá en cuenta para descuentos exclusivos cuando lleguen los pagos.'], 500:['500', 'Has entrado más de 500 veces. Eres leyenda de SynthZ.', 'Se te tendrá en cuenta para descuentos exclusivos cuando lleguen los pagos.'] }[n];
+    const b = document.createElement('div'); b.className = 'achv a' + n; b.setAttribute('role', 'status');
+    b.innerHTML = '<span class="ac-i">' + (n === 500 ? '<img src="media/z-glass.webp" alt="">' : '<b>' + t[0] + '</b>') + '</span><div><small>EVENTO ESPECIAL DESBLOQUEADO</small><h4>' + esc(t[1]) + '</h4><p>Este logro es 1 en un millón.</p>' + (t[2] ? '<p class="ac-d">' + esc(t[2]) + '</p>' : '') + '</div><button type="button" aria-label="Cerrar">×</button>';
+    document.body.appendChild(b); requestAnimationFrame(() => requestAnimationFrame(() => b.classList.add('on')));
+    try{ SND.done(); }catch(e){}
+    const close = () => { b.classList.remove('on'); setTimeout(() => b.remove(), 700); };
+    $('button', b).addEventListener('click', close); setTimeout(close, n === 50 ? 9000 : 14000);
+  }
+  /* de vez en cuando (muy raro) solo un «error» corto, sin logro */
+  function maybeGlitch(){ if (Math.random() < 1 / 120 || force === 'glitch') setTimeout(() => { if (!document.querySelector('#vintro,#intro,#portal,.szm')) glitch(900); }, 6000 + Math.random() * 20000); }
+  /* al llegar con un logro pendiente de mostrar */
+  function onLoad(){
+    let show = 0; try{ show = +sessionStorage.getItem('synthz:achShow') || 0; sessionStorage.removeItem('synthz:achShow'); }catch(e){}
+    if (show) setTimeout(() => badge(show), 1600);
+    else if (isFlow() && pending()) setTimeout(async () => { if (document.querySelector('.szm,#portal') || root.classList.contains('guiding')) return; const n = pending(); await play(n); badge(n); try{ sessionStorage.removeItem('synthz:achShow'); }catch(e){} }, 3500);
+    maybeGlitch();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onLoad); else setTimeout(onLoad, 50);
+  return { pending, play, badge, get visits(){ return visits; } };
+})();
 window.SZ = { root, $, $$, clamp, fmt, reduce, today, sleepRaw, esc, est, Z_PATH, ICONS, ico, zWord, API, MANUAL, ALL, byId,
   get state(){ return state; }, set state(v){ state = v; normalize(); },
   normalize, cleanUsage, cleanChats, cleanStrMap, save, total, addUsage, resetUsage, estAll, todayEst, todayReq, providerBalance, balanceHtml, splitHtml, syncNote, helpGuide, smoothDetails, szPrompt, swapDir, swapDir, face, FACE_GOOD, randomGoodFace, welcomeBack, wasAway, accSignOutAll, accClaim, ROLE_NAME, trialGet, trialSet, trialStart, legacyRow, cleanLedger, mergeLedger, DEV, hooks, toast, hydrateIcons, md, countTo,
-  BRAND, isFlow, flowWord, zMark, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI };
+  BRAND, isFlow, flowWord, zMark, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, BRANDS, brandOf, glassIcon, PIXART, pixelRun, pixelGrid, workView, workSaved, mdLoad, MDLIB, SZ_P, SZQ, SZ_AUTO, szqSet, msgsLeft, msgsTotal, limTxt, limShort, limLvl, limPct, limRing, limBar, szCatalog, szHeaders, guestGate, guestFull, isGuestQ, setTurn, puterOut, puterOutNote, TEL, telEv, telBeat, DEVH, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, feedbackModal, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI, EV, lipSync, ballFace, guideAsk, GTOPICS, whatsNew, signedish, cfgLinks, memAddCore, memPanel, menuOpen, menuClose, MICO };
 })();

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<link rel="icon" id="favi" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='15'%20fill='%230b0c10'/%3E%3Ccircle%20cx='20'%20cy='34'%20r='12'%20fill='%238fb0ff'%20fill-opacity='.9'/%3E%3Ccircle%20cx='32'%20cy='34'%20r='12'%20fill='%23b69cff'%20fill-opacity='.85'/%3E%3Ccircle%20cx='44'%20cy='34'%20r='12'%20fill='%23ff8f7a'%20fill-opacity='.85'/%3E%3C/svg%3E">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="robots" content="noindex, nofollow">
+<title>Pulsem · SynthZ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="pulsem.css">
+<link rel="stylesheet" href="core.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="zgrad" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fb0ff"/><stop offset=".55" stop-color="#c9566c"/><stop offset="1" stop-color="#ff8f7a"/></linearGradient><linearGradient id="ekgG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8fb0ff"/><stop offset=".6" stop-color="#c9566c"/><stop offset="1" stop-color="#e6b65f"/></linearGradient></defs></svg>
+<div class="aurora"><i></i><i></i><i></i></div>
+<div class="grain"></div>
+<div class="pz">
+  <header class="ptop">
+    <a href="index.html" class="word" id="pWord" aria-label="Volver a SynthZ"></a>
+    <div class="ptitle pmlogo" aria-label="Pulsem"><svg class="pmg" viewBox="0 0 64 30" aria-hidden="true"><defs><linearGradient id="pmG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd0e4" stop-opacity=".95"/><stop offset=".45" stop-color="#c486e0" stop-opacity=".7"/><stop offset="1" stop-color="#ff9c8c" stop-opacity=".9"/></linearGradient><linearGradient id="pmL" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><path class="pm-t" d="M3 17h13l4-10 6 18 5-13 4 5h26"/><path class="pm-h" d="M3 17h13l4-10 6 18 5-13 4 5h26"/><path class="pm-r" d="M3 17h13l4-10 6 18 5-13 4 5h26" pathLength="100"/></svg><span class="pmw"><span class="gS">P</span>ulsem</span></div>
+    <span class="rkp" id="pRank"></span>
+    <span class="sp"></span>
+    <span class="live" id="pLive"><i></i><span id="pLiveT">conectando…</span></span>
+    <button class="ibtn" id="pRefresh" type="button" aria-label="Actualizar ahora"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg></button>
+    <a class="ibtn" href="chat.html" aria-label="Ir a SynthFlow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M20 9h1a1 1 0 0 1 1 1v8l-3-2h-6"/></svg></a>
+  </header>
+
+  <section class="gate" id="gate"><div class="tcard"><div class="tn">PULSEM</div><div class="tb"><h3>Abriendo Pulsem…</h3><p>Un momento.</p></div></div></section>
+
+  <main id="app" hidden>
+    <div class="grid">
+      <section class="card w12" id="cHealth">
+        <h2>¿Cómo está SynthZ?<small>salud de la página</small></h2>
+        <div class="health"><div class="lamp" id="hLamp"></div><div class="hinfo"><h3 id="hTitle"></h3><p id="hText"></p><div class="hwhy" id="hWhy"></div></div></div>
+        <svg class="ekgbig" viewBox="0 0 600 46" preserveAspectRatio="none" aria-hidden="true"><path d="M0 26h120l10-14 10 26 8-30 9 30 7-12h90l10-10 10 20 8-24 9 24 7-10h112l10-14 10 26 8-30 9 30 7-12h56"/></svg>
+        <div class="kpis" id="hKpi"></div>
+      </section>
+
+      <section class="card w7" style="--cg:#8fb0ff">
+        <h2>En línea ahora<small id="oN"></small></h2>
+        <p class="lead">Quién está usando SynthZ en este momento. Arriba van los que tienen problemas.</p>
+        <div class="list" id="oList"></div>
+      </section>
+
+      <section class="card w5" style="--cg:#ff8f7a">
+        <h2>Dificultades<small>última hora</small></h2>
+        <p class="lead" id="tSum"></p>
+        <div class="chips" id="tChips"></div>
+        <div class="list" id="tList"></div>
+      </section>
+
+      <section class="card w12" style="--cg:#e6b65f">
+        <h2>Carga<small id="lNow"></small></h2>
+        <p class="lead">Mensajes por minuto con las IAs conectadas (últimos 30 min) y por día (últimos 7 días).</p>
+        <div class="bars" id="lBars"></div>
+        <div class="axis"><span>hace 30 min</span><span>ahora</span></div>
+        <div class="days" id="lDays"></div>
+      </section>
+
+      <section class="card w12" style="--cg:#c9566c">
+        <h2>Llaves de las IAs conectadas<small id="kN"></small></h2>
+        <p class="lead">Las llaves gratis de Prime, ZFlow y Symmetrix se juntan y se comparten con todos. Nunca salen del servidor ni se muestran completas.</p>
+        <div class="tbtn" style="justify-content:flex-end;margin:-6px 0 10px"><button class="mini" type="button" id="kAll" hidden>Probar todas</button></div>
+        <div class="ktab" id="kList"></div>
+        <h2 style="margin-top:22px;font-size:22px">Tus llaves</h2>
+        <p class="lead" id="kMine"></p>
+        <div class="mykeys" id="myKeys"></div>
+        <div class="note">💳 Solo planes <b>gratis</b>, sin tarjeta. Nunca actives facturación ni «pago por uso»: SynthZ solo usa modelos gratis y bloquea los de pago. En OpenRouter, en <a class="lnk" href="https://openrouter.ai/settings/privacy" target="_blank" rel="noopener noreferrer">settings/privacy</a> permite los modelos gratis (si no, los bloquea).</div>
+      </section>
+
+      <section class="card w12" style="--cg:#7fd6b8">
+        <h2>Ajustes<small>Prime y ZFlow</small></h2>
+        <p class="lead" id="setNote" hidden>Puedes ver los ajustes; solo Prime y ZFlow pueden cambiarlos.</p>
+        <div class="setg" id="setG"></div>
+      </section>
+
+      <section class="card w12" style="--cg:#e6b65f">
+        <h2>Comentarios de la beta<small id="fN"></small></h2>
+        <p class="lead">Lo que escriben en «Cuéntanos qué mejorar». Márcalos como vistos o resueltos.</p>
+        <div class="chips" id="fChips"></div>
+        <div class="list" id="fList" style="max-height:360px"></div>
+      </section>
+
+      <section class="card w12" style="--cg:#b8c4ff">
+        <h2>Ayuda<small id="hN"></small></h2>
+        <p class="lead">Pedidos de ayuda de los Synthers. Abre uno para responder; con «Contactar» (arriba) le escribes tú primero a alguien.</p>
+        <div class="list" id="hList" style="max-height:300px"></div>
+        <div id="hConv" hidden style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">
+          <div class="tbtn" style="margin-bottom:8px"><b id="hWho" style="font-weight:500"></b><button class="lnk" type="button" id="hEnd">Terminar</button></div>
+          <div class="hcv" id="hMsgs"></div>
+          <form class="hform" id="hForm"><label class="field"><input type="text" id="hInp" maxlength="1000" placeholder="Responde como equipo…" autocomplete="off"></label><button class="btn sm" type="submit">Enviar</button></form>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+<div class="corner" id="pCorner" role="img" aria-label="Claude" style="position:fixed;bottom:8px;right:10px;width:15px;height:15px;opacity:.55"></div>
+
+<script src="core.js"></script>
+<script src="pulsem.js"></script>
+</body>
+</html>

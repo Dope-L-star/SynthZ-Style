@@ -21,7 +21,15 @@ const CERTS = process.env.GOOGLE_CERTS_URL || 'https://www.googleapis.com/oauth2
 /* lo único obligatorio es la base de datos; Google y SYNTHZ_SECRET son opcionales */
 export const missing = () => [!R_URL && 'KV_REST_API_URL', !R_TOK && 'KV_REST_API_TOKEN'].filter(Boolean);
 export const ready = () => missing().length === 0;
-export const hasGoogle = () => !!CLIENT_ID;
+/* el «ID de cliente» de Google puede venir de Vercel o pegarse en el panel del equipo (es público, no es un secreto) */
+let gcid = { v:'', t:0 };
+export async function googleCid(){
+  if (CLIENT_ID) return CLIENT_ID;
+  if (Date.now() - gcid.t < 60e3) return gcid.v;
+  let v = ''; try{ const c = await getJ('cfg:google'); v = c && typeof c.clientId === 'string' ? c.clientId : ''; }catch(e){}
+  gcid = { v, t:Date.now() }; return v;
+}
+export const hasGoogle = async () => !!(await googleCid());
 export const secretFromEnv = () => !!SECRET;
 
 /* ---------- respuestas ---------- */
@@ -75,6 +83,8 @@ export const rid = (n = 12) => crypto.randomBytes(n).toString('base64url');
 export const today = () => new Date(Date.now() - 5 * 3600e3).toISOString().slice(0, 10);   /* día en Colombia (UTC-5) */
 export const cleanEmail = e => String(e || '').trim().toLowerCase();
 export const okEmail = e => /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/.test(e);
+/* IP de quien llama: Vercel la pone en x-real-ip (y reescribe x-forwarded-for), así nadie la puede inventar para saltarse los límites */
+export const ipOf = req => String(req.headers.get('x-real-ip') || (req.headers.get('x-forwarded-for') || 'x').split(',')[0]).trim().slice(0, 64) || 'x';
 export const str = (v, max) => String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max);
 
 /* límite de peticiones: n por ventana de s segundos */
@@ -173,7 +183,7 @@ export async function verifyGoogle(token){
   const ok = crypto.verify('RSA-SHA256', Buffer.from(p[0] + '.' + p[1]), crypto.createPublicKey({ key:k, format:'jwk' }), Buffer.from(p[2], 'base64url'));
   if (!ok) throw bad();
   if (!['accounts.google.com', 'https://accounts.google.com'].includes(claims.iss)) throw bad();
-  if (claims.aud !== CLIENT_ID) throw bad();
+  if (!claims.aud || claims.aud !== (await googleCid())) throw bad();
   if (!claims.exp || claims.exp * 1000 < Date.now()) throw bad('Tu inicio de sesión expiró. Intenta de nuevo.');
   if (!claims.sub) throw bad();
   return claims;
@@ -276,7 +286,61 @@ export async function saveChats(sub, b){
   items.forEach((it, i) => cmds.push(['HSET', key, it.k, strs[i]]));
   if (delta) cmds.push(['INCRBY', 'cz:' + sub, String(delta)]);
   await pipe(cmds);
+  await sbChats(sub, items, del);
   return { saved:items.length, deleted:del.length, used:Math.max(0, used + delta), max:QUOTA };
+}
+
+
+/* ---------- Supabase: la base de datos de verdad ----------
+   Si en Vercel están SUPABASE_SECRET_KEY (o SUPABASE_SERVICE_ROLE_KEY), cuentas, perfiles, preferencias, chats, logros y opiniones
+   se guardan también en Supabase. Si no está, todo sigue en Redis como antes (nada se rompe).
+   La llave secreta SOLO vive en el servidor: nunca va al navegador ni a las respuestas. */
+const SB_URL = String(process.env.SUPABASE_URL || 'https://luvvlfoyatdmrxvhdxay.supabase.co').replace(/\/+$/, '');
+const SB_KEY = String(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+export const SB_PUB = String(process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_HBY92jXWdZt4f2HwnyQTPQ_KKkkURdh').trim();   /* pública: se puede ver */
+export const SB_HOST = SB_URL;
+export const sbOn = () => !!SB_KEY;
+export async function sb(path, o = {}){
+  if (!SB_KEY) return null;
+  const h = Object.assign({ apikey:SB_KEY, 'Content-Type':'application/json' }, /^eyJ/.test(SB_KEY) ? { Authorization:'Bearer ' + SB_KEY } : {}, o.headers || {});
+  const r = await fetch(SB_URL + '/rest/v1/' + path, { method:o.method || 'GET', headers:h, body:o.body == null ? undefined : JSON.stringify(o.body), signal:AbortSignal.timeout(o.timeout || 7000) });
+  if (!r.ok){ const t = await r.text().catch(() => ''); throw Object.assign(new Error('supabase ' + r.status + ' ' + t.slice(0, 160)), { status:502, sb:true }); }
+  if (r.status === 204 || o.minimal) return null;
+  return r.json().catch(() => null);
+}
+const sbUp = (table, rows, conflict) => sb(table + '?on_conflict=' + conflict, { method:'POST', body:rows, minimal:true, headers:{ Prefer:'resolution=merge-duplicates,return=minimal' } });
+const qv = v => encodeURIComponent(String(v));
+const nowIso = () => new Date().toISOString();
+/* nunca deja caer una petición por Supabase: si falla, se anota y sigue con Redis */
+export async function sbSafe(fn){ if (!SB_KEY) return null; try{ return await fn(); }catch(e){ console.error('[supabase]', e.message); try{ await redis('LPUSH', 'sb:err', JSON.stringify({ t:Date.now(), m:String(e.message).slice(0, 200) })); await redis('LTRIM', 'sb:err', 0, 49); }catch(x){} return null; } }
+const known = new Set();
+async function sbEnsure(sub){ if (known.has(sub)) return; await sbUp('accounts', [{ sub }], 'sub'); known.add(sub); }
+export const sbAccount = u => sbSafe(async () => { if (!u || !u.sub) return; await sbUp('accounts', [Object.assign({ sub:u.sub, username:u.username || null, email:u.email || null, role:roleOf(u), updated_at:nowIso() }, u.sbUid ? { sb_uid:u.sbUid } : {})], 'sub'); known.add(u.sub); });
+export const sbProfile = (sub, data) => sbSafe(async () => { await sbEnsure(sub); await sbUp('profiles', [{ sub, data, updated_at:nowIso() }], 'sub'); });
+export const sbPrefs = (sub, data) => sbSafe(async () => { await sbEnsure(sub); await sbUp('prefs', [{ sub, data, updated_at:nowIso() }], 'sub'); });
+export const sbChats = (sub, items, del) => sbSafe(async () => {
+  await sbEnsure(sub);
+  if (items.length) await sbUp('chats', items.map(it => ({ sub, k:it.k, data:it.data, bytes:Buffer.byteLength(JSON.stringify(it.data)), updated_at:nowIso() })), 'sub,k');
+  for (const k of del) await sb('chats?sub=eq.' + qv(sub) + '&k=eq.' + qv(k), { method:'DELETE', minimal:true });
+});
+export const sbChatsGet = (sub, ks) => sbSafe(async () => { const out = {}; for (const k of ks){ const r = await sb('chats?select=data&sub=eq.' + qv(sub) + '&k=eq.' + qv(k)); if (r && r[0]) out[k] = r[0].data; } return out; });
+export const sbAch = (sub, code) => sbSafe(async () => { await sbEnsure(sub); await sbUp('achievements', [{ sub, code:String(code), discount_eligible:code !== '50' }], 'sub,code'); });
+export const sbFeedback = (sub, cat, text, page) => sbSafe(async () => { if (sub) await sbEnsure(sub); await sb('feedback', { method:'POST', minimal:true, body:[{ sub:sub || null, cat:str(cat, 30) || null, text:str(text, 4000), page:str(page, 80) || null }], headers:{ Prefer:'return=minimal' } }); });
+export const sbDelete = sub => sbSafe(() => sb('accounts?sub=eq.' + qv(sub), { method:'DELETE', minimal:true }));
+export const sbFindByUid = uid => sbSafe(async () => { const r = await sb('accounts?select=sub&sb_uid=eq.' + qv(uid)); return r && r[0] ? r[0].sub : null; });
+/* verifica un inicio de sesión de Supabase (Google) preguntándole a Supabase quién es el dueño del token */
+export async function sbUser(accessToken){
+  const r = await fetch(SB_URL + '/auth/v1/user', { headers:{ apikey:SB_PUB, Authorization:'Bearer ' + String(accessToken || '') }, signal:AbortSignal.timeout(7000) });
+  if (!r.ok) throw Object.assign(new Error('No pude verificar tu cuenta de Google. Intenta de nuevo.'), { status:401 });
+  const u = await r.json(); if (!u || !u.id) throw Object.assign(new Error('No pude verificar tu cuenta de Google.'), { status:401 });
+  return u;
+}
+/* ¿Supabase tiene «Entrar con Google» encendido? (se pregunta con la llave pública y se guarda 5 min) */
+let sbg = { v:false, t:0 };
+export async function sbGoogleOn(){
+  if (Date.now() - sbg.t < 300e3) return sbg.v;
+  let v = false; try{ const r = await fetch(SB_URL + '/auth/v1/settings', { headers:{ apikey:SB_PUB }, signal:AbortSignal.timeout(5000) }); const d = await r.json(); v = !!(d && d.external && d.external.google); }catch(e){}
+  sbg = { v, t:Date.now() }; return v;
 }
 
 /* ---------- perfil público mínimo (lo que ven tus compañeros de equipo) ---------- */
