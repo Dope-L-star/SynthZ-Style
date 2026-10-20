@@ -520,7 +520,7 @@ U.compile = function(){
       const url = x && U.safeUrl(x.url); if (!url || seen.has(url)) return;
       seen.add(url); sources.push({ url, title: String(x.title || url) });
     });
-    if (r.file && r.file.name && r.file.text != null) files.push(r.file);
+    if (r.file && r.file.name && (r.file.text != null || r.file.blobUrl)) files.push(r.file);
   });
   return {
     text: last ? String(S.results[last.id].output).trim() : '',
@@ -595,6 +595,9 @@ async function download(f){
   if (D){
     try{ save(await deckBlob(D), name); return; }
     catch(e){ U.say(t('err_pptx')); save(new Blob([outline(D)], { type: 'text/markdown;charset=utf-8' }), name.replace(/\.pptx$/i, '') + '.md'); return; }
+  }
+  if (f.blobUrl && f.text == null){      /* imagen u otro archivo ya hecho en el navegador */
+    const a = el('a', { href: f.blobUrl, download: name }); document.body.append(a); a.click(); a.remove(); return;
   }
   save(toBlob(f), name);
 }

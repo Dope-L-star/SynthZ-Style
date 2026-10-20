@@ -85,6 +85,9 @@ function doble(body) {
       };
     }
     const deck = { titulo: 'Clima de Bogotá', subtitulo: 'Resumen', diapositivas: [{ titulo: 'Temperatura', puntos: ['Entre 8 y 19 grados', 'Lluvia por la tarde'], notas: '' }, { titulo: 'Qué llevar', puntos: ['Chaqueta', 'Paraguas'], notas: '' }] };
+    if (String(plan.goal || '').includes('ZXALIAS-UI-MARK') && (step.tool === 'memory' || step.tool === 'image')) {
+      return { status: 200, json: { ok: true, step: { id: body.stepId, status: 'done', output: '[[ALIAS:' + step.tool + ']] ' + (step.input || 'x'), sources: [], file: null, error: null } } };
+    }
     const file = step.tool === 'file' && String(plan.goal || '').includes('ZXALIAS-UI-PPTX')
       ? { name: 'Clima-de-Bogota.pptx', mime: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', text: JSON.stringify(deck) }
       : step.tool === 'file'
@@ -130,10 +133,17 @@ function readRaw(req) {
 function startServer() {
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url || '/', 'http://127.0.0.1');
+    if (req.method === 'POST' && url.pathname === '/api/ai') {      /* doble de la imagen del chat */
+      const b = JSON.parse((await readRaw(req)) || '{}');
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end(JSON.stringify(b.action === 'image' ? { img: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', left: 1, max: 5 } : { error: 'no' }));
+      return;
+    }
     if (req.method === 'POST' && url.pathname === '/api/alias') {
       const raw = await readRaw(req);
       let body = {};
       try { body = raw ? JSON.parse(raw) : {}; } catch { body = {}; }
+      if (body.action === 'step' && String((body.plan && body.plan.goal) || '').includes('ZXALIAS-UI-SLOW')) await new Promise(r => setTimeout(r, 1500));
       const out = doble(body);
       res.writeHead(out.status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
       res.end(JSON.stringify(out.json));
@@ -173,24 +183,7 @@ function findPage() {
   }
   return '';
 }
-/* window.ALIAS lo pone alias-tools.js (HERRAMIENTAS). Mientras no exista, esta suite
-   usa un cliente de prueba mínimo que habla con el doble. Por eso testOpen NO prueba a
-   HERRAMIENTAS: solo que la pantalla funciona sobre el contrato. */
-const SHIM = () => {
-  if (window.ALIAS) return;
-  const post = async b => {
-    if (String(b.goal || (b.plan && b.plan.goal) || '').includes('ZXALIAS-UI-SLOW') && b.action === 'step') await new Promise(r => setTimeout(r, 1500));
-    const r = await fetch('/api/alias', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(Object.assign({ lang: document.documentElement.lang === 'en' ? 'en' : 'es' }, b)) });
-    return r.json();
-  };
-  window.ALIAS = {
-    plan: goal => post({ action: 'plan', goal }),
-    runStep: (plan, stepId, prev) => post({ action: 'step', plan, stepId, prev }),
-    tools: { search() {}, file() {}, memory() {}, image() {} }
-  };
-};
 async function start(page) {
-  await page.addInitScript(SHIM);
   await page.goto(baseUrl + findPage(), { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => window.ALIAS && typeof window.ALIAS.plan === 'function');
 }
@@ -378,6 +371,23 @@ async function testPptx(page) {
   if (head !== 'PK') throw new Error('no es un zip/pptx real (empieza con ' + JSON.stringify(head) + ', ' + size + ' bytes)');
   if (!xml.includes('ppt/slides/slide3.xml')) throw new Error('el pptx no trae las 3 diapositivas esperadas');
 }
+async function testMarkers(page) {
+  await page.addInitScript(() => { localStorage.setItem('synthz:v1', JSON.stringify({ mem: { on: true, items: [{ text: 'Me llamo Sammuel ZXMEM' }] } })); localStorage.setItem('synthz:sess', 'tok-de-prueba'); });
+  await planFor(page, GOAL + ' ZXALIAS-UI-MARK');
+  /* el doble arma: search, memory, think, image, file -> corremos hasta que se vea la imagen para bajar */
+  for (let i = 0; i < 4; i++) await runNext(page);
+  const body = await page.locator('[data-alias="step"]').evaluateAll(l => l.map(x => x.textContent).join('\n'));
+  if (/\[\[ALIAS/.test(body)) throw new Error('el marcador [[ALIAS:…]] quedó a la vista');
+  if (!body.includes('ZXMEM')) throw new Error('el paso de memoria no mostró lo guardado');
+  const dl = page.locator('[data-alias="step"]').nth(3);
+  const text = await dl.textContent();
+  if (!/Imagen lista|Image ready/.test(text)) throw new Error('el paso de imagen no dijo que quedó lista: ' + text.slice(0, 120));
+  for (let i = 0; i < 3; i++) { const b = page.locator('[data-alias="download"]'); if (await b.count()) break; await runNext(page).catch(() => {}); }
+  const imgBtn = page.locator('[data-alias="download"]').filter({ hasText: /imagen\.png|image\.png/ });
+  await imgBtn.first().waitFor();
+  const [d] = await Promise.all([page.waitForEvent('download'), imgBtn.first().click()]);
+  if (!/\.png$/.test(d.suggestedFilename())) throw new Error('la imagen no se descarga como .png: ' + d.suggestedFilename());
+}
 function score(text, vals, other) {
   return vals.filter(v => v.trim().length > 3 && text.includes(v) && !other.includes(v)).length;
 }
@@ -418,6 +428,7 @@ const TESTS = [
   ['muestra el error y los botones de decisión', 'Un paso con error muestra el aviso y al menos dos botones para decidir.', testError],
   ['descarga el archivo', 'Al llegar al paso file se puede descargar un archivo con texto.', testDownload],
   ['descarga la presentación', 'Un paso file que entrega el borrador de presentación baja un .pptx real (zip con las diapositivas), no el JSON.', testPptx],
+  ['pasos de memoria e imagen se resuelven en el navegador', 'El marcador del servidor se cambia por lo guardado (solo lectura) y por una imagen descargable.', testMarkers],
   ['cambia el idioma con el diccionario', 'Los textos visibles salen de textos.json y cambian al pulsar inglés.', testLang]
 ];
 

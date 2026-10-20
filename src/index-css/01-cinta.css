@@ -151,7 +151,7 @@ footer{text-align:center;color:var(--mute);font-size:13.5px;padding:70px 24px 90
 
 @media (max-width:820px){ .usage{grid-template-columns:1fr} }
 @media (max-width:560px){ .navlinks{display:none} }
-@media (prefers-reduced-motion:reduce) and (max-width:0px){
+@media (prefers-reduced-motion:reduce){
   html,.msgs{scroll-behavior:auto}
   html.js [data-reveal]{translate:0 0}
   .hero-fade{translate:0 0}

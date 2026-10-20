@@ -45,7 +45,7 @@ button{background:none;border:0;cursor:pointer}
 .field:focus-within{border-color:rgba(184,196,255,.55);background:rgba(0,0,0,.4)}
 .field input,.field textarea{flex:1;min-width:0;background:none;border:0;outline:0;padding:13px 14px;font-size:14.5px}
 .field textarea{resize:none}
-.field ::placeholder{color:#656875}
+.field ::placeholder{color:var(--mute)}   /* #8d909c: 6,1:1 sobre el fondo (antes #656875, 3,5:1) */
 .send{flex:none;width:46px;height:46px;border-radius:50%;background:var(--text);color:var(--bg);display:grid;place-items:center;transition:transform .2s,background .3s,opacity .3s}
 .send:hover{background:#fff}
 .send:active{transform:scale(.92)}
@@ -450,7 +450,7 @@ body.imaging .comp-in,body.imaging .composer .field{box-shadow:0 0 0 1px rgba(14
   .now{justify-content:flex-start;flex:1 1 100%}
   .tobottom{bottom:104px}
 }
-@media (prefers-reduced-motion:reduce) and (max-width:0px){ .m,.cmp-card,.now-chip,.mi.in,.sugg button,.cchip{animation:none} .side{transition:none} }
+@media (prefers-reduced-motion:reduce){ .m,.cmp-card,.now-chip,.mi.in,.sugg button,.cchip{animation:none} .side{transition:none} }
 
 /* ===== v2: cursor de carga, portal Z, escritura con brillo ===== */
 #cw{position:absolute;left:-11px;top:-11px;width:22px;height:22px;border-radius:50%;opacity:0;scale:.4;transition:opacity .25s,scale .45s var(--ease);background:conic-gradient(#ff5f57,#ffbd2e,#d9e84f,#28c840,#1ec8ff,#7c5cff,#ff5fb7,#ff5f57);-webkit-mask:radial-gradient(circle,transparent 3.5px,#000 4.5px);mask:radial-gradient(circle,transparent 3.5px,#000 4.5px);filter:drop-shadow(0 2px 5px rgba(0,0,0,.45))}

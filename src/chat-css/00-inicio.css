@@ -45,7 +45,7 @@ button{background:none;border:0;cursor:pointer}
 .field:focus-within{border-color:rgba(184,196,255,.55);background:rgba(0,0,0,.4)}
 .field input,.field textarea{flex:1;min-width:0;background:none;border:0;outline:0;padding:13px 14px;font-size:14.5px}
 .field textarea{resize:none}
-.field ::placeholder{color:#656875}
+.field ::placeholder{color:var(--mute)}   /* #8d909c: 6,1:1 sobre el fondo (antes #656875, 3,5:1) */
 .send{flex:none;width:46px;height:46px;border-radius:50%;background:var(--text);color:var(--bg);display:grid;place-items:center;transition:transform .2s,background .3s,opacity .3s}
 .send:hover{background:#fff}
 .send:active{transform:scale(.92)}

@@ -206,6 +206,11 @@ html[data-theme="atardecer"]{--gold:#f4a95e;--gold-rgb:244,169,94;--wine:#e2557a
 html[data-theme="lavanda"]{--gold:#bfa9f2;--gold-rgb:191,169,242;--wine:#d46fb0;--wine-rgb:212,111,176}
 html[data-theme] .aurora i:nth-child(3){background:var(--gold)}
 html[data-theme] .aurora i:nth-child(2){background:var(--wine)}
+/* Hecho por: CAZADOR (hallazgos 4, 12 y 20, verificados e integrados). Solo suma; no cambia colores de marca. */
+.skip{position:absolute;left:-9999px;top:0;z-index:10000;padding:10px 16px;background:#ecebe7;color:#0b0c10;border-radius:8px;font:500 14px/1.2 system-ui,sans-serif;text-decoration:none}
+.skip:focus{left:12px;top:12px}
+.field input:focus-visible,.lin input:focus-visible{outline:2px solid var(--accent,#b8c4ff);outline-offset:2px}
+.rbtn:focus-visible,.cfgb:focus-visible{outline:2px solid var(--accent,#b8c4ff);outline-offset:3px}
 /* ===== v15: SynthonIA (carita) y bienvenida tras 12 horas ===== */
 .szface{display:block;overflow:visible;flex:none}
 .szface .fe{transform-box:fill-box;transform-origin:center;animation:szblink 5.2s ease-in-out infinite}

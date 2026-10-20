@@ -19,6 +19,15 @@
 <meta property="og:title" content="SynthFlow · SynthZ">
 <meta property="og:description" content="Tu IA gratis, en una sola mesa.">
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://synthz-style.vercel.app/chat.html">
+<meta property="og:image" content="https://synthz-style.vercel.app/media/app/sf-512.png">
+<meta property="og:locale" content="es_CO">
+<meta property="og:locale:alternate" content="en_US">
+<link rel="canonical" href="https://synthz-style.vercel.app/chat.html">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SynthFlow · SynthZ">
+<meta name="twitter:description" content="Tu IA gratis, en una sola mesa.">
+<meta name="twitter:image" content="https://synthz-style.vercel.app/media/app/sf-512.png">
 <link rel="apple-touch-icon" href="media/apple-touch-icon.png">
 <link rel="stylesheet" href="core.css">
 <link rel="manifest" href="/synthflow.webmanifest">
@@ -29,6 +38,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
+<a class="skip" href="#top">Saltar al contenido</a>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="zgrad" x1="0" y1="0" x2="1" y2="1"><animateTransform attributeName="gradientTransform" type="rotate" from="0 .5 .5" to="360 .5 .5" dur="16s" repeatCount="indefinite"/><stop offset="0" stop-color="#8fb0ff"/><stop offset=".55" stop-color="#c9566c"/><stop offset="1" stop-color="#e6b65f"/></linearGradient></defs></svg>
 <div class="aurora"><i></i><i></i><i></i></div>
 <div class="grain"></div>
@@ -99,7 +109,7 @@
       <div class="lockc" id="lockCard" hidden role="region" aria-label="Conecta una IA"><span class="lk-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="3"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><path d="M12 15v2"/></svg></span><div class="lk-t"><b id="lockT">Ahora no hay IA disponible</b><small id="lockS">Vuelve en un momento, o conecta Puter y sigue chateando ya. Conecta tu versión pro de las IAs más usadas.</small></div><div class="lk-b"><button type="button" class="btn sm flow" data-lk="acc" hidden>Crear mi cuenta · gratis</button><button type="button" class="lnk" data-lk="in" hidden>Ya tengo cuenta</button><button type="button" class="btn sm flow" data-lk="pu">Conectar Puter · gratis</button><button type="button" class="lnk" data-lk="guide">Ver la Guía</button></div></div>
       <div class="comp-in">
         <div class="attw">
-          <button class="attach" id="attachBtn" type="button" aria-label="Adjuntar" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.9-8.9a3.7 3.7 0 0 1 5.2 5.2l-8.9 8.9a1.8 1.8 0 0 1-2.6-2.6l8.1-8.1"/></svg></button>
+          <button class="attach" id="attachBtn" type="button" aria-label="Adjuntar" aria-haspopup="menu" aria-expanded="false" aria-controls="attMenu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.9-8.9a3.7 3.7 0 0 1 5.2 5.2l-8.9 8.9a1.8 1.8 0 0 1-2.6-2.6l8.1-8.1"/></svg></button>
           <div class="amenu" id="attMenu" role="menu" hidden>
             <button type="button" role="menuitem" data-att="file"><i aria-hidden="true">📄</i><span><b>Archivo o PDF</b><small>Documentos, código y textos</small></span></button>
             <button type="button" role="menuitem" data-att="img"><i aria-hidden="true">🖼️</i><span><b>Imagen</b><small>Solo las IA que «ven fotos» pueden mirarla</small></span></button>
