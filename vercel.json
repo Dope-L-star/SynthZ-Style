@@ -101,6 +101,15 @@
   "functions": {
     "api/trial.js": {
       "maxDuration": 60
+    },
+    "api/alias.js": {
+      "maxDuration": 60
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/alias",
+      "destination": "/alias.html"
+    }
+  ]
 }
