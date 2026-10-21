@@ -601,7 +601,10 @@ function openCanvas(M, sibs, tab){
       else {
         /* la vista previa corre aislada: sin acceso a tu cuenta, tus chats ni esta página */
         const f = document.createElement('iframe'); f.title = 'Vista previa de ' + M.name; f.setAttribute('sandbox', 'allow-scripts allow-modals allow-forms allow-pointer-lock'); f.setAttribute('referrerpolicy', 'no-referrer');
-        f.srcdoc = previewDoc(M, sibs); box.appendChild(f);
+        /* la página de la vista previa tiene su propia política (preview.html) y recibe el documento por mensaje */
+        const doc = previewDoc(M, sibs); f.src = 'preview.html';
+        f.addEventListener('load', () => { try{ f.contentWindow.postMessage({ synthzPreview:doc }, '*'); }catch(e){} }, { once:true });
+        box.appendChild(f);
       }
     }
   };
