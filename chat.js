@@ -732,7 +732,6 @@ setInterval(() => {
   r.animate([{ opacity:1, transform:'none', filter:'blur(0)' }, { opacity:0, transform:'translateY(-6px)', filter:'blur(4px)' }], { duration:320, easing:'ease-in' }).onfinish = () => { r.innerHTML = exRowHtml(); r.animate([{ opacity:0, transform:'translateY(6px)', filter:'blur(4px)' }, { opacity:1, transform:'none', filter:'blur(0)' }], { duration:420, easing:'cubic-bezier(.22,1,.36,1)' }); };
 }, 7000);
 function topicsHtml(){
-  return '';   /* v2.3.1 · las etiquetas de temas (Escribir, Marketing, Código…) se quitaron */
   const L = topicsAll ? TOPICS : TOPICS.slice(0, TOPICS_SHOWN);
   return '<div class="topics" role="group" aria-label="¿Qué quieres hacer?">' + L.map(([k, e, l], i) => '<button type="button" class="tchip" data-topic="' + k + '" aria-pressed="' + (curTopic === k) + '" style="--i:' + i + '">' + esc(l) + '</button>').join('')
     + (topicsAll ? '<button type="button" class="tchip more" data-topics-less>Menos temas</button>' : '<button type="button" class="tchip more" data-topics-more>Más temas →</button>') + '</div>';
@@ -2307,6 +2306,7 @@ async function runGuide(){
     await gPoint(gAny('#cCmp', '#pickRow [data-add]'), 'Aquí sumas otra IA: hasta 4 a la vez. Todas responden la misma pregunta y las comparas. Ojo: cada una gasta lo suyo.');
     await gPoint(gAny('#payPill', '#payL', '#payM'), 'Aquí ves cómo va tu límite gratis de hoy.', { pad:6 });
     await gPoint(gT('#rail [data-r="chats"]', '#tabbar [data-tab="chats"]'), 'Tus chats y tus mensajes favoritos quedan aquí, en cualquier dispositivo si entras con tu cuenta.', { side:true });
+    await gPoint(gT('.tchip[data-topic]', '.tchip[data-topic]'), 'Toca un tema cuando quieras y te recomiendo IA expertas en eso.');
     await gPoint(gT('#guideTop', '#guideTop') || gT('#helpBtn', '#helpBtn'), 'Y si te pierdes, la Guía rápida siempre está aquí: la ves completa o solo lo que quieras.', { mood:'guino' });
     H.unspot(); H.quiet();
 
@@ -2420,6 +2420,7 @@ const TOPIC_STEPS = {
   ia:async () => {
     if (agentOn()){ await gPoint(gT('#agPill', '#agPill'), 'Ahora estás en modo agente: él elige la IA por ti. Si quieres elegirla tú, toca «Apagar».'); return; }
     await gPoint(gAny('#cPick', '#curChip'), 'Aquí eliges con qué IA hablas. Tócalo y se abre su ventana con temas, buscador y filtros.');
+    const tc = gT('.tchip[data-topic]', '.tchip[data-topic]'); if (tc) await gPoint(tc, 'Cada tema te recomienda las IA que mejor lo hacen. Por ejemplo, «Código» te muestra las expertas en programar.');
   },
   comparar:async () => {
     if (agentOn()){ await gPoint(null, 'Comparar se usa sin el modo agente: apágalo y verás el botón «Comparar con otra IA» abajo.'); return; }

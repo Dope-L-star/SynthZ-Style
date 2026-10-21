@@ -176,6 +176,7 @@ async function runGuide(){
     await gPoint(gAny('#cCmp', '#pickRow [data-add]'), 'Aquí sumas otra IA: hasta 4 a la vez. Todas responden la misma pregunta y las comparas. Ojo: cada una gasta lo suyo.');
     await gPoint(gAny('#payPill', '#payL', '#payM'), 'Aquí ves cómo va tu límite gratis de hoy.', { pad:6 });
     await gPoint(gT('#rail [data-r="chats"]', '#tabbar [data-tab="chats"]'), 'Tus chats y tus mensajes favoritos quedan aquí, en cualquier dispositivo si entras con tu cuenta.', { side:true });
+    await gPoint(gT('.tchip[data-topic]', '.tchip[data-topic]'), 'Toca un tema cuando quieras y te recomiendo IA expertas en eso.');
     await gPoint(gT('#guideTop', '#guideTop') || gT('#helpBtn', '#helpBtn'), 'Y si te pierdes, la Guía rápida siempre está aquí: la ves completa o solo lo que quieras.', { mood:'guino' });
     H.unspot(); H.quiet();
 
