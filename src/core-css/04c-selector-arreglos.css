@@ -9,3 +9,6 @@
   html.noglass #side.side.two-p{background:none !important;border:0 !important;box-shadow:none !important}
   html.noglass #side.two-p .pf-l,html.noglass #side.two-p .pf-r{background:#16151b !important}
 }
+/* 3) «De dónde» se veía como una barra vacía en pantallas bajitas: sus botones (con scroll propio) se encogían hasta desaparecer.
+      Nada del panel izquierdo se encoge: si no cabe, el panel se desplaza. */
+#side.two-p .pf-l>*{flex-shrink:0}

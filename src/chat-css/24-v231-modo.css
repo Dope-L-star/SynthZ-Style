@@ -22,9 +22,14 @@ body[data-cmode="auto"] .composer #cPick,body[data-cmode="agent"] .composer #cPi
 #modeMenu em.ck{font-style:normal;font-size:15px;color:var(--text)}
 html.simple .cpk4{background:transparent !important;border-color:var(--sline) !important}
 .composer .cpk4{border-radius:999px !important}
-/* celular: la fila se desliza hacia los lados para llegar a «Esfuerzo» y «Comparar» */
-@media (max-width:600px){
-  .composer .cpick,body.fresh .comp-in .cpick{overflow-x:auto !important;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-  .composer .cpick::-webkit-scrollbar{display:none}
-  .composer .cpick>*{flex:none}
+/* celular: la fila NO se desliza de lado (eso corría todos los íconos hacia la izquierda). Todo cabe en una línea: el nombre de la IA se acorta con «…» */
+@media (max-width:900px){
+  .composer .cpk2 span{display:none}
+  .composer .cpick,body.fresh .comp-in .cpick{flex-wrap:nowrap !important;overflow:hidden !important;min-width:0;gap:6px !important}
+  .composer .cpick>*{flex:0 0 auto}
+  .composer .cpick>#cPick{flex:1 1 0;min-width:0}
+  .composer #cPick b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .composer .cpk4{padding:0 8px 0 10px;gap:6px}
+  .composer .cpk4 .cm-chev{width:13px;height:13px}
 }
+@media (max-width:340px){ .composer .cpk4 b{display:none} .composer .cpk4{padding:0 8px} }

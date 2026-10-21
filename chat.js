@@ -79,7 +79,7 @@ function topicFor(q){ const f = fold(q).trim(); if (f.length < 3) return null; c
 function visible(q){
   const fav = new Set(st().fav), qt = !ptopic && q ? topicFor(q) : null;
   const nameHit = m => (m.name + ' ' + m.id + ' ' + m.vlabel).toLowerCase().includes(q);
-  let l = cat.list.filter(m => (ui.prov === 'all' || m.id.startsWith(ui.prov + ':')) && (!ui.free || m.free) && ((!ui.fav && ptab !== 'fav') || fav.has(m.id)) && (!ui.reason || m.reasoning) && (!ui.vision || m.vision) && (!ui.long || m.ctx >= 100000) && (!ui.code || expert(m).tags.includes('code')) && (!ui.write || expert(m).tags.includes('write')) && (!ui.fast || expert(m).tags.includes('fast')) && (!ui.math || expert(m).tags.includes('math')) && (!ui.newm || isNew(m)) && true
+  let l = cat.list.filter(m => m.id !== 'sz:auto' && (ui.prov === 'all' || m.id.startsWith(ui.prov + ':')) && (!ui.free || m.free) && ((!ui.fav && ptab !== 'fav') || fav.has(m.id)) && (!ui.reason || m.reasoning) && (!ui.vision || m.vision) && (!ui.long || m.ctx >= 100000) && (!ui.code || expert(m).tags.includes('code')) && (!ui.write || expert(m).tags.includes('write')) && (!ui.fast || expert(m).tags.includes('fast')) && (!ui.math || expert(m).tags.includes('math')) && (!ui.newm || isNew(m)) && true
     && (!q || nameHit(m) || (qt && recommendTop(qt, 8).some(x => x.id === m.id))));
   const cmp = ui.sort === 'ctx' ? (a, b) => b.ctx - a.ctx || a.name.localeCompare(b.name) : ui.sort === 'az' ? (a, b) => a.name.localeCompare(b.name) : (a, b) => b.created - a.created || a.name.localeCompare(b.name);
   l.sort(cmp);
@@ -732,6 +732,7 @@ setInterval(() => {
   r.animate([{ opacity:1, transform:'none', filter:'blur(0)' }, { opacity:0, transform:'translateY(-6px)', filter:'blur(4px)' }], { duration:320, easing:'ease-in' }).onfinish = () => { r.innerHTML = exRowHtml(); r.animate([{ opacity:0, transform:'translateY(6px)', filter:'blur(4px)' }, { opacity:1, transform:'none', filter:'blur(0)' }], { duration:420, easing:'cubic-bezier(.22,1,.36,1)' }); };
 }, 7000);
 function topicsHtml(){
+  return '';   /* v2.3.1 · las etiquetas de temas (Escribir, Marketing, Código…) se quitaron */
   const L = topicsAll ? TOPICS : TOPICS.slice(0, TOPICS_SHOWN);
   return '<div class="topics" role="group" aria-label="¿Qué quieres hacer?">' + L.map(([k, e, l], i) => '<button type="button" class="tchip" data-topic="' + k + '" aria-pressed="' + (curTopic === k) + '" style="--i:' + i + '">' + esc(l) + '</button>').join('')
     + (topicsAll ? '<button type="button" class="tchip more" data-topics-less>Menos temas</button>' : '<button type="button" class="tchip more" data-topics-more>Más temas →</button>') + '</div>';
@@ -2306,7 +2307,6 @@ async function runGuide(){
     await gPoint(gAny('#cCmp', '#pickRow [data-add]'), 'Aquí sumas otra IA: hasta 4 a la vez. Todas responden la misma pregunta y las comparas. Ojo: cada una gasta lo suyo.');
     await gPoint(gAny('#payPill', '#payL', '#payM'), 'Aquí ves cómo va tu límite gratis de hoy.', { pad:6 });
     await gPoint(gT('#rail [data-r="chats"]', '#tabbar [data-tab="chats"]'), 'Tus chats y tus mensajes favoritos quedan aquí, en cualquier dispositivo si entras con tu cuenta.', { side:true });
-    await gPoint(gT('.tchip[data-topic]', '.tchip[data-topic]'), 'Toca un tema cuando quieras y te recomiendo IA expertas en eso.');
     await gPoint(gT('#guideTop', '#guideTop') || gT('#helpBtn', '#helpBtn'), 'Y si te pierdes, la Guía rápida siempre está aquí: la ves completa o solo lo que quieras.', { mood:'guino' });
     H.unspot(); H.quiet();
 
@@ -2420,7 +2420,6 @@ const TOPIC_STEPS = {
   ia:async () => {
     if (agentOn()){ await gPoint(gT('#agPill', '#agPill'), 'Ahora estás en modo agente: él elige la IA por ti. Si quieres elegirla tú, toca «Apagar».'); return; }
     await gPoint(gAny('#cPick', '#curChip'), 'Aquí eliges con qué IA hablas. Tócalo y se abre su ventana con temas, buscador y filtros.');
-    const tc = gT('.tchip[data-topic]', '.tchip[data-topic]'); if (tc) await gPoint(tc, 'Cada tema te recomienda las IA que mejor lo hacen. Por ejemplo, «Código» te muestra las expertas en programar.');
   },
   comparar:async () => {
     if (agentOn()){ await gPoint(null, 'Comparar se usa sin el modo agente: apágalo y verás el botón «Comparar con otra IA» abajo.'); return; }
@@ -3425,13 +3424,15 @@ const MODES = {
 };
 const MODE_KEYS = ['auto', 'chat', 'agent'];
 const modeSvg = k => k === 'agent' && typeof ssIco === 'function' ? ssIco() : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + MODES[k].ico + '</svg>';
-function modeKey(){ if (agentOn()) return 'agent'; return (st().sx.cmode === 'chat' || selId() !== 'sz:auto') ? 'chat' : 'auto'; }
+function modeKey(){ if (agentOn()) return 'agent'; return selId() === 'sz:auto' ? 'auto' : 'chat'; }   /* «Automática» es solo un modo; en Chat siempre hay una IA concreta */
 /* la IA con la que empieza «Chat»: Gemini (la más nueva que esté disponible y gratis); si no hay, la que ya tenías */
 function geminiDefault(){
   const g = (cat.list || []).filter(m => /gemini/i.test(m.id + ' ' + m.name) && !/embed|image|tts|live|audio/i.test(m.id)), pool = g.filter(m => connected(m.id));
   const best = (pool.length ? pool : g).slice().sort((a, b) => (b.free - a.free) || (b.created - a.created))[0];
   if (best) return best.id;
-  const s = (st().models.openrouter || []).find(x => /gemini/i.test(x) && connected(x)); return s || '';
+  const s = (st().models.openrouter || []).find(x => /gemini/i.test(x) && connected(x)); if (s) return s;
+  const any = (cat.list || []).filter(m => m.id !== 'sz:auto' && connected(m.id)).sort((a, b) => (b.free - a.free) || (b.created - a.created))[0];   /* sin Gemini: cualquier IA concreta que esté disponible */
+  return any ? any.id : '';
 }
 function setModel(id){ st().model.openrouter = id; st().pinned = id; save(); }
 function applyMode(k){

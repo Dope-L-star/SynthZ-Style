@@ -9,13 +9,15 @@ const MODES = {
 };
 const MODE_KEYS = ['auto', 'chat', 'agent'];
 const modeSvg = k => k === 'agent' && typeof ssIco === 'function' ? ssIco() : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + MODES[k].ico + '</svg>';
-function modeKey(){ if (agentOn()) return 'agent'; return (st().sx.cmode === 'chat' || selId() !== 'sz:auto') ? 'chat' : 'auto'; }
+function modeKey(){ if (agentOn()) return 'agent'; return selId() === 'sz:auto' ? 'auto' : 'chat'; }   /* «Automática» es solo un modo; en Chat siempre hay una IA concreta */
 /* la IA con la que empieza «Chat»: Gemini (la más nueva que esté disponible y gratis); si no hay, la que ya tenías */
 function geminiDefault(){
   const g = (cat.list || []).filter(m => /gemini/i.test(m.id + ' ' + m.name) && !/embed|image|tts|live|audio/i.test(m.id)), pool = g.filter(m => connected(m.id));
   const best = (pool.length ? pool : g).slice().sort((a, b) => (b.free - a.free) || (b.created - a.created))[0];
   if (best) return best.id;
-  const s = (st().models.openrouter || []).find(x => /gemini/i.test(x) && connected(x)); return s || '';
+  const s = (st().models.openrouter || []).find(x => /gemini/i.test(x) && connected(x)); if (s) return s;
+  const any = (cat.list || []).filter(m => m.id !== 'sz:auto' && connected(m.id)).sort((a, b) => (b.free - a.free) || (b.created - a.created))[0];   /* sin Gemini: cualquier IA concreta que esté disponible */
+  return any ? any.id : '';
 }
 function setModel(id){ st().model.openrouter = id; st().pinned = id; save(); }
 function applyMode(k){

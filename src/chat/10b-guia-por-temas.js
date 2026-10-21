@@ -8,7 +8,6 @@ const TOPIC_STEPS = {
   ia:async () => {
     if (agentOn()){ await gPoint(gT('#agPill', '#agPill'), 'Ahora estás en modo agente: él elige la IA por ti. Si quieres elegirla tú, toca «Apagar».'); return; }
     await gPoint(gAny('#cPick', '#curChip'), 'Aquí eliges con qué IA hablas. Tócalo y se abre su ventana con temas, buscador y filtros.');
-    const tc = gT('.tchip[data-topic]', '.tchip[data-topic]'); if (tc) await gPoint(tc, 'Cada tema te recomienda las IA que mejor lo hacen. Por ejemplo, «Código» te muestra las expertas en programar.');
   },
   comparar:async () => {
     if (agentOn()){ await gPoint(null, 'Comparar se usa sin el modo agente: apágalo y verás el botón «Comparar con otra IA» abajo.'); return; }
