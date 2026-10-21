@@ -1,3 +1,5 @@
+> ⚠️ **REEMPLAZADO el 20-oct 19:10 por `equipo/PLAN-OPUS-v2.2B.md`.** Sammuel decidió reiniciar desde la v2.2B. Usa este archivo solo como consulta (Fase 6 del plan nuevo).
+
 # PLAN MAESTRO PARA EL CLAUDE DE PAGO (v2.4)
 Escrito por Claude Opus el 20-oct-2026. **Tú eres el ejecutor; Opus es el revisor.** Cuando Opus vuelva, verificará tu trabajo corriendo UN solo comando (`bash t/aceptacion.sh`) y leyendo tu informe. Por eso: sigue el plan al pie de la letra, no improvises fuera de él, y no declares nada "hecho" sin pruebas que lo demuestren.
 
