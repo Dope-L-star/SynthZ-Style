@@ -1,12 +1,8 @@
 {
   "headers": [
     {
-      "source": "/((?!preview\\.html).*)",
+      "source": "/(.*)",
       "headers": [
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
         {
           "key": "X-Content-Type-Options",
           "value": "nosniff"
@@ -24,12 +20,21 @@
           "value": "max-age=63072000; includeSubDomains"
         },
         {
-          "key": "Cross-Origin-Opener-Policy",
-          "value": "same-origin-allow-popups"
-        },
-        {
           "key": "X-Permitted-Cross-Domain-Policies",
           "value": "none"
+        }
+      ]
+    },
+    {
+      "source": "/(|index\\.html|chat\\.html|pulsem\\.html|privacidad\\.html|terminos\\.html)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin-allow-popups"
         },
         {
           "key": "Content-Security-Policy",
@@ -40,6 +45,10 @@
     {
       "source": "/preview.html",
       "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
         {
           "key": "Content-Security-Policy",
           "value": "sandbox allow-scripts allow-modals allow-forms allow-pointer-lock; default-src * data: blob: 'unsafe-inline' 'unsafe-eval'; frame-ancestors 'self'; base-uri 'none'; form-action 'none'"

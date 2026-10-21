@@ -601,9 +601,17 @@ function openCanvas(M, sibs, tab){
       else {
         /* la vista previa corre aislada: sin acceso a tu cuenta, tus chats ni esta página */
         const f = document.createElement('iframe'); f.title = 'Vista previa de ' + M.name; f.setAttribute('sandbox', 'allow-scripts allow-modals allow-forms allow-pointer-lock'); f.setAttribute('referrerpolicy', 'no-referrer');
-        /* la página de la vista previa tiene su propia política (preview.html) y recibe el documento por mensaje */
+        /* la página de la vista previa tiene su propia política (preview.html) y recibe el documento por mensaje cuando avisa que está lista.
+           Si no avisa a tiempo, se muestra sin scripts (la política de esta página no deja correrlos aquí) y se explica. */
         const doc = previewDoc(M, sibs); f.src = 'preview.html';
-        f.addEventListener('load', () => { try{ f.contentWindow.postMessage({ synthzPreview:doc }, '*'); }catch(e){} }, { once:true });
+        let ok = false;
+        const onMsg = e => { if (e.source === f.contentWindow && e.data && e.data.synthzPreviewReady){ ok = true; removeEventListener('message', onMsg); f.contentWindow.postMessage({ synthzPreview:doc }, '*'); } };
+        addEventListener('message', onMsg);
+        setTimeout(() => {
+          if (ok || !f.isConnected) return; removeEventListener('message', onMsg);
+          const g = document.createElement('iframe'); g.title = f.title; g.setAttribute('sandbox', ''); g.setAttribute('referrerpolicy', 'no-referrer'); g.srcdoc = doc; f.replaceWith(g);
+          const n = document.createElement('p'); n.className = 'cnote'; n.style.cssText = 'margin:6px 10px;font-size:12px'; n.textContent = 'No pude abrir la vista previa completa, así que la muestro sin scripts. Usa «Descargar» para verla con todo funcionando.'; box.prepend(n);
+        }, 3000);
         box.appendChild(f);
       }
     }

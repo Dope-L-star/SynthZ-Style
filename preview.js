@@ -4,3 +4,4 @@ addEventListener('message', function(e){
   if (e.source !== parent || !e.data || typeof e.data.synthzPreview !== 'string') return;
   document.open(); document.write(e.data.synthzPreview); document.close();
 }, { once:true });
+parent.postMessage({ synthzPreviewReady:1 }, '*');   /* avisa que ya está lista para recibir el documento */
