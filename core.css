@@ -614,6 +614,17 @@ html.noanim #side.two-p .pf-l,html.noanim #side.two-p .pf-r{transition-duration:
 @media (max-width:560px){.pill-total.lim{font-size:12px}}
 .sxfoot.lim{display:flex;align-items:center;gap:10px}
 .rcoin .lring{margin:0 -1px}
+/* v2.3.1 · arreglos del selector de IA («¿Con quién fluyes hoy?»)
+   1) Al cerrarlo, «Las IA» quedaba invisible pero seguía recibiendo clics encima de la caja de escribir:
+      tocar para escribir elegía otra IA. Cerrado = nada del selector se ve ni se toca. */
+#side.side:not(.open),#side.side:not(.open) *{pointer-events:none !important}
+#side.side:not(.open) .pf-l,#side.side:not(.open) .pf-r{visibility:hidden !important}
+/* 2) Con el efecto vidrio apagado, la caja entera (1180 px) se pintaba oscura detrás de los paneles:
+      el fondo va solo en cada panel, como con vidrio. */
+@media (min-width:900px){
+  html.noglass #side.side.two-p{background:none !important;border:0 !important;box-shadow:none !important}
+  html.noglass #side.two-p .pf-l,html.noglass #side.two-p .pf-r{background:#16151b !important}
+}
 /* ===== v1.3 · logos de vidrio: la S de «Synth», la Z y «Flow» ===== */
 .gS{position:relative;display:inline-block;color:transparent;background:linear-gradient(165deg,rgba(255,255,255,.96) 0%,rgba(255,198,220,.62) 20%,rgba(196,128,214,.42) 46%,rgba(255,150,140,.62) 70%,rgba(255,255,255,.92) 100%);background-size:100% 240%;-webkit-background-clip:text;background-clip:text;-webkit-text-stroke:.024em rgba(255,236,246,.78);filter:drop-shadow(0 0 .12em rgba(232,140,190,.42)) drop-shadow(0 .03em .02em rgba(0,0,0,.35));animation:gSflow 6s ease-in-out infinite;padding-right:.01em}
 @keyframes gSflow{0%,100%{background-position:0 0}50%{background-position:0 100%}}
