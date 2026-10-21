@@ -35,15 +35,18 @@ function renderKeys(){
   }).join('') : '<div class="empty">Todavía no hay llaves. Agrega las tuyas abajo: las IAs conectadas se activa para todos al instante.</div>';
 }
 function renderMyKeys(){
-  const mine = (T && T.mine) || {};
-  $('#myKeys').innerHTML = PROVS.map(([id, name, url, ph, note]) => {
-    const on = !!mine[id], P0 = SZ.byId(id) || SZ.byId('openrouter');
-    return '<div class="mk" data-p="' + id + '"><div class="mh">' + SZ.glassIcon({ id, vendor:id === 'mistral' ? 'mistralai' : id }, 'sm') + '<b>' + name + '</b><em class="' + (on ? 'on' : '') + '">' + (on ? '✓ guardada' : 'sin llave') + '</em></div>'
-      + (note ? '<p class="cnote" style="margin:4px 0 8px">' + esc(note) + '</p>' : '')
-      + '<label class="field"><input type="text" data-sec="1" data-k="' + id + '" placeholder="' + esc(on ? 'Pega otra para cambiarla' : ph) + '" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other" spellcheck="false"></label>'
-      + (id === 'cloudflare' ? '<label class="field"><input type="text" data-cfa placeholder="Account ID (opcional; lo busco solo si falta)" autocomplete="off" spellcheck="false" value="' + esc((T && T.cfAccount) || '') + '"></label>' : '')
-      + '<div class="acts"><button class="btn sm" type="button" data-save="' + id + '">Guardar y probar</button>' + (on ? '<button class="lnk" type="button" data-del="' + id + '">Quitar</button>' : '') + '<a class="lnk" href="' + url + '" target="_blank" rel="noopener noreferrer">Sacar una gratis</a></div></div>';
-  }).join('');
+  const mine = (T && T.mine) || {}, cur = ($('#mkProv') || {}).value || PROVS[0][0];
+  $('#myKeys').innerHTML = '<div class="mk" id="mkForm"><div class="mh"><b>Agregar o cambiar una llave</b></div>'
+    + '<label class="field"><select id="mkProv" aria-label="Proveedor">' + PROVS.map(([id, name]) => '<option value="' + id + '"' + (id === cur ? ' selected' : '') + '>' + name + (mine[id] ? ' · ya tienes una' : '') + '</option>').join('') + '</select></label>'
+    + '<div id="mkBody"></div></div>';
+  fillMk(cur);
+}
+function fillMk(id){
+  const mine = (T && T.mine) || {}, p = PROVS.find(x => x[0] === id) || PROVS[0], on = !!mine[id], [, , url, ph, note] = p;
+  $('#mkBody').innerHTML = (note ? '<p class="cnote" style="margin:4px 0 8px">' + esc(note) + '</p>' : '')
+    + '<label class="field"><input type="text" data-sec="1" id="mkKey" placeholder="' + esc(on ? 'Pega otra para cambiarla' : ph) + '" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other" spellcheck="false"></label>'
+    + (id === 'cloudflare' ? '<label class="field"><input type="text" data-cfa placeholder="Account ID (opcional; lo busco solo si falta)" autocomplete="off" spellcheck="false" value="' + esc((T && T.cfAccount) || '') + '"></label>' : '')
+    + '<div class="acts"><button class="btn sm" type="button" data-save="' + id + '">Guardar y probar</button><a class="lnk" href="' + url + '" target="_blank" rel="noopener noreferrer">Sacar una gratis</a></div>';
 }
 async function keysPost(body, btn, label){
   const l = btn ? btn.textContent : ''; if (btn){ btn.disabled = true; btn.textContent = label || 'Probando…'; }
@@ -55,22 +58,16 @@ async function keysPost(body, btn, label){
   }catch(e){ toast(e.message); }
   finally{ if (btn && btn.isConnected){ btn.disabled = false; btn.textContent = l; } }
 }
+$('#myKeys').addEventListener('change', e => { if (e.target.id === 'mkProv') fillMk(e.target.value); });
 $('#myKeys').addEventListener('click', async e => {
-  const s = e.target.closest('[data-save]'), d = e.target.closest('[data-del]');
-  if (s){
-    const id = s.dataset.save, v = ($('[data-k="' + id + '"]').value || '').trim(), body = { action:'keys' };
-    if (v) body[id] = v;
-    if (id === 'cloudflare'){ const a = $('[data-cfa]'); if (a) body.cfAccount = a.value.trim(); }
-    if (!v && !(id === 'cloudflare' && body.cfAccount)){ toast('Pega tu llave de ' + PROVS.find(p => p[0] === id)[1] + '.'); return; }
-    if (id === 'groq' && v && !/^gsk_/.test(v)){ toast('Esa no parece una llave de Groq: empieza con «gsk_».'); return; }
-    if (id === 'openrouter' && v && !/^sk-or-/.test(v)){ toast('Esa no parece una llave de OpenRouter: empieza con «sk-or-».'); return; }
-    await keysPost(body, s, 'Guardando…');
-  }
-  if (d){
-    const id = d.dataset.del, nm = PROVS.find(p => p[0] === id)[1];
-    if (!(await SZ.szConfirm('¿Quitar tu llave de ' + nm + '?', 'Dejará de usarse para las IAs conectadas. Las llaves de los demás siguen funcionando.', 'Quitar', true))) return;
-    await keysPost({ action:'keys', [id]:'' }, d, 'Quitando…');
-  }
+  const s = e.target.closest('[data-save]'); if (!s) return;
+  const id = s.dataset.save, v = ($('#mkKey').value || '').trim(), body = { action:'keys' };
+  if (v) body[id] = v;
+  if (id === 'cloudflare'){ const a = $('[data-cfa]'); if (a) body.cfAccount = a.value.trim(); }
+  if (!v && !(id === 'cloudflare' && body.cfAccount)){ toast('Pega tu llave de ' + PROVS.find(p => p[0] === id)[1] + '.'); return; }
+  if (id === 'groq' && v && !/^gsk_/.test(v)){ toast('Esa no parece una llave de Groq: empieza con «gsk_».'); return; }
+  if (id === 'openrouter' && v && !/^sk-or-/.test(v)){ toast('Esa no parece una llave de OpenRouter: empieza con «sk-or-».'); return; }
+  await keysPost(body, s, 'Guardando…');
 });
 $('#kList').addEventListener('click', async e => {
   const b = e.target.closest('[data-check]'); if (b){ keysPost({ action:'check', id:b.dataset.check }, b); return; }
