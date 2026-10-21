@@ -15,3 +15,5 @@ jobs:
         run: node build.mjs --check
       - name: El servidor no tiene errores de sintaxis
         run: for f in api/*.js; do node --check "$f"; done
+      - name: Pruebas del servidor
+        run: npm test
