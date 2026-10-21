@@ -3,5 +3,9 @@
   "private": true,
   "type": "module",
   "description": "SynthZ: chat con IA gratis (Puter y OpenRouter) con cuentas propias, perfiles y equipos.",
+  "scripts": {
+    "build": "node build.mjs",
+    "check": "node build.mjs --check"
+  },
   "engines": { "node": ">=20" }
 }

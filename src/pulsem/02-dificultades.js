@@ -31,7 +31,7 @@ function renderKeys(){
   $('#kList').innerHTML = ks.length ? ks.map((k, i) => {
     const [d, s] = keyState(k), mine = k.mine || (k.owner && T && T.keys && T.keys.find(x => x.id === k.id && x.mine));
     const pct = k.cap ? Math.min(1, (k.n || 0) / k.cap) : 0;
-    return '<div class="krow" style="--i:' + i + '"><i class="dot ' + d + '"></i><div style="display:flex;gap:10px;align-items:center">' + SZ.glassIcon({ id:k.prov, vendor:k.prov === 'mistral' ? 'mistralai' : k.prov }, 'sm') + '<div><b>' + esc(k.provName || k.prov) + '</b><small>' + esc(k.owner ? k.owner.name + ' · ' + k.owner.rank : '') + (k.key ? ' · ' + esc(k.key) : '') + (k.src === 'vercel' ? ' · Vercel' : '') + '</small></div></div><div><small>' + esc(s) + '</small>' + (k.check && !k.check.ok && k.check.detail ? '<small style="color:#ffc0b2">' + esc(k.provName || k.prov) + ' dijo: «' + esc(k.check.detail) + '»</small>' : '') + '</div><div class="kmeter" style="min-width:110px"><div class="meter"><i style="transform:scaleX(' + pct.toFixed(3) + ')"></i></div><small>hoy ' + fmt(k.n || 0) + ' / ' + fmt(k.cap || 0) + ' · ' + fmt(k.tok || 0) + ' palabras</small></div><div class="kact">' + (can || mine ? '<button class="mini" type="button" data-check="' + esc(k.id) + '">Probar</button>' : '') + '</div></div>';
+    return '<div class="krow" style="--i:' + i + '"><i class="dot ' + d + '"></i><div style="display:flex;gap:10px;align-items:center">' + SZ.glassIcon({ id:k.prov, vendor:k.prov === 'mistral' ? 'mistralai' : k.prov }, 'sm') + '<div><b>' + esc(k.provName || k.prov) + '</b><small>' + esc(k.owner ? k.owner.name + ' · ' + k.owner.rank : '') + (k.key ? ' · ' + esc(k.key) : '') + (k.src === 'vercel' ? ' · Vercel' : '') + '</small></div></div><div><small>' + esc(s) + '</small>' + (k.check && !k.check.ok && k.check.detail ? '<small style="color:#ffc0b2">' + esc(k.provName || k.prov) + ' dijo: «' + esc(k.check.detail) + '»</small>' : '') + '</div><div class="kmeter" style="min-width:110px"><div class="meter"><i style="transform:scaleX(' + pct.toFixed(3) + ')"></i></div><small>hoy ' + fmt(k.n || 0) + ' / ' + fmt(k.cap || 0) + ' · ' + fmt(k.tok || 0) + ' palabras</small></div><div class="kact">' + (can || mine ? '<button class="mini" type="button" data-check="' + esc(k.id) + '">Probar</button>' : '') + (k.src !== 'vercel' && (can || mine) ? '<button class="lnk" type="button" data-rm="' + esc(k.id) + '" data-nm="' + esc(k.provName || k.prov) + '">Quitar</button>' : '') + '</div></div>';
   }).join('') : '<div class="empty">Todavía no hay llaves. Agrega las tuyas abajo: las IAs conectadas se activa para todos al instante.</div>';
 }
 function renderMyKeys(){
@@ -72,6 +72,13 @@ $('#myKeys').addEventListener('click', async e => {
     await keysPost({ action:'keys', [id]:'' }, d, 'Quitando…');
   }
 });
-$('#kList').addEventListener('click', e => { const b = e.target.closest('[data-check]'); if (b) keysPost({ action:'check', id:b.dataset.check }, b); });
+$('#kList').addEventListener('click', async e => {
+  const b = e.target.closest('[data-check]'); if (b){ keysPost({ action:'check', id:b.dataset.check }, b); return; }
+  const r = e.target.closest('[data-rm]'); if (!r) return;
+  if (!(await SZ.szConfirm('¿Quitar esta llave de ' + r.dataset.nm + '?', 'Dejará de usarse para las IAs conectadas. Las demás llaves siguen funcionando.', 'Quitar', true))) return;
+  r.disabled = true; r.textContent = 'Quitando…';
+  try{ await api('trial', { method:'POST', body:{ action:'rmkey', id:r.dataset.rm }, keep:true }); toast('Llave quitada.'); T = await api('trial', { keep:true }).catch(() => T); renderKeys(); renderMyKeys(); }
+  catch(er){ toast(er.message); r.disabled = false; r.textContent = 'Quitar'; }
+});
 $('#kAll').addEventListener('click', e => keysPost({ action:'check' }, e.currentTarget, 'Probando todas…'));
 

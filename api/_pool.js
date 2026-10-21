@@ -67,6 +67,22 @@ export async function saveOwnerKeys(me, rank, patch){
   await redis('DEL', 'pool:models');                       /* la lista de modelos se rehace con las llaves nuevas */
   return o;
 }
+/* quita una llave por su id (el de loadKeys). Las de Vercel no se pueden quitar desde aquí: viven en las variables del proyecto */
+export async function removeKeyById(id, canAny, meSub){
+  const k = (await loadKeys()).find(x => x.id === id);
+  if (!k) return { ok:false, why:'Esa llave ya no existe.' };
+  if (k.src === 'vercel') return { ok:false, why:'Esa llave viene de Vercel. Quítala en Vercel › Settings › Environment Variables.' };
+  if (k.src === 'panel'){
+    if (!canAny) return { ok:false, why:'Solo Prime y ZFlow pueden quitar esa llave.' };
+    const lg = (await getJ('cfg:trial')) || {}; if (lg.keys) delete lg.keys[k.prov]; await setJ('cfg:trial', lg);
+  } else {
+    if (!canAny && k.owner.sub !== meSub) return { ok:false, why:'Solo puedes quitar tus propias llaves.' };
+    const all = await ownersRaw(), o = all[k.owner.sub]; if (o && o.keys) delete o.keys[k.prov];
+    await setJ('cfg:pool', all);
+  }
+  await redis('DEL', 'pool:models');
+  return { ok:true };
+}
 /* todas las llaves: las de Vercel, las del panel viejo de la prueba y las de cada cuenta del equipo */
 export async function loadKeys(){
   const out = [], seen = new Set();

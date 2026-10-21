@@ -9,7 +9,7 @@
    Reglas: cero cobros (solo modelos gratis y topes propios), las llaves nunca salen del servidor. */
 import { route, body, json, fail, auth, redis, pipe, getJ, setJ, rid, limit, today, str, roleOf, sha, sbOn, sbAccount, sbProfile, sbPrefs, sbChats, ipOf } from './_lib.js';
 import { CID_RX } from './config.js';
-import { loadKeys, saveOwnerKeys, status, checkKey, settings, saveSettings, chat, models, ownersRaw, mask, ORDER, PROV, KEY_PROVS, provName } from './_pool.js';
+import { loadKeys, saveOwnerKeys, removeKeyById, status, checkKey, settings, saveSettings, chat, models, ownersRaw, mask, ORDER, PROV, KEY_PROVS, provName } from './_pool.js';
 
 export const TRIAL_MAX = 5;
 const RANK = { owner:'Prime', admin:'ZFlow', staff:'Symmetrix' };
@@ -56,6 +56,12 @@ export default route({
       const res = await Promise.all(keys.map(async k => Object.assign({ id:k.id, prov:k.prov, provName:provName(k.prov), key:mask(k.key), owner:k.owner }, await checkKey(k))));
       await redis('DEL', 'pool:models');
       return json({ ok:true, keys:res });
+    }
+    if (a === 'rmkey'){
+      const me = await auth(req); if (!team(me)) return fail(403, 'Solo el equipo de SynthZ puede quitar llaves.');
+      await limit('trial-admin:' + me.sub, 30, 600);
+      const r = await removeKeyById(typeof b.id === 'string' ? b.id : '', boss(me), me.sub);
+      return r.ok ? json({ ok:true }) : fail(r.why.startsWith('Esa llave viene') ? 409 : 403, r.why);
     }
     if (a === 'limit'){
       const me = await auth(req); if (!boss(me)) return fail(403, 'Solo Prime y ZFlow pueden cambiar el tope.');

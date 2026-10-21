@@ -1,0 +1,17 @@
+name: Revisión
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Los archivos armados están al día con src/
+        run: node build.mjs --check
+      - name: El servidor no tiene errores de sintaxis
+        run: for f in api/*.js; do node --check "$f"; done
