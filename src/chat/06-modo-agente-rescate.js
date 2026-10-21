@@ -120,7 +120,7 @@ async function send(){
     if (g0 !== gen){ card.el.remove(); return; }                /* cambiaste de chat mientras tanto */
     if (!same) msg.ask = plan.pedido;
     if (plan.web || needsWeb(text)){ card.el.remove(); await webPrep(msg, plan.pedido || text); if (g0 !== gen) return; }
-    if (PPT_RX.test(text)){ msg.ask = (msg.ask || plan.pedido || text) + DECK_INSTR; msg.deck = true; }
+    if (wantsDeck(text)) msg.deck = true;
     msg.agent = { pick, name:info(pick).name, tl:light ? 'cosas sencillas (gasta menos)' : tl, ask:same ? '' : plan.pedido };
     st().model.openrouter = pick; save(); paintSel(); renderTop(false); paintAccent();
     let ok = true;
@@ -142,7 +142,7 @@ async function send(){
   if (sent.length) msg.files = sent.map(f => ({ name:f.name, kind:f.kind, text:f.text, thumb:f.thumb }));
   const imgs = sent.filter(f => f.kind === 'img').map(f => f.dataUrl);
   if (imgs.length) Object.defineProperty(msg, '_imgs', { value:imgs, enumerable:false, writable:true });
-  if (text && PPT_RX.test(text)){ msg.ask = (msg.ask || text) + DECK_INSTR; msg.deck = true; }
+  if (text && wantsDeck(text)) msg.deck = true;
   chat.push(msg); touchThread(); save();
   if (text && needsWeb(text)){ renderMsgs(); await webPrep(msg, text); save(); }
   let okSent = true;
@@ -210,6 +210,21 @@ async function runSolo(onFail, o = {}){
       const ctl = new AbortController(); ctls.add(ctl);
       try{ r = await SZ.askStream(OR, sent, Object.assign({ model:mid, maxTokens: saver ? 700 : 0, signal:ctl.signal, onReason:t => W.reason(t) }, effortOpts(saver)), txt => { mount(); W.write(txt); if (rv) rv.push(txt); }); }finally{ ctls.delete(ctl); }
       addUsage(r.prov || SZ.provOf(mid), r.prompt, r.completion, true, { est:r.est, free:/:free$/.test(mid) || r.prov === 'synthz', rid:r.rid });
+      /* si la IA se quedó sin espacio (o se cortó la conexión), sigue sola donde quedó: la persona recibe la respuesta completa sin tocar «Continuar» */
+      for (let n = 0; n < 3 && !r.aborted && !r.swapped && g === gen && (r.finish === 'length' || r.cut); n++){
+        const base = r.text, ctl2 = new AbortController(); ctls.add(ctl2);
+        const glue = t => (!base || /\s$/.test(base) || /^[\s.,;:!?)\]]/.test(t) || !/[.!?:;)\]*_`]$/.test(base)) ? '' : ' ';
+        let r2 = null;
+        try{
+          r2 = await SZ.askStream(OR, [...sent, { role:'assistant', content:base }, { role:'user', content:'Continúa exactamente donde te quedaste: sigue desde la última palabra, sin repetir nada de lo anterior, sin saludar y sin decir que continúas. Escribe solo lo que falta.' }],
+            Object.assign({ model:mid, maxTokens:0, signal:ctl2.signal, onReason:t => W.reason(t) }, effortOpts(saver)), txt => { mount(); const full = base + glue(txt) + txt; W.write(full); if (rv) rv.push(full); });
+        }catch(e){ r2 = null; }
+        finally{ ctls.delete(ctl2); }
+        if (!r2 || r2.aborted && !r2.text) break;
+        addUsage(r2.prov || SZ.provOf(mid), r2.prompt, r2.completion, true, { est:r2.est, free:/:free$/.test(mid) || r2.prov === 'synthz', rid:r2.rid });
+        if (/^\(La IA devolvió una respuesta vacía\.\)$/.test(r2.text)) break;
+        r = Object.assign({}, r, { text:base + glue(r2.text) + r2.text, prompt:r.prompt + r2.prompt, completion:r.completion + r2.completion, ms:r.ms + r2.ms, finish:r2.finish, cut:r2.cut, aborted:r2.aborted, est:r.est || r2.est });
+      }
       if (!r.aborted && !r.swapped) SZ.markGood(mid);
       SZ.TEL.msgs++; SZ.TEL.ai = (r.prov || SZ.provOf(mid)).slice(0, 12);
       st().sx.saved += Math.max(0, msgCost(naive) - msgCost(sent)); save();
@@ -217,7 +232,7 @@ async function runSolo(onFail, o = {}){
     }
     if (g !== gen){ if (rv) rv.skip(); return; }
     const tail = r.aborted ? ' · detenido' : r.cut ? ' · se cortó la conexión' : r.finish === 'length' ? ' · se cortó porque era muy larga (toca «Continuar»)' : '';
-    const who = r.swapped ? ' · se acabó tu saldo de Puter este mes; respondió ' + (r.real || 'otra IA') : mid === 'sz:auto' && r.real ? ' · respondió ' + r.real : '';
+    const who = r.swapped ? ' · se acabó tu saldo de Puter este mes; respondió ' + (r.real || 'otra IA') : '';
     W.write(r.text); W.finish({ ms:r.ms, real:r.real || '' });
     const work = { ms:Math.round(r.ms || 0), words:W.state.words, real:r.real || '', steps:W.state.steps.map(([a, b]) => [Math.round(a), b]), reason:(r.reasoning || '').slice(0, 4000) || undefined };
     const msg = { role:'assistant', content:r.text, work, meta:metaOf(r) + tail + who + (r.via ? ' · vía ' + r.via + ' (prueba de SynthZ)' : ''), model:mid, cont: !!(r.cut || r.finish === 'length') || undefined };

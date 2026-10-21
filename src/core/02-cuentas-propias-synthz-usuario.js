@@ -210,6 +210,15 @@ async function accSignOutAll(force){
   await api('auth?all=1', { method:'DELETE', keep:true });
   setSess(''); ACC.ready = false; ACC.user = null; ACC.profile = null; wipeAccountData(); accFire('out');
 }
+/* vincular otra cuenta de Google a ESTA cuenta (usuario o Google): así no se crean cuentas repetidas */
+async function accLink(body){
+  const d = await api('auth', { method:'POST', body:Object.assign({ mode:'link' }, body), keep:true });
+  if (ACC.user){ ACC.user.links = d.links || []; if (d.role && d.role !== 'user') ACC.user.role = d.role; if (d.email && !ACC.user.email) ACC.user.email = d.email; }
+  accFire('profile');
+  toast(d.merged ? 'Listo: ese Google ya era otra cuenta tuya y quedó unido a esta.' : 'Listo: ese Google quedó vinculado a tu cuenta.' + (d.role && d.role !== 'user' && ROLE_NAME[d.role] ? ' Tu rango: ' + ROLE_NAME[d.role] + '.' : ''));
+  return d;
+}
+async function accUnlink(email){ const d = await api('auth', { method:'POST', body:{ mode:'unlink', email }, keep:true }); if (ACC.user) ACC.user.links = d.links || []; accFire('profile'); return d; }
 async function accClaim(setup){ const d = await api('auth', { method:'POST', body:{ mode:'claim', setup }, keep:true }); if (ACC.user){ ACC.user.role = d.role; ACC.user.claimable = false; } accFire('profile'); return d.role; }
 /* rangos de SynthZ */
 const ROLE_NAME = { owner:'Prime', admin:'ZFlow', staff:'Symmetrix', user:'Synther' };

@@ -10,6 +10,12 @@ const SECRET = (process.env.SYNTHZ_SECRET || '').length >= 32 ? process.env.SYNT
 const SECRET_OLD = String(process.env.SYNTHZ_SECRET_OLD || '').split(',').map(s => s.trim()).filter(s => s.length >= 32);
 /* cuentas del equipo de SynthZ: usuario → rango. Solo se pueden crear o reclamar con SYNTHZ_SETUP_CODE */
 export const SEED_ROLES = Object.fromEntries(String(process.env.SYNTHZ_RESERVED || 'sammuersynth:owner,sammueladmin:admin,sammuerbusiness:staff').split(',').map(x => x.trim().toLowerCase().split(':')).filter(([u, r]) => u && ['owner', 'admin', 'staff'].includes(r)));
+/* correos de Google del equipo: si Google confirma que el correo es tuyo, esa cuenta recibe su rango (Prime/ZFlow/Symmetrix).
+   Se puede cambiar en Vercel con SYNTHZ_ADMIN_EMAILS (correo:rango, separados por coma). */
+export const ADMIN_EMAILS = Object.fromEntries(String(process.env.SYNTHZ_ADMIN_EMAILS || 'sammuel.loaiza10@gmail.com:owner,sammuel.loaiza@gmail.com:admin,sammuer.business@gmail.com:staff').split(',').map(x => x.trim().toLowerCase().split(':')).filter(([e, r]) => e && ['owner', 'admin', 'staff'].includes(r)));
+const ROLE_N = { user:0, staff:1, admin:2, owner:3 };
+export const topRole = (a, b) => (ROLE_N[b] || 0) > (ROLE_N[a] || 0) ? b : (a || '');
+export const roleForEmail = (email, verified) => verified ? (ADMIN_EMAILS[String(email || '').trim().toLowerCase()] || '') : '';
 const SETUP_CODE = String(process.env.SYNTHZ_SETUP_CODE || '');
 /* sin variable en Vercel vale el código que Claude le entregó al dueño en privado; aquí solo está su huella (sha-256), no el código */
 const SETUP_HASH = 'gPdr9BebZicVNRBvdmxxy2dSywVwV2gXjVjIF3joHAc';

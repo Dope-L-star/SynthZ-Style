@@ -33,3 +33,12 @@ html.simple .cpk4{background:transparent !important;border-color:var(--sline) !i
   .composer .cpk4 .cm-chev{width:13px;height:13px}
 }
 @media (max-width:340px){ .composer .cpk4 b{display:none} .composer .cpk4{padding:0 8px} }
+
+/* cuentas de Google vinculadas (panel «Tu cuenta») */
+.glinks{margin-top:8px;padding:12px 14px;border:1px solid var(--line);border-radius:14px}
+.glinks p{margin:0 0 8px;font-size:13px;color:var(--soft)}
+.glinks p b{display:block;color:var(--ink,inherit);margin-bottom:2px}
+.gl-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0;font-size:13px;border-bottom:1px solid var(--line)}
+.gl-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gl-none{color:var(--soft);border-bottom:0}
+.glinks .gbtn{margin-top:10px}

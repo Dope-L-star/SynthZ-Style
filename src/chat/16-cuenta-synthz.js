@@ -35,6 +35,7 @@ function accModal(){
         + '<div class="sxstats"><div><b>' + fmt(n) + '</b><span>chats en la nube</span></div><div><b>' + fmt(Object.values(st().usage || {}).reduce((a, u) => a + (u.requests || 0), 0)) + '</b><span>respuestas en total</span></div><div><b>' + fmt(Object.values(st().chats).reduce((a, c) => a + (Array.isArray(c) ? c.filter(m => m && m.star).length : 0), 0)) + '</b><span>mensajes favoritos</span></div></div>'
         + (false ? '<div class="sxsave"><p>Guardar mi llave de OpenRouter (de antes) en mi cuenta, cifrada, para no volver a pegarla en otro dispositivo.</p><button class="sxsw" id="aKey" type="button" aria-pressed="' + !!st().syncKey + '" aria-label="Guardar mi llave en mi cuenta"></button></div>' : '')
         + spaceHtml()
+        + '<div class="glinks" id="aLinks" hidden><p><b>Cuentas de Google vinculadas</b><span>Une tus cuentas de Google a esta para entrar con cualquiera de ellas sin crear cuentas repetidas.</span></p><div id="aLinkList"></div><div class="gbtn" id="aLinkBtn"></div></div>'
         + (u.claimable ? '<div class="sxsave"><p>Esta cuenta está reservada para el equipo de SynthZ. Actívala con tu código de configuración.</p><button class="btn sm" id="aClaim" type="button">Activar mi rango</button></div>' : '')
         + (['owner', 'admin', 'staff'].includes(u.role) ? '<div id="aTrial"><div class="tmload">Cargando las IAs conectadas…</div></div>' : '')
 
@@ -53,6 +54,13 @@ function accModal(){
   if (ab) SZ.authBox(ab, () => { reopen(); renderAccBtn(); }, k => { close(); showBlockHelp(k); });
   if (!signed) return;
   $('#aEdit').addEventListener('click', () => SZ.profileModal(() => { renderAccBtn(); reopen(); }));
+  SZ.accConfig().then(() => {
+    const box = $('#aLinks'); if (!box || !SZ.ACC.google) return; box.hidden = false;
+    const list = $('#aLinkList'), L = (SZ.ACC.user && SZ.ACC.user.links) || [];
+    list.innerHTML = L.length ? L.map(x => '<div class="gl-row"><span>' + esc(x.email) + '</span><button class="lnk" type="button" data-un="' + esc(x.email) + '">Quitar</button></div>').join('') : '<div class="gl-row gl-none">Todavía no has vinculado ninguna.</div>';
+    list.addEventListener('click', async e => { const b = e.target.closest('[data-un]'); if (!b) return; b.disabled = true; try{ await SZ.accUnlink(b.dataset.un); toast('Listo: lo quité de tu cuenta.'); reopen(); }catch(er){ b.disabled = false; toast(er.message); } });
+    SZ.googleBtn($('#aLinkBtn'), () => reopen(), k => { close(); showBlockHelp(k); });
+  }).catch(() => {});
   const sec = $('#aSec'); if (sec) sec.addEventListener('click', () => SZ.securityModal());
   $('#aSurvey').addEventListener('click', () => SZ.surveyModal(ok => { if (ok){ forMeK = ''; applySurvey(true); renderList({ keep:true }); } }));
   const aKey = $('#aKey'); if (aKey) aKey.addEventListener('click', e => { st().syncKey = !st().syncKey; save(); e.currentTarget.setAttribute('aria-pressed', String(!!st().syncKey)); if (!st().syncKey) SZ.api('me', { method:'PUT', body:{ key:'' } }).catch(() => {}); toast(st().syncKey ? 'Tu llave se guardará cifrada en tu cuenta.' : 'Tu llave se borró de tu cuenta.'); });

@@ -161,6 +161,9 @@ export async function usedToday(who){ return +(await redis('GET', quotaKey(who))
 
 /* ---------- conversar (con streaming) ---------- */
 const est = s => Math.ceil(String(s || '').length / 4);
+/* cuánto puede escribir cada IA en una sola respuesta (antes eran 1.200: por eso las respuestas largas se cortaban) */
+const OUT_MAX = { groq:6000, mistral:6000, openrouter:6000, google:8000, ollama:6000, cloudflare:3500, siliconflow:4000 };
+const outTok = (prov, asked) => Math.max(64, Math.min(OUT_MAX[prov] || 3500, Math.round(+asked) || 4096));
 export async function chat({ who, ipKey, messages, model, maxTokens, system, stream = true, onDone }){
   const { dayLimit } = await settings();
   const [used, usedIp] = (await pipe([['GET', quotaKey(who)], ['GET', quotaKey(ipKey)]])).map(x => +x || 0);
@@ -180,12 +183,16 @@ export async function chat({ who, ipKey, messages, model, maxTokens, system, str
       let up;
       try{
         const base = await baseOf(k);
-        const body = { model:m.mid, messages:msgs, stream, max_tokens:Math.min(1600, +maxTokens || 1200), temperature:.6 };
+        const body = { model:m.mid, messages:msgs, stream, max_tokens:outTok(m.prov, maxTokens), temperature:.6 };
         if (stream && (m.prov === 'groq' || m.prov === 'mistral')) body.stream_options = { include_usage:true };
         if (stream && m.prov === 'openrouter') body.usage = { include:true };
         if (m.prov === 'siliconflow') body.enable_thinking = false;
-        up = await calm(() => fetch(base + '/chat/completions', { method:'POST', signal:AbortSignal.timeout(30000),
-          headers:Object.assign({ Authorization:'Bearer ' + k.key, 'content-type':'application/json' }, m.prov === 'openrouter' ? { 'HTTP-Referer':'https://synthz.app', 'X-Title':'SynthZ' } : {}), body:JSON.stringify(body) }));
+        const ac = new AbortController(); let tm = setTimeout(() => ac.abort(), 30000);   /* solo espera a que el proveedor conteste */
+        try{
+          up = await calm(() => fetch(base + '/chat/completions', { method:'POST', signal:ac.signal,
+            headers:Object.assign({ Authorization:'Bearer ' + k.key, 'content-type':'application/json' }, m.prov === 'openrouter' ? { 'HTTP-Referer':'https://synthz.app', 'X-Title':'SynthZ' } : {}), body:JSON.stringify(body) }));
+        } finally { clearTimeout(tm); }
+        if (up && up.ok && !stream){ tm = setTimeout(() => ac.abort(), 60000); up._tm = tm; }   /* sin streaming sí hay que esperar el cuerpo completo */
       }catch(e){ up = null; }
       if (!up || !up.ok || (stream && !up.body)){
         const s = up ? up.status : 0, txt = up ? await up.text().catch(() => '') : '';
@@ -210,7 +217,7 @@ export async function chat({ who, ipKey, messages, model, maxTokens, system, str
       };
       const meta = { prov:m.prov, provName:PROV[m.prov].name, model:m.id, name:m.name, fallback:m.id !== (steps[0] || {}).id };
       if (!stream){
-        const j = await up.json().catch(() => ({})), text = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+        const j = await up.json().catch(() => ({})); clearTimeout(up._tm); const text = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
         if (typeof text !== 'string' || !text.trim()) continue;
         const u = j.usage || {}, tok = (u.prompt_tokens || 0) + (u.completion_tokens || 0) || inTok + est(text);
         const total = await account(tok);

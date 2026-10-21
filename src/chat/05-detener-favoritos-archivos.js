@@ -123,9 +123,10 @@ function apiMsgs(chat, vision, o = {}){
   const start = Math.max(0, chat.length - keepN);
   const h = chat.slice(start).map((m, j) => {
     if (m.imgId) return null;
-    if (m.role !== 'user' || !m.files || !m.files.length) return { role:m.role, content:(m.role === 'user' && m.ask) || m.content };
+    const dk = m.role === 'user' && m.deck && start + j === chat.length - 1 ? DECK_INSTR : '', noDk = s => String(s || '').split(DECK_INSTR).join('');   /* la orden de «arma una presentación» solo viaja en ESTE mensaje, no en los viejos */
+    if (m.role !== 'user' || !m.files || !m.files.length) return { role:m.role, content:noDk((m.role === 'user' && m.ask) || m.content) + dk };
     const full = o.naive || start + j === lastF;
-    let t = m.ask || m.content || '';
+    let t = noDk(m.ask || m.content || '') + dk;
     m.files.forEach(f => {
       if (f.text) t += full ? '\n\n[Archivo adjunto: ' + f.name + ']\n```\n' + (saver && f.text.length > 12000 ? f.text.slice(0, 12000) + '\n…(recortado por el modo ahorro)' : f.text) + '\n```' : '\n\n[Archivo adjunto antes: ' + f.name + ' (no se reenvía para ahorrar SynXCoin\'s)]';
       else if (f.kind === 'img' && !(vision && m._imgs && full)) t += '\n\n[Imagen adjunta: ' + f.name + (full ? ' (ya no está disponible)' : ' (no se reenvía)') + ']';
