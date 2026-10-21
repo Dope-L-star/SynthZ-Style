@@ -1,0 +1,41 @@
+Hecho por: AUDITOR
+
+# Auditoría de API — SynthZ (commit base ed67186)
+
+Revisión línea a línea de `api/_lib.js`, `api/_pool.js`, `api/ai.js`, `api/chat.js`, `api/chats.js`, `api/auth.js`, `api/me.js`, `api/config.js`, `api/help.js`, `api/trial.js`, `api/teams.js`, `api/health.js`, `api/csp.js` y `vercel.json` (CSP + cabeceras).
+
+Criterios: validación de entradas, límites de uso, fugas de errores internos, claves Redis mal formadas o sin caducidad, condiciones de carrera (INCR/DECR), `await` faltante, secretos en logs, permisos por rol.
+
+## Hallazgos
+
+| ID | Gravedad | Archivo:línea | Problema | Cómo reproducirlo | Parche exacto ANTES/DESPUÉS |
+|----|----------|---------------|----------|-------------------|-----------------------------|
+| A1 | media | api/chat.js:19-32 | Condición de carrera en límite diario de equipo: se hace GET del contador y más tarde INCRBY. Dos peticiones concurrentes pueden superar `t.daily`. | Crear equipo con daily=100. Enviar dos POST /api/chat simultáneos cuando el uso está en 99. Ambos pasan el chequeo. | ANTES:<br>`if (+t.daily > 0 && +(await redis('GET', ukey) \|\| 0) >= +t.daily) return fail(429, ...);`<br>…<br>`const count = async n => { if (n > 0) await redis('INCRBY', ukey, String(Math.round(n))).then(() => redis('EXPIRE', ukey, '259200')).catch(() => {}); };`<br>DESPUÉS (chequeo atómico aproximado): mover el chequeo después de un INCRBY tentativo o usar:<br>`const cur = +(await redis('INCRBY', ukey, '0') \|\| 0); if (+t.daily > 0 && cur >= +t.daily) return fail(429, ...);` (y ajustar count para no doble-contar; o DECR en caso de rechazo temprano). |
+| A2 | media | api/ai.js:18-36 | Condición de carrera en límites de búsqueda web: GET de `uk`/`gk` y luego INCR. Concurrentes pueden superar max/SEARCH_GLOBAL. | Con cuenta, límite 30. Lanzar 2 búsquedas simultáneas cuando n=29. | ANTES:<br>`const [n, g] = (await pipe([['GET', uk], ['GET', gk]])).map(x => +x \|\| 0);`<br>`if (n >= max) throw ...`<br>…<br>`await pipe([['INCR', uk], ...]);`<br>DESPUÉS: usar el patrón de trial.js (INCR primero, comprobar, DECR si excede):<br>`const [n, g] = (await pipe([['INCR', uk], ['INCR', gk]])).map(x => +x \|\| 0);`<br>`if (n > max \|\| g > SEARCH_GLOBAL) { await pipe([['DECR', uk], ['DECR', gk]]); throw ... }` |
+| A3 | media | api/ai.js:47-62 | Condición de carrera en límite de imágenes: GET de `uk`/`gk` antes de INCR. | Con cuenta, imgDay=3. Dos creaciones simultáneas cerca del tope. | Mismo patrón que A2: INCR + comprobar + DECR de reembolso. |
+| A4 | baja | api/chat.js:22 | `withLock` llamado sin `await` (re-cifrado perezoso). Si la promesa rechaza de forma no esperada o el lock falla de forma silenciosa, el re-cifrado puede no completarse y no hay traza. | Forzar needsReenc=true (clave v1) y simular fallo de Redis dentro del callback. | ANTES:<br>`if (needsReenc(t.keyEnc)) withLock('t:' + t.id, async () => { ... }).catch(() => {});`<br>DESPUÉS:<br>`if (needsReenc(t.keyEnc)) await withLock('t:' + t.id, async () => { ... }).catch(e => console.error('[synthz] reenc', e.message));` |
+| A5 | baja | api/_lib.js:91-94 | El rate-limit `limit()` usa INCR + EXPIRE NX. Concurrentes pueden superar n en 1-2 peticiones (ventana no perfectamente atómica). | Enviar >n peticiones en paralelo a cualquier ruta que use limit() (ej. /api/auth signup). | Aceptable para rate-limit. Parche opcional: documentar o usar Redis script/Lua si se quiere exactitud estricta. No crítico. |
+| A6 | baja | api/help.js:55-56 | En ask de SynthonIA: INCR y luego si > ASK_DAY hace DECR. Correcto para reembolso, pero entre el INCR y el DECR un concurrente puede ver un valor temporalmente alto. | 16 asks simultáneos. | El patrón ya reembolsa. Baja prioridad. |
+| A7 | media | api/_pool.js:166-168 | Chequeo de cuota diaria (quotaKey) es GET + luego INCRBY en account(). Race posible de superar dayLimit. | Dos chats simultáneos cuando used ≈ dayLimit. | Igual que A1: considerar INCRBY tentativo o aceptar overshoot pequeño (tokens estimados). |
+| A8 | baja | api/config.js:11 | `/api/config` es público y devuelve `missing` (nombres de variables de entorno faltantes) y `secretFromEnv`. Información de configuración, no secretos, pero visible sin auth. | GET /api/config sin token cuando Redis no está configurado. | ANTES: `return json({ ok:..., missing:m, secretFromEnv:secretFromEnv() });`<br>DESPUÉS: `return json({ ok:m.length === 0, google:..., ... });` (omitir missing y secretFromEnv en respuesta pública, o moverlos a panel autenticado). |
+| A9 | baja | api/_lib.js:307 | Error de Supabase puede incluir texto de respuesta (hasta 160 chars) en el throw. sbSafe lo loguea limitado, pero si no se atrapa en ruta, podría filtrarse. | Forzar error 4xx/5xx de Supabase con mensaje sensible. | ANTES: `throw Object.assign(new Error('supabase ' + r.status + ' ' + t.slice(0, 160)), ...)`<br>DESPUÉS: `throw Object.assign(new Error('supabase ' + r.status), { status:502, sb:true });` (sin cuerpo). |
+| A10 | baja | api/health.js:49 | Panel Pulsem (GET ?panel=1) devuelve metadatos de llaves (owner name/rank, n, down). No devuelve la llave en claro (usa status() que enmascara). Correcto, pero lista de eventos y feedback puede contener detalles de usuarios. | Autenticarse como staff y GET /api/health?panel=1. | Sin cambio necesario (intencional para el equipo). Verificar que clean() en eventos enmascara claves. |
+| A11 | baja | api/teams.js:100 | remove de miembro no valida que b.sub sea string seguro ni que el sub exista. Se hace SREM de cualquier valor. | POST /api/teams {action:'remove', id, sub:'cualquier-cosa'} | ANTES: `t.members = (t.members \|\| []).filter(m => m.sub !== b.sub); ... await redis('SREM', 'ut:' + b.sub, t.id);`<br>DESPUÉS: `const sub = typeof b.sub === 'string' && /^[\w-]{4,40}$/.test(b.sub) ? b.sub : ''; if (!sub) throw err(400, 'Miembro inválido.');` |
+| A12 | baja | vercel.json:24-36 | CSP en modo Report-Only + una CSP mínima (frame-ancestors, base-uri, etc.). No hay fuga, pero script-src permite 'unsafe-inline' y varios dominios. Aceptable para la etapa actual. | Inspeccionar cabeceras de cualquier página. | Sin parche de código (configuración). Considerar endurecer cuando los reportes de /api/csp estén limpios. |
+
+## Revisado y sin problemas relevantes
+
+- `api/_lib.js`: cifrado AES-GCM con rotación, scrypt timing-safe, sesiones con TTL, `body()` con límite y parse seguro, `route()` que oculta 500 no conocidos, `ipOf` usando x-real-ip, `limit()` con EXPIRE, `okChatKey` estricto, cuota de nube con chequeo de tamaño, Supabase con sbSafe (no rompe si falla).
+- `api/auth.js`: validación de usuario/pass, RESERVED, rate-limits por IP/usuario, SET NX para username, verificación Google completa (firma, aud, iss, exp), linking de email solo si verificado (NX), códigos de recuperación hasheados.
+- `api/me.js`: auth obligatorio, límites, cleanProfile, validación de key OpenRouter (regex), confirmación de borrado con pass o confirm, limpieza de equipos/sesiones.
+- `api/chats.js`: auth, okChatKey, límite de items, fallback a Supabase.
+- `api/csp.js`: límite por IP, body acotado, solo 5 filas, LTRIM.
+- `api/health.js`: panel solo equipo (role !== 'user'), clean() de detalles, límites por IP, TTL en badges.
+- `api/help.js`: límites por día/IP, auth para acciones de usuario, team checks, reembolso en ask si falla.
+- `api/teams.js`: withLock por equipo, MAX_TEAMS/MAX_PEOPLE, validación de email/usuario, key nunca sale (solo hasKey/keyLabel), checkKey remoto.
+- `api/trial.js`: role checks (team/boss/owner), límites, reembolso en trial chat, CID_RX, no devuelve llaves en claro.
+- `api/_pool.js`: solo modelos gratis (filtros GOOGLE_FREE, SF_FREE, DROP, :free), mask() en status, classify/provSaid que enmascaran claves en logs, EXPIRE en contadores, pickKeys respeta cap/down, streaming con uso real o estimación.
+- `vercel.json`: HSTS, nosniff, DENY frame, Permissions-Policy, Cache-Control no-store en /api, CSP report-uri a /api/csp.
+- No se encontraron secretos en logs (se usan classify, provSaid, mask, hash de device). No se encontraron `await` faltantes críticos (el de chat.js es intencional fire-and-forget). Claves Redis de datos permanentes sin TTL son intencionales; temporales tienen EXPIRE o LTRIM.
+
+Máximo 25; solo hallazgos reales observados. 
