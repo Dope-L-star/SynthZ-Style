@@ -1858,3 +1858,13 @@ body:not(.fresh) .composer #cPick,body:not(.fresh) .composer #cCmp{display:none!
 #effMenu em.ck{border:0;font-size:15px;color:var(--text)}
 #effMenu .lk{opacity:.7}
 html.simple .cpk3{background:transparent !important;border-color:var(--sline) !important}
+
+/* fila de la caja de escribir, igual que el modelo de referencia: todo del mismo alto, píldoras y círculos.
+   Orden: [+] [IA] [esfuerzo] … [Comparar con otra IA] (los botones nuevos van antes de «Comparar») */
+.composer .attach,.composer .cpk,.composer .cpk2,.composer .cpk3,.composer .agpill{min-height:40px !important;height:40px;border-radius:999px !important;box-sizing:border-box}
+.composer .attach,.composer .cpk3:not(.on){width:40px;min-width:40px;padding:0 !important;justify-content:center}
+.composer .cpk{padding:0 12px 0 8px !important;border:1px solid rgba(255,255,255,.16) !important;background:rgba(255,255,255,.04) !important;gap:8px !important}
+.composer .cpk2{padding:0 14px !important;font-size:13.5px !important}
+.composer .cpick{gap:8px !important}
+.composer .cpk3.on{padding:0 14px 0 12px !important}
+@media (max-width:600px){ .composer .cpk3 span{display:none !important} .composer .cpk3.on{width:40px;min-width:40px;padding:0 !important;justify-content:center} }
