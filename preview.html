@@ -10,11 +10,15 @@
 <body>
 <script>
 /* Vista previa de lo que crea la IA. Corre dentro de un iframe con sandbox (sin acceso a SynthZ) y recibe el documento
-   desde SynthFlow por mensaje. Esta página tiene su propia política de seguridad (ver vercel.json), distinta de la del resto del sitio. */
+   desde SynthFlow por mensaje. Esta página tiene su propia política de seguridad (ver vercel.json), distinta de la del resto del sitio.
+   Ojo: el oyente NO es de una sola vez; en las vistas previas de Vercel otros scripts también mandan mensajes y se comerían el nuestro. */
+var shown = false;
 addEventListener('message', function(e){
-  if (e.source !== parent || !e.data || typeof e.data.synthzPreview !== 'string') return;
+  if (shown || e.source !== parent || !e.data || typeof e.data.synthzPreview !== 'string') return;
+  shown = true;
   document.open(); document.write(e.data.synthzPreview); document.close();
-}, { once:true });
+  parent.postMessage({ synthzPreviewShown:1 }, '*');   /* avisa que ya lo pintó */
+});
 parent.postMessage({ synthzPreviewReady:1 }, '*');   /* avisa que ya está lista para recibir el documento */
 </script>
 </body>

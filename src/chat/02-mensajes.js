@@ -108,17 +108,22 @@ function openCanvas(M, sibs, tab){
       else {
         /* la vista previa corre aislada: sin acceso a tu cuenta, tus chats ni esta página */
         const f = document.createElement('iframe'); f.title = 'Vista previa de ' + M.name; f.setAttribute('sandbox', 'allow-scripts allow-modals allow-forms allow-pointer-lock'); f.setAttribute('referrerpolicy', 'no-referrer');
-        /* la página de la vista previa tiene su propia política (preview.html) y recibe el documento por mensaje cuando avisa que está lista.
-           Si no avisa a tiempo, se muestra sin scripts (la política de esta página no deja correrlos aquí) y se explica. */
+        /* la página de la vista previa tiene su propia política (preview.html): avisa cuando está lista, se le manda el documento y avisa cuando lo pintó.
+           Si algo de eso no ocurre a tiempo, se muestra sin scripts (la política de esta página no deja correrlos aquí) y se explica. */
         const doc = previewDoc(M, sibs); f.src = 'preview.html';
-        let ok = false;
-        const onMsg = e => { if (e.source === f.contentWindow && e.data && e.data.synthzPreviewReady){ ok = true; removeEventListener('message', onMsg); f.contentWindow.postMessage({ synthzPreview:doc }, '*'); } };
+        let shown = false, sent = false;
+        const stop = () => removeEventListener('message', onMsg);
+        const onMsg = e => {
+          if (e.source !== f.contentWindow || !e.data) return;
+          if (e.data.synthzPreviewReady && !sent){ sent = true; f.contentWindow.postMessage({ synthzPreview:doc }, '*'); }
+          if (e.data.synthzPreviewShown){ shown = true; stop(); }
+        };
         addEventListener('message', onMsg);
         setTimeout(() => {
-          if (ok || !f.isConnected) return; removeEventListener('message', onMsg);
-          const g = document.createElement('iframe'); g.title = f.title; g.setAttribute('sandbox', ''); g.setAttribute('referrerpolicy', 'no-referrer'); g.srcdoc = doc; f.replaceWith(g);
+          if (shown || !f.isConnected) return; stop();
+          const g = document.createElement('iframe'); g.title = f.title; g.setAttribute('sandbox', ''); g.setAttribute('referrerpolicy', 'no-referrer'); g.srcdoc = doc; f.replaceWith(g); box.style.flexDirection = 'column';
           const n = document.createElement('p'); n.className = 'cnote'; n.style.cssText = 'margin:6px 10px;font-size:12px'; n.textContent = 'No pude abrir la vista previa completa, así que la muestro sin scripts. Usa «Descargar» para verla con todo funcionando.'; box.prepend(n);
-        }, 3000);
+        }, 4000);
         box.appendChild(f);
       }
     }
