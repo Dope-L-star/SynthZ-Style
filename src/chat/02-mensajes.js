@@ -1,3 +1,5 @@
+/* v2.5 · el ícono del archivo es el del boceto; si no hay, la extensión en letras */
+const fcIc = ext => SZ.fileIco(ext) ? '<span class="fc-ic img" aria-hidden="true">' + SZ.fileIco(ext) + '</span>' : '<span class="fc-ic" aria-hidden="true">' + esc(String(ext).slice(0, 4).toUpperCase()) + '</span>';
 /* ---------- mensajes ---------- */
 const msgsEl = $('#msgs'), lane = $('#lane'), inp = $('#inp'), sendBtn = $('#sendBtn');
 /* v1.8: en modo agente la conversación es una sola aunque cada mensaje lo responda una IA distinta */
@@ -55,7 +57,7 @@ function codeButtons(body){
     if (/^(json|txt)$/.test(M.ext) || /"diapositivas"/.test(M.text)){ const D = deckFrom(M.text); if (D){ deckCard(pre, D); return; } }
     if (isFile(M, pre)){
       const c = document.createElement('div'); c.className = 'fcard'; c.dataset.ext = M.ext;
-      c.innerHTML = '<button type="button" class="fc-main" data-fv="open" title="Abrir ' + esc(M.name) + '"><span class="fc-ic" aria-hidden="true">' + esc(M.ext.slice(0, 4).toUpperCase()) + '</span><span class="fc-t"><b>' + esc(M.name) + '</b><small>' + esc(M.label) + ' · ' + M.lines + (M.lines === 1 ? ' línea' : ' líneas') + (canPreview(M) ? ' · con vista previa' : '') + '</small></span></button>'
+      c.innerHTML = '<button type="button" class="fc-main" data-fv="open" title="Abrir ' + esc(M.name) + '">' + fcIc(M.ext) + '<span class="fc-t"><b>' + esc(M.name) + '</b><small>' + esc(M.label) + ' · ' + M.lines + (M.lines === 1 ? ' línea' : ' líneas') + (canPreview(M) ? ' · con vista previa' : '') + '</small></span></button>'
         + (canPreview(M) ? '<button type="button" class="cnv-b" data-fv="prev">' + CNV_ICO.eye + '<span>Vista previa</span></button>' : '')
         + '<button type="button" class="cnv-b" data-fv="open">' + CNV_ICO.code + '<span>Ver</span></button>'
         + '<button type="button" class="cnv-b" data-fv="down" title="Descargar ' + esc(M.name) + '">' + CNV_ICO.down + '<span>Descargar</span></button>';
@@ -92,7 +94,7 @@ function openCanvas(M, sibs, tab){
   closeCanvas(true);
   const pv = canPreview(M);
   const o = document.createElement('div'); o.className = 'cvp'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', M.name);
-  o.innerHTML = '<div class="cvp-in"><div class="cvp-h"><span class="fc-ic" aria-hidden="true">' + esc(M.ext.slice(0, 4).toUpperCase()) + '</span><span class="cnv-t"><b>' + esc(M.name) + '</b><small>' + esc(M.label) + ' · ' + M.lines + ' líneas</small></span>'
+  o.innerHTML = '<div class="cvp-in"><div class="cvp-h">' + fcIc(M.ext) + '<span class="cnv-t"><b>' + esc(M.name) + '</b><small>' + esc(M.label) + ' · ' + M.lines + ' líneas</small></span>'
     + '<button type="button" class="cnv-b" data-cv="copy">' + CNV_ICO.copy + '<span>Copiar</span></button><button type="button" class="cnv-b" data-cv="down">' + CNV_ICO.down + '<span>Descargar</span></button><button type="button" class="cnv-b ic" data-cx aria-label="Cerrar">✕</button></div>'
     + (pv ? '<div class="cvp-tabs" role="tablist"><button type="button" role="tab" data-tab="code">Código</button><button type="button" role="tab" data-tab="prev">Vista previa</button></div>' : '')
     + '<div class="cvp-b"><pre class="cvp-code"><code></code></pre>' + (pv ? '<div class="cvp-prev" hidden></div>' : '') + '</div></div>';

@@ -15,7 +15,7 @@ function deckFrom(text){
 const fileSafe = t => (String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-').slice(0, 60) || 'presentacion') + '.pptx';
 function deckCard(pre, D){
   const c = document.createElement('div'); c.className = 'fcard deck'; c.dataset.ext = 'pptx';
-  c.innerHTML = '<button type="button" class="fc-main" data-dk="prev"><span class="fc-ic" aria-hidden="true">PPTX</span><span class="fc-t"><b></b><small>Presentación · ' + D.slides.length + ' diapositivas · con vista previa</small></span></button>'
+  c.innerHTML = '<button type="button" class="fc-main" data-dk="prev"><span class="fc-ic img" aria-hidden="true">' + SZ.fileIco('pptx') + '</span><span class="fc-t"><b></b><small>Presentación · ' + D.slides.length + ' diapositivas · con vista previa</small></span></button>'
     + '<button type="button" class="cnv-b" data-dk="prev">' + CNV_ICO.eye + '<span>Vista previa</span></button><button type="button" class="cnv-b" data-dk="down">' + CNV_ICO.down + '<span>Descargar .pptx</span></button>';
   $('.fc-t b', c).textContent = fileSafe(D.titulo);
   pre.before(c); pre.hidden = true; c.appendChild(pre); c._deck = D;
@@ -29,7 +29,7 @@ function slideHtml(D, i){
 function openDeck(D){
   closeCanvas(true);
   const o = document.createElement('div'); o.className = 'cvp'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', D.titulo);
-  o.innerHTML = '<div class="cvp-in"><div class="cvp-h"><span class="fc-ic" aria-hidden="true">PPTX</span><span class="cnv-t"><b></b><small>' + D.slides.length + ' diapositivas</small></span><button type="button" class="cnv-b" data-dk="down">' + CNV_ICO.down + '<span>Descargar .pptx</span></button><button type="button" class="cnv-b ic" data-cx aria-label="Cerrar">✕</button></div><div class="cvp-b deckv"></div></div>';
+  o.innerHTML = '<div class="cvp-in"><div class="cvp-h"><span class="fc-ic img" aria-hidden="true">' + SZ.fileIco('pptx') + '</span><span class="cnv-t"><b></b><small>' + D.slides.length + ' diapositivas</small></span><button type="button" class="cnv-b" data-dk="down">' + CNV_ICO.down + '<span>Descargar .pptx</span></button><button type="button" class="cnv-b ic" data-cx aria-label="Cerrar">✕</button></div><div class="cvp-b deckv"></div></div>';
   $('.cnv-t b', o).textContent = fileSafe(D.titulo);
   const box = $('.deckv', o);
   [-1, ...D.slides.map((_, i) => i)].forEach(i => {

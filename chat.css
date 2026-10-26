@@ -2104,3 +2104,9 @@ html:not(.simple) .composer .cpk3.on{border-color:rgba(255,122,69,.55);backgroun
   body[data-cmode="chat"] .composer .cpk4{width:40px;min-width:40px;padding:0;justify-content:center}
   .composer #cPick{overflow:hidden}
 }
+/* v2.5 · íconos de archivo del boceto */
+.fc-ic.img{background:none !important;padding:0;overflow:visible}
+.fc-ic.img .fico{width:46px;height:46px;object-fit:contain;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35))}
+.cvp-h .fc-ic.img .fico{width:38px;height:38px}
+#tray .fc .ic.img{background:none;padding:0;display:grid;place-items:center}
+#tray .fc .ic.img .fico{width:30px;height:30px;object-fit:contain}

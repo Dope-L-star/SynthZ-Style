@@ -510,6 +510,8 @@ function renderFoot(){
   const tc = $('#tabCoin .tci'); if (tc) tc.innerHTML = SZ.limRing(22);
 }
 
+/* v2.5 · el ícono del archivo es el del boceto; si no hay, la extensión en letras */
+const fcIc = ext => SZ.fileIco(ext) ? '<span class="fc-ic img" aria-hidden="true">' + SZ.fileIco(ext) + '</span>' : '<span class="fc-ic" aria-hidden="true">' + esc(String(ext).slice(0, 4).toUpperCase()) + '</span>';
 /* ---------- mensajes ---------- */
 const msgsEl = $('#msgs'), lane = $('#lane'), inp = $('#inp'), sendBtn = $('#sendBtn');
 /* v1.8: en modo agente la conversación es una sola aunque cada mensaje lo responda una IA distinta */
@@ -567,7 +569,7 @@ function codeButtons(body){
     if (/^(json|txt)$/.test(M.ext) || /"diapositivas"/.test(M.text)){ const D = deckFrom(M.text); if (D){ deckCard(pre, D); return; } }
     if (isFile(M, pre)){
       const c = document.createElement('div'); c.className = 'fcard'; c.dataset.ext = M.ext;
-      c.innerHTML = '<button type="button" class="fc-main" data-fv="open" title="Abrir ' + esc(M.name) + '"><span class="fc-ic" aria-hidden="true">' + esc(M.ext.slice(0, 4).toUpperCase()) + '</span><span class="fc-t"><b>' + esc(M.name) + '</b><small>' + esc(M.label) + ' · ' + M.lines + (M.lines === 1 ? ' línea' : ' líneas') + (canPreview(M) ? ' · con vista previa' : '') + '</small></span></button>'
+      c.innerHTML = '<button type="button" class="fc-main" data-fv="open" title="Abrir ' + esc(M.name) + '">' + fcIc(M.ext) + '<span class="fc-t"><b>' + esc(M.name) + '</b><small>' + esc(M.label) + ' · ' + M.lines + (M.lines === 1 ? ' línea' : ' líneas') + (canPreview(M) ? ' · con vista previa' : '') + '</small></span></button>'
         + (canPreview(M) ? '<button type="button" class="cnv-b" data-fv="prev">' + CNV_ICO.eye + '<span>Vista previa</span></button>' : '')
         + '<button type="button" class="cnv-b" data-fv="open">' + CNV_ICO.code + '<span>Ver</span></button>'
         + '<button type="button" class="cnv-b" data-fv="down" title="Descargar ' + esc(M.name) + '">' + CNV_ICO.down + '<span>Descargar</span></button>';
@@ -604,7 +606,7 @@ function openCanvas(M, sibs, tab){
   closeCanvas(true);
   const pv = canPreview(M);
   const o = document.createElement('div'); o.className = 'cvp'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', M.name);
-  o.innerHTML = '<div class="cvp-in"><div class="cvp-h"><span class="fc-ic" aria-hidden="true">' + esc(M.ext.slice(0, 4).toUpperCase()) + '</span><span class="cnv-t"><b>' + esc(M.name) + '</b><small>' + esc(M.label) + ' · ' + M.lines + ' líneas</small></span>'
+  o.innerHTML = '<div class="cvp-in"><div class="cvp-h">' + fcIc(M.ext) + '<span class="cnv-t"><b>' + esc(M.name) + '</b><small>' + esc(M.label) + ' · ' + M.lines + ' líneas</small></span>'
     + '<button type="button" class="cnv-b" data-cv="copy">' + CNV_ICO.copy + '<span>Copiar</span></button><button type="button" class="cnv-b" data-cv="down">' + CNV_ICO.down + '<span>Descargar</span></button><button type="button" class="cnv-b ic" data-cx aria-label="Cerrar">✕</button></div>'
     + (pv ? '<div class="cvp-tabs" role="tablist"><button type="button" role="tab" data-tab="code">Código</button><button type="button" role="tab" data-tab="prev">Vista previa</button></div>' : '')
     + '<div class="cvp-b"><pre class="cvp-code"><code></code></pre>' + (pv ? '<div class="cvp-prev" hidden></div>' : '') + '</div></div>';
@@ -1126,7 +1128,7 @@ async function readPdf(file){
   return clip(t.trim());
 }
 function renderTray(){
-  $('#tray').innerHTML = files.map(f => '<span class="fc ' + f.state + '" data-id="' + f.id + '">' + (f.thumb ? '<img src="' + esc(f.thumb) + '" alt="">' : '<i class="ic">' + esc((f.name.split('.').pop() || 'file').slice(0, 4)) + '</i>') + '<b>' + esc(f.name) + '</b><button class="x" type="button" aria-label="Quitar archivo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>').join('');
+  $('#tray').innerHTML = files.map(f => '<span class="fc ' + f.state + '" data-id="' + f.id + '">' + (f.thumb ? '<img src="' + esc(f.thumb) + '" alt="">' : (SZ.fileIco(f.name.split('.').pop()) ? '<i class="ic img">' + SZ.fileIco(f.name.split('.').pop()) + '</i>' : '<i class="ic">' + esc((f.name.split('.').pop() || 'file').slice(0, 4)) + '</i>')) + '<b>' + esc(f.name) + '</b><button class="x" type="button" aria-label="Quitar archivo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>').join('');
 }
 async function addFiles(list){
   if (mode === 'cmp'){ toast('Los archivos funcionan en el modo Individual.'); return; }
@@ -1387,7 +1389,7 @@ function deckFrom(text){
 const fileSafe = t => (String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-').slice(0, 60) || 'presentacion') + '.pptx';
 function deckCard(pre, D){
   const c = document.createElement('div'); c.className = 'fcard deck'; c.dataset.ext = 'pptx';
-  c.innerHTML = '<button type="button" class="fc-main" data-dk="prev"><span class="fc-ic" aria-hidden="true">PPTX</span><span class="fc-t"><b></b><small>Presentación · ' + D.slides.length + ' diapositivas · con vista previa</small></span></button>'
+  c.innerHTML = '<button type="button" class="fc-main" data-dk="prev"><span class="fc-ic img" aria-hidden="true">' + SZ.fileIco('pptx') + '</span><span class="fc-t"><b></b><small>Presentación · ' + D.slides.length + ' diapositivas · con vista previa</small></span></button>'
     + '<button type="button" class="cnv-b" data-dk="prev">' + CNV_ICO.eye + '<span>Vista previa</span></button><button type="button" class="cnv-b" data-dk="down">' + CNV_ICO.down + '<span>Descargar .pptx</span></button>';
   $('.fc-t b', c).textContent = fileSafe(D.titulo);
   pre.before(c); pre.hidden = true; c.appendChild(pre); c._deck = D;
@@ -1401,7 +1403,7 @@ function slideHtml(D, i){
 function openDeck(D){
   closeCanvas(true);
   const o = document.createElement('div'); o.className = 'cvp'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', D.titulo);
-  o.innerHTML = '<div class="cvp-in"><div class="cvp-h"><span class="fc-ic" aria-hidden="true">PPTX</span><span class="cnv-t"><b></b><small>' + D.slides.length + ' diapositivas</small></span><button type="button" class="cnv-b" data-dk="down">' + CNV_ICO.down + '<span>Descargar .pptx</span></button><button type="button" class="cnv-b ic" data-cx aria-label="Cerrar">✕</button></div><div class="cvp-b deckv"></div></div>';
+  o.innerHTML = '<div class="cvp-in"><div class="cvp-h"><span class="fc-ic img" aria-hidden="true">' + SZ.fileIco('pptx') + '</span><span class="cnv-t"><b></b><small>' + D.slides.length + ' diapositivas</small></span><button type="button" class="cnv-b" data-dk="down">' + CNV_ICO.down + '<span>Descargar .pptx</span></button><button type="button" class="cnv-b ic" data-cx aria-label="Cerrar">✕</button></div><div class="cvp-b deckv"></div></div>';
   $('.cnv-t b', o).textContent = fileSafe(D.titulo);
   const box = $('.deckv', o);
   [-1, ...D.slides.map((_, i) => i)].forEach(i => {

@@ -174,7 +174,7 @@ html.noanim .szroam .rb-fig{animation:none}
   .ft img{width:64px;height:64px}
   .secbg{-webkit-mask:linear-gradient(180deg,transparent,#000 80px,#000 calc(100% - 80px),transparent);mask:linear-gradient(180deg,transparent,#000 80px,#000 calc(100% - 80px),transparent)}
   .hb-bub:nth-of-type(n+4){display:none}
-  #comparar .band .set{gap:8px}
+  #comparar .band .set{gap:8px;padding-right:8px}
 }
 @media (max-width:360px){
   .cta{flex-direction:column;align-items:stretch}

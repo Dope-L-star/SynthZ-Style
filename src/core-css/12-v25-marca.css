@@ -18,3 +18,5 @@ a:hover>.lgz,.logo:hover .lgz{transform:rotate(-8deg) scale(1.08);filter:drop-sh
 html.noanim .sforb path{animation:none}
 html[data-scheme="light"] .zw,html[data-scheme="light"] .flw-w .fw-t{color:#1b1035}
 .logo .lgz.mark,.sf-b .lgz.mark{width:auto}
+.gico .zmini{width:86%;height:86%;object-fit:contain;filter:drop-shadow(0 0 4px rgba(176,92,255,.5))}
+:where(a,button,[role="button"],summary,input,textarea,select,[tabindex]):focus-visible{outline:2px solid #3de0ff;outline-offset:2px}
