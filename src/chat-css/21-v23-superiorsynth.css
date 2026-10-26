@@ -16,14 +16,14 @@ html.noanim .ssi .ssi-s,html.noanim .ssi .ssi-k{animation:none}
 #railAgent[aria-pressed="true"]{color:#f3d79e;background:linear-gradient(135deg,rgba(var(--gold-rgb),.16),rgba(var(--wine-rgb),.12))}
 #railAgent[aria-pressed="true"] .ssi-s{animation-duration:1.8s}
 
-/* «Chats | SuperiorSynth» arriba de tus chats, también en PC */
+/* SuperiorSynth ya no tiene pestaña en tus chats: se elige en el botón de modo */
 #cSeg{position:relative}
 #cSeg button{display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;position:relative;z-index:1}
 #cSeg button .ssmount .ssi{width:16px;height:16px}
 #cSeg button[data-v="agents"][aria-selected="true"]{color:#f3d79e}
 #cAgH{display:none !important}
 @media (min-width:900px){
-  #cSeg,#cSeg[hidden]{display:grid !important;grid-template-columns:1fr 1fr;gap:0;padding:4px;margin:0 0 10px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03)}
+  #cSeg,#cSeg[hidden]{display:none !important;grid-template-columns:1fr 1fr;gap:0;padding:4px;margin:0 0 10px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03)}
   #cSeg [data-v="favs"]{display:none !important}
   #cSeg button{padding:8px 6px;border-radius:9px;border:0;background:none;color:var(--mute);font:500 13.5px var(--sans,inherit);cursor:pointer;transition:color .25s}
   #cSeg button:hover{color:var(--text)}

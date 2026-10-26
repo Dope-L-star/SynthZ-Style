@@ -15,7 +15,7 @@ const TOPIC_STEPS = {
     await gPoint(gAny('#cCmp', '#pickRow [data-add]'), 'Aquí sumas otra IA, hasta 4. Todas responden la misma pregunta y aparecen lado a lado, en el orden en que llegan. Ojo: cada una gasta lo suyo.');
   },
   agente:async () => {
-    await gPoint(gT('#cSeg [data-v="agents"]', '#tabbar [data-tab="chats"]'), isMobile() ? 'SuperiorSynth está en «Chats», en la pestaña «SuperiorSynth».' : 'Este es SuperiorSynth, junto a «Chats», arriba de tus chats.');
+    await gPoint(gT('#cMode', '#cMode'), 'SuperiorSynth se elige aquí, en el botón de modo junto a la caja de escribir.');
     await gPoint(null, 'Con SuperiorSynth no eliges IA: tú escribes, él entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso. Al final decides si te quedas con esa IA o sigues con SuperiorSynth.', { mood:'guino' });
   },
   archivos:async () => {

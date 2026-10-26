@@ -2,7 +2,7 @@
    y te muestra cada paso. Al final decides: quedarte con esa IA o seguir en modo agente ---------- */
 let agentBusy = false;
 const agentOn = () => !!st().agent && !trialOn;
-$('#agPill').addEventListener('click', () => { if (isMobile()) closeChatsSheet && closeChatsSheet(); cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(false); });
+$('#agPill').addEventListener('click', () => { if (isMobile()) closeChatsSheet && closeChatsSheet(); setAgent(false); });
 function paintAgent(){ try{ paintMode(); }catch(e){} $$('.agentb, #railAgent').forEach(b => { b.setAttribute('aria-pressed', String(agentOn())); b.classList.toggle('on', agentOn()); }); document.body.classList.toggle('agenting', agentOn()); inp.placeholder = agentOn() ? 'SuperiorSynth: cuéntame qué necesitas…' : (isLocked() ? inp.placeholder : 'Escribe tu mensaje...'); }
 function setAgent(on){
   if (!!st().agent === !!on){ paintAgent(); return; }
@@ -77,9 +77,8 @@ function agentChoice(pick){
     st().chats[k1] = msgs; delete st().chats[k0]; st().del = [...(st().del || []), k0].slice(-300);
     const L = (st().threads || {})[AGK]; if (L){ const id0 = curT(), e0 = L.find(x => x.id === id0); st().threads[AGK] = L.filter(x => x.id !== id0); if (e0){ const e1 = thMeta(pick, tid, true); e1.title = e0.title; e1.t = Date.now(); } }
     (st().thread || (st().thread = {}))[pick] = tid; st().model.openrouter = pick; st().pinned = pick; st().agent = false;
-    if (cView === 'agents'){ cView = 'chats'; RS.view = 'chats'; saveRS(); }
     save(); paintAgent(); gen++; applyRail(); paintSel(); renderTop(true); paintAccent(); renderMsgs(); updateHint(); renderChats(false);
-    toast('Listo: sigues con ' + nm + '. SuperiorSynth quedó apagado; lo vuelves a activar arriba de tus chats.');
+    toast('Listo: sigues con ' + nm + '. SuperiorSynth quedó apagado; lo vuelves a activar en el botón de modo, junto a la caja de escribir.');
   });
 }
 async function agentPlan(text){

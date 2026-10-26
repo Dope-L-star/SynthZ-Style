@@ -206,7 +206,7 @@ body.agenting #cPick,body.agenting #cCmp,body.agenting #tabbar [data-tab="ia"]{d
 .agkeep small{flex-basis:100%;color:var(--mute,#8d909c);font-size:12px}
 html.noanim .agrun,html.noanim .aghello .agbadge{animation:none}
 html.noanim .agrun .ag-s li.on i{animation-duration:2s}
-@media (max-width:899px){#cSeg,#cSeg[hidden]{display:grid !important;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;margin:4px 0 8px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.03)}#cSeg .pill{display:none}#cSeg button{display:flex;padding:8px 6px;border-radius:999px;font-size:13px;color:var(--mute);border:0;background:none}#cSeg button[aria-selected="true"]{background:rgba(255,255,255,.1);color:var(--text)}}
+@media (max-width:899px){#cSeg,#cSeg[hidden]{display:grid !important;grid-template-columns:repeat(2,1fr);gap:4px;padding:4px;margin:4px 0 8px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.03)}#cSeg .pill{display:none}#cSeg button{display:flex;padding:8px 6px;border-radius:999px;font-size:13px;color:var(--mute);border:0;background:none}#cSeg button[aria-selected="true"]{background:rgba(255,255,255,.1);color:var(--text)}}
 @keyframes agSpin{to{transform:rotate(360deg)}}
 #sx{position:fixed;inset:0;z-index:9720;display:grid;place-items:center;padding:18px;background:rgba(5,6,10,.5);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);opacity:0;transition:opacity .45s ease}
 #sx.on{opacity:1}

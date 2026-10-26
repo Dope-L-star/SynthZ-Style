@@ -433,7 +433,7 @@ $('#cPick').addEventListener('click', e => { if (side.classList.contains('open')
 $('#cCmp').addEventListener('click', e => openSide('add', e.currentTarget));
 $('#pickRow').addEventListener('click', e => {
   if (e.target.closest('#payPill')){ if (needsConn()) openConnect(); else coinModal('panel'); return; }
-  const ss = e.target.closest('#ssTop'); if (ss){ const r = ss.getBoundingClientRect(); SZ.menuOpen([{ head:'SuperiorSynth' }, { label:'Elegir yo la IA', ico:'chats', fn:() => { cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(true); } }, { label:'¿Qué hace SuperiorSynth?', ico:'help', fn:() => toast('Tú escribes; SuperiorSynth entiende tu pedido, lo mejora y elige la IA que más sabe de eso. Al final decides si te quedas con esa IA.') }], r.left, r.bottom + 6, 'sstm'); return; }
+  const ss = e.target.closest('#ssTop'); if (ss){ const r = ss.getBoundingClientRect(); SZ.menuOpen([{ head:'SuperiorSynth' }, { label:'Elegir yo la IA', ico:'chats', fn:() => applyMode('chat') }, { label:'¿Qué hace SuperiorSynth?', ico:'help', fn:() => toast('Tú escribes; SuperiorSynth entiende tu pedido, lo mejora y elige la IA que más sabe de eso. Al final decides si te quedas con esa IA.') }], r.left, r.bottom + 6, 'sstm'); return; }
   const rm = e.target.closest('[data-rm]'); if (rm){ removeCmp(rm.dataset.rm, rm.closest('.mchip')); return; }
   const ad = e.target.closest('[data-add]'); if (ad){ if ($('#side').classList.contains('open') && pickMode === 'add') closeSide(); else openSide('add', ad); return; }
   const bt = e.target.closest('#btTog'); if (bt){ st().battle = !st().battle; save(); bt.setAttribute('aria-pressed', String(!!st().battle)); toast(st().battle ? 'A ciegas: no verás qué IA es hasta que votes (desde la próxima pregunta).' : 'Modo sorpresa apagado: ya ves el nombre de cada IA.'); return; }
@@ -1019,6 +1019,7 @@ function updateHint(){
 inp.addEventListener('input', () => { autoGrow(); updateHint(); });
 /* en el celular (pantalla táctil) «Enter» da un salto de línea y se envía con el botón de enviar; en el computador Enter envía y Shift+Enter baja de línea */
 const touchKb = () => { try{ return matchMedia('(hover: none) and (pointer: coarse)').matches; }catch(e){ return false; } };
+{ const kh = document.querySelector('.kbdh'); if (kh && touchKb()) kh.textContent = 'Enter salta de línea · envía con la flecha'; }
 inp.addEventListener('keydown', e => {
   if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
   if (touchKb() && !(e.ctrlKey || e.metaKey)) return;     /* deja el salto de línea normal */
@@ -1471,7 +1472,7 @@ function memModal(){ SZ.cfgModal('mem'); }
    y te muestra cada paso. Al final decides: quedarte con esa IA o seguir en modo agente ---------- */
 let agentBusy = false;
 const agentOn = () => !!st().agent && !trialOn;
-$('#agPill').addEventListener('click', () => { if (isMobile()) closeChatsSheet && closeChatsSheet(); cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(false); });
+$('#agPill').addEventListener('click', () => { if (isMobile()) closeChatsSheet && closeChatsSheet(); setAgent(false); });
 function paintAgent(){ try{ paintMode(); }catch(e){} $$('.agentb, #railAgent').forEach(b => { b.setAttribute('aria-pressed', String(agentOn())); b.classList.toggle('on', agentOn()); }); document.body.classList.toggle('agenting', agentOn()); inp.placeholder = agentOn() ? 'SuperiorSynth: cuéntame qué necesitas…' : (isLocked() ? inp.placeholder : 'Escribe tu mensaje...'); }
 function setAgent(on){
   if (!!st().agent === !!on){ paintAgent(); return; }
@@ -1546,9 +1547,8 @@ function agentChoice(pick){
     st().chats[k1] = msgs; delete st().chats[k0]; st().del = [...(st().del || []), k0].slice(-300);
     const L = (st().threads || {})[AGK]; if (L){ const id0 = curT(), e0 = L.find(x => x.id === id0); st().threads[AGK] = L.filter(x => x.id !== id0); if (e0){ const e1 = thMeta(pick, tid, true); e1.title = e0.title; e1.t = Date.now(); } }
     (st().thread || (st().thread = {}))[pick] = tid; st().model.openrouter = pick; st().pinned = pick; st().agent = false;
-    if (cView === 'agents'){ cView = 'chats'; RS.view = 'chats'; saveRS(); }
     save(); paintAgent(); gen++; applyRail(); paintSel(); renderTop(true); paintAccent(); renderMsgs(); updateHint(); renderChats(false);
-    toast('Listo: sigues con ' + nm + '. SuperiorSynth quedó apagado; lo vuelves a activar arriba de tus chats.');
+    toast('Listo: sigues con ' + nm + '. SuperiorSynth quedó apagado; lo vuelves a activar en el botón de modo, junto a la caja de escribir.');
   });
 }
 async function agentPlan(text){
@@ -2052,7 +2052,7 @@ addEventListener('keydown', e => {
 /* ---------- barrita lateral y tus chats ---------- */
 const RAIL_KEY = 'synthz:rail';
 const RS = { open:false, chats:null, view:'chats' };
-try{ const r = JSON.parse(localStorage.getItem(RAIL_KEY)) || {}; if (typeof r.open === 'boolean') RS.open = r.open; if (typeof r.chats === 'boolean') RS.chats = r.chats; if (r.view === 'favs' || r.view === 'agents') RS.view = r.view; }catch(e){}
+try{ const r = JSON.parse(localStorage.getItem(RAIL_KEY)) || {}; if (typeof r.open === 'boolean') RS.open = r.open; if (typeof r.chats === 'boolean') RS.chats = r.chats; if (r.view === 'favs') RS.view = r.view; }catch(e){}
 if (RS.chats === null) RS.chats = !isTablet();
 let cView = RS.view;
 const saveRS = () => { try{ localStorage.setItem(RAIL_KEY, JSON.stringify(RS)); }catch(e){} };
@@ -2060,10 +2060,9 @@ function applyRail(){
   const sh = $('#shell'), tg = $('#railTog');
   $('#rail').classList.toggle('open', !!RS.open); sh.classList.toggle('ropen', !!RS.open); sh.classList.toggle('nochats', !RS.chats);
   tg.setAttribute('aria-expanded', String(!!RS.open)); tg.setAttribute('aria-label', RS.open ? 'Cerrar la barra' : 'Abrir la barra'); tg.dataset.tip = RS.open ? 'Cerrar la barra' : 'Abrir la barra';
-  $$('#rail [data-r]').forEach(b => { const r = b.dataset.r; b.setAttribute('aria-pressed', String((r === 'agents' && cView === 'agents') || (r === 'chats' && RS.chats && cView === 'chats') || (r === 'favs' && RS.chats && cView === 'favs'))); });
+  $$('#rail [data-r]').forEach(b => { const r = b.dataset.r; b.setAttribute('aria-pressed', String((r === 'chats' && RS.chats && cView === 'chats') || (r === 'favs' && RS.chats && cView === 'favs'))); });
   $$('#cSeg button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.v === cView))); placePill($('#cSeg'));
   $('#railWord').tabIndex = RS.open ? 0 : -1;
-  setAgent(cView === 'agents');
 }
 function showChats(view, focus){
   if (isMobile()){ cView = view || cView; openChatsSheet(focus); return; }
@@ -2076,7 +2075,6 @@ $('#rail').addEventListener('click', e => {
   const r = b.dataset.r;
   if (r === 'new'){ newChat(); return; }
   if (r === 'search'){ showChats('chats', true); return; }
-  if (r === 'agents' && cView === 'agents'){ cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(true); toast('Saliste de SuperiorSynth.'); return; }
   if ((r === 'chats' || r === 'favs') && RS.chats && cView === r && !RS.open){ RS.chats = false; saveRS(); applyRail(); return; }
   showChats(r);
 });
@@ -2486,7 +2484,7 @@ const TOPIC_STEPS = {
     await gPoint(gAny('#cCmp', '#pickRow [data-add]'), 'Aquí sumas otra IA, hasta 4. Todas responden la misma pregunta y aparecen lado a lado, en el orden en que llegan. Ojo: cada una gasta lo suyo.');
   },
   agente:async () => {
-    await gPoint(gT('#cSeg [data-v="agents"]', '#tabbar [data-tab="chats"]'), isMobile() ? 'SuperiorSynth está en «Chats», en la pestaña «SuperiorSynth».' : 'Este es SuperiorSynth, junto a «Chats», arriba de tus chats.');
+    await gPoint(gT('#cMode', '#cMode'), 'SuperiorSynth se elige aquí, en el botón de modo junto a la caja de escribir.');
     await gPoint(null, 'Con SuperiorSynth no eliges IA: tú escribes, él entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso. Al final decides si te quedas con esa IA o sigues con SuperiorSynth.', { mood:'guino' });
   },
   archivos:async () => {
@@ -3124,7 +3122,6 @@ function renderChats(anim){
   box.classList.toggle('still', !anim);
   $('#thQ').placeholder = cView === 'favs' ? 'Buscar en tus favoritos…' : 'Buscar en tus chats';
   $('#cFavH').hidden = cView !== 'favs'; $('#cNew').hidden = cView === 'favs';
-  $('#cAgH').hidden = cView !== 'agents';
   if (cView === 'favs'){
     const L = allFavs().filter(x => !q || (x.text + ' ' + info(x.model).name).toLowerCase().includes(q));
     box.innerHTML = L.length ? L.map((x, i) => '<div class="fvi" data-k="' + esc(x.k) + '" data-i="' + x.i + '" style="--i:' + Math.min(i, 20) + '"><b>' + esc(info(x.model).name) + '</b><p>' + esc(q ? snipOf(x.text, q) || x.text.slice(0, 220) : x.text.slice(0, 220)) + '</p></div>').join('')
@@ -3135,8 +3132,8 @@ function renderChats(anim){
   const grp = t => !t ? 'Antes' : t >= d0 ? 'Hoy' : t >= d0 - 864e5 ? 'Ayer' : t >= d0 - 6 * 864e5 ? 'Esta semana' : 'Antes';
   const AG = st().agentT || {};
   const isAg = x => !!AG[x.k] || x.model === AGK;
-  const L = allThreads().filter(x => cView === 'agents' ? isAg(x) : !isAg(x)).map(x => { if (!q) return x; const hitT = (x.title + ' ' + info(x.model).name).toLowerCase().includes(q); let sn = ''; if (!hitT){ const m = (st().chats[x.k] || []).find(mm => (mm.content || '').toLowerCase().includes(q)); if (!m) return null; sn = snipOf(m.content, q); } return Object.assign({}, x, { sn }); }).filter(Boolean);
-  if (!L.length){ box.innerHTML = '<div class="thnone">' + (q ? 'Nada coincide en tus chats.' : cView === 'agents' ? 'Aún no tienes chats con SuperiorSynth.' : 'Aún no tienes chats.') + '<em>' + (q ? 'Busco en los títulos y dentro de cada mensaje.' : cView === 'agents' ? 'Escribe lo que necesitas: una IA mejora tu pedido y se lo pasa a la IA que más sabe de eso.' : 'Escribe tu primer mensaje y aparecerá aquí.') + '</em></div>'; return; }
+  const L = allThreads().map(x => { if (!q) return x; const hitT = (x.title + ' ' + info(x.model).name).toLowerCase().includes(q); let sn = ''; if (!hitT){ const m = (st().chats[x.k] || []).find(mm => (mm.content || '').toLowerCase().includes(q)); if (!m) return null; sn = snipOf(m.content, q); } return Object.assign({}, x, { sn }); }).filter(Boolean);
+  if (!L.length){ box.innerHTML = '<div class="thnone">' + (q ? 'Nada coincide en tus chats.' : 'Aún no tienes chats.') + '<em>' + (q ? 'Busco en los títulos y dentro de cada mensaje.' : 'Escribe tu primer mensaje y aparecerá aquí.') + '</em></div>'; return; }
   let h = '', g0 = '', n = 0;
   const hlq = t => q ? hl(t, q) : esc(t);
   L.forEach(x => {
@@ -3150,7 +3147,6 @@ function renderChats(anim){
 $('#thQ').addEventListener('input', () => renderChats(false));
 $('#cNew').addEventListener('click', () => newChat());
 $('#cFavBack').addEventListener('click', () => { cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(true); });
-$('#cAgBack').addEventListener('click', () => { cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(true); });
 function openThread(model, id, ci){
   if (mode !== 'solo'){ stopNow(); cmpRun++; cmpLast = null; mode = 'solo'; }
   (st().thread || (st().thread = {}))[model] = id;

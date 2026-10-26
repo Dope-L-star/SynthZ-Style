@@ -339,7 +339,7 @@ function videoIntro(){
     o.innerHTML = '<video muted playsinline preload="auto" poster="media/intro-z.jpg" aria-hidden="true"><source src="media/intro-z.webm" type="video/webm"><source src="media/intro-z.mp4" type="video/mp4"></video><div class="vi-glow" aria-hidden="true"></div><button type="button" class="vi-skip">Saltar <kbd>Esc</kbd></button><div class="vi-bar" aria-hidden="true"><i></i></div>';
     document.body.appendChild(o);
     const v = $('video', o), bar = $('.vi-bar i', o); let end = false, t0 = 0;
-    const finish = (skipped) => { if (end) return; end = true; removeEventListener('keydown', key, true); o.classList.add('out'); setTimeout(() => o.remove(), 900); done(!skipped); };
+    const finish = (skipped) => { if (end) return; end = true; if (skipped && v.currentTime > .05) try{ localStorage.setItem('synthz:introSkip', '1'); }catch(e){} removeEventListener('keydown', key, true); o.classList.add('out'); setTimeout(() => o.remove(), 900); done(!skipped); };
     const key = e => { if (e.key === 'Escape' || e.key === 'Enter' || e.code === 'Space'){ e.preventDefault(); finish(true); } };
     addEventListener('keydown', key, true);
     $('.vi-skip', o).addEventListener('click', () => finish(true));
@@ -652,7 +652,8 @@ boot();
   b.addEventListener('mouseenter', () => { put('flow'); b.classList.add('cool'); });
 })();
 let seen = false, backIn = '';
-try{ const im = SZ.CFG.intro || 'always'; seen = !FIRST && (!SZ.CFG.anim || im === 'never' || (im === 'session' && sessionStorage.getItem('synthz:intro') === '1')); }catch(e){}
+/* v2.4: la intro sale una vez por visita; si alguien la saltó, ya no se le vuelve a mostrar (salvo que pida «Siempre» en Ajustes) */
+try{ const im = SZ.CFG.intro || 'session', skipped = localStorage.getItem('synthz:introSkip') === '1'; seen = !FIRST && (!SZ.CFG.anim || im === 'never' || (im !== 'always' && skipped) || (im === 'session' && sessionStorage.getItem('synthz:intro') === '1')); }catch(e){}
 /* de vuelta desde SynthFlow: «SynthZ» ya llegó volando a su esquina; sin intro, la página aparece suave */
 try{ backIn = sessionStorage.getItem('synthz:back') || ''; sessionStorage.removeItem('synthz:back'); }catch(e){}
 if (backIn){ seen = !FIRST; requestAnimationFrame(() => requestAnimationFrame(() => { root.classList.add('backout'); setTimeout(() => root.classList.remove('backin', 'backout'), 950); })); }

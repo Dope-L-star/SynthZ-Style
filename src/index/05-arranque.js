@@ -48,7 +48,8 @@ boot();
   b.addEventListener('mouseenter', () => { put('flow'); b.classList.add('cool'); });
 })();
 let seen = false, backIn = '';
-try{ const im = SZ.CFG.intro || 'always'; seen = !FIRST && (!SZ.CFG.anim || im === 'never' || (im === 'session' && sessionStorage.getItem('synthz:intro') === '1')); }catch(e){}
+/* v2.4: la intro sale una vez por visita; si alguien la saltó, ya no se le vuelve a mostrar (salvo que pida «Siempre» en Ajustes) */
+try{ const im = SZ.CFG.intro || 'session', skipped = localStorage.getItem('synthz:introSkip') === '1'; seen = !FIRST && (!SZ.CFG.anim || im === 'never' || (im !== 'always' && skipped) || (im === 'session' && sessionStorage.getItem('synthz:intro') === '1')); }catch(e){}
 /* de vuelta desde SynthFlow: «SynthZ» ya llegó volando a su esquina; sin intro, la página aparece suave */
 try{ backIn = sessionStorage.getItem('synthz:back') || ''; sessionStorage.removeItem('synthz:back'); }catch(e){}
 if (backIn){ seen = !FIRST; requestAnimationFrame(() => requestAnimationFrame(() => { root.classList.add('backout'); setTimeout(() => root.classList.remove('backin', 'backout'), 950); })); }

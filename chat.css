@@ -635,7 +635,7 @@ body.agenting #cPick,body.agenting #cCmp,body.agenting #tabbar [data-tab="ia"]{d
 .agkeep small{flex-basis:100%;color:var(--mute,#8d909c);font-size:12px}
 html.noanim .agrun,html.noanim .aghello .agbadge{animation:none}
 html.noanim .agrun .ag-s li.on i{animation-duration:2s}
-@media (max-width:899px){#cSeg,#cSeg[hidden]{display:grid !important;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;margin:4px 0 8px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.03)}#cSeg .pill{display:none}#cSeg button{display:flex;padding:8px 6px;border-radius:999px;font-size:13px;color:var(--mute);border:0;background:none}#cSeg button[aria-selected="true"]{background:rgba(255,255,255,.1);color:var(--text)}}
+@media (max-width:899px){#cSeg,#cSeg[hidden]{display:grid !important;grid-template-columns:repeat(2,1fr);gap:4px;padding:4px;margin:4px 0 8px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.03)}#cSeg .pill{display:none}#cSeg button{display:flex;padding:8px 6px;border-radius:999px;font-size:13px;color:var(--mute);border:0;background:none}#cSeg button[aria-selected="true"]{background:rgba(255,255,255,.1);color:var(--text)}}
 @keyframes agSpin{to{transform:rotate(360deg)}}
 #sx{position:fixed;inset:0;z-index:9720;display:grid;place-items:center;padding:18px;background:rgba(5,6,10,.5);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);opacity:0;transition:opacity .45s ease}
 #sx.on{opacity:1}
@@ -1854,14 +1854,14 @@ html.noanim .ssi .ssi-s,html.noanim .ssi .ssi-k{animation:none}
 #railAgent[aria-pressed="true"]{color:#f3d79e;background:linear-gradient(135deg,rgba(var(--gold-rgb),.16),rgba(var(--wine-rgb),.12))}
 #railAgent[aria-pressed="true"] .ssi-s{animation-duration:1.8s}
 
-/* «Chats | SuperiorSynth» arriba de tus chats, también en PC */
+/* SuperiorSynth ya no tiene pestaña en tus chats: se elige en el botón de modo */
 #cSeg{position:relative}
 #cSeg button{display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;position:relative;z-index:1}
 #cSeg button .ssmount .ssi{width:16px;height:16px}
 #cSeg button[data-v="agents"][aria-selected="true"]{color:#f3d79e}
 #cAgH{display:none !important}
 @media (min-width:900px){
-  #cSeg,#cSeg[hidden]{display:grid !important;grid-template-columns:1fr 1fr;gap:0;padding:4px;margin:0 0 10px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03)}
+  #cSeg,#cSeg[hidden]{display:none !important;grid-template-columns:1fr 1fr;gap:0;padding:4px;margin:0 0 10px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03)}
   #cSeg [data-v="favs"]{display:none !important}
   #cSeg button{padding:8px 6px;border-radius:9px;border:0;background:none;color:var(--mute);font:500 13.5px var(--sans,inherit);cursor:pointer;transition:color .25s}
   #cSeg button:hover{color:var(--text)}
@@ -2088,7 +2088,8 @@ html:not(.noglass) .tcard,html:not(.noglass) .amenu,html:not(.noglass) .ctxm,htm
 .sxfoot.gauge .gz-bg{stroke:rgba(255,255,255,.09)}
 .sxfoot.gauge .gz-v{stroke:url(#gzG);filter:drop-shadow(0 0 6px rgba(123,63,242,.7));transition:stroke-dasharray 1.1s cubic-bezier(.22,1,.36,1)}
 .sxfoot.gauge.warn .gz-v{stroke:#ffc857}.sxfoot.gauge.full .gz-v{stroke:#ff6b6b}
-.sxfoot.gauge .gz-n{margin-top:-30px;display:grid;line-height:1.15}
+.sxfoot.gauge .gz-n{margin-top:-30px;display:grid;justify-items:center;text-align:center;line-height:1.15}
+.sxfoot.gauge{flex-direction:column;align-items:center}
 .sxfoot.gauge .gz-n b{font-size:18px;color:#fff}
 .sxfoot.gauge .gz-n small{font-size:11px;color:var(--mute)}
 .sxfoot.gauge .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}

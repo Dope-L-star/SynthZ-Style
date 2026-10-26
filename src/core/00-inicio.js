@@ -20,7 +20,7 @@ const CFG = (() => {
   const phone = (() => { try{ return matchMedia('(pointer:coarse)').matches && Math.min(screen.width, screen.height) <= 820; }catch(e){ return false; } })();
   if (phone && fresh) c = Object.assign(cfgPreset('speed'), { perf:'speed', anim:true, lite:1 });
   else if (phone && !c.lite){ c = Object.assign({}, cfgPreset(c.perf), c, { glass:false, bg:false, cursor:false, lite:1 }); try{ localStorage.setItem('synthz:cfg', JSON.stringify(Object.assign({ v:2 }, c))); }catch(e){} }
-  return Object.assign({ v:2, perf:'visual', intro:'always', sound:true }, cfgPreset(c.perf), c);
+  return Object.assign({ v:2, perf:'visual', intro:'session', sound:true }, cfgPreset(c.perf), c);
 })();
 const PERF = CFG.perf === 'speed';
 const reduce = !CFG.anim;

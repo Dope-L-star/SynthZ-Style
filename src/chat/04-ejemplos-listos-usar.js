@@ -93,6 +93,7 @@ function updateHint(){
 inp.addEventListener('input', () => { autoGrow(); updateHint(); });
 /* en el celular (pantalla táctil) «Enter» da un salto de línea y se envía con el botón de enviar; en el computador Enter envía y Shift+Enter baja de línea */
 const touchKb = () => { try{ return matchMedia('(hover: none) and (pointer: coarse)').matches; }catch(e){ return false; } };
+{ const kh = document.querySelector('.kbdh'); if (kh && touchKb()) kh.textContent = 'Enter salta de línea · envía con la flecha'; }
 inp.addEventListener('keydown', e => {
   if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
   if (touchKb() && !(e.ctrlKey || e.metaKey)) return;     /* deja el salto de línea normal */

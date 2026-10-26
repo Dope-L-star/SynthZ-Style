@@ -86,7 +86,6 @@ function renderChats(anim){
   box.classList.toggle('still', !anim);
   $('#thQ').placeholder = cView === 'favs' ? 'Buscar en tus favoritos…' : 'Buscar en tus chats';
   $('#cFavH').hidden = cView !== 'favs'; $('#cNew').hidden = cView === 'favs';
-  $('#cAgH').hidden = cView !== 'agents';
   if (cView === 'favs'){
     const L = allFavs().filter(x => !q || (x.text + ' ' + info(x.model).name).toLowerCase().includes(q));
     box.innerHTML = L.length ? L.map((x, i) => '<div class="fvi" data-k="' + esc(x.k) + '" data-i="' + x.i + '" style="--i:' + Math.min(i, 20) + '"><b>' + esc(info(x.model).name) + '</b><p>' + esc(q ? snipOf(x.text, q) || x.text.slice(0, 220) : x.text.slice(0, 220)) + '</p></div>').join('')
@@ -97,8 +96,8 @@ function renderChats(anim){
   const grp = t => !t ? 'Antes' : t >= d0 ? 'Hoy' : t >= d0 - 864e5 ? 'Ayer' : t >= d0 - 6 * 864e5 ? 'Esta semana' : 'Antes';
   const AG = st().agentT || {};
   const isAg = x => !!AG[x.k] || x.model === AGK;
-  const L = allThreads().filter(x => cView === 'agents' ? isAg(x) : !isAg(x)).map(x => { if (!q) return x; const hitT = (x.title + ' ' + info(x.model).name).toLowerCase().includes(q); let sn = ''; if (!hitT){ const m = (st().chats[x.k] || []).find(mm => (mm.content || '').toLowerCase().includes(q)); if (!m) return null; sn = snipOf(m.content, q); } return Object.assign({}, x, { sn }); }).filter(Boolean);
-  if (!L.length){ box.innerHTML = '<div class="thnone">' + (q ? 'Nada coincide en tus chats.' : cView === 'agents' ? 'Aún no tienes chats con SuperiorSynth.' : 'Aún no tienes chats.') + '<em>' + (q ? 'Busco en los títulos y dentro de cada mensaje.' : cView === 'agents' ? 'Escribe lo que necesitas: una IA mejora tu pedido y se lo pasa a la IA que más sabe de eso.' : 'Escribe tu primer mensaje y aparecerá aquí.') + '</em></div>'; return; }
+  const L = allThreads().map(x => { if (!q) return x; const hitT = (x.title + ' ' + info(x.model).name).toLowerCase().includes(q); let sn = ''; if (!hitT){ const m = (st().chats[x.k] || []).find(mm => (mm.content || '').toLowerCase().includes(q)); if (!m) return null; sn = snipOf(m.content, q); } return Object.assign({}, x, { sn }); }).filter(Boolean);
+  if (!L.length){ box.innerHTML = '<div class="thnone">' + (q ? 'Nada coincide en tus chats.' : 'Aún no tienes chats.') + '<em>' + (q ? 'Busco en los títulos y dentro de cada mensaje.' : 'Escribe tu primer mensaje y aparecerá aquí.') + '</em></div>'; return; }
   let h = '', g0 = '', n = 0;
   const hlq = t => q ? hl(t, q) : esc(t);
   L.forEach(x => {
@@ -112,7 +111,6 @@ function renderChats(anim){
 $('#thQ').addEventListener('input', () => renderChats(false));
 $('#cNew').addEventListener('click', () => newChat());
 $('#cFavBack').addEventListener('click', () => { cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(true); });
-$('#cAgBack').addEventListener('click', () => { cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(true); });
 function openThread(model, id, ci){
   if (mode !== 'solo'){ stopNow(); cmpRun++; cmpLast = null; mode = 'solo'; }
   (st().thread || (st().thread = {}))[model] = id;

@@ -39,7 +39,8 @@ html:not(.noglass) .tcard,html:not(.noglass) .amenu,html:not(.noglass) .ctxm,htm
 .sxfoot.gauge .gz-bg{stroke:rgba(255,255,255,.09)}
 .sxfoot.gauge .gz-v{stroke:url(#gzG);filter:drop-shadow(0 0 6px rgba(123,63,242,.7));transition:stroke-dasharray 1.1s cubic-bezier(.22,1,.36,1)}
 .sxfoot.gauge.warn .gz-v{stroke:#ffc857}.sxfoot.gauge.full .gz-v{stroke:#ff6b6b}
-.sxfoot.gauge .gz-n{margin-top:-30px;display:grid;line-height:1.15}
+.sxfoot.gauge .gz-n{margin-top:-30px;display:grid;justify-items:center;text-align:center;line-height:1.15}
+.sxfoot.gauge{flex-direction:column;align-items:center}
 .sxfoot.gauge .gz-n b{font-size:18px;color:#fff}
 .sxfoot.gauge .gz-n small{font-size:11px;color:var(--mute)}
 .sxfoot.gauge .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}

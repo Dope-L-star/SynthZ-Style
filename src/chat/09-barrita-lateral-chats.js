@@ -1,7 +1,7 @@
 /* ---------- barrita lateral y tus chats ---------- */
 const RAIL_KEY = 'synthz:rail';
 const RS = { open:false, chats:null, view:'chats' };
-try{ const r = JSON.parse(localStorage.getItem(RAIL_KEY)) || {}; if (typeof r.open === 'boolean') RS.open = r.open; if (typeof r.chats === 'boolean') RS.chats = r.chats; if (r.view === 'favs' || r.view === 'agents') RS.view = r.view; }catch(e){}
+try{ const r = JSON.parse(localStorage.getItem(RAIL_KEY)) || {}; if (typeof r.open === 'boolean') RS.open = r.open; if (typeof r.chats === 'boolean') RS.chats = r.chats; if (r.view === 'favs') RS.view = r.view; }catch(e){}
 if (RS.chats === null) RS.chats = !isTablet();
 let cView = RS.view;
 const saveRS = () => { try{ localStorage.setItem(RAIL_KEY, JSON.stringify(RS)); }catch(e){} };
@@ -9,10 +9,9 @@ function applyRail(){
   const sh = $('#shell'), tg = $('#railTog');
   $('#rail').classList.toggle('open', !!RS.open); sh.classList.toggle('ropen', !!RS.open); sh.classList.toggle('nochats', !RS.chats);
   tg.setAttribute('aria-expanded', String(!!RS.open)); tg.setAttribute('aria-label', RS.open ? 'Cerrar la barra' : 'Abrir la barra'); tg.dataset.tip = RS.open ? 'Cerrar la barra' : 'Abrir la barra';
-  $$('#rail [data-r]').forEach(b => { const r = b.dataset.r; b.setAttribute('aria-pressed', String((r === 'agents' && cView === 'agents') || (r === 'chats' && RS.chats && cView === 'chats') || (r === 'favs' && RS.chats && cView === 'favs'))); });
+  $$('#rail [data-r]').forEach(b => { const r = b.dataset.r; b.setAttribute('aria-pressed', String((r === 'chats' && RS.chats && cView === 'chats') || (r === 'favs' && RS.chats && cView === 'favs'))); });
   $$('#cSeg button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.v === cView))); placePill($('#cSeg'));
   $('#railWord').tabIndex = RS.open ? 0 : -1;
-  setAgent(cView === 'agents');
 }
 function showChats(view, focus){
   if (isMobile()){ cView = view || cView; openChatsSheet(focus); return; }
@@ -25,7 +24,6 @@ $('#rail').addEventListener('click', e => {
   const r = b.dataset.r;
   if (r === 'new'){ newChat(); return; }
   if (r === 'search'){ showChats('chats', true); return; }
-  if (r === 'agents' && cView === 'agents'){ cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(true); toast('Saliste de SuperiorSynth.'); return; }
   if ((r === 'chats' || r === 'favs') && RS.chats && cView === r && !RS.open){ RS.chats = false; saveRS(); applyRail(); return; }
   showChats(r);
 });
