@@ -49,6 +49,8 @@ const coinsLeft = () => coinsOf((SZQ.limit || 25000) - (SZQ.used || 0));
 const coinsTotal = () => coinsOf(SZQ.limit || 25000);
 const coinsFmt = n => Math.round(n).toLocaleString('es');
 const coinsShort = n => n >= 10000 ? (Math.floor(n / 100) / 10).toLocaleString('es') + ' mil' : coinsFmt(n);
+/* recibo de cada respuesta: cuántas SynXCoin's gastó y cuántas te quedan (solo con las IAs conectadas; Puter no gasta SynXCoin's) */
+const coinNote = (mid, r) => /^sz:/.test(String(mid)) && r && !r.cached && ((r.prompt || 0) + (r.completion || 0)) > 0 ? ' · gastó ' + coinsFmt(Math.max(1, coinsOf((r.prompt || 0) + (r.completion || 0)))) + ' SynXCoin\'s · te quedan ' + coinsFmt(coinsLeft()) : '';
 const limTxt = () => SZQ.on === false ? 'Las IAs gratis están descansando' : guestFull() ? 'Entra a tu cuenta para seguir FlowIAndo' : isGuestQ() ? 'Te quedan ' + Math.max(0, (SZQ.guest.max || 5) - (SZQ.guest.used || 0)) + ' mensajes de prueba' : limPct() >= 1 ? 'Usaste tus SynXCoin\'s de hoy' : 'Te quedan ' + coinsFmt(coinsLeft()) + ' SynXCoin\'s';
 const limShort = () => SZQ.on === false ? 'Descansando' : guestFull() ? 'Entra para seguir' : isGuestQ() ? Math.max(0, (SZQ.guest.max || 5) - (SZQ.guest.used || 0)) + ' de prueba' : limPct() >= 1 ? 'Agotado por hoy' : coinsShort(coinsLeft()) + ' SynXCoin\'s';
 const limLvl = () => { const k = limPct(); return k >= 1 ? 'full' : k >= .8 ? 'warn' : 'ok'; };

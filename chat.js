@@ -499,7 +499,12 @@ function renderNow(){
 }
 function renderFoot(){
   const left = SZ.msgsLeft(), lv = SZ.limLvl();
-  $('#sideFoot').innerHTML = '<button class="sxfoot lim ' + lv + '" id="sxBtn" type="button" title="Tu límite de hoy">' + SZ.limRing(20) + '<span>' + esc(SZ.limTxt()) + '</span></button>';
+  /* v2.4 · «Medidor del día» (boceto): un arco de vidrio que se vacía mientras chateas; con cuenta muestra tus SynXCoin's */
+  const k = Math.max(0, 1 - SZ.limPct()), g = SZ.isGuestQ(), big = g ? Math.max(0, (SZ.SZQ.guest.max || 5) - (SZ.SZQ.guest.used || 0)) + '' : SZ.coinsShort(SZ.coinsLeft()), of = g ? 'de ' + (SZ.SZQ.guest.max || 5) + ' mensajes de prueba' : 'de ' + SZ.coinsShort(SZ.coinsTotal()) + ' SynXCoin\'s';
+  $('#sideFoot').innerHTML = '<button class="sxfoot lim gauge ' + lv + '" id="sxBtn" type="button" title="Tu medidor del día: toca para ver el detalle">'
+    + '<span class="gz-t">Medidor del día</span><svg class="gz" viewBox="0 0 120 66" aria-hidden="true"><defs><linearGradient id="gzG" x1="0" x2="1"><stop offset="0" stop-color="#3de0ff"/><stop offset=".5" stop-color="#7b3ff2"/><stop offset="1" stop-color="#ff3d9a"/></linearGradient></defs>'
+    + '<path d="M10 60a50 50 0 0 1 100 0" pathLength="100" class="gz-bg"/><path d="M10 60a50 50 0 0 1 100 0" pathLength="100" class="gz-v" style="stroke-dasharray:' + (k * 100).toFixed(1) + ' 100"/></svg>'
+    + '<span class="gz-n"><b>' + esc(big) + '</b><small>' + esc(of) + '</small></span><span class="sr">' + esc(SZ.limTxt()) + '</span></button>';
   const rc = $('#railCoin'); if (rc) rc.innerHTML = SZ.limRing(22) + '<span class="rl">' + esc(SZ.limTxt()) + '</span>';
   const tc = $('#tabCoin .tci'); if (tc) tc.innerHTML = SZ.limRing(22);
 }
@@ -1686,7 +1691,7 @@ async function runSolo(onFail, o = {}){
     const who = r.swapped ? ' · se acabó tu saldo de Puter este mes; respondió ' + (r.real || 'otra IA') : mid === 'sz:auto' && r.real ? ' · respondió ' + r.real : '';
     W.write(r.text); W.finish({ ms:r.ms, real:r.real || '' });
     const work = { ms:Math.round(r.ms || 0), words:W.state.words, real:r.real || '', steps:W.state.steps.map(([a, b]) => [Math.round(a), b]), reason:(r.reasoning || '').slice(0, 4000) || undefined };
-    const msg = { role:'assistant', content:r.text, work, meta:metaOf(r) + tail + who + (r.via ? ' · vía ' + r.via + ' (prueba de SynthZ)' : ''), model:mid, cont: !!(r.cut || r.finish === 'length') || undefined };
+    const msg = { role:'assistant', content:r.text, work, meta:metaOf(r) + SZ.coinNote(mid, r) + tail + who + (r.via ? ' · vía ' + r.via + ' (prueba de SynthZ)' : ''), model:mid, cont: !!(r.cut || r.finish === 'length') || undefined };
     chat.push(msg); touchThread(); save();
     if (here()){
       mount(); rv.push(r.text);
@@ -1799,7 +1804,7 @@ function cmpJob(mid, C){
     if (!live()) return;
     mount(); if (!card) return;
     rv.push(r.text); await rv.end();
-    finishCard(C, card, r.text, metaOf(r) + (r.cached ? ' · respuesta guardada, no gastó nada' : '') + (r.aborted ? ' · detenido' : '') + (r.swapped ? ' · se acabó tu saldo de Puter este mes; respondió ' + (r.real || 'otra IA') : /^sz:/.test(mid) && r.real && mid === 'sz:auto' ? ' · respondió ' + r.real : ''));
+    finishCard(C, card, r.text, metaOf(r) + SZ.coinNote(mid, r) + (r.cached ? ' · respuesta guardada, no gastó nada' : '') + (r.aborted ? ' · detenido' : '') + (r.swapped ? ' · se acabó tu saldo de Puter este mes; respondió ' + (r.real || 'otra IA') : /^sz:/.test(mid) && r.real && mid === 'sz:auto' ? ' · respondió ' + r.real : ''));
     C.done.push({ card, mid, ms:r.ms, ttft:r.ttft || r.ms });
   }).catch(err => {
     if (err && err.gone){ SZ.markBad(mid); setCatalog(cat.list.filter(m => m.id !== mid), cat.t, cat.status); err.message = info(mid).name + ' no está funcionando ahora mismo: la escondí de la lista. Quítala y suma otra.'; }

@@ -109,7 +109,12 @@ function renderNow(){
 }
 function renderFoot(){
   const left = SZ.msgsLeft(), lv = SZ.limLvl();
-  $('#sideFoot').innerHTML = '<button class="sxfoot lim ' + lv + '" id="sxBtn" type="button" title="Tu límite de hoy">' + SZ.limRing(20) + '<span>' + esc(SZ.limTxt()) + '</span></button>';
+  /* v2.4 · «Medidor del día» (boceto): un arco de vidrio que se vacía mientras chateas; con cuenta muestra tus SynXCoin's */
+  const k = Math.max(0, 1 - SZ.limPct()), g = SZ.isGuestQ(), big = g ? Math.max(0, (SZ.SZQ.guest.max || 5) - (SZ.SZQ.guest.used || 0)) + '' : SZ.coinsShort(SZ.coinsLeft()), of = g ? 'de ' + (SZ.SZQ.guest.max || 5) + ' mensajes de prueba' : 'de ' + SZ.coinsShort(SZ.coinsTotal()) + ' SynXCoin\'s';
+  $('#sideFoot').innerHTML = '<button class="sxfoot lim gauge ' + lv + '" id="sxBtn" type="button" title="Tu medidor del día: toca para ver el detalle">'
+    + '<span class="gz-t">Medidor del día</span><svg class="gz" viewBox="0 0 120 66" aria-hidden="true"><defs><linearGradient id="gzG" x1="0" x2="1"><stop offset="0" stop-color="#3de0ff"/><stop offset=".5" stop-color="#7b3ff2"/><stop offset="1" stop-color="#ff3d9a"/></linearGradient></defs>'
+    + '<path d="M10 60a50 50 0 0 1 100 0" pathLength="100" class="gz-bg"/><path d="M10 60a50 50 0 0 1 100 0" pathLength="100" class="gz-v" style="stroke-dasharray:' + (k * 100).toFixed(1) + ' 100"/></svg>'
+    + '<span class="gz-n"><b>' + esc(big) + '</b><small>' + esc(of) + '</small></span><span class="sr">' + esc(SZ.limTxt()) + '</span></button>';
   const rc = $('#railCoin'); if (rc) rc.innerHTML = SZ.limRing(22) + '<span class="rl">' + esc(SZ.limTxt()) + '</span>';
   const tc = $('#tabCoin .tci'); if (tc) tc.innerHTML = SZ.limRing(22);
 }

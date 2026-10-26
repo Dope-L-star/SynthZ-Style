@@ -234,7 +234,7 @@ async function runSolo(onFail, o = {}){
     const who = r.swapped ? ' · se acabó tu saldo de Puter este mes; respondió ' + (r.real || 'otra IA') : mid === 'sz:auto' && r.real ? ' · respondió ' + r.real : '';
     W.write(r.text); W.finish({ ms:r.ms, real:r.real || '' });
     const work = { ms:Math.round(r.ms || 0), words:W.state.words, real:r.real || '', steps:W.state.steps.map(([a, b]) => [Math.round(a), b]), reason:(r.reasoning || '').slice(0, 4000) || undefined };
-    const msg = { role:'assistant', content:r.text, work, meta:metaOf(r) + tail + who + (r.via ? ' · vía ' + r.via + ' (prueba de SynthZ)' : ''), model:mid, cont: !!(r.cut || r.finish === 'length') || undefined };
+    const msg = { role:'assistant', content:r.text, work, meta:metaOf(r) + SZ.coinNote(mid, r) + tail + who + (r.via ? ' · vía ' + r.via + ' (prueba de SynthZ)' : ''), model:mid, cont: !!(r.cut || r.finish === 'length') || undefined };
     chat.push(msg); touchThread(); save();
     if (here()){
       mount(); rv.push(r.text);
