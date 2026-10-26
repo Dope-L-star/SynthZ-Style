@@ -1912,7 +1912,7 @@ const hasPass = u => !!(u && (u.kind === 'pass' || u.username));
 const hasGoogle = u => !!(u && (u.google || u.kind === 'google' || u.sbUid || u.gsub));
 /* al volver de Google para VINCULAR (no para entrar) */
 async function linkGoogleDone(body){
-  try{ const d = await api('auth', { method:'POST', keep:true, body:Object.assign({ mode:'link' }, body) }); if (d.user) ACC.user = Object.assign({}, ACC.user, d.user); await accStart(); toast('¡Listo! Tu Google quedó vinculado: ya puedes entrar con él o con tu usuario.'); }
+  try{ const d = await api('auth', { method:'POST', keep:true, body:Object.assign({ mode:'link' }, body) }); if (d.user) ACC.user = Object.assign({}, ACC.user, d.user); await accStart(); toast(d.merged ? '¡Listo! Ese Google ya era otra cuenta tuya y quedó unida a esta.' : '¡Listo! Tu Google quedó vinculado: ya puedes entrar con él o con tu usuario.'); }
   catch(e){ toast((e && e.message) || 'No pude vincular tu Google. Intenta de nuevo.'); }
 }
 function securityModal(){
@@ -1927,10 +1927,17 @@ function securityModal(){
   const GICO = '<svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
   const paint = () => {
     const u = ACC.user || {}, P = hasPass(u), G = hasGoogle(u);
+    const L = Array.isArray(u.links) && u.links.length ? u.links : (G && u.email ? [{ email:u.email }] : []);   /* cuentas vinculadas antes de v2.4 no tenían lista */
     box.innerHTML = '<h3>Cómo entras</h3><div class="sacc">'
       + '<div class="sa-r' + (P ? ' on' : '') + '"><span class="sa-i">🔑</span><span class="sa-t"><b>Usuario y contraseña</b><small>' + (P ? '@' + esc(u.username || '') : 'Aún no tienes') + '</small></span>' + (P ? '<em class="sa-ok">✓ Activo</em>' : '<button class="btn sm" type="button" data-k="addp">Agregar</button>') + '</div>'
-      + '<div class="sa-r' + (G ? ' on' : '') + '"><span class="sa-i">' + GICO + '</span><span class="sa-t"><b>Google</b><small>' + (G ? esc(u.email || 'Vinculado') : 'Sin vincular') + '</small></span>' + (G ? '<em class="sa-ok">✓ Vinculado</em>' : (ACC.google ? '<span class="sa-g"><button class="btn sm" type="button" data-k="link">Vincular</button></span>' : '<small class="sa-no">No disponible ahora</small>')) + '</div>'
-      + '</div><p class="cnote">Con las dos formas entras a la <b>misma</b> cuenta, con tus chats y tu perfil. Nunca se juntan dos cuentas distintas.</p><div id="secForm"></div>';
+      + (G ? L.map(x => '<div class="sa-r on"><span class="sa-i">' + GICO + '</span><span class="sa-t"><b>Google</b><small>' + esc(x.email) + '</small></span>' + (P || L.length > 1 ? '<button class="lnk" type="button" data-un="' + esc(x.email) + '">Quitar</button>' : '<em class="sa-ok">✓ Vinculado</em>') + '</div>').join('') : '')
+      + '<div class="sa-r"><span class="sa-i">' + GICO + '</span><span class="sa-t"><b>' + (G ? 'Otra cuenta de Google' : 'Google') + '</b><small>' + (G ? 'Entra con cualquiera de tus Google' : 'Sin vincular') + '</small></span>' + (ACC.google ? '<span class="sa-g"><button class="btn sm" type="button" data-k="link">Vincular</button></span>' : '<small class="sa-no">No disponible ahora</small>') + '</div>'
+      + '</div><p class="cnote">Con cualquiera de estas formas entras a la <b>misma</b> cuenta, con tus chats y tu perfil. Si vinculas un Google que ya tenía una cuenta solo de Google, esa cuenta se une a esta.</p><div id="secForm"></div>';
+    box.querySelectorAll('[data-un]').forEach(btn => btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      try{ const d = await api('auth', { method:'POST', keep:true, body:{ mode:'unlink', email:btn.dataset.un } }); if (d.user) ACC.user = Object.assign({}, ACC.user, d.user); accFire('profile'); toast('Listo: quité ese Google de tu cuenta.'); paint(); }
+      catch(e){ btn.disabled = false; toast((e && e.message) || 'No pude quitarlo. Intenta de nuevo.'); }
+    }));
     const add = $('[data-k="addp"]', box); if (add) add.addEventListener('click', () => addPassForm());
     const ln = $('[data-k="link"]', box); if (ln) ln.addEventListener('click', () => linkGoogle(ln.parentNode));
     if (P) passForm();

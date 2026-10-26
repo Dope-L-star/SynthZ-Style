@@ -56,7 +56,7 @@ export default route({
       } else { t.members = (t.members || []).filter(m => m.sub !== u.sub); await setJ('t:' + id, t); }
     }
     await sbDelete(u.sub);
-    await pipe([].concat((sess || []).map(h => ['DEL', 's:' + h]), [['DEL', 'ach:' + u.sub]], [['DEL', 'ss:' + u.sub], ['DEL', 'u:' + u.sub], ['DEL', 'p:' + u.sub], ['DEL', 'pr:' + u.sub], ['DEL', 'c:' + u.sub], ['DEL', 'k:' + u.sub], ['DEL', 'ut:' + u.sub], ['DEL', 'lg:' + u.sub], ['DEL', 'cz:' + u.sub]], [['DEL', 'pw:' + u.sub]], u.email ? [['DEL', 'e:' + u.email]] : [], u.username ? [['DEL', 'n:' + u.username]] : []));
+    await pipe([].concat((sess || []).map(h => ['DEL', 's:' + h]), [['DEL', 'ach:' + u.sub]], [['DEL', 'ss:' + u.sub], ['DEL', 'u:' + u.sub], ['DEL', 'p:' + u.sub], ['DEL', 'pr:' + u.sub], ['DEL', 'c:' + u.sub], ['DEL', 'k:' + u.sub], ['DEL', 'ut:' + u.sub], ['DEL', 'lg:' + u.sub], ['DEL', 'cz:' + u.sub]], [['DEL', 'pw:' + u.sub]], u.email ? [['DEL', 'e:' + u.email]] : [], (Array.isArray(u.links) ? u.links : []).filter(x => x && x.email).map(x => ['DEL', 'e:' + x.email]), u.username ? [['DEL', 'n:' + u.username]] : []));
     return json({ ok:true });
   }
 });
