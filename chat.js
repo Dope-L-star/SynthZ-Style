@@ -1016,7 +1016,13 @@ function updateHint(){
     : (!needsConn() ? c : '<a href="#" data-conn>Conecta una IA para empezar</a>');
 }
 inp.addEventListener('input', () => { autoGrow(); updateHint(); });
-inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); send(); } });
+/* en el celular (pantalla táctil) «Enter» da un salto de línea y se envía con el botón de enviar; en el computador Enter envía y Shift+Enter baja de línea */
+const touchKb = () => { try{ return matchMedia('(hover: none) and (pointer: coarse)').matches; }catch(e){ return false; } };
+inp.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
+  if (touchKb() && !(e.ctrlKey || e.metaKey)) return;     /* deja el salto de línea normal */
+  e.preventDefault(); send();
+});
 sendBtn.addEventListener('click', () => { if (Object.keys(busy).length) stopNow(); else send(); });
 
 /* v1.9 · la caja de escribir va mostrando ejemplos (todos distintos) para que se note que ahí se escribe */
@@ -1164,9 +1170,10 @@ function apiMsgs(chat, vision, o = {}){
   const start = Math.max(0, chat.length - keepN);
   const h = chat.slice(start).map((m, j) => {
     if (m.imgId) return null;
-    if (m.role !== 'user' || !m.files || !m.files.length) return { role:m.role, content:(m.role === 'user' && m.ask) || m.content };
+    const dk = m.role === 'user' && m.deck && start + j === chat.length - 1 ? DECK_INSTR : '', noDk = s => String(s || '').split(DECK_INSTR).join('');   /* la orden de «arma una presentación» solo viaja en ESTE mensaje, no en los viejos */
+    if (m.role !== 'user' || !m.files || !m.files.length) return { role:m.role, content:noDk((m.role === 'user' && m.ask) || m.content) + dk };
     const full = o.naive || start + j === lastF;
-    let t = m.ask || m.content || '';
+    let t = noDk(m.ask || m.content || '') + dk;
     m.files.forEach(f => {
       if (f.text) t += full ? '\n\n[Archivo adjunto: ' + f.name + ']\n```\n' + (saver && f.text.length > 12000 ? f.text.slice(0, 12000) + '\n…(recortado por el modo ahorro)' : f.text) + '\n```' : '\n\n[Archivo adjunto antes: ' + f.name + ' (no se reenvía para ahorrar SynXCoin\'s)]';
       else if (f.kind === 'img' && !(vision && m._imgs && full)) t += '\n\n[Imagen adjunta: ' + f.name + (full ? ' (ya no está disponible)' : ' (no se reenvía)') + ']';
@@ -1362,7 +1369,10 @@ function citeLinks(body, sources){
 }
 /* ---------- v2.1 · presentaciones: pides «hazme una presentación de…», la IA arma las diapositivas,
    las ves en vista previa y las descargas como PowerPoint (.pptx) con el estilo de SynthZ ---------- */
-const PPT_RX = /\b(presentaci[oó]n|presentaciones|diapositivas?|power ?point|pptx|slides?)\b/i;
+const PPT_RX = /\b(?:hazme|haz|cr[eé]a(?:me)?|arma(?:me)?|genera(?:me)?|prepara(?:me)?|dise[ñn]a(?:me)?|elabora(?:me)?|redacta(?:me)?|necesito|quiero|dame|p[oó]n(?:me)?|make|create|build|generate|prepare|need|want)\b[^.\n?!]{0,40}\b(?:presentaci[oó]n(?:es)?|presentations?|diapositivas?|power ?point|pptx|slides?|slide ?deck)\b|\b(?:en|como|formato|archivo)\s+(?:un\s+)?(?:power ?point|pptx)\b|\.pptx\b/i;
+const PPT_NO = /\b(consejos|tips|c[oó]mo (?:hacer|dar|hablar|mejorar|preparar|presentar)|nervios|exposici[oó]n oral|practicar|mejorar mi presentaci|presentaci[oó]n personal|presentarme)\b/i;
+/* solo arma diapositivas si de verdad las pides (no porque la palabra aparezca en otra frase) */
+const wantsDeck = t => { t = String(t || ''); return PPT_RX.test(t) && !PPT_NO.test(t); };
 const DECK_INSTR = '\n\n---\nIMPORTANTE: arma una presentación. Responde con UNA frase corta y luego UN solo bloque ```json con este formato exacto: {"titulo":"...","subtitulo":"...","diapositivas":[{"titulo":"...","puntos":["...","..."],"notas":"lo que diría el presentador"}]}. Entre 6 y 10 diapositivas, máximo 5 puntos cortos por diapositiva (máximo 15 palabras cada uno), en el idioma del pedido. La última diapositiva es un cierre o conclusión. No pongas nada después del bloque.';
 function deckFrom(text){
   const t = String(text || ''); let a = t.indexOf('{'), b = t.lastIndexOf('}'); if (a < 0 || b <= a) return null;
@@ -1591,7 +1601,7 @@ async function send(){
     if (g0 !== gen){ card.el.remove(); return; }                /* cambiaste de chat mientras tanto */
     if (!same) msg.ask = plan.pedido;
     if (plan.web || needsWeb(text)){ card.el.remove(); await webPrep(msg, plan.pedido || text); if (g0 !== gen) return; }
-    if (PPT_RX.test(text)){ msg.ask = (msg.ask || plan.pedido || text) + DECK_INSTR; msg.deck = true; }
+    if (wantsDeck(text)) msg.deck = true;
     msg.agent = { pick, name:info(pick).name, tl:light ? 'cosas sencillas (gasta menos)' : tl, ask:same ? '' : plan.pedido };
     st().model.openrouter = pick; save(); paintSel(); renderTop(false); paintAccent();
     let ok = true;
@@ -1613,7 +1623,7 @@ async function send(){
   if (sent.length) msg.files = sent.map(f => ({ name:f.name, kind:f.kind, text:f.text, thumb:f.thumb }));
   const imgs = sent.filter(f => f.kind === 'img').map(f => f.dataUrl);
   if (imgs.length) Object.defineProperty(msg, '_imgs', { value:imgs, enumerable:false, writable:true });
-  if (text && PPT_RX.test(text)){ msg.ask = (msg.ask || text) + DECK_INSTR; msg.deck = true; }
+  if (text && wantsDeck(text)) msg.deck = true;
   chat.push(msg); touchThread(); save();
   if (text && needsWeb(text)){ renderMsgs(); await webPrep(msg, text); save(); }
   let okSent = true;
@@ -1685,10 +1695,25 @@ async function runSolo(onFail, o = {}){
       SZ.TEL.msgs++; SZ.TEL.ai = (r.prov || SZ.provOf(mid)).slice(0, 12);
       st().sx.saved += Math.max(0, msgCost(naive) - msgCost(sent)); save();
       if (canCache && !r.aborted) cachePut(ck, r);
+      /* si la IA se quedó sin espacio (o se cortó la conexión), sigue sola donde quedó: la persona recibe la respuesta completa sin tocar «Continuar» */
+      for (let n = 0; n < 3 && !r.aborted && !r.swapped && g === gen && (r.finish === 'length' || r.cut); n++){
+        const base = r.text, ctl2 = new AbortController(); ctls.add(ctl2);
+        const glue = t => (!base || /\s$/.test(base) || /^[\s.,;:!?)\]]/.test(t) || !/[.!?:;)\]*_`]$/.test(base)) ? '' : ' ';
+        let r2 = null;
+        try{
+          r2 = await SZ.askStream(OR, [...sent, { role:'assistant', content:base }, { role:'user', content:'Continúa exactamente donde te quedaste: sigue desde la última palabra, sin repetir nada de lo anterior, sin saludar y sin decir que continúas. Escribe solo lo que falta.' }],
+            { model:mid, maxTokens:0, signal:ctl2.signal, onReason:t => W.reason(t) }, txt => { mount(); const full = base + glue(txt) + txt; W.write(full); if (rv) rv.push(full); });
+        }catch(e){ r2 = null; }
+        finally{ ctls.delete(ctl2); }
+        if (!r2 || r2.aborted && !r2.text) break;
+        addUsage(r2.prov || SZ.provOf(mid), r2.prompt, r2.completion, true, { est:r2.est, free:/:free$/.test(mid) || r2.prov === 'synthz', rid:r2.rid });
+        if (/^\(La IA devolvió una respuesta vacía\.\)$/.test(r2.text)) break;
+        r = Object.assign({}, r, { text:base + glue(r2.text) + r2.text, prompt:r.prompt + r2.prompt, completion:r.completion + r2.completion, ms:r.ms + r2.ms, finish:r2.finish, cut:r2.cut, aborted:r2.aborted, est:r.est || r2.est });
+      }
     }
     if (g !== gen){ if (rv) rv.skip(); return; }
     const tail = r.aborted ? ' · detenido' : r.cut ? ' · se cortó la conexión' : r.finish === 'length' ? ' · se cortó porque era muy larga (toca «Continuar»)' : '';
-    const who = r.swapped ? ' · se acabó tu saldo de Puter este mes; respondió ' + (r.real || 'otra IA') : mid === 'sz:auto' && r.real ? ' · respondió ' + r.real : '';
+    const who = r.swapped ? ' · se acabó tu saldo de Puter este mes; respondió ' + (r.real || 'otra IA') : '';
     W.write(r.text); W.finish({ ms:r.ms, real:r.real || '' });
     const work = { ms:Math.round(r.ms || 0), words:W.state.words, real:r.real || '', steps:W.state.steps.map(([a, b]) => [Math.round(a), b]), reason:(r.reasoning || '').slice(0, 4000) || undefined };
     const msg = { role:'assistant', content:r.text, work, meta:metaOf(r) + SZ.coinNote(mid, r) + tail + who + (r.via ? ' · vía ' + r.via + ' (prueba de SynthZ)' : ''), model:mid, cont: !!(r.cut || r.finish === 'length') || undefined };
@@ -1804,7 +1829,7 @@ function cmpJob(mid, C){
     if (!live()) return;
     mount(); if (!card) return;
     rv.push(r.text); await rv.end();
-    finishCard(C, card, r.text, metaOf(r) + SZ.coinNote(mid, r) + (r.cached ? ' · respuesta guardada, no gastó nada' : '') + (r.aborted ? ' · detenido' : '') + (r.swapped ? ' · se acabó tu saldo de Puter este mes; respondió ' + (r.real || 'otra IA') : /^sz:/.test(mid) && r.real && mid === 'sz:auto' ? ' · respondió ' + r.real : ''));
+    finishCard(C, card, r.text, metaOf(r) + SZ.coinNote(mid, r) + (r.cached ? ' · respuesta guardada, no gastó nada' : '') + (r.aborted ? ' · detenido' : '') + (r.swapped ? ' · se acabó tu saldo de Puter este mes; respondió ' + (r.real || 'otra IA') : ''));
     C.done.push({ card, mid, ms:r.ms, ttft:r.ttft || r.ms });
   }).catch(err => {
     if (err && err.gone){ SZ.markBad(mid); setCatalog(cat.list.filter(m => m.id !== mid), cat.t, cat.status); err.message = info(mid).name + ' no está funcionando ahora mismo: la escondí de la lista. Quítala y suma otra.'; }

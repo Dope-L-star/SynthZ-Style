@@ -91,7 +91,13 @@ function updateHint(){
     : (!needsConn() ? c : '<a href="#" data-conn>Conecta una IA para empezar</a>');
 }
 inp.addEventListener('input', () => { autoGrow(); updateHint(); });
-inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); send(); } });
+/* en el celular (pantalla táctil) «Enter» da un salto de línea y se envía con el botón de enviar; en el computador Enter envía y Shift+Enter baja de línea */
+const touchKb = () => { try{ return matchMedia('(hover: none) and (pointer: coarse)').matches; }catch(e){ return false; } };
+inp.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
+  if (touchKb() && !(e.ctrlKey || e.metaKey)) return;     /* deja el salto de línea normal */
+  e.preventDefault(); send();
+});
 sendBtn.addEventListener('click', () => { if (Object.keys(busy).length) stopNow(); else send(); });
 
 /* v1.9 · la caja de escribir va mostrando ejemplos (todos distintos) para que se note que ahí se escribe */
