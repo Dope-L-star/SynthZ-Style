@@ -31,28 +31,30 @@
   <section class="gate" id="gate"><div class="tcard"><div class="tn">PULSEM</div><div class="tb"><h3>Abriendo Pulsem…</h3><p>Un momento.</p></div></div></section>
 
   <main id="app" hidden>
+    <nav class="dnav" id="dNav" aria-label="Secciones de Pulsem"></nav>
+    <div class="dmain"><div class="dhead"><h1 id="dTitle">Resumen</h1><p id="dSub">Cómo está SynthZ ahora mismo.</p></div>
     <div class="grid">
-      <section class="card w12" id="cHealth">
+      <section class="card w12" id="cHealth" data-view="res">
         <h2>¿Cómo está SynthZ?<small>salud de la página</small></h2>
         <div class="health"><div class="lamp" id="hLamp"></div><div class="hinfo"><h3 id="hTitle"></h3><p id="hText"></p><div class="hwhy" id="hWhy"></div></div></div>
         <svg class="ekgbig" viewBox="0 0 600 46" preserveAspectRatio="none" aria-hidden="true"><path d="M0 26h120l10-14 10 26 8-30 9 30 7-12h90l10-10 10 20 8-24 9 24 7-10h112l10-14 10 26 8-30 9 30 7-12h56"/></svg>
         <div class="kpis" id="hKpi"></div>
       </section>
 
-      <section class="card w7" style="--cg:#8fb0ff">
+      <section class="card w7" style="--cg:#8fb0ff" data-view="res" id="cOnline">
         <h2>En línea ahora<small id="oN"></small></h2>
         <p class="lead">Quién está usando SynthZ en este momento. Arriba van los que tienen problemas.</p>
         <div class="list" id="oList"></div>
       </section>
 
-      <section class="card w5" style="--cg:#ff8f7a">
+      <section class="card w5" style="--cg:#ff8f7a" data-view="res" id="cTrouble">
         <h2>Dificultades<small>última hora</small></h2>
         <p class="lead" id="tSum"></p>
         <div class="chips" id="tChips"></div>
         <div class="list" id="tList"></div>
       </section>
 
-      <section class="card w12" style="--cg:#e6b65f">
+      <section class="card w12" style="--cg:#e6b65f" data-view="res" id="cLoad">
         <h2>Carga<small id="lNow"></small></h2>
         <p class="lead">Mensajes por minuto con las IAs conectadas (últimos 30 min) y por día (últimos 7 días).</p>
         <div class="bars" id="lBars"></div>
@@ -60,7 +62,7 @@
         <div class="days" id="lDays"></div>
       </section>
 
-      <section class="card w12" style="--cg:#c9566c">
+      <section class="card w12" style="--cg:#c9566c" data-view="keys" id="cKeys">
         <h2>Llaves de las IAs conectadas<small id="kN"></small></h2>
         <p class="lead">Las llaves gratis de Prime, ZFlow y Symmetrix se juntan y se comparten con todos. Nunca salen del servidor ni se muestran completas.</p>
         <div class="tbtn" style="justify-content:flex-end;margin:-6px 0 10px"><button class="mini" type="button" id="kAll" hidden>Probar todas</button></div>
@@ -71,20 +73,20 @@
         <div class="note">💳 Solo planes <b>gratis</b>, sin tarjeta. Nunca actives facturación ni «pago por uso»: SynthZ solo usa modelos gratis y bloquea los de pago. En OpenRouter, en <a class="lnk" href="https://openrouter.ai/settings/privacy" target="_blank" rel="noopener noreferrer">settings/privacy</a> permite los modelos gratis (si no, los bloquea).</div>
       </section>
 
-      <section class="card w12" style="--cg:#7fd6b8">
+      <section class="card w12" style="--cg:#7fd6b8" data-view="set" id="cSet">
         <h2>Ajustes<small>Prime y ZFlow</small></h2>
         <p class="lead" id="setNote" hidden>Puedes ver los ajustes; solo Prime y ZFlow pueden cambiarlos.</p>
         <div class="setg" id="setG"></div>
       </section>
 
-      <section class="card w12" style="--cg:#e6b65f">
+      <section class="card w12" style="--cg:#e6b65f" data-view="fb" id="cFb">
         <h2>Comentarios de la beta<small id="fN"></small></h2>
         <p class="lead">Lo que escriben en «Cuéntanos qué mejorar». Márcalos como vistos o resueltos.</p>
         <div class="chips" id="fChips"></div>
         <div class="list" id="fList" style="max-height:360px"></div>
       </section>
 
-      <section class="card w12" style="--cg:#b8c4ff">
+      <section class="card w12" style="--cg:#b8c4ff" data-view="help" id="cHelp">
         <h2>Ayuda<small id="hN"></small></h2>
         <p class="lead">Pedidos de ayuda de los Synthers. Abre uno para responder; con «Contactar» (arriba) le escribes tú primero a alguien.</p>
         <div class="list" id="hList" style="max-height:300px"></div>
@@ -94,6 +96,7 @@
           <form class="hform" id="hForm"><label class="field"><input type="text" id="hInp" maxlength="1000" placeholder="Responde como equipo…" autocomplete="off"></label><button class="btn sm" type="submit">Enviar</button></form>
         </div>
       </section>
+    </div>
     </div>
   </main>
 </div>

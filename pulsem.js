@@ -83,7 +83,7 @@ function renderHealth(){
   $('#hLamp').innerHTML = '<b>' + L[3] + '</b>';
   $('#hTitle').textContent = L[1]; $('#hText').textContent = L[2];
   $('#hWhy').innerHTML = h.why.map(w => '<span>' + esc(w) + '</span>').join('');
-  const K = [[(P.online || []).length, 'en línea ahora'], [d0.req || 0, 'mensajes hoy'], [d0.tok || 0, 'palabras usadas hoy · IAs conectadas'], [(d0.err || 0) + (d0.fail || 0), 'errores de IA hoy'], [d0.req ? ((d0.ms || 0) / d0.req / 1000) : 0, 'segundos por respuesta']];
+  const K = [[(P.online || []).length, 'en línea ahora'], [d0.req || 0, 'mensajes hoy'], [SZ.coinsOf(d0.tok || 0), 'SynXCoin\'s gastadas hoy · IAs conectadas'], [(d0.err || 0) + (d0.fail || 0), 'errores de IA hoy'], [d0.req ? ((d0.ms || 0) / d0.req / 1000) : 0, 'segundos por respuesta']];
   $('#hKpi').innerHTML = K.map(([v, l], i) => '<div class="kpi"><b data-k="' + i + '">0</b><span>' + l + '</span></div>').join('');
   K.forEach(([v], i) => { const b = $('[data-k="' + i + '"]'); if (i === 4){ b.textContent = v ? v.toFixed(1).replace('.', ',') : '–'; } else SZ.countTo(b, v); });
   { const U = P.use || {}, B = [['Vercel · llamadas al servidor', U.req || 0, 100000], ['Upstash · comandos de datos', U.cmd || 0, 500000]];
@@ -193,7 +193,7 @@ $('#kAll').addEventListener('click', e => keysPost({ action:'check' }, e.current
 function renderSettings(){
   const can = !!P.canEdit, g = (T && T.google) || {}, dv = (T && T.drive) || {};
   const src = s => s === 'vercel' ? ' · desde Vercel' : s === 'panel' ? ' · desde Pulsem' : '';
-  $('#setG').innerHTML = '<div class="set"><b>Tope diario por persona</b><p>Cuánto puede usar cada persona al día con las IAs conectadas (Puter no cuenta). 800 ≈ 1 mensaje. Entre 1.000 y 500.000.</p>' + (can ? '<label class="field"><input type="number" min="1000" max="500000" step="1000" id="sLimit" value="' + (P.dayLimit || 20000) + '"></label><div class="acts" style="margin-top:8px"><button class="btn sm" type="button" data-set="limit">Guardar</button></div>' : '<div class="val">' + fmt(P.dayLimit || 20000) + ' SynXCoin\'s</div>') + '</div>'
+  $('#setG').innerHTML = '<div class="set"><b>Tope diario por persona</b><p>Cuánto puede usar cada persona al día con las IAs conectadas (Puter no cuenta). Se guarda en tokens: ' + fmt(P.dayLimit || 20000) + ' tokens ≈ ' + SZ.coinsFmt(SZ.coinsOf(P.dayLimit || 20000)) + ' SynXCoin\'s (1 SynXCoin = 1 palabra; una palabra ≈ 4/3 de token). Entre 1.000 y 500.000.</p>' + (can ? '<label class="field"><input type="number" min="1000" max="500000" step="1000" id="sLimit" value="' + (P.dayLimit || 20000) + '"></label><div class="acts" style="margin-top:8px"><button class="btn sm" type="button" data-set="limit">Guardar</button></div>' : '<div class="val">' + SZ.coinsFmt(SZ.coinsOf(P.dayLimit || 20000)) + ' SynXCoin\'s</div>') + '</div>'
     + '<div class="set"><b>Imágenes al día por persona</b><p>Cuántas imágenes puede crear cada cuenta al día con Pollinations (el equipo tiene al menos 20). 0 = pausadas. No gasta Puter ni el límite del chat.</p>' + (can ? '<label class="field"><input type="number" min="0" max="50" step="1" id="sImg" value="' + (T && T.imgDay != null ? T.imgDay : 3) + '"></label><div class="acts"><button class="mini" type="button" data-set="img">Guardar</button></div>' : '<p><b>' + (T && T.imgDay != null ? T.imgDay : 3) + '</b> al día</p>') + '</div>'
     + '<div class="set"><b>Entrar con Google</b><p>El «ID de cliente» de Google Cloud (es público, no es una contraseña). Sin cobros.</p>' + (can ? '<label class="field"><input type="text" id="sGoogle" placeholder="123456-abc….apps.googleusercontent.com" value="' + esc(g.clientId || '') + '" spellcheck="false"' + (g.source === 'vercel' ? ' disabled' : '') + '></label><div class="acts" style="margin-top:8px"><button class="btn sm" type="button" data-set="google"' + (g.source === 'vercel' ? ' disabled' : '') + '>Guardar</button><small style="color:var(--mute)">' + (g.clientId ? 'activado' + src(g.source) : 'sin activar') + '</small></div>' : '<div class="val">' + (g.clientId ? esc(g.clientId.slice(0, 18)) + '…' + src(g.source) : 'sin activar') + '</div>') + '</div>'
     + '<div class="set"><b>Google Drive</b><p>Opcional: otro ID solo para Drive. Si lo dejas vacío, se usa el de «Entrar con Google». Activa la Drive API y el permiso <code>drive.appdata</code>.</p>' + (can ? '<label class="field"><input type="text" id="sDrive" placeholder="(opcional)" value="' + esc(dv.clientId || '') + '" spellcheck="false"' + (dv.source === 'vercel' ? ' disabled' : '') + '></label><div class="acts" style="margin-top:8px"><button class="btn sm" type="button" data-set="drive"' + (dv.source === 'vercel' ? ' disabled' : '') + '>Guardar</button><small style="color:var(--mute)">' + (dv.clientId ? 'activado' + src(dv.source) : g.clientId ? 'usa el de Google' : 'sin activar') + '</small></div>' : '<div class="val">' + (dv.clientId ? 'activado' + src(dv.source) : 'usa el de Google') + '</div>') + '</div>';
@@ -288,3 +288,34 @@ function render(){
 load();
 })();
 
+
+/* ===== v2.4 · Pulsem como un tablero común: menú a la izquierda y una sección a la vez ===== */
+(() => {
+const nav = document.getElementById('dNav'); if (!nav) return;
+const I = d => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
+const V = [
+  ['res', 'Resumen', 'Cómo está SynthZ ahora mismo: salud, quién está en línea, dificultades y carga.', I('<path d="M4 13h4l2-5 4 10 2-5h4"/>'), null],
+  ['keys', 'Llaves', 'Las llaves gratis que comparten las IAs conectadas, y las tuyas.', I('<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/>'), null],
+  ['set', 'Ajustes', 'Tope diario, imágenes, cuentas y aviso de mantenimiento.', I('<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>'), null],
+  ['fb', 'Comentarios', 'Lo que escriben en «Cuéntanos qué mejorar».', I('<path d="M5 5h14v10H9l-4 4z"/>'), 'fN'],
+  ['help', 'Ayuda', 'Pedidos de ayuda de los Synthers.', I('<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5M12 17h.01"/>'), 'hN']];
+nav.innerHTML = '<p class="dn-l">Pulsem</p>' + V.map(([k, l, , ic]) => '<button type="button" class="dn-i" data-v="' + k + '">' + ic + '<span>' + l + '</span><i class="dn-b" data-b="' + k + '" hidden></i></button>').join('')
+  + '<a class="dn-i dn-x" href="chat.html">' + I('<path d="M4 5h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 4V7a2 2 0 0 1 2-2z"/>') + '<span>Ir a SynthFlow</span></a>';
+let cur = 'res';
+function show(k, quiet){
+  if (!V.some(v => v[0] === k)) k = 'res';
+  cur = k; try{ localStorage.setItem('synthz:pulsemView', k); }catch(e){}
+  document.querySelectorAll('#app [data-view]').forEach(s => { s.hidden = s.dataset.view !== k; });
+  nav.querySelectorAll('[data-v]').forEach(b => b.setAttribute('aria-current', String(b.dataset.v === k)));
+  const v = V.find(x => x[0] === k); document.getElementById('dTitle').textContent = v[1]; document.getElementById('dSub').textContent = v[2];
+  if (!quiet) window.scrollTo({ top:0, behavior:'smooth' });
+}
+nav.addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (b) show(b.dataset.v); });
+let k0 = 'res'; try{ k0 = localStorage.getItem('synthz:pulsemView') || 'res'; }catch(e){} show(k0, true);
+/* los numeritos del menú salen de lo que ya dice cada sección (comentarios nuevos, ayuda esperando, dificultades) */
+function badges(){
+  V.forEach(([k, , , , src]) => { const b = nav.querySelector('[data-b="' + k + '"]'), el = src && document.getElementById(src); if (!b) return; const n = el ? parseInt(el.textContent, 10) || 0 : 0; b.hidden = !n; b.textContent = n; });
+  const t = document.getElementById('tSum'), br = nav.querySelector('[data-b="res"]'), n = t ? parseInt(t.textContent, 10) || 0 : 0; if (br){ br.hidden = !n; br.textContent = n; br.classList.add('warn'); }
+}
+{ const mo = new MutationObserver(badges); ['fN', 'hN', 'tSum'].forEach(id => { const el = document.getElementById(id); if (el) mo.observe(el, { subtree:true, childList:true, characterData:true }); }); badges(); }
+})();
