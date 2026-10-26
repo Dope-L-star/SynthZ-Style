@@ -663,77 +663,8 @@ else {
   videoIntro().then(played => intro({ afterVideo:played })).catch(finishIntro).finally(() => clearTimeout(failsafe));
 }
 
-/* ---------- v15: barrita lateral · al abrirla, las palabras del menú de arriba caen en ella (con vidrio) ---------- */
-(function(){
-  const rail = $('#rail'), tog = $('#railTog'); if (!rail) return;
-  const wide = () => matchMedia('(min-width:761px)').matches;
-  const KEYS = ['como', 'modos', 'usos', 'faq'];
-  const pairs = () => KEYS.map(k => [$('.navlinks a[data-sec="' + k + '"]'), $('.rail .rbtn[data-sec="' + k + '"] .rl')]).filter(p => p[0] && p[1]);
-  const store = open => { try{ const o = JSON.parse(localStorage.getItem('synthz:rail')) || {}; o.open = open; localStorage.setItem('synthz:rail', JSON.stringify(o)); }catch(e){} };
-  let flying = false;
-  function marks(open){ tog.setAttribute('aria-expanded', String(open)); tog.setAttribute('aria-label', open ? 'Cerrar la barra' : 'Abrir la barra'); tog.dataset.tip = open ? 'Cerrar la barra' : 'Abrir la barra'; }
-  function ghost(text){ const g = document.createElement('div'); g.className = 'navfly'; g.textContent = text; document.body.appendChild(g); return g; }
-  function set(open, animate){
-    marks(open);
-    const navShown = getComputedStyle($('.navlinks')).display !== 'none';
-    if (!animate || !wide() || !navShown || SZ.reduce || root.classList.contains('noanim')){ rail.classList.toggle('open', open); document.body.classList.toggle('railup', open && navShown && wide()); return; }
-    if (flying) return; flying = true;
-    const P = pairs(), E = 'cubic-bezier(.65,0,.35,1)';
-    if (open){
-      const from = P.map(([a]) => a.getBoundingClientRect());
-      P.forEach(([, l]) => l.classList.add('wait'));
-      rail.classList.add('open'); document.body.classList.add('railup');
-      P.forEach(([a, l], i) => {
-        const br = l.parentElement.getBoundingClientRect(), r0 = from[i], g = ghost(a.textContent), gw = g.offsetWidth, gh = g.offsetHeight;
-        const x0 = r0.left + (r0.width - gw) / 2, y0 = r0.top + (r0.height - gh) / 2, x1 = br.left + 32, y1 = br.top + (br.height - gh) / 2;
-        const mx = x0 + (x1 - x0) * .55, my = y1 + (y0 - y1) * .25 + 46;
-        g.animate([
-          { transform:'translate(' + x0 + 'px,' + y0 + 'px) scale(1) rotate(0deg)' },
-          { transform:'translate(' + mx + 'px,' + my + 'px) scale(1.1) rotate(' + (i % 2 ? 5 : -5) + 'deg)', offset:.5 },
-          { transform:'translate(' + x1 + 'px,' + (y1 + 6) + 'px) scale(.98) rotate(0deg)', offset:.85 },
-          { transform:'translate(' + x1 + 'px,' + y1 + 'px) scale(1) rotate(0deg)', background:'rgba(255,255,255,0)', borderColor:'rgba(255,255,255,0)', boxShadow:'0 0 0 rgba(0,0,0,0)' }
-        ], { duration:900, delay:i * 95, easing:E, fill:'both' }).onfinish = () => {
-          l.classList.remove('wait');
-          g.animate([{ opacity:1 }, { opacity:0 }], { duration:260, fill:'forwards' }).onfinish = () => g.remove();
-          if (i === P.length - 1) flying = false;
-        };
-      });
-    } else {
-      const P2 = P.map(([a, l]) => [a, l, l.getBoundingClientRect()]);
-      P2.forEach(([, l]) => l.classList.add('wait'));
-      rail.classList.remove('open');
-      P2.forEach(([a, l, r0], i) => {
-        const g = ghost(a.textContent), gw = g.offsetWidth, gh = g.offsetHeight, ar = a.getBoundingClientRect();
-        const x0 = r0.left - 15, y0 = r0.top + (r0.height - gh) / 2, x1 = ar.left + (ar.width - gw) / 2, y1 = ar.top + (ar.height - gh) / 2;
-        const mx = x0 + (x1 - x0) * .45, my = Math.min(y0, y1) - 30;
-        g.animate([
-          { transform:'translate(' + x0 + 'px,' + y0 + 'px) scale(.96)', background:'rgba(255,255,255,0)', borderColor:'rgba(255,255,255,0)' },
-          { transform:'translate(' + mx + 'px,' + my + 'px) scale(1.08) rotate(' + (i % 2 ? -4 : 4) + 'deg)', offset:.5 },
-          { transform:'translate(' + x1 + 'px,' + y1 + 'px) scale(1)' }
-        ], { duration:820, delay:(P2.length - 1 - i) * 80, easing:E, fill:'both' }).onfinish = () => {
-          l.classList.remove('wait');
-          if (i === 0){ document.body.classList.remove('railup'); flying = false; }
-          g.animate([{ opacity:1 }, { opacity:0 }], { duration:300, fill:'forwards' }).onfinish = () => g.remove();
-        };
-      });
-    }
-  }
-  /* en la portada la barrita siempre empieza cerrada (solo SynthFlow recuerda cómo la dejaste) */
-  set(false, false);
-  tog.addEventListener('click', () => { const o = !rail.classList.contains('open'); set(o, true); });
-  addEventListener('resize', () => { if (!wide()) document.body.classList.remove('railup'); else if (rail.classList.contains('open')) document.body.classList.add('railup'); });
-  $('#railCfg').addEventListener('click', () => $('#cfgBtn').click());
-  $('#railHelp').addEventListener('click', () => $('#helpBtn').click());
-  $('#railMe').addEventListener('click', () => $('#accBtn').click());
-  $('#limPill').addEventListener('click', () => { const u = $('#consumo'); if (u) u.scrollIntoView({ behavior:SZ.reduce ? 'auto' : 'smooth' }); });
-  function paintMe(){
-    const b = $('#railMe'), A = SZ.ACC, u = A.user || {};
-    if (A.ready){ b.className = 'rbtn rme'; b.dataset.tip = SZ.accName(); b.innerHTML = SZ.myAvatar() + '<span class="rl"><b>' + esc(SZ.accName().slice(0, 22)) + '</b><small>' + esc((SZ.ROLE_NAME || {})[u.role || 'user'] || 'Synther') + '</small></span>'; }
-    else { b.className = 'rbtn rme out'; b.dataset.tip = 'Entrar a tu cuenta'; b.innerHTML = '<span class="av-me" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span><span class="rl"><b>Entrar</b><small>guarda tus chats</small></span>'; }
-    b.style.setProperty('--i', 4);
-  }
-  paintMe(); SZ.accHooks.push(paintMe);
-})();
+/* v2.5 · ya no hay barrita lateral en la portada: todo está en el menú de arriba */
+$('#limPill').addEventListener('click', () => { const u = $('#consumo'); if (u) u.scrollIntoView({ behavior:SZ.reduce ? 'auto' : 'smooth' }); });
 })();
 
 /* v2.2 · Ajustes › IAs y memoria en la portada, y el «!» de novedades sobre SynthonIA */
@@ -746,38 +677,31 @@ setTimeout(() => { if (!document.querySelector('.szm, #vintro, #intro')) SZ.what
 const { $, $$, reduce } = SZ;
 const q = s => document.querySelector(s);
 
-/* SynthonIA de cuerpo entero: cabeza (su carita de siempre), torso de vidrio con el núcleo cian, brazo que saluda y su anillo de luz */
-function body(mood, size){
-  return '<div class="sb-h">' + SZ.face(mood || 'feliz', size || 150) + '</div>'
-    + '<svg class="sb-t" viewBox="0 0 200 170" aria-hidden="true">'
-    + '<defs><radialGradient id="sbTor" cx=".38" cy=".25" r=".9"><stop offset="0" stop-color="#fff2fb"/><stop offset=".4" stop-color="#f0b3e4"/><stop offset=".78" stop-color="#a47ff0"/><stop offset="1" stop-color="#6c48cf"/></radialGradient>'
-    + '<radialGradient id="sbCore" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#e9ffff"/><stop offset=".45" stop-color="#3de0ff"/><stop offset="1" stop-color="#3de0ff" stop-opacity="0"/></radialGradient></defs>'
-    + '<rect x="82" y="0" width="36" height="16" rx="8" fill="#c79cf2"/>'
-    + '<path class="sb-arm l" d="M64 34q-26 16-30 52" stroke="url(#sbTor)" stroke-width="20" stroke-linecap="round" fill="none"/>'
-    + '<g class="sb-arm r"><path d="M136 34q26-14 38-46" stroke="url(#sbTor)" stroke-width="20" stroke-linecap="round" fill="none"/><circle cx="175" cy="-14" r="13" fill="url(#sbTor)"/></g>'
-    + '<rect x="56" y="12" width="88" height="96" rx="40" fill="url(#sbTor)"/>'
-    + '<path d="M70 30q12-10 30-10" stroke="#fff" stroke-opacity=".7" stroke-width="5" stroke-linecap="round" fill="none"/>'
-    + '<circle class="sb-core" cx="100" cy="62" r="20" fill="url(#sbCore)"/>'
-    + '<path d="M72 112h56l-6 22H78z" fill="#b48cf0"/>'
-    + '</svg><i class="sb-ring"></i><i class="sb-ring r2"></i>';
-}
+/* v2.5 · SynthonIA de cuerpo entero, igual al boceto (cabeza 45 %, torso 30 %, base 25 %) */
+const body = (mood, pose, size) => SZ.synBody(mood, pose, size);
 const hb = q('#heroBot');
 if (hb){
-  hb.innerHTML = body('feliz', 150);
-  /* detalle: si la tocas, guiña y suelta un destello */
+  hb.innerHTML = body('feliz', 'saluda', 300);
+  /* después del saludo, señala la tarjeta de ejemplo (como en el boceto) */
+  const calm = () => { if (!hb.matches(':hover')) hb.innerHTML = body('neutral', innerWidth > 980 ? 'senalaL' : 'presenta', 300); };
+  setTimeout(calm, 3800);
+  /* detalle: si la tocas, se emociona, celebra y suelta un destello */
   hb.parentElement.style.pointerEvents = 'auto';
   hb.addEventListener('click', () => {
-    hb.querySelector('.sb-h').innerHTML = SZ.face('guino', 150); hb.classList.remove('boop'); void hb.offsetWidth; hb.classList.add('boop');
-    try{ SZ.SND && SZ.SND.blip && SZ.SND.blip('feliz'); }catch(e){}
-    setTimeout(() => { hb.querySelector('.sb-h').innerHTML = SZ.face('feliz', 150); }, 1400);
+    hb.innerHTML = body('celebrando', 'celebra', 300); hb.classList.remove('boop'); void hb.offsetWidth; hb.classList.add('boop');
+    try{ SZ.SND && SZ.SND.blip && SZ.SND.blip('feliz'); SZ.burst && SZ.burst(hb); }catch(e){}
+    setTimeout(() => { hb.innerHTML = body('feliz', 'saluda', 300); setTimeout(calm, 2600); }, 1600);
   });
-  /* detalle: los ojos siguen al mouse (muy poquito) */
+  /* detalle: los ojos y la cabeza siguen al mouse */
   if (!reduce && matchMedia('(pointer: fine)').matches){
     let raf = 0, ex = 0, ey = 0;
-    addEventListener('pointermove', e => { const r = hb.getBoundingClientRect(); ex = Math.max(-1, Math.min(1, (e.clientX - r.left - r.width / 2) / 500)); ey = Math.max(-1, Math.min(1, (e.clientY - r.top - 80) / 500)); if (!raf) raf = requestAnimationFrame(() => { raf = 0; hb.style.setProperty('--ex', (ex * 4).toFixed(2) + 'px'); hb.style.setProperty('--ey', (ey * 3).toFixed(2) + 'px'); }); }, { passive:true });
+    addEventListener('pointermove', e => { const r = hb.getBoundingClientRect(); ex = Math.max(-1, Math.min(1, (e.clientX - r.left - r.width / 2) / 500)); ey = Math.max(-1, Math.min(1, (e.clientY - r.top - 90) / 500)); if (!raf) raf = requestAnimationFrame(() => { raf = 0; hb.style.setProperty('--ex', (ex * 3.2).toFixed(2) + 'px'); hb.style.setProperty('--ey', (ey * 2.4).toFixed(2) + 'px'); hb.style.setProperty('--tilt', (ex * 4).toFixed(2) + 'deg'); }); }, { passive:true });
   }
 }
-const rf = q('#readyFace'); if (rf) rf.innerHTML = body('celebrando', 120);
+/* chispitas doradas que flotan alrededor de SynthonIA */
+const dust = q('#heroDust');
+if (dust && !reduce) dust.innerHTML = Array.from({ length:26 }, (_, i) => '<i style="--x:' + (Math.random() * 100).toFixed(1) + '%;--y:' + (Math.random() * 100).toFixed(1) + '%;--t:' + (3 + Math.random() * 5).toFixed(1) + 's;--dl:-' + (Math.random() * 6).toFixed(1) + 's;--s:' + (1.5 + Math.random() * 2.5).toFixed(1) + 'px"></i>').join('');
+const rf = q('#readyFace'); if (rf) rf.innerHTML = body('celebrando', 'celebra', 230);
 
 /* «¿Qué es estar synthonized?»: una onda de estática que, al pasar, se vuelve una onda limpia */
 const cv = q('#szWave');
@@ -821,4 +745,123 @@ if (hub){ const place = () => { const r = hub.getBoundingClientRect(), R = Math.
 /* detalle: el «Ver demo» baja con suavidad hasta «Así de fácil» y lo hace brillar un momento */
 const demo = q('#demoBtn');
 if (demo) demo.addEventListener('click', e => { const c = q('#como'); if (!c) return; e.preventDefault(); c.scrollIntoView({ behavior:reduce ? 'auto' : 'smooth' }); setTimeout(() => { c.classList.remove('glint'); void c.offsetWidth; c.classList.add('glint'); }, 650); });
+})();
+/* ===== v2.5 · SynthonIA viva: cuando sales de la portada te acompaña por toda la página.
+   Vuela de un lado al otro según la sección, cambia de cara y de pose, dice una frase corta,
+   te mira con los ojos y, si la tocas, abre su ventanita para hablar contigo. ===== */
+(() => {
+const { $, reduce } = SZ;
+if (!SZ.synBody) return;
+const STOPS = {
+  como:     { side:'r', mood:'feliz',      pose:'saluda',   say:'¡Así de fácil! Pregunta lo que sea.' },
+  modos:    { side:'l', mood:'neutral',    pose:'senala',   say:'Si no sabes cuál elegir, déjalo en Automático.' },
+  usos:     { side:'r', mood:'creando',    pose:'presenta', say:'Estudia, programa o crea ideas conmigo.' },
+  comparar: { side:'l', mood:'pensando',   pose:'piensa',   say:'¿Cuál tiene más Flow? Tú decides.', at:'.blind h3' },
+  conectar: { side:'r', mood:'feliz',      pose:'presenta', say:'Tu IA ya está lista, sin configurar nada.' },
+  chat:     { side:'l', mood:'hablando',   pose:'senala',   say:'Escribe aquí y te llevo a SynthFlow.' },
+  consumo:  { side:'r', mood:'analizando', pose:'escribe',  say:'Aquí ves cuánto te queda hoy.' },
+  faq:      { side:'l', mood:'escuchando', pose:'escucha',  say:'¿Tienes dudas? Tócame y pregúntame.' }
+};
+const el = document.createElement('div');
+el.id = 'szRoam'; el.className = 'szroam'; el.setAttribute('role', 'button'); el.tabIndex = 0;
+el.setAttribute('aria-label', 'SynthonIA: tócala para hablar con ella');
+el.innerHTML = '<span class="rb-fig"></span><span class="rb-say" aria-live="polite"></span>';
+document.body.appendChild(el);
+const fig = el.querySelector('.rb-fig'), bub = el.querySelector('.rb-say');
+const hero = document.getElementById('top');
+let cur = '', said = new Set(), sayT = 0, heroOn = true, posed = '';
+const small = () => matchMedia('(max-width:760px)').matches;
+function paint(k){
+  const S = STOPS[k]; if (!S) return;
+  const side = el.dataset.side || S.side, key = S.mood + S.pose + side;
+  if (key !== posed){ fig.innerHTML = SZ.synBody(S.mood, S.pose === 'senala' ? (side === 'l' ? 'senala' : 'senalaL') : S.pose, small() ? 96 : 132); posed = key; }
+}
+/* en PC se para junto al título de cada sección (del lado con más espacio); en el celular, en una esquina */
+function anchor(k){
+  const S = STOPS[k], sec = document.getElementById(k); if (!S || !sec) return;
+  if (small()){ el.classList.remove('abs'); el.style.left = el.style.top = ''; el.dataset.side = S.side; return; }
+  const h = (S.at && sec.querySelector(S.at)) || sec.querySelector('.head h2') || sec.querySelector('h2'); if (!h) return;
+  /* el título se escribe letra por letra: se mide el texto completo (no lo que ya se ve) */
+  const cs = getComputedStyle(h), R = h.getBoundingClientRect(), fs = parseFloat(cs.fontSize) || 40;
+  const cx = (anchor.cv || (anchor.cv = document.createElement('canvas'))).getContext('2d'); cx.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+  const txt = h.textContent.trim(), ls = parseFloat(cs.letterSpacing) || 0, tw = Math.min(R.width, cx.measureText(txt).width + ls * txt.length);
+  const lh = Math.min(R.height, parseFloat(cs.lineHeight) || fs * 1.1), al = cs.textAlign;
+  const l0 = al === 'center' ? R.left + (R.width - tw) / 2 : al === 'right' || al === 'end' ? R.right - tw : R.left;
+  const t = { left:l0, right:l0 + tw, top:R.top, height:lh };
+  const w = el.offsetWidth || 132, H = el.offsetHeight || 176, gap = 26;
+  const roomR = innerWidth - t.right - gap, roomL = t.left - gap;
+  let side = S.side === 'r' ? (roomR >= w ? 'r' : roomL >= w ? 'l' : 'r') : (roomL >= w ? 'l' : roomR >= w ? 'r' : 'l');
+  let x = side === 'r' ? t.right + gap : t.left - gap - w;
+  x = Math.max(8, Math.min(innerWidth - w - 8, x));
+  el.classList.add('abs'); el.dataset.side = side;
+  el._x = Math.round(x + scrollX); el._top = Math.round(t.top + scrollY + t.height / 2 - H * .42); stick();
+}
+/* si el título ya subió, se queda flotando arriba (debajo del menú) en vez de esconderse */
+function stick(){
+  if (!el.classList.contains('abs') || el._top == null) return;
+  const lim = 92, up = el._top - scrollY < lim;
+  el.classList.toggle('stick', up);
+  el.style.left = (up ? el._x - scrollX : el._x) + 'px'; el.style.top = (up ? lim : el._top) + 'px';
+}
+function place(k, fly){
+  const S = STOPS[k]; if (!S) return;
+  const from = el.getBoundingClientRect();
+  anchor(k); paint(k);
+  if (fly && !reduce && from.width){
+    const to = el.getBoundingClientRect(), dx = from.left - to.left, dy = from.top - to.top;
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4)
+      el.animate([
+        { transform:'translate(' + dx + 'px,' + dy + 'px) rotate(0deg)' },
+        { transform:'translate(' + dx * .5 + 'px,' + (dy * .5 - 90) + 'px) rotate(' + (dx > 0 ? -14 : 14) + 'deg) scale(1.06)', offset:.5 },
+        { transform:'translate(0,0) rotate(0deg)' }
+      ], { duration:1100, easing:'cubic-bezier(.45,0,.2,1)' });
+  }
+  if (!said.has(k)){ said.add(k); say(S.say, fly ? 1100 : 300); }
+}
+function say(t, delay){
+  clearTimeout(sayT);
+  sayT = setTimeout(() => {
+    bub.textContent = t; el.classList.add('talk');
+    const f = el.querySelector('.szbody'); if (f) f.classList.add('talking');
+    sayT = setTimeout(() => { el.classList.remove('talk'); const g = el.querySelector('.szbody'); if (g) g.classList.remove('talking'); }, 3600);
+  }, delay || 0);
+}
+function update(){
+  heroOn = !!hero && hero.getBoundingClientRect().bottom > innerHeight * .45;
+  const mid = innerHeight * .45; let best = '';
+  for (const k of Object.keys(STOPS)){ const s = document.getElementById(k); if (!s) continue; const r = s.getBoundingClientRect(); if (r.top < mid && r.bottom > mid * .6){ best = k; } }
+  const rd = document.querySelector('#faq .ready'), rr = rd && rd.getBoundingClientRect(), readyOn = rr && rr.top < innerHeight * .8 && rr.bottom > 0;
+  const show = !heroOn && !readyOn && !!best && !document.querySelector('.szm.on, #intro, #vintro');
+  el.classList.toggle('on', show);
+  if (show && best !== cur){ const first = !cur; cur = best; place(best, !first); }
+}
+
+let raf = 0;
+addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; update(); stick(); }); }, { passive:true, capture:true });
+addEventListener('resize', () => { posed = ''; if (cur){ paint(cur); anchor(cur); } update(); });
+/* los títulos se escriben letra por letra: cuando cambian de tamaño, se vuelve a acomodar */
+if ('ResizeObserver' in window){ const ro = new ResizeObserver(() => { if (cur) anchor(cur); }); Object.keys(STOPS).forEach(k => { const h = document.querySelector('#' + k + ' .head h2'); if (h) ro.observe(h); }); }
+/* los ojos la siguen: el puntero */
+if (!reduce && matchMedia('(pointer: fine)').matches){
+  let r2 = 0;
+  addEventListener('pointermove', e => { if (r2 || !el.classList.contains('on')) return; r2 = requestAnimationFrame(() => { r2 = 0; const r = el.getBoundingClientRect(); const ex = Math.max(-1, Math.min(1, (e.clientX - r.left - r.width / 2) / 420)), ey = Math.max(-1, Math.min(1, (e.clientY - r.top - 40) / 420)); el.style.setProperty('--ex', (ex * 3.2).toFixed(2) + 'px'); el.style.setProperty('--ey', (ey * 2.4).toFixed(2) + 'px'); el.style.setProperty('--tilt', (ex * 5).toFixed(2) + 'deg'); }); }, { passive:true });
+}
+/* tocarla: se pone contenta y abre su ventanita */
+const open = () => {
+  posed = ''; fig.innerHTML = SZ.synBody('celebrando', 'celebra', small() ? 96 : 132);
+  try{ SZ.SND && SZ.SND.blip && SZ.SND.blip('feliz'); }catch(e){}
+  setTimeout(() => { if (cur) paint(cur); }, 1500);
+  try{ SZ.BOT && SZ.BOT.open && SZ.BOT.open(); }catch(e){}
+};
+el.addEventListener('click', open);
+el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } });
+/* de vez en cuando parpadea distinto o mira a su alrededor para que se sienta viva */
+if (!reduce) setInterval(() => {
+  if (!el.classList.contains('on') || el.classList.contains('talk') || document.hidden) return;
+  const k = cur, S = STOPS[k]; if (!S) return;
+  const alt = ['guino', 'feliz', 'sorprendida', 'pensando'][Math.floor(Math.random() * 4)];
+  fig.innerHTML = SZ.synBody(alt, S.pose, small() ? 96 : 132); posed = '';
+  setTimeout(() => { if (cur === k) paint(k); }, 1400);
+}, 9000);
+update();
 })();

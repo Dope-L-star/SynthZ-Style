@@ -62,8 +62,11 @@ const isFlow = () => document.documentElement.dataset.brand === 'flow';
 const BRAND = () => isFlow() ? 'SynthFlow' : 'SynthZ';
 const SPARKS = '<i class="sp s1" aria-hidden="true"></i><i class="sp s2" aria-hidden="true"></i><i class="sp s3" aria-hidden="true"></i>';
 const GS = '<span class="gS">S</span>ynth';
-const flowWord = () => '<span class="flw-w">' + GS + '<span class="flwg"><img class="flwi" src="media/flow-glass.webp" alt="Flow" draggable="false">' + SPARKS + '</span></span>';
-const zMark = (txt = 'Synth') => (txt === 'Synth' ? GS : txt) + '<img class="zb zg" src="media/z-glass.webp" alt="Z" draggable="false">';
+/* v2.5 · logos del boceto: SynthZ = Z de vidrio + «Synth» blanco con la Z en degradado; SynthFlow = la esfera de vidrio con la onda */
+const LOGO_Z = '<img class="lgz" src="media/v24/logo-z.webp" alt="" draggable="false">';
+const flowOrb = cls => '<span class="sforb' + (cls ? ' ' + cls : '') + '" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><defs><linearGradient id="sfOrbG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3de0ff"/><stop offset=".45" stop-color="#7b3ff2"/><stop offset=".75" stop-color="#ff3d9a"/><stop offset="1" stop-color="#ff7a45"/></linearGradient></defs><path d="M8 32c5-14 10-14 14 0s9 14 14 0 9-14 14 0 5 8 6 4" stroke="url(#sfOrbG)" stroke-width="5" stroke-linecap="round"/></svg></span>';
+const flowWord = () => '<span class="flw-w">' + flowOrb() + '<span class="fw-t">SynthFlow</span></span>';
+const zMark = (txt = 'Synth') => '<span class="zw">' + (txt === 'Synth' ? 'Synth' : txt) + '<span class="zt">Z</span></span>';
 const zWord = (txt = 'Synth') => isFlow() && txt === 'Synth' ? flowWord() : zMark(txt);
 
 /* ---------- datos ---------- */

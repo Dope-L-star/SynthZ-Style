@@ -4,38 +4,31 @@
 const { $, $$, reduce } = SZ;
 const q = s => document.querySelector(s);
 
-/* SynthonIA de cuerpo entero: cabeza (su carita de siempre), torso de vidrio con el núcleo cian, brazo que saluda y su anillo de luz */
-function body(mood, size){
-  return '<div class="sb-h">' + SZ.face(mood || 'feliz', size || 150) + '</div>'
-    + '<svg class="sb-t" viewBox="0 0 200 170" aria-hidden="true">'
-    + '<defs><radialGradient id="sbTor" cx=".38" cy=".25" r=".9"><stop offset="0" stop-color="#fff2fb"/><stop offset=".4" stop-color="#f0b3e4"/><stop offset=".78" stop-color="#a47ff0"/><stop offset="1" stop-color="#6c48cf"/></radialGradient>'
-    + '<radialGradient id="sbCore" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#e9ffff"/><stop offset=".45" stop-color="#3de0ff"/><stop offset="1" stop-color="#3de0ff" stop-opacity="0"/></radialGradient></defs>'
-    + '<rect x="82" y="0" width="36" height="16" rx="8" fill="#c79cf2"/>'
-    + '<path class="sb-arm l" d="M64 34q-26 16-30 52" stroke="url(#sbTor)" stroke-width="20" stroke-linecap="round" fill="none"/>'
-    + '<g class="sb-arm r"><path d="M136 34q26-14 38-46" stroke="url(#sbTor)" stroke-width="20" stroke-linecap="round" fill="none"/><circle cx="175" cy="-14" r="13" fill="url(#sbTor)"/></g>'
-    + '<rect x="56" y="12" width="88" height="96" rx="40" fill="url(#sbTor)"/>'
-    + '<path d="M70 30q12-10 30-10" stroke="#fff" stroke-opacity=".7" stroke-width="5" stroke-linecap="round" fill="none"/>'
-    + '<circle class="sb-core" cx="100" cy="62" r="20" fill="url(#sbCore)"/>'
-    + '<path d="M72 112h56l-6 22H78z" fill="#b48cf0"/>'
-    + '</svg><i class="sb-ring"></i><i class="sb-ring r2"></i>';
-}
+/* v2.5 · SynthonIA de cuerpo entero, igual al boceto (cabeza 45 %, torso 30 %, base 25 %) */
+const body = (mood, pose, size) => SZ.synBody(mood, pose, size);
 const hb = q('#heroBot');
 if (hb){
-  hb.innerHTML = body('feliz', 150);
-  /* detalle: si la tocas, guiña y suelta un destello */
+  hb.innerHTML = body('feliz', 'saluda', 300);
+  /* después del saludo, señala la tarjeta de ejemplo (como en el boceto) */
+  const calm = () => { if (!hb.matches(':hover')) hb.innerHTML = body('neutral', innerWidth > 980 ? 'senalaL' : 'presenta', 300); };
+  setTimeout(calm, 3800);
+  /* detalle: si la tocas, se emociona, celebra y suelta un destello */
   hb.parentElement.style.pointerEvents = 'auto';
   hb.addEventListener('click', () => {
-    hb.querySelector('.sb-h').innerHTML = SZ.face('guino', 150); hb.classList.remove('boop'); void hb.offsetWidth; hb.classList.add('boop');
-    try{ SZ.SND && SZ.SND.blip && SZ.SND.blip('feliz'); }catch(e){}
-    setTimeout(() => { hb.querySelector('.sb-h').innerHTML = SZ.face('feliz', 150); }, 1400);
+    hb.innerHTML = body('celebrando', 'celebra', 300); hb.classList.remove('boop'); void hb.offsetWidth; hb.classList.add('boop');
+    try{ SZ.SND && SZ.SND.blip && SZ.SND.blip('feliz'); SZ.burst && SZ.burst(hb); }catch(e){}
+    setTimeout(() => { hb.innerHTML = body('feliz', 'saluda', 300); setTimeout(calm, 2600); }, 1600);
   });
-  /* detalle: los ojos siguen al mouse (muy poquito) */
+  /* detalle: los ojos y la cabeza siguen al mouse */
   if (!reduce && matchMedia('(pointer: fine)').matches){
     let raf = 0, ex = 0, ey = 0;
-    addEventListener('pointermove', e => { const r = hb.getBoundingClientRect(); ex = Math.max(-1, Math.min(1, (e.clientX - r.left - r.width / 2) / 500)); ey = Math.max(-1, Math.min(1, (e.clientY - r.top - 80) / 500)); if (!raf) raf = requestAnimationFrame(() => { raf = 0; hb.style.setProperty('--ex', (ex * 4).toFixed(2) + 'px'); hb.style.setProperty('--ey', (ey * 3).toFixed(2) + 'px'); }); }, { passive:true });
+    addEventListener('pointermove', e => { const r = hb.getBoundingClientRect(); ex = Math.max(-1, Math.min(1, (e.clientX - r.left - r.width / 2) / 500)); ey = Math.max(-1, Math.min(1, (e.clientY - r.top - 90) / 500)); if (!raf) raf = requestAnimationFrame(() => { raf = 0; hb.style.setProperty('--ex', (ex * 3.2).toFixed(2) + 'px'); hb.style.setProperty('--ey', (ey * 2.4).toFixed(2) + 'px'); hb.style.setProperty('--tilt', (ex * 4).toFixed(2) + 'deg'); }); }, { passive:true });
   }
 }
-const rf = q('#readyFace'); if (rf) rf.innerHTML = body('celebrando', 120);
+/* chispitas doradas que flotan alrededor de SynthonIA */
+const dust = q('#heroDust');
+if (dust && !reduce) dust.innerHTML = Array.from({ length:26 }, (_, i) => '<i style="--x:' + (Math.random() * 100).toFixed(1) + '%;--y:' + (Math.random() * 100).toFixed(1) + '%;--t:' + (3 + Math.random() * 5).toFixed(1) + 's;--dl:-' + (Math.random() * 6).toFixed(1) + 's;--s:' + (1.5 + Math.random() * 2.5).toFixed(1) + 'px"></i>').join('');
+const rf = q('#readyFace'); if (rf) rf.innerHTML = body('celebrando', 'celebra', 230);
 
 /* «¿Qué es estar synthonized?»: una onda de estática que, al pasar, se vuelve una onda limpia */
 const cv = q('#szWave');

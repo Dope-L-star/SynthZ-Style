@@ -62,8 +62,11 @@ const isFlow = () => document.documentElement.dataset.brand === 'flow';
 const BRAND = () => isFlow() ? 'SynthFlow' : 'SynthZ';
 const SPARKS = '<i class="sp s1" aria-hidden="true"></i><i class="sp s2" aria-hidden="true"></i><i class="sp s3" aria-hidden="true"></i>';
 const GS = '<span class="gS">S</span>ynth';
-const flowWord = () => '<span class="flw-w">' + GS + '<span class="flwg"><img class="flwi" src="media/flow-glass.webp" alt="Flow" draggable="false">' + SPARKS + '</span></span>';
-const zMark = (txt = 'Synth') => (txt === 'Synth' ? GS : txt) + '<img class="zb zg" src="media/z-glass.webp" alt="Z" draggable="false">';
+/* v2.5 · logos del boceto: SynthZ = Z de vidrio + «Synth» blanco con la Z en degradado; SynthFlow = la esfera de vidrio con la onda */
+const LOGO_Z = '<img class="lgz" src="media/v24/logo-z.webp" alt="" draggable="false">';
+const flowOrb = cls => '<span class="sforb' + (cls ? ' ' + cls : '') + '" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><defs><linearGradient id="sfOrbG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3de0ff"/><stop offset=".45" stop-color="#7b3ff2"/><stop offset=".75" stop-color="#ff3d9a"/><stop offset="1" stop-color="#ff7a45"/></linearGradient></defs><path d="M8 32c5-14 10-14 14 0s9 14 14 0 9-14 14 0 5 8 6 4" stroke="url(#sfOrbG)" stroke-width="5" stroke-linecap="round"/></svg></span>';
+const flowWord = () => '<span class="flw-w">' + flowOrb() + '<span class="fw-t">SynthFlow</span></span>';
+const zMark = (txt = 'Synth') => '<span class="zw">' + (txt === 'Synth' ? 'Synth' : txt) + '<span class="zt">Z</span></span>';
 const zWord = (txt = 'Synth') => isFlow() && txt === 'Synth' ? flowWord() : zMark(txt);
 
 /* ---------- datos ---------- */
@@ -457,7 +460,7 @@ if (SESS) setTimeout(accStart, 0);
 const paintPulse = () => { const b = document.getElementById('railPulse'); if (b) b.hidden = !(ACC.ready && ACC.user && ['owner', 'admin', 'staff'].includes(ACC.user.role)); };
 accHooks.push(paintPulse);
 
-/* ---------- icono de la pestaña: los 3 círculos como péndulo de Newton ---------- */
+/* ---------- icono de la pestaña: la Z de vidrio (SynthZ) o la esfera con la onda (SynthFlow) ---------- */
 function cradleAngles(t, A){
   const u = (t % 1150) / 1150, out = x => 1 - Math.pow(1 - x, 2.4), inn = x => Math.pow(x, 2.4);
   const L = u < .25 ? out(u / .25) : u < .5 ? 1 - inn((u - .25) / .25) : 0;
@@ -467,27 +470,21 @@ function cradleAngles(t, A){
 (function favCradle(){
   const link = document.getElementById('favi'); if (!link) return;
   const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); if (!g) return;
-  /* SynthFlow tiene su propio logito: la «F» de Flow en cursiva, con su destello */
+  /* v2.5 · SynthFlow: la esfera de vidrio con la onda (cian → violeta → rosa → naranja), que ondula un poquito */
   const drawFlow = now => {
     g.clearRect(0, 0, 64, 64);
-    g.fillStyle = '#0b0c10'; g.beginPath(); if (g.roundRect) g.roundRect(0, 0, 64, 64, 15); else g.rect(0, 0, 64, 64); g.fill();
-    const gr = g.createLinearGradient(10, 8, 54, 58); gr.addColorStop(0, '#c9566c'); gr.addColorStop(.62, '#e6b65f'); gr.addColorStop(1, '#ffd9a0');
-    g.fillStyle = gr; g.font = 'italic 54px "Instrument Serif", Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillText('F', 29, 51);
-    const k = now ? .55 + .45 * Math.abs(Math.sin(now / 900)) : 1, sx = 50, sy = 14, r = 7.5 * k;
-    g.fillStyle = '#ffe7b0'; g.globalAlpha = .55 + .45 * k; g.beginPath(); g.moveTo(sx, sy - r); g.quadraticCurveTo(sx, sy, sx + r, sy); g.quadraticCurveTo(sx, sy, sx, sy + r); g.quadraticCurveTo(sx, sy, sx - r, sy); g.quadraticCurveTo(sx, sy, sx, sy - r); g.fill(); g.globalAlpha = 1;
+    const bg = g.createRadialGradient(24, 20, 2, 32, 32, 31); bg.addColorStop(0, 'rgba(255,255,255,.55)'); bg.addColorStop(.45, 'rgba(123,63,242,.55)'); bg.addColorStop(1, 'rgba(14,8,40,.95)');
+    g.fillStyle = bg; g.beginPath(); g.arc(32, 32, 30, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = 'rgba(255,255,255,.45)'; g.lineWidth = 1.5; g.stroke();
+    const wg = g.createLinearGradient(8, 20, 56, 44); wg.addColorStop(0, '#3de0ff'); wg.addColorStop(.45, '#7b3ff2'); wg.addColorStop(.75, '#ff3d9a'); wg.addColorStop(1, '#ff7a45');
+    g.strokeStyle = wg; g.lineWidth = 5.5; g.lineCap = 'round'; g.beginPath();
+    const ph = now ? now / 600 : 0;
+    for (let x = 12; x <= 52; x++){ const y = 32 + Math.sin((x - 12) / 40 * Math.PI * 3 + ph) * 9; x === 12 ? g.moveTo(x, y) : g.lineTo(x, y); }
+    g.stroke();
     try{ link.href = c.toDataURL('image/png'); }catch(e){}
   };
-  const draw = now => {
-    if (isFlow()) return drawFlow(now);
-    const [a1, a3] = cradleAngles(now, 26 * Math.PI / 180), Lr = 30, py = 4;
-    g.clearRect(0, 0, 64, 64);
-    g.fillStyle = '#0b0c10'; g.beginPath(); if (g.roundRect) g.roundRect(0, 0, 64, 64, 15); else g.rect(0, 0, 64, 64); g.fill();
-    [[20, a1, '#8fb0ff'], [32, 0, '#c9566c'], [44, a3, '#ff8f7a']].forEach(([x, a, col]) => {
-      g.globalAlpha = .9; g.fillStyle = col; g.beginPath(); g.arc(x - Lr * Math.sin(a), py + Lr * Math.cos(a), 12, 0, Math.PI * 2); g.fill();
-    });
-    g.globalAlpha = 1;
-    try{ link.href = c.toDataURL('image/png'); }catch(e){}
-  };
+  /* SynthZ: la Z de vidrio del boceto, quieta */
+  const draw = now => { if (isFlow()) return drawFlow(now); if (link.getAttribute('href') !== 'media/v24/fav-z.png') link.href = 'media/v24/fav-z.png'; };
   let last = 0;
   let on = false;
   const tick = now => { if (!CFG.favAnim){ on = false; draw(0); return; } if (now - last > 50){ last = now; draw(now); } requestAnimationFrame(tick); };
@@ -920,7 +917,7 @@ async function ask(p, messages, opts = {}){
   return { text, prompt: u.prompt_tokens != null ? u.prompt_tokens : Math.ceil(inChars / 4), completion: u.completion_tokens != null ? u.completion_tokens : est(text), ms, model };
 }
 /* SynXCoin's: la moneda de SynthZ. 1 SynXCoin = 1 token */
-const MARK_HTML = '<svg class="mark" viewBox="0 0 44 30" fill="none" aria-hidden="true"><g class="sw sw1"><circle class="b1" cx="11" cy="15" r="10" fill="#8fb0ff" fill-opacity=".85"/></g><g class="sw sw2"><circle class="b2" cx="22" cy="15" r="10" fill="#c9566c" fill-opacity=".8"/></g><g class="sw sw3"><circle class="b3" cx="33" cy="15" r="10" fill="#ff8f7a" fill-opacity=".75"/></g><text class="mk-s" x="22" y="21.4" text-anchor="middle">S</text><text class="mk-z" x="28" y="26" text-anchor="middle">z</text></svg>';
+const MARK_HTML = LOGO_Z.replace('class="lgz"', 'class="lgz mark"');
 const SXC = '<svg class="sxc" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="sxg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8fb0ff"/><stop offset=".55" stop-color="#c9566c"/><stop offset="1" stop-color="#e6b65f"/></linearGradient></defs><circle cx="12" cy="12" r="10.5" fill="url(#sxg)"/><circle cx="12" cy="12" r="7.6" fill="none" stroke="rgba(11,12,16,.32)" stroke-width="1.1"/><path d="M14.7 9.3c-.5-.8-1.5-1.4-2.8-1.4-1.6 0-2.7.8-2.7 2 0 2.7 5.7 1.4 5.7 4.1 0 1.3-1.2 2.2-2.9 2.2-1.3 0-2.5-.6-3-1.6" transform="translate(-1.4 -1.3)" fill="none" stroke="#0b0c10" stroke-width="1.8" stroke-linecap="round"/><path d="M14.7 14.6l2.4 2.4M17.1 14.6l-2.4 2.4" stroke="#0b0c10" stroke-width="1.35" stroke-linecap="round"/></svg>';
 const coins = n => fmt(n);   /* v1.3: ya no existen las monedas; queda solo el número */
 const metaOf = r => r.cached ? 'respuesta guardada · no gastó nada' : 'tardó ' + (r.ms / 1000).toFixed(1).replace('.', ',') + ' s';
@@ -2669,69 +2666,188 @@ function profileModal(onSave){
 })();
 /* ---------- SynthonIA: su carita (SVG), con una expresión para cada momento ---------- */
 const FACE_G = '#f6d9a0';
-const FACE = (() => {
-  const open = (dx, dy) => ['M' + (40 + dx) + ' ' + (48 + dy) + 'v8', 'M' + (60 + dx) + ' ' + (48 + dy) + 'v8'];
-  const happy = ['M35 54q5-7 10 0', 'M55 54q5-7 10 0'];
-  const heart = x => 'M' + x + ' 58l-5.5-5.5a3.2 3.2 0 0 1 5.5-4a3.2 3.2 0 0 1 5.5 4z';
-  const star = x => 'M' + x + ' 45l1.8 3.8 4 .5-3 2.8.8 4-3.6-2-3.6 2 .8-4-3-2.8 4-.5z';
-  const ring = x => 'M' + (x - 4.5) + ' 52a4.5 4.5 0 1 0 9 0a4.5 4.5 0 1 0-9 0';
-  return {
-    feliz:{ e:open(0, 0), m:'M42 64q8 7 16 0', ck:1 },
-    neutral:{ e:open(0, 0), m:'M45 66h10' },
-    encantada:{ e:[heart(40), heart(60)], ec:'#ef7f93', ew:1.6, ef:'#ef7f93', m:'M41 63q9 10 18 0z', mf:1, ck:1 },
-    riendo:{ e:happy, m:'M41 62q9 11 18 0z', mf:1, ck:1 },
-    guino:{ e:['M40 48v8', 'M55 54q5-7 10 0'], m:'M42 64q8 7 16 0', ck:1 },
-    pensando:{ e:open(3, -3), m:'M45 67q5-3 10-1', x:'M84 26h.1M91 16h.1', xw:5 },
-    sorprendida:{ e:[ring(40), ring(60)], ew:3, ef:FACE_G, m:'M47 68a3 3 0 1 0 6 0a3 3 0 1 0-6 0', b:'M34 41l10-1M56 40l10 1' },
-    senalando:{ e:open(4, 0), m:'M46 65q6 4 12 0' },
-    disculpa:{ e:['M40 51v6', 'M60 51v6'], b:'M34 46l10-4M66 46l-10-4', m:'M43 69q7-6 14 0' },
-    confundida:{ e:['M40 48v8', 'M60 51v3'], b:'M54 42l12-3', m:'M41 67q3-3 6 0t6 0t6 0' },
-    dormida:{ e:['M35 52q5 4 10 0', 'M55 52q5 4 10 0'], ew:3.4, m:'M47 67h6', x:'M73 15h8l-8 9h8' },
-    celebrando:{ e:[star(40), star(60)], ew:1.5, ef:FACE_G, m:'M41 62q9 11 18 0z', mf:1, ck:1, x:'M10 16l4 4M90 14l-4 5M6 32h5M94 30h-5', xw:2.6 },
-    esperando:{ e:open(-3, -2), m:'M45 66h10', x:'M84 14a6 6 0 1 0 .01 0M84 11v3.5l2.5 2', xw:2 },
-    flow:{ glasses:1, m:'M43 65q8 6 16-1', ck:1 },
-    preocupada:{ e:open(0, 2), b:'M33 45l11-5M67 45l-11-5', m:'M42 70q4-4 8-1t8-1', drop:1 }
-  };
-})();
-/* v1.4: caras nuevas: triste (si todo salió mal) y «¡ay!» (si le tocas el ojo) */
-FACE.triste = { e:['M40 53v4', 'M60 53v4'], ew:6, b:'M32 47l11-5M68 47l-11-5', m:'M41 72q9-8 18 0' };
-FACE.auch = { e:['M34 49l10 4-10 4', 'M55 53q5-4 10 0'], ew:3.4, b:'M32 43l12 5M57 45l10-3', m:'M41 70q4.5-4 9 0q4.5 4 9 0', x:'M78 30l4-6M84 36l6-2' };
-const FACE_GOOD = ['feliz', 'riendo', 'guino', 'encantada', 'celebrando', 'flow'];
-/* v2.4 · cara nueva del boceto: casco de vidrio perlado, visor oscuro con borde que brilla y ojos alargados cian; sin boca.
-   Cuando habla salen ondas naranjas a la DERECHA; cuando escucha, ondas azules a la IZQUIERDA. */
+/* v2.5 · SynthonIA idéntica al boceto «Cuerpo maestro» y «Expresiones»:
+   casco de vidrio perlado (rosa, lila y un filo cian abajo), visor negro grande con borde rosa que brilla,
+   ojos cian alargados, cuello de anillos, torso con núcleo cian, brazos por partes, base de pedestal y anillo flotante.
+   Ondas: azul a la IZQUIERDA cuando escucha, naranja a la DERECHA cuando habla. */
 const FACE_EYE = '#3de0ff';
 (function faceDefs(){
   if (document.getElementById('szFaceDefs')) return;
   const d = document.createElement('div'); d.id = 'szFaceDefs'; d.setAttribute('aria-hidden', 'true');
   d.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
   d.innerHTML = '<svg width="0" height="0"><defs>'
-    + '<radialGradient id="szHead" cx=".35" cy=".28" r=".85"><stop offset="0" stop-color="#fff4fb"/><stop offset=".35" stop-color="#f3b9e6"/><stop offset=".7" stop-color="#b48cf0"/><stop offset="1" stop-color="#7a54d8"/></radialGradient>'
-    + '<linearGradient id="szRim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5fb4"/><stop offset=".5" stop-color="#b06bff"/><stop offset="1" stop-color="#ff7a45"/></linearGradient>'
-    + '<radialGradient id="szVisor" cx=".5" cy=".35" r=".8"><stop offset="0" stop-color="#1c1240"/><stop offset="1" stop-color="#07041a"/></radialGradient>'
+    /* vidrio perlado: brillo blanco rosado arriba a la izquierda, rosa, lila y violeta en el borde */
+    + '<radialGradient id="szPearl" cx=".5" cy=".56" r=".6"><stop offset="0" stop-color="#8a74e4" stop-opacity=".78"/><stop offset=".55" stop-color="#b19cf2" stop-opacity=".86"/><stop offset=".86" stop-color="#d3c2fa" stop-opacity=".95"/><stop offset="1" stop-color="#e9defe"/></radialGradient>'
+    /* filo de luz cian abajo y a los lados (la luz del ambiente rebota en el vidrio) */
+    + '<radialGradient id="szRimL" cx=".5" cy=".08" r="1"><stop offset=".68" stop-color="#9fe9ff" stop-opacity="0"/><stop offset=".9" stop-color="#9fe9ff" stop-opacity=".45"/><stop offset="1" stop-color="#8ce6ff" stop-opacity=".95"/></radialGradient>'
+    /* el rosa que se ve a través del vidrio, más fuerte a la derecha */
+    + '<radialGradient id="szSub" cx=".66" cy=".3" r=".75"><stop offset="0" stop-color="#ff9ee6" stop-opacity=".7"/><stop offset=".6" stop-color="#ff86da" stop-opacity=".25"/><stop offset="1" stop-color="#ff86da" stop-opacity="0"/></radialGradient>'
+    + '<radialGradient id="szVisor" cx=".42" cy=".32" r=".8"><stop offset="0" stop-color="#1d1236"/><stop offset=".55" stop-color="#0b0719"/><stop offset="1" stop-color="#030209"/></radialGradient>'
+    /* piezas cilíndricas (cuello, brazos, base): luz al centro y lila en los bordes */
+    + '<linearGradient id="szCyl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f3ecff"/><stop offset=".2" stop-color="#c3aef6"/><stop offset=".42" stop-color="#e9dcfd"/><stop offset=".6" stop-color="#a990f0"/><stop offset=".85" stop-color="#e3a3ea"/><stop offset="1" stop-color="#fbe9ff"/></linearGradient>'
+    + '<linearGradient id="szCylV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6efff"/><stop offset=".45" stop-color="#c9b2f6"/><stop offset="1" stop-color="#9a80ef"/></linearGradient>'
+    + '<radialGradient id="szTorso" cx=".5" cy=".62" r=".62"><stop offset="0" stop-color="#f08fdc" stop-opacity=".92"/><stop offset=".45" stop-color="#b39bf2" stop-opacity=".88"/><stop offset=".82" stop-color="#d8c8fa" stop-opacity=".96"/><stop offset="1" stop-color="#f7f0ff"/></radialGradient>'
+    + '<linearGradient id="szBase" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f6efff"/><stop offset=".18" stop-color="#c2acf6"/><stop offset=".45" stop-color="#e8dafd"/><stop offset=".62" stop-color="#ad94f1"/><stop offset=".85" stop-color="#ee9fe4"/><stop offset="1" stop-color="#fde8ff"/></linearGradient>'
+    + '<radialGradient id="szCore" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#f2ffff"/><stop offset=".35" stop-color="#7befff"/><stop offset=".7" stop-color="#3de0ff" stop-opacity=".55"/><stop offset="1" stop-color="#3de0ff" stop-opacity="0"/></radialGradient>'
+    + '<linearGradient id="szRingG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff7ad0"/><stop offset=".5" stop-color="#bfe9ff"/><stop offset="1" stop-color="#3de0ff"/></linearGradient>'
+    + '<filter id="szBlur3" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2"/></filter>'
+    + '<filter id="szBlur1" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1"/></filter>'
     + '</defs></svg>';
   (document.body || document.documentElement).appendChild(d);
 })();
+/* ojos del boceto («Piezas de la cara»): alargado, sonriente, estrella, corazón, cerrado, barra, mirando arriba */
+const FEYE = {
+  cap:(x, y, s) => '<rect x="' + (x - 3.7 * s) + '" y="' + (y - 9.5 * s) + '" width="' + 7.4 * s + '" height="' + 19 * s + '" rx="' + 3.7 * s + '"/>',
+  big:(x, y) => '<rect x="' + (x - 5) + '" y="' + (y - 11.5) + '" width="10" height="23" rx="5"/>',
+  smile:(x, y) => '<path d="M' + (x - 7) + ' ' + (y + 3) + 'q7-11 14 0" fill="none" stroke-width="4.6" stroke-linecap="round"/>',
+  talk:(x, y, d) => '<path d="M' + (x - 7) + ' ' + (y + 1 + d) + 'q7-6 14 ' + (-2 * d) + '" fill="none" stroke-width="4.4" stroke-linecap="round"/>',
+  closed:(x, y) => '<path d="M' + (x - 7) + ' ' + y + 'q7 5 14 0" fill="none" stroke-width="3.8" stroke-linecap="round"/>',
+  bar:(x, y) => '<rect x="' + (x - 8) + '" y="' + (y - 2.8) + '" width="16" height="5.6" rx="2.8"/>',
+  tilt:(x, y, a) => '<rect x="' + (x - 7) + '" y="' + (y - 2.8) + '" width="14" height="5.6" rx="2.8" transform="rotate(' + a + ' ' + x + ' ' + y + ')"/>',
+  up:(x, y) => '<circle cx="' + x + '" cy="' + (y - 6) + '" r="3.6"/>',
+  star:(x, y) => '<path d="M' + x + ' ' + (y - 8.5) + 'l2.5 5.4 5.9.7-4.4 4 1.2 5.8-5.2-2.9-5.2 2.9 1.2-5.8-4.4-4 5.9-.7z"/>',
+  heart:(x, y) => '<path d="M' + x + ' ' + (y + 7) + 'l-7-6.6a4.2 4.2 0 0 1 7-4.6a4.2 4.2 0 0 1 7 4.6z"/>',
+  sad:(x, y, k) => '<path d="M' + (x - 7) + ' ' + (y + (k < 0 ? 3 : -1)) + 'q7-7 14 ' + (k < 0 ? -4 : 4) + '" fill="none" stroke-width="4.2" stroke-linecap="round"/>',
+  glitch:(x, y) => '<path d="M' + (x - 2) + ' ' + (y - 8) + 'h4v6h6v4h-6v6h-4v-6h-6v-4h6z"/>',
+  cross:(x, y, k) => '<path d="M' + (x - 6) + ' ' + (y - 5) + 'l' + (k < 0 ? '12 5-12 5' : '0 0') + '" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>'
+};
+const FL0 = 39, FR0 = 61, FY0 = 56;
+const FFX = {
+  gears:'<g class="fx" fill="#f6c25c" opacity=".95"><circle cx="86" cy="12" r="5"/><circle cx="95" cy="19" r="3.4"/><circle cx="86" cy="12" r="1.8" fill="#0b0820"/><circle cx="95" cy="19" r="1.2" fill="#0b0820"/><circle cx="83" cy="25" r="1.1"/><circle cx="87" cy="25" r="1.1"/><circle cx="91" cy="25" r="1.1"/></g>',
+  bulb:'<g class="fx"><circle cx="90" cy="12" r="6.5" fill="#ffd36a"/><rect x="87.5" y="18" width="5" height="4" rx="1" fill="#e9b04a"/><path d="M78 6l2 4M98 4l-2 4M100 14h-3" stroke="#ffd36a" stroke-width="1.6" stroke-linecap="round"/></g><path class="fx" d="M14 10l1.4 3.2 3.2 1.4-3.2 1.4L14 19.2l-1.4-3.2L9.4 14.6l3.2-1.4z" fill="#ffd36a"/>',
+  q:'<text class="fx" x="84" y="20" font-size="22" font-weight="800" fill="' + FACE_EYE + '" font-family="system-ui,sans-serif">?</text>',
+  zz:'<text class="fx" x="74" y="22" font-size="10" font-weight="800" fill="' + FACE_EYE + '" font-family="system-ui,sans-serif">z<tspan dy="-6" font-size="13">z</tspan><tspan dy="-7" font-size="17">Z</tspan></text>',
+  tear:'<path class="fx ftear" d="M61 70q-4 6-1 8.6q4 2 5-2.6q0-2-4-6z" fill="#7fe3ff"/>',
+  drop:'<path class="fx" d="M86 24q-5 8-1 11q5 2.2 6-3q0-2.6-5-8z" fill="#8fd3e8" opacity=".9"/>',
+  spark:'<g class="fx" fill="#ffd36a"><path d="M10 14l1.6 3.6 3.6 1.6-3.6 1.6L10 24.4l-1.6-3.6L4.8 19.2l3.6-1.6z"/><path d="M90 8l1.2 2.6 2.6 1.2-2.6 1.2L90 15.6l-1.2-2.6-2.6-1.2 2.6-1.2z"/></g>',
+  confetti:'<g class="fx"><rect x="6" y="10" width="4" height="2" rx="1" fill="#ff5fb4" transform="rotate(-30 8 11)"/><rect x="88" y="6" width="4" height="2" rx="1" fill="#3de0ff" transform="rotate(25 90 7)"/><rect x="94" y="22" width="4" height="2" rx="1" fill="#ffc857"/><rect x="2" y="26" width="4" height="2" rx="1" fill="#b06bff"/><circle cx="18" cy="4" r="1.3" fill="#ffc857"/><circle cx="80" cy="2" r="1.3" fill="#ff5fb4"/></g>',
+  lines:'<g class="fx" stroke="#ff5fb4" stroke-width="2.2" stroke-linecap="round"><path d="M10 14l5 4M50 2v5M90 14l-5 4M24 5l2.5 4.5M76 5l-2.5 4.5"/></g>',
+  scan:'<g class="fx" stroke="' + FACE_EYE + '" stroke-width="1.8" fill="none" opacity=".9"><path d="M4 14V4h10M86 4h10v10M96 86v10H86M14 96H4V86"/></g><g class="fx fscan" stroke="' + FACE_EYE + '" stroke-opacity=".22" stroke-width=".8"><path d="M14 30h72M12 40h76M11 50h78M11 60h78M12 70h76M15 80h70"/></g>',
+  clock:'<g class="fx" stroke="' + FACE_EYE + '" stroke-width="1.8" fill="none" stroke-linecap="round"><circle cx="89" cy="12" r="6.5"/><path d="M89 8.5V12l2.4 1.6"/></g>',
+  glitch:'<g class="fx fglitch"><rect x="8" y="40" width="14" height="3" fill="#ff5fb4" opacity=".7"/><rect x="78" y="62" width="16" height="3" fill="' + FACE_EYE + '" opacity=".7"/><rect x="70" y="30" width="8" height="2" fill="#fff" opacity=".5"/></g>',
+  shades:''
+};
+/* cada expresión: ojos (izquierdo, derecho), extras y si lleva ondas */
+const FACE = {
+  neutral:{ e:[['cap'], ['cap']] },
+  feliz:{ e:[['smile'], ['smile']] },
+  riendo:{ e:[['smile'], ['smile']], x:'spark' },
+  encantada:{ e:[['heart'], ['heart']], c:'#ff6fae' },
+  guino:{ e:[['cap'], ['smile']] },
+  escuchando:{ e:[['cap', 1, -2], ['cap', 1, -2]], dx:-3, w:'l' },
+  pensando:{ e:[['tilt', 1, -14], ['tilt', 1, -14]], dx:3, dy:-4, x:'gears' },
+  analizando:{ e:[['bar'], ['bar']], x:'scan' },
+  creando:{ e:[['cap'], ['cap']], dy:-2, x:'bulb' },
+  hablando:{ e:[['talk', 1, 0], ['talk', 1, 0]], w:'r' },
+  senalando:{ e:[['cap'], ['cap']], dx:4 },
+  celebrando:{ e:[['star'], ['star']], x:'confetti' },
+  sorprendida:{ e:[['big'], ['big']], x:'lines' },
+  confundida:{ e:[['tilt', 1, 72], ['cap', .55]], x:'q' },
+  disculpa:{ e:[['sad', 1, -1], ['sad', 1, 1]] },
+  preocupada:{ e:[['sad', 1, -1], ['sad', 1, 1]], x:'drop' },
+  triste:{ e:[['sad', 1, -1], ['sad', 1, 1]], dy:2, x:'tear' },
+  dormida:{ e:[['closed'], ['closed']], dy:2, x:'zz' },
+  esperando:{ e:[['up'], ['up']], x:'clock' },
+  flow:{ e:[['bar'], ['bar']], dy:-2, x:'spark' },
+  auch:{ e:[['cross', 1, -1], ['smile']] },
+  error:{ e:[['glitch'], ['glitch']], x:'glitch' }
+};
+/* nombres del boceto que también se pueden pedir */
+FACE.descansando = FACE.dormida;
+const FACE_GOOD = ['feliz', 'riendo', 'guino', 'encantada', 'celebrando', 'flow'];
+function eyesOf(f){
+  const dx = f.dx || 0, dy = f.dy || 0;
+  return f.e.map((s, i) => {
+    const x = (i ? FR0 : FL0) + dx, y = FY0 + dy, k = s[0];
+    if (k === 'cap') return FEYE.cap(x, y + (s[1] && s[1] < 1 ? 3 : 0), s[1] || 1);
+    if (k === 'tilt') return FEYE.tilt(x, y, s[2] || 0);
+    if (k === 'talk') return FEYE.talk(x, y, i ? -1 : 1);
+    if (k === 'sad') return FEYE.sad(x, y, i ? 1 : -1);
+    if (k === 'cross') return i ? FEYE.smile(x, y) : FEYE.cross(x, y, -1);
+    return FEYE[k](x, y);
+  }).join('');
+}
+/* la cabeza (lo mismo en la bolita, el logo y el cuerpo entero) */
+function headSvg(f, big){
+  const G = f.c || FACE_EYE;
+  return '<ellipse class="fear" cx="11.5" cy="57" rx="4.6" ry="9" fill="url(#szCylV)"/><ellipse class="fear" cx="88.5" cy="57" rx="4.6" ry="9" fill="url(#szCylV)"/>'
+    + '<g class="fhead"><ellipse cx="50" cy="53" rx="39.5" ry="37.5" fill="url(#szPearl)"/>'
+    + '<ellipse cx="50" cy="53" rx="39.5" ry="37.5" fill="url(#szSub)"/>'
+    + '<ellipse cx="50" cy="53" rx="39.5" ry="37.5" fill="url(#szRimL)"/>'
+    + '<ellipse cx="50" cy="53" rx="39" ry="37" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width=".7"/></g>'
+    + (big ? '<ellipse cx="34" cy="26" rx="14" ry="6" transform="rotate(-26 34 26)" fill="#fff" opacity=".8" filter="url(#szBlur3)"/>' : '<ellipse cx="34" cy="27" rx="11" ry="4.6" transform="rotate(-26 34 27)" fill="#fff" opacity=".6"/>')
+    + '<path d="M24.5 37q4-11 15.5-15.5" stroke="#fff" stroke-opacity=".95" stroke-width="2.2" stroke-linecap="round" fill="none"/>'
+    + '<ellipse class="frim" cx="50" cy="56" rx="31.4" ry="28.2" fill="none" stroke="#ff4fc0" stroke-width="' + (big ? 6 : 4) + '" opacity="' + (big ? .85 : .6) + '"' + (big ? ' filter="url(#szBlur3)"' : '') + '/>'
+    + '<ellipse cx="50" cy="56" rx="30.6" ry="27.4" fill="url(#szVisor)" stroke="#ff7ad0" stroke-width="2.2"/>'
+    + (big ? '<ellipse cx="50" cy="56" rx="28.6" ry="25.4" fill="none" stroke="#ff4fc0" stroke-width="3" opacity=".35" filter="url(#szBlur3)"/>' : '') + ''
+    + '<path d="M28.5 49q5-15 21.5-18" stroke="#fff" stroke-opacity=".13" stroke-width="3.2" stroke-linecap="round" fill="none"/>'
+    + '<g class="fe" fill="' + G + '" stroke="' + G + '" stroke-width="0">' + eyesOf(f) + '</g>';
+}
+function wavesSvg(){
+  const W = (x, dir, c, k) => '<g class="' + k + '" stroke="' + c + '" stroke-width="3" stroke-linecap="round" fill="none">'
+    + [4.5, 9.5, 14.5].map((r, i) => '<path style="--i:' + i + '" d="M' + x + ' ' + (56 - r) + 'a' + r + ' ' + r + ' 0 0 ' + (dir > 0 ? 1 : 0) + ' 0 ' + (2 * r) + '"/>').join('') + '</g>';
+  return W(93, 1, '#ff8a3d', 'fwr') + W(7, -1, FACE_EYE, 'fwl');
+}
 function face(mood, size, cls){
-  const f = FACE[mood] || FACE.feliz, z = size || 40, G = FACE_EYE;
-  const P = (d, st) => d ? '<path d="' + d + '" ' + st + '/>' : '';
-  /* los ojos de antes (rayitas verticales) se estiran un poco: así quedan alargados como en el boceto */
-  const tall = d => d.replace(/^M(\d+(?:\.\d+)?) (\d+(?:\.\d+)?)v(\d+)$/, (m, x, y, l) => 'M' + x + ' ' + (+y - 2) + 'v' + (+l + 4));
-  const eyes = f.glasses
-    ? '<path d="M28 46h18v6a7 7 0 0 1-7 7h-4a7 7 0 0 1-7-7z" fill="#05030f" stroke="' + G + '" stroke-width="2.2"/><path d="M54 46h18v6a7 7 0 0 1-7 7h-4a7 7 0 0 1-7-7z" fill="#05030f" stroke="' + G + '" stroke-width="2.2"/><path d="M46 48q4-2.5 8 0" stroke="' + G + '" stroke-width="2.2" fill="none"/>'
-    : f.e.map(d => P(tall(d), 'stroke="' + (f.ec || G) + '" stroke-width="' + (f.ew || 7.5) + '" stroke-linecap="round" stroke-linejoin="round" fill="' + (f.ef === FACE_G ? G : (f.ef || 'none')) + '"')).join('');
-  const W = (x, dir, c, k) => '<g class="' + k + '" stroke="' + c + '" stroke-width="2.6" stroke-linecap="round" fill="none">'
-    + [5, 10.5, 16].map((r, i) => '<path style="--i:' + i + '" d="M' + x + ' ' + (55 - r) + 'a' + r + ' ' + r + ' 0 0 ' + (dir > 0 ? 1 : 0) + ' 0 ' + (2 * r) + '"/>').join('') + '</g>';
-  return '<svg class="szface' + (cls ? ' ' + cls : '') + '" data-mood="' + (FACE[mood] ? mood : 'feliz') + '" viewBox="0 0 100 100" width="' + z + '" height="' + z + '" aria-hidden="true">'
-    + W(83, 1, '#ff8a3d', 'fwr') + W(17, -1, '#3de0ff', 'fwl')
-    + '<rect x="9" y="47" width="7" height="16" rx="3.5" fill="url(#szRim)"/><rect x="84" y="47" width="7" height="16" rx="3.5" fill="url(#szRim)"/>'
-    + '<rect class="fhead" x="13" y="16" width="74" height="74" rx="35" fill="url(#szHead)"/>'
-    + '<path d="M26 24q14-8 32-6" stroke="#fff" stroke-opacity=".75" stroke-width="3" stroke-linecap="round" fill="none"/>'
-    + '<rect x="21" y="30" width="58" height="48" rx="22" fill="url(#szVisor)" stroke="url(#szRim)" stroke-width="2.4"/>'
-    + P(f.b, 'stroke="' + G + '" stroke-opacity=".8" stroke-width="2.4" stroke-linecap="round" fill="none"')
-    + '<g class="fe">' + eyes + '</g>'
-    + (f.m ? '<path class="fm" d="' + f.m + '" style="display:none"/>' : '')
-    + P(f.x, 'stroke="' + G + '" stroke-width="' + (f.xw || 2.4) + '" stroke-linecap="round" stroke-linejoin="round" fill="none"')
-    + (f.drop ? '<path class="fdrop" d="M83 28q-6 9-1 12.5q6 2.5 7-3.5q0-3-6-9z" fill="#8fd3e8" fill-opacity=".9"/>' : '')
+  const m = FACE[mood] ? mood : 'feliz', f = FACE[m], z = size || 40;
+  return '<svg class="szface' + (cls ? ' ' + cls : '') + (f.w ? ' w' + f.w : '') + '" data-mood="' + m + '" viewBox="0 0 100 100" width="' + z + '" height="' + z + '" aria-hidden="true">'
+    + wavesSvg() + headSvg(f, z >= 64)
+    + '<path class="fm" d="M45 66h10" style="display:none"/>'
+    + (f.x ? FFX[f.x] : '')
+    + '</svg>';
+}
+/* ---------- cuerpo entero (boceto «Proporciones»: cabeza 45 %, torso 30 %, base 25 %) ----------
+   viewBox 0 0 240 320; los brazos son grupos que giran en el hombro y el codo, así se pueden animar. */
+const SPOSE = {
+  idle:     { r:[-14, -10, 'open'], l:[14, 10, 'open'] },
+  saluda:   { r:[-128, -42, 'wave'], l:[12, 10, 'open'] },
+  senala:   { r:[-84, -4, 'point'], l:[14, 10, 'open'] },
+  senalaL:  { r:[-14, -10, 'open'], l:[84, 4, 'point'] },
+  celebra:  { r:[-140, -12, 'open'], l:[140, 12, 'open'] },
+  piensa:   { r:[-14, -10, 'open'], l:[22, -168, 'point'] },
+  escucha:  { r:[-36, -150, 'open'], l:[14, 10, 'open'] },
+  presenta: { r:[-52, -58, 'open'], l:[14, 10, 'open'] },
+  sorpresa: { r:[-128, -30, 'open'], l:[128, 30, 'open'] },
+  escribe:  { r:[-22, -70, 'open'], l:[22, 70, 'open'] }
+};
+function handSvg(kind, side){
+  const s = side;   /* 1 derecha (en pantalla), -1 izquierda */
+  if (kind === 'point') return '<g class="hand"><ellipse cx="0" cy="8" rx="8.5" ry="9.5" fill="url(#szCyl)"/><rect x="-3.2" y="10" width="6.4" height="17" rx="3.2" fill="url(#szCyl)"/><ellipse cx="' + (6 * s) + '" cy="6" rx="3" ry="5" fill="url(#szCyl)" transform="rotate(' + (-30 * s) + ' ' + (6 * s) + ' 6)"/></g>';
+  if (kind === 'wave') return '<g class="hand"><ellipse cx="0" cy="9" rx="9.5" ry="10.5" fill="url(#szCyl)"/>' + [-6, -2, 2, 6].map((x, i) => '<rect x="' + (x - 2.2) + '" y="' + (12 + Math.abs(i - 1.5) * 1.5) + '" width="4.4" height="' + (11 - Math.abs(i - 1.5) * 2) + '" rx="2.2" fill="url(#szCyl)"/>').join('') + '<ellipse cx="' + (-10 * s) + '" cy="6" rx="3" ry="5.5" fill="url(#szCyl)" transform="rotate(' + (40 * s) + ' ' + (-10 * s) + ' 6)"/></g>';
+  return '<g class="hand"><ellipse cx="0" cy="9" rx="9" ry="10.5" fill="url(#szCyl)"/><path d="M-6 15q6 8 12 0" stroke="#a487ef" stroke-opacity=".5" stroke-width="1.2" fill="none"/><ellipse cx="' + (8 * s) + '" cy="6" rx="3" ry="5.4" fill="url(#szCyl)" transform="rotate(' + (-26 * s) + ' ' + (8 * s) + ' 6)"/></g>';
+}
+function armSvg(side, a1, a2, hand){
+  const sx = side > 0 ? 160 : 80, sy = 176;
+  return '<g class="arm ' + (side > 0 ? 'ar' : 'al') + '" style="--a1:' + a1 + 'deg;--a2:' + a2 + 'deg" transform="translate(' + sx + ' ' + sy + ')">'
+    + '<g class="up" transform="rotate(' + a1 + ')"><circle r="15" fill="url(#szCylV)"/>'
+    + '<rect x="-12.5" y="2" width="25" height="38" rx="12.5" fill="url(#szCyl)"/>'
+    + '<circle cy="40" r="10.5" fill="url(#szCylV)"/>'
+    + '<g class="lo" transform="translate(0 40) rotate(' + a2 + ')">' + (hand === 'wave' && !reduce ? '<g><animateTransform attributeName="transform" type="rotate" values="0;-24;6;-24;0" keyTimes="0;.25;.5;.75;1" dur="1.5s" repeatCount="indefinite"/>' : '<g>') + '<rect x="-11" y="0" width="22" height="34" rx="11" fill="url(#szCyl)"/><path d="M-10.5 10h21" stroke="#9a80ef" stroke-opacity=".45" stroke-width="1.4"/>'
+    + '<g transform="translate(0 30) scale(1.45)">' + handSvg(hand, side) + '</g></g></g></g></g>';
+}
+function synBody(mood, pose, size){
+  const f = FACE[mood] || FACE.feliz, P = SPOSE[pose] || SPOSE.idle, z = size || 240;
+  return '<svg class="szbody" data-mood="' + (FACE[mood] ? mood : 'feliz') + '" data-pose="' + (SPOSE[pose] ? pose : 'idle') + '" viewBox="0 0 240 320" width="' + z + '" height="' + Math.round(z * 4 / 3) + '" aria-hidden="true">'
+    /* anillo flotante y su luz en el piso */
+    + '<g class="syb-ring"><ellipse cx="120" cy="306" rx="58" ry="9" fill="none" stroke="url(#szRingG)" stroke-width="5" opacity=".5" filter="url(#szBlur3)"/><ellipse cx="120" cy="306" rx="58" ry="9" fill="none" stroke="url(#szRingG)" stroke-width="2.4"/></g>'
+    /* base de pedestal: campana que se abre con borde rosa brillante */
+    + '<g class="syb-base"><path d="M98 250h44l4 10q16 8 22 22q3 9-8 11H74q-11-2-8-11q6-14 22-22z" fill="url(#szBase)"/>'
+    + '<path d="M70 286q50 12 100 0" stroke="#ff5fb4" stroke-width="3" stroke-linecap="round" fill="none" opacity=".85"/><path d="M84 268q36 8 72 0M76 278q44 10 88 0" stroke="#fff" stroke-opacity=".35" stroke-width="1.4" fill="none"/>'
+    + '<path d="M86 270q16-8 32-8" stroke="#fff" stroke-opacity=".6" stroke-width="2.4" stroke-linecap="round" fill="none"/>'
+    + '<rect x="100" y="236" width="40" height="18" rx="7" fill="url(#szCyl)"/></g>'
+    /* brazo de atrás (izquierdo en pantalla) */
+    + armSvg(-1, P.l[0], P.l[1], P.l[2])
+    /* torso: barril de vidrio con el núcleo cian */
+    + '<g class="syb-torso"><path d="M80 176q0-20 40-21q40 1 40 21l-5 44q-3 22-35 22t-35-22z" fill="url(#szTorso)"/>'
+    + '<path d="M80 176q0-20 40-21q40 1 40 21l-5 44q-3 22-35 22t-35-22z" fill="url(#szRimL)"/>'
+    + '<path d="M89 176q4-11 19-13" stroke="#fff" stroke-opacity=".85" stroke-width="3" stroke-linecap="round" fill="none"/>'
+    + '<circle class="syb-core" cx="120" cy="200" r="13" fill="url(#szCore)" opacity=".85"/><circle cx="120" cy="200" r="4" fill="#e9ffff" opacity=".8"/></g>'
+    /* cuello de anillos */
+    + '<g class="syb-neck"><rect x="104" y="140" width="32" height="20" rx="8" fill="url(#szCyl)"/><path d="M106 147h28M106 153h28" stroke="#9f86f2" stroke-opacity=".55" stroke-width="1.4"/></g>'
+    /* brazo de adelante (derecho en pantalla) */
+    + armSvg(1, P.r[0], P.r[1], P.r[2])
+    /* cabeza */
+    + '<g class="syb-head" transform="translate(26.5 -27) scale(1.87)"><g>' + (reduce ? '' : '<animateTransform attributeName="transform" type="rotate" values="0 50 90;-3 50 90;0 50 90;2.5 50 90;0 50 90" dur="7s" repeatCount="indefinite"/>') + wavesSvg() + headSvg(f, true) + (f.x ? FFX[f.x] : '') + '</g></g>'
     + '</svg>';
 }
 /* v1.9 · SynthonIA mueve la boca con cada letra que dice: a (abierta), e/i (ancha), o/u (redonda), m/b/p (cerrada) */
@@ -4226,5 +4342,5 @@ const EV = (() => {
 window.SZ = { root, $, $$, clamp, fmt, reduce, today, sleepRaw, esc, est, Z_PATH, ICONS, ico, zWord, API, MANUAL, ALL, byId,
   get state(){ return state; }, set state(v){ state = v; normalize(); },
   normalize, cleanUsage, cleanChats, cleanStrMap, save, total, addUsage, resetUsage, estAll, todayEst, todayReq, providerBalance, balanceHtml, splitHtml, syncNote, helpGuide, smoothDetails, szPrompt, swapDir, swapDir, face, FACE_GOOD, randomGoodFace, welcomeBack, wasAway, accSignOutAll, accClaim, ROLE_NAME, trialGet, trialSet, trialStart, legacyRow, cleanLedger, mergeLedger, DEV, hooks, toast, hydrateIcons, md, countTo,
-  BRAND, isFlow, flowWord, zMark, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, BRANDS, brandOf, glassIcon, PIXART, pixelRun, pixelGrid, workView, workSaved, mdLoad, MDLIB, SZ_P, SZQ, SZ_AUTO, szqSet, msgsLeft, msgsTotal, coinsOf, coinsLeft, coinsTotal, coinsFmt, coinsShort, coinNote, limTxt, limShort, limLvl, limPct, limRing, limBar, szCatalog, szHeaders, guestGate, guestFull, isGuestQ, setTurn, puterOut, puterOutNote, TEL, telEv, telBeat, DEVH, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, feedbackModal, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI, EV, lipSync, ballFace, guideAsk, GTOPICS, whatsNew, signedish, cfgLinks, memAddCore, memPanel, menuOpen, menuClose, MICO, appInstall, appPromo, appStandalone, appPhone };
+  BRAND, isFlow, flowWord, flowOrb, LOGO_Z, zMark, synBody, SPOSE, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, BRANDS, brandOf, glassIcon, PIXART, pixelRun, pixelGrid, workView, workSaved, mdLoad, MDLIB, SZ_P, SZQ, SZ_AUTO, szqSet, msgsLeft, msgsTotal, coinsOf, coinsLeft, coinsTotal, coinsFmt, coinsShort, coinNote, limTxt, limShort, limLvl, limPct, limRing, limBar, szCatalog, szHeaders, guestGate, guestFull, isGuestQ, setTurn, puterOut, puterOutNote, TEL, telEv, telBeat, DEVH, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, feedbackModal, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI, EV, lipSync, ballFace, guideAsk, GTOPICS, whatsNew, signedish, cfgLinks, memAddCore, memPanel, menuOpen, menuClose, MICO, appInstall, appPromo, appStandalone, appPhone };
 })();
