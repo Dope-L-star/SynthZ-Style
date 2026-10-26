@@ -202,7 +202,6 @@ html.noanim .sfx>span,html.noanim .sfb .arr{transition:none}
 /* temas de SynthFlow (solo en el chat; el estilo Simple usa sus propios colores) */
 html[data-theme="oceano"]{--gold:#7cc9e3;--gold-rgb:124,201,227;--wine:#5a7bd6;--wine-rgb:90,123,214}
 html[data-theme="bosque"]{--gold:#9bd68f;--gold-rgb:155,214,143;--wine:#3fa58a;--wine-rgb:63,165,138}
-html[data-theme="atardecer"]{--gold:#f4a95e;--gold-rgb:244,169,94;--wine:#e2557a;--wine-rgb:226,85,122}
 html[data-theme="lavanda"]{--gold:#bfa9f2;--gold-rgb:191,169,242;--wine:#d46fb0;--wine-rgb:212,111,176}
 html[data-theme] .aurora i:nth-child(3){background:var(--gold)}
 html[data-theme] .aurora i:nth-child(2){background:var(--wine)}

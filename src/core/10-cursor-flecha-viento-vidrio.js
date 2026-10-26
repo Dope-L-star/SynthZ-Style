@@ -8,7 +8,7 @@ if (matchMedia('(pointer: fine)').matches && CFG.cursor){
   const TEXT = 'input:not([type=checkbox]):not([type=file]), textarea, [contenteditable=true]';
   const LINK = 'a[href], button, select, summary, label.ckb, input[type=checkbox], input[type=radio], .chip, [role=tab], [data-hover]';
   /* en toda la web lo que se puede tocar muestra la manita; los switches van sin vidrio encima para que se vea su animación */
-  const NOGLASS = '.cfgsw, .sxsw, [role=switch], .sfb, #szBot, .mi, .mi *, .rcard, .rcard *, input[type=checkbox], label.ckb, .cnv-b, .flowbtn, .flowbtn *';   /* v1.8: «Empezar a FlowIA’r» tiene su propio efecto (la copia de vidrio lo partía en dos y escondía la carita) */   /* v1.4: en la lista de IA el vidrio tapaba «Comparar» y la estrella */
+  const NOGLASS = '#curChip, #curChip *, .mchip, .mchip *, .cfgsw, .sxsw, [role=switch], .sfb, #szBot, .mi, .mi *, .rcard, .rcard *, input[type=checkbox], label.ckb, .cnv-b, .flowbtn, .flowbtn *';   /* v1.8: «Empezar a FlowIA’r» tiene su propio efecto (la copia de vidrio lo partía en dos y escondía la carita) */   /* v1.4: en la lista de IA el vidrio tapaba «Comparar» y la estrella */
   let px = -100, py = -100, ax = -100, ay = -100, rx = -100, ry = -100, rw = 34, rh = 34, rr = 17;
   let cm = 'idle', hov = null, lblEl = null, lx = 0, ly = 0, down = false, active = false, clT = 0;
   let lastX = ax, lastY2 = ay, vx = 0, vy = 0, ang = 0, angV = 0, sc = 1, fl = performance.now();
@@ -131,6 +131,8 @@ if (matchMedia('(pointer: fine)').matches && CFG.cursor){
   /* todos los suavizados dependen del tiempo, así que se sienten igual a 60 o a 144 Hz */
   const ease = (k, dt) => 1 - Math.pow(1 - k, dt);
   (function frame(now){
+    /* v2.3: si lo que tenía el vidrio se rehizo en el DOM (p. ej. la IA de la caja al elegir otra), se suelta la copia vieja y se busca lo que hay debajo */
+    if (hov && !hov.isConnected){ cl.style.opacity = '0'; cl.innerHTML = ''; lblEl = null; lblSync = null; hov = null; pick(document.elementFromPoint(px, py)); }
     const dt = Math.min(2.5, (now - fl) / 16.67 || 1); fl = now;
     /* la flecha va un poco detrás del mouse real y llega con suavidad */
     const nx = ax + (px - ax) * ease(.34, dt), ny = ay + (py - ay) * ease(.34, dt);

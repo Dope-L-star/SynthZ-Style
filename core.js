@@ -9,7 +9,7 @@ const NF = new Intl.NumberFormat('es-CO'), fmt = n => NF.format(Math.round(n || 
 /* configuración de la página: visuales SynthZ-Style o rendimiento para PCs modestos */
 const CFG_KEYS = ['cursor', 'smooth', 'favAnim', 'bg', 'glass', 'anim'];
 /* v2.3 · temas de color de SynthFlow: [id, nombre, color 1, bloqueado (llega con Syntonia)] */
-const THEMES = [['synthz', 'SynthZ', '#e6b65f', 0, '#c9566c'], ['oceano', 'Océano', '#7cc9e3', 0, '#5a7bd6'], ['bosque', 'Bosque', '#9bd68f', 0, '#3fa58a'], ['atardecer', 'Atardecer', '#f4a95e', 0, '#e2557a'], ['lavanda', 'Lavanda', '#bfa9f2', 0, '#d46fb0'], ['aurora', 'Aurora', '#9fffd6', 1, '#a46bff'], ['oro', 'Oro negro', '#ffd27a', 1, '#2b2b2b']];
+const THEMES = [['synthz', 'SynthZ', '#e6b65f', 0, '#c9566c'], ['oceano', 'Océano', '#7cc9e3', 0, '#5a7bd6'], ['bosque', 'Bosque', '#9bd68f', 0, '#3fa58a'], ['lavanda', 'Lavanda', '#bfa9f2', 0, '#d46fb0'], ['aurora', 'Aurora', '#9fffd6', 1, '#a46bff'], ['oro', 'Oro negro', '#ffd27a', 1, '#2b2b2b']];
 const cfgPreset = perf => CFG_KEYS.reduce((o, k) => (o[k] = perf !== 'speed', o), {});
 const CFG = (() => {
   let c = {}; try{ c = JSON.parse(localStorage.getItem('synthz:cfg')) || {}; }catch(e){}
@@ -27,7 +27,7 @@ const reduce = !CFG.anim;
 function cfgClasses(){ const r = document.documentElement; r.classList.toggle('nocur', !CFG.cursor); if (!CFG.cursor) r.classList.remove('cursor-on'); r.classList.toggle('noglass', !CFG.glass); r.classList.toggle('nobg', !CFG.bg); r.classList.toggle('noanim', !CFG.anim); r.classList.remove('perf'); r.classList.toggle('pmode', CFG.perf === 'speed');
   /* v2.3 · solo en SynthFlow: estilo Simple, color del tema y barra del celular a la izquierda */
   const chat = !!document.getElementById('composer') || /chat(\.html)?$/.test(location.pathname), simple = chat && CFG.ui === 'simple';
-  r.classList.toggle('simple', simple); if (simple){ r.classList.add('noglass', 'nobg'); r.classList.remove('cursor-on'); r.classList.add('nocur'); } r.classList.toggle('navleft', chat && CFG.nav === 'left');
+  r.classList.toggle('simple', simple); if (simple){ r.classList.add('noglass', 'nobg'); } r.classList.toggle('navleft', chat && CFG.nav === 'left');
   if (chat && !simple && THEMES.some(t => t[0] === CFG.theme && !t[3])) r.dataset.theme = CFG.theme; else delete r.dataset.theme; }
 cfgClasses();
 function saveCfg(){ try{ localStorage.setItem('synthz:cfg', JSON.stringify(CFG)); }catch(e){} }
@@ -1143,7 +1143,7 @@ if (matchMedia('(pointer: fine)').matches && CFG.cursor){
   const TEXT = 'input:not([type=checkbox]):not([type=file]), textarea, [contenteditable=true]';
   const LINK = 'a[href], button, select, summary, label.ckb, input[type=checkbox], input[type=radio], .chip, [role=tab], [data-hover]';
   /* en toda la web lo que se puede tocar muestra la manita; los switches van sin vidrio encima para que se vea su animación */
-  const NOGLASS = '.cfgsw, .sxsw, [role=switch], .sfb, #szBot, .mi, .mi *, .rcard, .rcard *, input[type=checkbox], label.ckb, .cnv-b, .flowbtn, .flowbtn *';   /* v1.8: «Empezar a FlowIA’r» tiene su propio efecto (la copia de vidrio lo partía en dos y escondía la carita) */   /* v1.4: en la lista de IA el vidrio tapaba «Comparar» y la estrella */
+  const NOGLASS = '#curChip, #curChip *, .mchip, .mchip *, .cfgsw, .sxsw, [role=switch], .sfb, #szBot, .mi, .mi *, .rcard, .rcard *, input[type=checkbox], label.ckb, .cnv-b, .flowbtn, .flowbtn *';   /* v1.8: «Empezar a FlowIA’r» tiene su propio efecto (la copia de vidrio lo partía en dos y escondía la carita) */   /* v1.4: en la lista de IA el vidrio tapaba «Comparar» y la estrella */
   let px = -100, py = -100, ax = -100, ay = -100, rx = -100, ry = -100, rw = 34, rh = 34, rr = 17;
   let cm = 'idle', hov = null, lblEl = null, lx = 0, ly = 0, down = false, active = false, clT = 0;
   let lastX = ax, lastY2 = ay, vx = 0, vy = 0, ang = 0, angV = 0, sc = 1, fl = performance.now();
@@ -1266,6 +1266,8 @@ if (matchMedia('(pointer: fine)').matches && CFG.cursor){
   /* todos los suavizados dependen del tiempo, así que se sienten igual a 60 o a 144 Hz */
   const ease = (k, dt) => 1 - Math.pow(1 - k, dt);
   (function frame(now){
+    /* v2.3: si lo que tenía el vidrio se rehizo en el DOM (p. ej. la IA de la caja al elegir otra), se suelta la copia vieja y se busca lo que hay debajo */
+    if (hov && !hov.isConnected){ cl.style.opacity = '0'; cl.innerHTML = ''; lblEl = null; lblSync = null; hov = null; pick(document.elementFromPoint(px, py)); }
     const dt = Math.min(2.5, (now - fl) / 16.67 || 1); fl = now;
     /* la flecha va un poco detrás del mouse real y llega con suavidad */
     const nx = ax + (px - ax) * ease(.34, dt), ny = ay + (py - ay) * ease(.34, dt);
@@ -2035,7 +2037,7 @@ function cfgModal(tab){
     + '<div class="cfglbl">Cómo se ve</div><div id="cfgCh"></div>'
     + '<div class="cfglbl">Estilo de SynthFlow</div><div class="cfgseg" id="cfgUi"><button type="button" data-ui="full" aria-pressed="' + (draft.ui !== 'simple') + '">SynthFlow</button><button type="button" data-ui="simple" aria-pressed="' + (draft.ui === 'simple') + '">Simple</button></div><p class="cnote">Simple: solo tus chats, la caja de escribir y las respuestas, con un diseño tranquilo y sin efectos.</p>'
     + '<div class="cfglbl">Color de SynthFlow</div><div class="cfgth" id="cfgTh">' + THEMES.map(([id, nm, c1, lock, c2]) => '<button type="button" data-th="' + id + '" aria-pressed="' + ((draft.theme || 'synthz') === id) + '"' + (lock ? ' disabled aria-disabled="true"' : '') + ' style="--t1:' + c1 + ';--t2:' + c2 + '"><i></i><span>' + esc(nm) + '</span>' + (lock ? '<em>Pronto</em>' : '') + '</button>').join('') + '</div><p class="cnote" id="cfgThN"></p>'
-    + '<div class="cfglbl">Barra del celular</div><div class="cfgseg" id="cfgNav"><button type="button" data-nav="bottom" aria-pressed="' + (draft.nav !== 'left') + '">Abajo</button><button type="button" data-nav="left" aria-pressed="' + (draft.nav === 'left') + '">A la izquierda</button></div><p class="cnote">A la izquierda: la barra se esconde y la abres con el botón ☰ de arriba.</p>'
+    + (matchMedia('(pointer:coarse), (max-width:820px)').matches ? '<div class="cfglbl">Barra del celular</div><div class="cfgseg" id="cfgNav"><button type="button" data-nav="bottom" aria-pressed="' + (draft.nav !== 'left') + '">Abajo</button><button type="button" data-nav="left" aria-pressed="' + (draft.nav === 'left') + '">A la izquierda</button></div><p class="cnote">A la izquierda: la barra se esconde y la abres con el botón ☰ de arriba.</p>' : '')
     + '<div class="cfglbl">Detalles</div><div id="cfgRows">' + CFG_PAGE.map(row).join('') + '</div>'
     + '<div class="cfglbl">Intro de la página</div><div class="cfgseg" id="cfgIn">' + IN.map(([v, l]) => '<button type="button" data-in="' + v + '" aria-pressed="' + (draft.intro === v) + '">' + l + '</button>').join('') + '</div><p class="cnote">La animación al entrar al chat siempre se ve.</p>'
     + '</section>'
@@ -3002,7 +3004,7 @@ const BOT_FAQ = [
   { k:'error no responde falla lenta demora', a:'Si una IA falla, te ofrezco una parecida que sí funcione, con tu mensaje listo para reenviar.' },
   { k:'agente modo agente superiorsynth superior mejorar prompt', a:'Con SuperiorSynth no eliges IA: tú escribes, él entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso. Al final decides si te quedas con esa IA o sigues con él. Lo activas arriba de tus chats, en «SuperiorSynth», junto a «Chats» (en el celular: pestaña Chats › SuperiorSynth).', go:['#cSeg [data-v="agents"]', '#railAgent', '[data-tab="chats"]'] },
   { k:'app instalar descargar aplicacion celular pantalla inicio', a:'SynthFlow se instala como app desde aquí mismo, sin tiendas: Ajustes › IAs y memoria › «Descargar la app SynthFlow». En Android toca «Instalar»; en iPhone: Compartir › Agregar a inicio. Queda a pantalla completa y a un toque.', go:['[data-tab="cfg"]', '#cfgBtn'] },
-  { k:'tema temas color colores cambiar simple estilo oscuro barra izquierda', a:'En Ajustes › Página eliges el estilo («SynthFlow» o «Simple», más tranquilo), el color de SynthFlow (Océano, Bosque, Atardecer, Lavanda…) y, en el celular, si la barra va abajo o a la izquierda.', go:['[data-tab="cfg"]', '#cfgBtn'] },
+  { k:'tema temas color colores cambiar simple estilo oscuro barra izquierda', a:'En Ajustes › Página eliges el estilo («SynthFlow» o «Simple», más tranquilo), el color de SynthFlow (Océano, Bosque, Lavanda…) y, en el celular, si la barra va abajo o a la izquierda.', go:['[data-tab="cfg"]', '#cfgBtn'] },
   { k:'vincular google correo usuario contraseña juntar unir cuentas', a:'En Tu cuenta › «Seguridad y acceso» vinculas tu Google a tu cuenta con usuario, o le pones usuario y contraseña a tu cuenta de Google. Así entras a la misma cuenta de las dos formas.', go:['#accBtn', '[data-tab="me"]'] },
   { k:'synth synthetism nombre significa synthonia sintonia por que llama', a:'«Synth» viene del synthetism, un arte. Sammuel, el creador, lo lleva a un arte nuevo de hacer páginas: SynthetismZ y SynthetismFlow. Y yo me llamo SynthonIA porque te sintonizo con la IA. ✨', mood:'encantada' },
   /* charla sencilla */
