@@ -62,7 +62,7 @@ else {
 (function(){
   const rail = $('#rail'), tog = $('#railTog'); if (!rail) return;
   const wide = () => matchMedia('(min-width:761px)').matches;
-  const KEYS = ['conectar', 'chat', 'consumo'];
+  const KEYS = ['como', 'modos', 'usos', 'faq'];
   const pairs = () => KEYS.map(k => [$('.navlinks a[data-sec="' + k + '"]'), $('.rail .rbtn[data-sec="' + k + '"] .rl')]).filter(p => p[0] && p[1]);
   const store = open => { try{ const o = JSON.parse(localStorage.getItem('synthz:rail')) || {}; o.open = open; localStorage.setItem('synthz:rail', JSON.stringify(o)); }catch(e){} };
   let flying = false;

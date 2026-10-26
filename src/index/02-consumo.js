@@ -28,6 +28,11 @@ function renderUsage(){
     st2.style.setProperty('--h', (sum / dmax * 100).toFixed(1) + '%');
     st2.innerHTML = arr.filter(x => x.v).map(x => '<u style="flex:' + x.v + ' 1 0;background:' + x.c + '"></u>').join('');
   });
+  /* «día más activo»: siempre es la barra más alta (si hay empate, el más reciente) */
+  const sums = per.map(a => a.reduce((s2, x) => s2 + x.v, 0)), top = sums.lastIndexOf(Math.max(...sums)), k = $('#chartKpi');
+  [...chart.children].forEach((c, i) => c.classList.toggle('top', sums[top] > 0 && i === top));
+  if (k){ const dl = s => new Date(s + 'T12:00').toLocaleDateString('es', { weekday:'long', day:'numeric' }), all = sums.reduce((a, b) => a + b, 0);
+    k.innerHTML = '<span><b>' + fmt(sums[13]) + '</b> hoy</span><span><b>' + fmt(all) + '</b> en 14 días</span>' + (sums[top] > 0 ? '<span class="ck-top"><b>' + esc(dl(days[top])) + '</b> tu día más activo · ' + fmt(sums[top]) + (sums[top] === 1 ? ' mensaje' : ' mensajes') + '</span>' : '<span>Aún sin día más activo</span>'); }
 }
 SZ.hooks.usage = () => { renderUsage(); updateTotals(); };
 
@@ -57,7 +62,7 @@ $('#wipeBtn').addEventListener('click', async () => { if (await SZ.szConfirm('¿
 
 /* ---------- scroll: solo lo esencial (barra, navegación y sección activa) ---------- */
 const bar = $('#progress'), nav = $('#nav');
-const secs = ['conectar', 'chat', 'consumo'].map(id => document.getElementById(id));
+const secs = ['como', 'modos', 'usos', 'comparar', 'conectar', 'chat', 'consumo', 'faq'].map(id => document.getElementById(id));
 let ticking = false;
 function update(){
   ticking = false;

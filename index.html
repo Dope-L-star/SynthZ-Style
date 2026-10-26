@@ -28,7 +28,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="sxg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8fb0ff"/><stop offset=".55" stop-color="#c9566c"/><stop offset="1" stop-color="#e6b65f"/></linearGradient><linearGradient id="zgrad" x1="0" y1="0" x2="1" y2="1"><animateTransform attributeName="gradientTransform" type="rotate" from="0 .5 .5" to="360 .5 .5" dur="16s" repeatCount="indefinite"/><stop offset="0" stop-color="#8fb0ff"/><stop offset=".55" stop-color="#c9566c"/><stop offset="1" stop-color="#e6b65f"/></linearGradient></defs></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="v24g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3de0ff"/><stop offset=".45" stop-color="#7b3ff2"/><stop offset=".75" stop-color="#ff3d9a"/><stop offset="1" stop-color="#ff7a45"/></linearGradient><linearGradient id="sxg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8fb0ff"/><stop offset=".55" stop-color="#c9566c"/><stop offset="1" stop-color="#e6b65f"/></linearGradient><linearGradient id="zgrad" x1="0" y1="0" x2="1" y2="1"><animateTransform attributeName="gradientTransform" type="rotate" from="0 .5 .5" to="360 .5 .5" dur="16s" repeatCount="indefinite"/><stop offset="0" stop-color="#8fb0ff"/><stop offset=".55" stop-color="#c9566c"/><stop offset="1" stop-color="#e6b65f"/></linearGradient></defs></svg>
 
 <div id="intro" aria-hidden="true">
   <div class="bg"></div>
@@ -81,67 +81,125 @@
     <span class="word" id="navWord"></span>
   </a>
   <div class="navlinks">
-    <a href="#conectar" data-sec="conectar">Mis IA</a>
-    <a href="chat.html" data-sec="chat">SynthFlow</a>
-    <a href="#consumo" data-sec="consumo">Tu uso</a>
+    <a href="#como" data-sec="como">Qué es</a>
+    <a href="#modos" data-sec="modos">Modos</a>
+    <a href="#usos" data-sec="usos">Para ti</a>
+    <a href="#faq" data-sec="faq">Preguntas</a>
   </div>
   <div class="navr"><button type="button" class="pill-total" id="limPill" title="Tu límite de hoy"><span id="limRing"></span><span id="navTotal">Cargando…</span></button><button class="cfgb helpb" id="helpBtn" type="button" aria-label="Ayuda: guía rápida" title="Guía rápida">?</button><button class="cfgb" id="cfgBtn" type="button" aria-label="Configuración" title="Configuración"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></button><button class="accb out" id="accBtn" type="button" aria-label="Tu cuenta">Entrar</button><button class="cfgb navmenu" id="navMenu" type="button" aria-label="Abrir el menú" aria-expanded="false" aria-controls="navDrop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
-  <div class="navdrop" id="navDrop" hidden><a href="chat.html">SynthFlow</a><a href="#conectar">Mis IA</a><a href="#consumo">Tu uso</a><button type="button" data-nd="acc">Mi cuenta</button><button type="button" data-nd="help">Guía</button><button type="button" data-nd="cfg">Configuración</button></div>
+  <div class="navdrop" id="navDrop" hidden><a href="#como">Qué es</a><a href="#modos">Modos</a><a href="#usos">Para ti</a><a href="#faq">Preguntas</a><a href="chat.html">SynthFlow</a><a href="#conectar">Mis IA</a><a href="#consumo">Tu uso</a><button type="button" data-nd="acc">Mi cuenta</button><button type="button" data-nd="help">Guía</button><button type="button" data-nd="cfg">Configuración</button></div>
 </nav>
 
 <main>
-<header class="hero" id="top">
+<header class="hero v24hero" id="top">
   <div class="hero-inner">
-    <h1 id="h1">Sintonía con la IA.<br>Tu futuro a la mano.</h1>
-    <p class="sub" id="heroSub">Pregunta, crea, programa y compara modelos de inteligencia artificial desde un solo lugar. Totalmente gratis.</p>
+    <span class="hbadge hero-fade"><b>Nuevo</b> · Conoce a SynthonIA <i class="hb-sp" aria-hidden="true">✦</i></span>
+    <h1 id="h1">Diseña a la <span class="gt">velocidad del pensamiento.</span></h1>
+    <p class="hsub2">Sintonía con la IA.</p>
+    <p class="sub" id="heroSub">Pregunta, crea, programa y compara muchas IAs desde un solo lugar.</p>
     <div class="cta hero-fade">
-      <a class="btn big flowbtn" href="chat.html" id="startBtn"><span class="fb-t">Empezar a <em>FlowIA’r</em></span><span class="fb-f" id="startFace" aria-hidden="true"></span><i class="fb-s s1"></i><i class="fb-s s2"></i><i class="fb-s s3"></i></a>
+      <a class="btn big flowbtn" href="chat.html" id="startBtn"><span class="fb-t">Empezar gratis</span><span class="fb-f" id="startFace" aria-hidden="true"></span><i class="fb-s s1"></i><i class="fb-s s2"></i><i class="fb-s s3"></i></a>
+      <a class="btn ghost lgbtn" href="#como" id="demoBtn">Ver demo <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg></a>
     </div>
-    <div class="chips hero-fade" id="chips"></div>
-    <p class="hero-meta hero-fade"><b id="heroConn">Listo para chatear</b> · <span id="heroTotal">sin configurar nada</span></p>
+    <div class="chips hero-fade" id="chips" hidden></div>
+    <p class="hero-meta hero-fade"><b id="heroConn">Gratis</b> · <span id="heroTotal">sin configurar nada</span> · pruébala sin cuenta</p>
+  </div>
+  <div class="hstage hero-fade" aria-hidden="true">
+    <div class="sbody" id="heroBot"></div>
+    <div class="hdemo lqg">
+      <div class="hd-q">Dame 3 ideas para un regalo barato</div>
+      <div class="hd-r">
+        <div class="hd-c" style="--i:0"><small><i class="dot"></i>IA de ejemplo 1</small><p>1. Una planta de interior pequeña</p></div>
+        <div class="hd-c" style="--i:1"><small><i class="dot"></i>IA de ejemplo 2</small><p>2. Un llavero con sus iniciales</p></div>
+        <div class="hd-c" style="--i:2"><small><i class="dot"></i>IA de ejemplo 3</small><p>3. Una taza con un dibujo suyo</p></div>
+      </div>
+    </div>
   </div>
   <span class="hint" aria-hidden="true"></span>
 </header>
 
-<section id="usos" aria-label="Para qué sirve SynthZ">
-  <div class="uses">
-    <a class="use" href="chat.html?draft=study" data-draft="study" style="--c:#8fb0ff;--i:0"><span class="ue" aria-hidden="true">📚</span><h3>Estudia y entiende</h3><p>Pide que te expliquen un tema difícil paso a paso, con ejemplos.</p><span class="ugo">Probar en SynthFlow →</span></a>
-    <a class="use" href="chat.html?draft=code" data-draft="code" style="--c:#c9566c;--i:1"><span class="ue" aria-hidden="true">💻</span><h3>Programa y resuelve</h3><p>Explica código, encuentra errores y compara soluciones.</p><span class="ugo">Probar en SynthFlow →</span></a>
-    <a class="use" href="chat.html?draft=create" data-draft="create" style="--c:#ff8f7a;--i:2"><span class="ue" aria-hidden="true">✍️</span><h3>Crea y desarrolla ideas</h3><p>Escribe textos, resume documentos y aterriza tus ideas.</p><span class="ugo">Probar en SynthFlow →</span></a>
-  </div>
-</section>
-
-<div class="band" aria-hidden="true"><div class="track" id="track"></div></div>
-
 <section id="como" aria-label="Cómo funciona">
   <div class="head"><h2 data-type data-cps="24" id="hHow">Así de fácil</h2></div>
   <div class="how-grid">
-    <article class="how-card">
-      <span class="how-n">01</span>
-      <h3 data-type data-cps="18">Pregunta lo que sea</h3>
-      <p data-type data-cps="110">Escribe lo que necesitas y da detalles. Ya está listo: no hay nada que instalar ni configurar.</p>
-      <div class="viz">
-        <div class="ubub">Dame 3 ideas para un regalo barato</div>
-        <div class="two"><div class="mini" style="grid-column:1/-1"><div class="who"><span data-ico="synthz"></span>Automática</div><div class="ln" style="--w:92%;--s:.1s"></div><div class="ln" style="--w:78%;--s:.3s"></div><div class="ln" style="--w:60%;--s:.5s"></div></div></div>
-      </div>
+    <article class="how-card lqg">
+      <span class="how-n">1</span>
+      <h3><b>Pregunta</b> lo que sea</h3>
+      <div class="viz"><div class="hsearch"><span class="hs-t">Dame 3 ideas para un <b>regalo barato</b></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg></div>
+        <div class="ln" style="--w:92%;--s:.1s"></div><div class="ln" style="--w:70%;--s:.3s"></div><div class="ln" style="--w:80%;--s:.5s"></div></div>
     </article>
-    <article class="how-card">
-      <span class="how-n">02</span>
-      <h3 data-type data-cps="18">Compara y elige</h3>
-      <p data-type data-cps="110">Pon varias IA a responder lo mismo y quédate con la que tenga más Flow.</p>
-      <div class="viz">
-        <div class="two">
-          <div class="mini"><div class="who"><span data-ico="synthz"></span>IA 1</div><div class="ln" style="--w:88%;--s:.1s"></div><div class="ln" style="--w:96%;--s:.3s"></div><div class="ln" style="--w:66%;--s:.5s"></div></div>
-          <div class="mini"><div class="who"><span data-ico="puter"></span>IA 2</div><div class="ln" style="--w:80%;--s:.2s"></div><div class="ln" style="--w:70%;--s:.4s"></div><div class="ln" style="--w:90%;--s:.6s"></div></div>
-        </div>
-      </div>
+    <article class="how-card lqg">
+      <span class="how-n">2</span>
+      <h3><b>Compara</b> y elige</h3>
+      <div class="viz"><div class="hvs"><span class="hv a">IA 1</span><span class="hv b">IA 2</span></div><p class="hv-tip">La que tenga más Flow</p></div>
     </article>
-    <article class="how-card" id="howMeasure">
-      <span class="how-n">03</span>
-      <h3 data-type data-cps="18">SynthonIA te acompaña</h3>
-      <p data-type data-cps="110">Si te pierdes, ella te muestra dónde está todo con su manita. Y de vez en cuando te cuenta un chiste.</p>
+    <article class="how-card lqg" id="howMeasure">
+      <span class="how-n">3</span>
+      <h3><b>SynthonIA</b> te acompaña</h3>
       <div class="viz"><div class="synth-demo"><span class="sd-f" id="howFace"></span><div class="sd-b">¿Te muestro dónde están tus chats?</div></div><span id="sceneNum" hidden>0</span></div>
     </article>
+  </div>
+  <div class="synthz lqg" data-reveal>
+    <h3>¿Qué es estar <span class="gt">synthonized</span>?</h3>
+    <p>Que la IA y tú se entiendan a la primera, como sintonizar tu canción favorita.</p>
+    <canvas class="sz-wave" id="szWave" aria-hidden="true"></canvas>
+  </div>
+</section>
+
+<section id="modos" aria-label="Modos">
+  <div class="head"><h2 data-type data-cps="24" id="hModos">Tú decides cómo trabajar</h2></div>
+  <div class="mflow" data-reveal aria-hidden="true">
+    <span class="mf-q">Tu pregunta</span><i class="mf-dots"></i>
+    <span class="mf-h"><b>?</b>¿Qué tan difícil es?</span>
+    <span class="mf-out"><span class="mf-a"><b>Sencilla</b>una IA que sabe de eso</span><span class="mf-b"><b>Difícil</b>SuperiorSynth</span></span>
+  </div>
+  <div class="modes" data-stagger>
+    <a class="mode lqg" href="chat.html"><em>Por defecto</em><span class="mi-ic"><svg viewBox="0 0 48 48" fill="none" stroke="url(#v24g)" stroke-width="3" stroke-linejoin="round"><path d="M27 4L10 27h12l-3 17 19-24H25z"/></svg></span><h3>Automático</h3><p>Elige solo: si tu pregunta es sencilla, la pasa a una IA que sabe de eso; si es difícil, llama a SuperiorSynth.</p></a>
+    <a class="mode lqg" href="chat.html"><em>Tú mandas</em><span class="mi-ic"><svg viewBox="0 0 48 48" fill="none" stroke="url(#v24g)" stroke-width="3" stroke-linejoin="round"><path d="M8 22c0-8 7-14 16-14s16 6 16 14-7 14-16 14c-2 0-4-.3-6-1l-8 4 2-7c-2.5-2.5-4-5.6-4-10z"/><circle cx="17" cy="22" r="1.6" fill="#3de0ff"/><circle cx="24" cy="22" r="1.6" fill="#3de0ff"/><circle cx="31" cy="22" r="1.6" fill="#3de0ff"/></svg></span><h3>Chat</h3><p>Tú eliges la IA y conversas.</p></a>
+    <a class="mode lqg hot" href="chat.html"><em>Gratis</em><span class="mi-ic"><svg viewBox="0 0 48 48" class="ss7" fill="none"><path d="M10 9h28L10 25l28 1-28 13h28" stroke="url(#v24g)" stroke-width="2.4" stroke-linejoin="round"/><g fill="#ffc857"><circle cx="10" cy="9" r="2.6"/><circle cx="38" cy="9" r="2.6"/><circle cx="10" cy="25" r="2.6"/><circle cx="24" cy="25.5" r="2.6"/><circle cx="38" cy="26" r="2.6"/><circle cx="10" cy="39" r="2.6"/><circle cx="38" cy="39" r="2.6"/></g></svg></span><h3>SuperiorSynth</h3><p>El agente rápido: entiende tu pedido, lo mejora y se lo pasa a la IA que más sabe.</p></a>
+  </div>
+</section>
+
+<section id="usos" aria-label="Para qué sirve SynthZ">
+  <div class="head"><h2 data-type data-cps="24" id="hUsos">SynthonIA es para ti</h2></div>
+  <div class="uses">
+    <a class="use lqg" href="chat.html?draft=study" data-draft="study" style="--c:#3de0ff;--i:0"><span class="ue" aria-hidden="true">📚</span><h3>Estudia y entiende</h3><p>«Explícame este tema paso a paso»</p><span class="ugo">Probar en SynthFlow →</span></a>
+    <a class="use lqg" href="chat.html?draft=code" data-draft="code" style="--c:#ff3d9a;--i:1"><span class="ue" aria-hidden="true">💻</span><h3>Programa y resuelve</h3><p>«Encuentra el error en mi código»</p><span class="ugo">Probar en SynthFlow →</span></a>
+    <a class="use lqg" href="chat.html?draft=create" data-draft="create" style="--c:#ff7a45;--i:2"><span class="ue" aria-hidden="true">✍️</span><h3>Crea y desarrolla ideas</h3><p>«Resume este documento»</p><span class="ugo">Probar en SynthFlow →</span></a>
+  </div>
+  <div class="free lqg" data-reveal>
+    <h3>Todo esto es gratis</h3>
+    <div class="ftiles" data-stagger>
+      <span class="ft"><svg viewBox="0 0 48 48"><circle cx="21" cy="21" r="13"/><path d="M8 21h26M21 8c-5 6-5 20 0 26M21 8c5 6 5 20 0 26"/><circle cx="33" cy="33" r="6" class="a"/><path d="M37.5 37.5L43 43" class="a"/></svg>Internet con fuentes</span>
+      <span class="ft"><svg viewBox="0 0 48 48"><path d="M12 6h17l9 9v27H12z"/><path d="M29 6v9h9"/><rect x="17" y="21" width="15" height="11" rx="2" class="a"/><path d="M17 30l5-5 4 4 2-2 4 4" class="a"/></svg>Archivos con vista previa</span>
+      <span class="ft"><svg viewBox="0 0 48 48"><rect x="8" y="10" width="32" height="24" rx="3"/><path d="M24 34v6M17 40h14"/><path d="M24 15v7h7a7 7 0 1 1-7-7z" class="a"/></svg>Presentaciones en PowerPoint</span>
+      <span class="ft"><svg viewBox="0 0 48 48"><path d="M24 7C13 7 6 15 6 23c0 9 8 16 16 16 3 0 3-3 2-5s0-4 3-4h6c5 0 9-3 9-8 0-9-8-15-18-15z"/><circle cx="15" cy="21" r="2.4" class="a"/><circle cx="21" cy="14" r="2.4" class="a"/><circle cx="30" cy="14" r="2.4" class="a"/><circle cx="35" cy="21" r="2.4" class="a"/></svg>Imágenes a partir de tus palabras</span>
+      <span class="ft"><svg viewBox="0 0 48 48"><path d="M8 19h7l9-8v26l-9-8H8z"/><path d="M30 18c2 3 2 9 0 12M35 14c4 5 4 15 0 20" class="a"/></svg>Escucha las respuestas en voz alta</span>
+      <span class="ft"><svg viewBox="0 0 48 48"><path d="M24 10c-3-4-12-3-12 4-5 1-6 8-2 11-3 5 2 11 7 9 2 4 7 4 7 0z"/><path d="M24 10c3-4 12-3 12 4 5 1 6 8 2 11 3 5-2 11-7 9-2 4-7 4-7 0z" class="a"/><path d="M24 10v24"/></svg>Memoria con tu permiso</span>
+      <span class="ft"><svg viewBox="0 0 48 48"><path d="M14 36a9 9 0 0 1-1-18 12 12 0 0 1 23 3 7.5 7.5 0 0 1-1 15z"/><path d="M19 27a5.5 5.5 0 0 1 9.5-3M29 28a5.5 5.5 0 0 1-9.5 3" class="a"/><path d="M28.5 21v3h-3M19.5 34v-3h3" class="a"/></svg>Copia de tus chats en tu Google Drive</span>
+      <span class="ft"><svg viewBox="0 0 48 48"><rect x="14" y="5" width="20" height="38" rx="4"/><path d="M21 9h6"/><circle cx="24" cy="23" r="5" class="a"/><path d="M21.5 23v.01M26.5 23v.01" class="a"/></svg>Funciona en el celular</span>
+    </div>
+  </div>
+</section>
+
+<section id="comparar" aria-label="Compáralas a ciegas">
+  <div class="cmp-top">
+    <div class="head"><h2 data-type data-cps="24" id="hTodas">Todas las IAs. Un solo lugar.</h2><p>Escribe, compara y quédate con la mejor respuesta.</p></div>
+    <div class="hub" data-reveal aria-hidden="true">
+      <span class="hub-c"><svg viewBox="0 0 64 64" fill="none"><path d="M8 32c5-14 10-14 14 0s9 14 14 0 9-14 14 0 5 8 6 4" stroke="url(#v24g)" stroke-width="4" stroke-linecap="round"/></svg></span>
+      <span class="hub-i" style="--a:-150deg">Para escribir</span><span class="hub-i" style="--a:180deg">Para estudiar</span><span class="hub-i" style="--a:150deg">Para programar</span>
+      <span class="hub-i" style="--a:-30deg">Para imágenes</span><span class="hub-i" style="--a:0deg">Para buscar en internet</span><span class="hub-i" style="--a:30deg">Las IAs famosas con tu cuenta gratis</span>
+    </div>
+  </div>
+  <div class="band" aria-hidden="true"><div class="track" id="track"></div></div>
+  <div class="blind lqg" data-reveal>
+    <h3>Compáralas a ciegas</h3>
+    <div class="bl-g">
+      <div class="bl-c"><b>Respuesta A</b><p>Una planta de interior no pide mucho cuidado y alegra cualquier cuarto.</p><button type="button" class="bl-v">Esta tiene más Flow</button></div>
+      <div class="bl-c first"><b>Respuesta B</b><em>Llegó primero</em><p>Un llavero con sus iniciales es barato y se siente personal.</p><button type="button" class="bl-v">Esta tiene más Flow</button></div>
+      <div class="bl-c"><b>Respuesta C</b><p>Una taza con un dibujo hecho por ti dura años y la usará cada mañana.</p><button type="button" class="bl-v">Esta tiene más Flow</button></div>
+      <div class="bl-c"><b>Respuesta D</b><p>Una cartita escrita a mano con un dulce: cuesta poco y se recuerda mucho.</p><button type="button" class="bl-v">Esta tiene más Flow</button></div>
+    </div>
+    <div class="bl-who"><span id="blFace"></span><span class="bl-say" id="blSay">Después te digo quién respondió</span></div>
   </div>
 </section>
 
@@ -175,20 +233,20 @@
 
 <section id="consumo">
   <div class="head">
-    <h2 data-type data-cps="24" id="hUse">Tu uso</h2>
-    <p data-type data-cps="120" data-after="#hUse">Cómo va tu límite gratis de hoy y cuánto has chateado estos días.</p>
+    <h2 data-type data-cps="24" id="hUse">Siempre sabes cuánto tienes</h2>
+    <p data-type data-cps="120" data-after="#hUse">Tus SynXCoin's de hoy, lo que llevas chateado y tu día más activo. 1 SynXCoin = 1 palabra.</p>
   </div>
   <div class="usage" data-reveal id="usagePanel">
-    <div>
-      <div class="limbig"><span id="bigRing"></span><div><b id="bigTotal">…</b><span>tu límite de hoy</span></div></div>
+    <div class="us-l lqg">
+      <div class="limbig"><span id="bigRing"></span><div><b id="bigTotal">…</b><span>te quedan hoy · se llenan a medianoche</span></div></div>
       <div id="useSplit"></div>
       <div id="useBal"><div class="bl-load">Revisando tu cuenta de Puter…</div></div>
       <div id="useSync"></div>
     </div>
-    <div class="rows" id="rows"></div>
+    <div class="us-r lqg"><h3 class="us-h">Dónde chateas</h3><div class="rows" id="rows"></div></div>
   </div>
-  <div class="chart-wrap" data-reveal id="chartPanel">
-    <h3>Mensajes por día · últimos 14 días</h3>
+  <div class="chart-wrap lqg" data-reveal id="chartPanel">
+    <div class="ch-h"><h3>Mensajes por día · últimos 14 días</h3><div class="ch-k" id="chartKpi"></div></div>
     <div class="chart" id="chart"></div>
   </div>
   <div class="tools" data-reveal>
@@ -199,11 +257,31 @@
     <input type="file" id="importFile" accept="application/json" class="hide">
   </div>
 </section>
+<section id="faq" aria-label="Preguntas frecuentes">
+  <div class="head"><h2 data-type data-cps="24" id="hFaq">Preguntas frecuentes</h2></div>
+  <div class="faq" data-stagger>
+    <details class="lqg" open><summary>¿Necesito saber de tecnología?</summary><p>Para nada. Escribes como hablas y SynthonIA te entiende.</p></details>
+    <details class="lqg"><summary>¿Puede navegar por internet o publicar mi app?</summary><p>Busca en internet y te da las fuentes, pero no abre un navegador completo ni publica apps.</p></details>
+    <details class="lqg"><summary>¿Es gratis de verdad?</summary><p>Sí. Cada persona tiene un límite gratis al día que se llena otra vez a medianoche. SynthZ nunca te cobra.</p></details>
+    <details class="lqg"><summary>¿Qué pasa si se me acaba el límite?</summary><p>Esperas a la medianoche, o conectas tu cuenta gratis de Puter para seguir con las IAs más famosas.</p></details>
+    <details class="lqg"><summary>¿Cuánto gasta cada cosa?</summary><p>Lo ves antes de enviar, junto a la caja de escribir, y en «Tu uso» siempre sabes cuánto te queda.</p></details>
+    <details class="lqg"><summary>¿Mis chats están seguros?</summary><p>Se guardan en tu equipo. Si entras a tu cuenta, también los ves en tu celular y en cualquier computador.</p></details>
+    <details class="lqg"><summary>¿Qué es A.L.I.A.S.?</summary><p>Un agente aparte: le cuentas un objetivo, te muestra el plan en pasos y los cumple uno a uno. Tú puedes pausar, aprobar o rehacer cada paso.</p></details>
+    <details class="lqg"><summary>¿Funciona en el celular?</summary><p>Sí, y puedes instalar SynthFlow como app desde el navegador.</p></details>
+  </div>
+  <div class="ready lqg" data-reveal>
+    <div><h2>¿Listo para <span class="gt">sintonizar</span>?</h2><a class="btn big flowbtn" href="chat.html"><span class="fb-t">Empezar gratis</span></a></div>
+    <span class="rd-f" id="readyFace" aria-hidden="true"></span>
+  </div>
+</section>
 </main>
 
-<footer>
+<footer class="v24foot lqg">
+  <div class="vf-b"><b class="vf-l">Synth<span>Z</span></b><span>Sintonía con la IA.</span></div>
+  <div class="vf-c" role="navigation" aria-label="Producto"><b>Producto</b><a href="chat.html">SynthFlow</a><a href="#modos">SuperiorSynth</a><a href="#como">SynthonIA</a></div>
+  <div class="vf-c" role="navigation" aria-label="Ayuda"><b>Ayuda</b><a href="#faq">Preguntas</a><a href="#consumo">Tu uso</a></div>
+  <div class="vf-c" role="navigation" aria-label="Legal"><b>Legal</b><a href="privacidad.html">Privacidad</a><a href="terminos.html">Términos</a></div>
   <p class="only-guest">Tus chats se guardan en este equipo. Si entras a tu cuenta, también los ves en tu celular y en cualquier computador.</p>
-  <p class="legal"><a href="privacidad.html">Privacidad</a> · <a href="terminos.html">Términos</a></p>
 </footer>
 
 <script src="core.js"></script>
