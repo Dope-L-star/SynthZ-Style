@@ -32,11 +32,12 @@ function paint(k){
 function anchor(k){
   const S = STOPS[k], sec = document.getElementById(k); if (!S || !sec) return;
   /* prueba cada título posible de la sección hasta encontrar uno donde quepa sin tapar nada */
+  el.hidden = false;   /* v2.7: visible un instante (en el mismo cuadro) para medir su alto real; abajo se decide si se queda */
   const hs = [...new Set([...(S.at ? S.at.split('|') : []), '.head h2', 'h2'].map(q => sec.querySelector(q)).filter(Boolean))];
   for (const h of hs){ standAt(S, sec, h); if (!el.hidden) return; }
 }
 /* todo lo que se ve en la página (textos, tarjetas, botones, etiquetas): ella nunca se para encima de nada de esto */
-const nearOf = h => [...document.querySelectorAll('main h2,main h3,main h4,main p,main a,main button,main img,main li,main summary,main .lqg,main .card,main .band,main .chip,main canvas')].filter(e => e !== h && !h.contains(e) && !e.contains(h) && !el.contains(e));
+const nearOf = h => [...document.querySelectorAll('main h2,main h3,main h4,main p,main a,main button,main img,main li,main summary,main .lqg,main .card,main .band,main .chip,main canvas,main .gi,main .uscene')].filter(e => e !== h && !h.contains(e) && !e.contains(h) && !el.contains(e));
 const hitsIn = (near, x0, y0, ww, hh) => near.some(e => { const r = e.getBoundingClientRect(); return r.width && r.height && Math.min(x0 + ww, r.right) - Math.max(x0, r.left) > 4 && Math.min(y0 + hh, r.bottom) - Math.max(y0, r.top) > 4; });
 /* celular: ya no flota fija tapando tarjetas; se para en el espacio libre encima del título de cada sección */
 function standSmall(t, w, H){
@@ -85,7 +86,8 @@ function stick(){
 function place(k, fly){
   const S = STOPS[k]; if (!S) return;
   const from = el.getBoundingClientRect();
-  anchor(k); paint(k);
+  /* v2.7: se dibuja primero con su tamaño real (si no, la primera vez se medía con un alto de reserva y quedaba flotando más arriba) */
+  paint(k); anchor(k); paint(k);
   if (fly && !reduce && from.width){
     const to = el.getBoundingClientRect(), dx = from.left - to.left, dy = from.top - to.top;
     if (Math.abs(dx) > 4 || Math.abs(dy) > 4)
@@ -120,7 +122,9 @@ let raf = 0;
 addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; update(); stick(); }); }, { passive:true, capture:true });
 addEventListener('resize', () => { posed = ''; if (cur){ paint(cur); anchor(cur); } update(); });
 /* los títulos se escriben letra por letra: cuando cambian de tamaño, se vuelve a acomodar */
-if ('ResizeObserver' in window){ const ro = new ResizeObserver(() => { if (cur) anchor(cur); }); Object.keys(STOPS).forEach(k => { const h = document.querySelector('#' + k + ' .head h2'); if (h) ro.observe(h); }); }
+if ('ResizeObserver' in window){ const ro = new ResizeObserver(() => { if (cur) anchor(cur); }); Object.keys(STOPS).forEach(k => { const h = document.querySelector('#' + k + ' .head h2'); if (h) ro.observe(h); });
+  /* v2.7: y si algo de arriba crece (una tarjeta que se llena después), el título baja: ella se vuelve a parar junto a él */
+  const mn = document.querySelector('main'); if (mn) ro.observe(mn); }
 /* los ojos la siguen: el puntero */
 if (!reduce && matchMedia('(pointer: fine)').matches){
   let r2 = 0;

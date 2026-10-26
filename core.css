@@ -1041,38 +1041,49 @@ html.noanim .szface .fwr path,html.noanim .szface .fwl path{animation:none}
 @keyframes sztear{0%{transform:translateY(0);opacity:0}20%{opacity:1}100%{transform:translateY(9px);opacity:0}}
 @keyframes szglitch{0%{transform:translateX(0)}50%{transform:translateX(1.6px)}100%{transform:translateX(-1.2px)}}
 @keyframes szscanE{to{transform:translateX(3px)}}
-/* v2.6 · SynthonIA de cuerpo entero hecha con el render (piezas en media/v26). Escenario 3:4; todo en % */
+/* v2.7 · SynthonIA de cristal líquido, toda en SVG (escenario 300 × 400). Cada pieza gira en su propio punto */
 .szbody{position:relative;display:block;width:var(--sz,240px);aspect-ratio:3/4;height:auto;user-select:none;-webkit-user-select:none}
-.szbody img{position:absolute;display:block;max-width:none;pointer-events:none;-webkit-user-drag:none}
-.szbody .syb-glow{position:absolute;left:8%;top:6%;width:84%;height:80%;border-radius:50%;background:radial-gradient(closest-side,rgba(190,110,255,.32),rgba(120,80,255,.12) 55%,transparent);pointer-events:none}
-.szbody .syb-ring{position:absolute;left:22%;top:93.6%;width:56%;height:5.6%;border-radius:50%;border:2px solid rgba(160,220,255,.55);box-shadow:0 0 14px rgba(255,95,200,.45),inset 0 0 10px rgba(61,224,255,.35);animation:szring 3.2s ease-in-out infinite}
-.szbody .syb-base{left:30.79%;top:76.47%;width:38.43%}
-.szbody .syb-up{position:absolute;inset:0;animation:sybfloat 3.6s ease-in-out infinite alternate}
-.szbody .syb-torso{left:29.55%;top:43.34%;width:40.91%}
-.szbody .syb-core{position:absolute;left:43.8%;top:55.26%;width:12.4%;aspect-ratio:1;border-radius:50%;background:radial-gradient(closest-side,rgba(200,255,255,.9),rgba(61,224,255,.45) 45%,transparent);mix-blend-mode:screen;animation:szcore 2.8s ease-in-out infinite}
-.szbody .syb-arm{position:absolute;top:46.44%;width:22.73%;height:37.77%;transition:rotate .75s cubic-bezier(.34,1.35,.64,1)}
-.szbody .syb-arm img{position:static;width:100%;height:auto}
-.szbody .syb-arm.al{left:8.47%;transform-origin:89.1% 14.75%;rotate:var(--al,0deg);animation:sybswayL 4.2s ease-in-out infinite alternate}
-.szbody .syb-arm.ar{left:68.8%;transform-origin:10.9% 14.75%;rotate:var(--ar,0deg);animation:sybswayR 4.6s ease-in-out infinite alternate}
-.szbody .syb-arm.ar.wave{animation:sybwave 1.3s ease-in-out infinite}
-.szbody[data-pose=escribe] .syb-arm{animation:sybtype .32s ease-in-out infinite alternate}
-.szbody[data-pose=escribe] .syb-arm.ar{animation-delay:-.16s}
-.szbody .syb-head{position:absolute;left:18.8%;top:5.26%;width:62.4%;height:41.18%;transform-origin:50% 97%;animation:sybhead 7s ease-in-out infinite}
-.szbody .syb-hd{position:absolute;inset:0;transform-origin:50% 97%;rotate:var(--tilt,0deg);transition:rotate .5s ease-out}
-.szbody .syb-hd img{left:0;top:0;width:100%}
-.szbody .syb-face{position:absolute;left:-9.93%;top:-21.8%;width:119.9%;height:136.1%;overflow:visible}
-.szbody .fe{filter:drop-shadow(0 0 1.5px rgba(61,224,255,.95)) drop-shadow(0 0 5px rgba(61,224,255,.65))}
-.szbody .fbl{transform-box:fill-box;transform-origin:50% 50%;animation:sybblink 5.6s ease-in-out infinite}
-.szbody[data-mood=dormida] .fbl,.szbody[data-mood=descansando] .fbl{animation:none}
-@keyframes szcore{50%{opacity:.45}}
-@keyframes szring{50%{opacity:.55}}
-@keyframes sybfloat{to{transform:translateY(-2.4%)}}
+.szbody .syb-glow{position:absolute;left:10%;top:4%;width:80%;height:82%;border-radius:50%;background:radial-gradient(closest-side,rgba(110,90,255,.3),rgba(61,224,255,.1) 55%,transparent);pointer-events:none}
+.szbody .syb-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.szbody .syb-ring,.szbody .syb-up,.szbody .syb-arm,.szbody .syb-sway,.szbody .syb-head,.szbody .syb-hd,.szbody .syb-halo,.szbody .syb-wave,.szbody .syb-dots circle,.szbody .syb-beam,.szbody .syb-liq{transform-box:view-box}
+.szbody .syb-ring{transform-origin:150px 380px;animation:sybring 3.2s ease-in-out infinite}
+.szbody .syb-beam{animation:sybbeam 2.4s ease-in-out infinite}
+.szbody .syb-dots circle{animation:sybdot 2.8s linear infinite}
+.szbody .syb-dots circle:nth-child(2){animation-delay:-.6s}.szbody .syb-dots circle:nth-child(3){animation-delay:-1.2s}.szbody .syb-dots circle:nth-child(4){animation-delay:-1.8s}.szbody .syb-dots circle:nth-child(5){animation-delay:-2.3s}
+.szbody .syb-up{animation:sybfloat 3.6s ease-in-out infinite alternate}
+.szbody .syb-arm{transition:transform .75s cubic-bezier(.34,1.35,.64,1)}
+.szbody .syb-arm.al,.szbody .al .syb-sway{transform-origin:100px 222px}
+.szbody .syb-arm.ar,.szbody .ar .syb-sway{transform-origin:200px 222px}
+.szbody .syb-arm.al{transform:rotate(var(--al,0deg))}
+.szbody .syb-arm.ar{transform:rotate(var(--ar,0deg))}
+.szbody .al .syb-sway{animation:sybswayL 4.2s ease-in-out infinite alternate}
+.szbody .ar .syb-sway{animation:sybswayR 4.6s ease-in-out infinite alternate}
+.szbody .syb-arm.ar.wave .syb-sway{animation:sybwave 1.3s ease-in-out infinite}
+.szbody[data-pose=escribe] .syb-sway{animation:sybtype .32s ease-in-out infinite alternate}
+.szbody[data-pose=escribe] .ar .syb-sway{animation-delay:-.16s}
+.szbody .syb-wave{animation:sybwavex 2.4s linear infinite}
+.szbody .syb-liq.a{animation:sybliqA 7s ease-in-out infinite alternate}
+.szbody .syb-liq.b{animation:sybliqB 8.5s ease-in-out infinite alternate}
+.szbody .syb-halo{transform-origin:150px 256px;animation:sybhalo 2.8s ease-in-out infinite}
+.szbody.talking .syb-halo{animation-duration:.6s}
+.szbody .syb-head{transform-origin:150px 206px;animation:sybhead 7s ease-in-out infinite}
+.szbody .syb-hd{transform-origin:150px 206px;transform:rotate(var(--tilt,0deg));transition:transform .5s ease-out}
+.szbody .syb-hsvg .fe{filter:drop-shadow(0 0 2px rgba(61,224,255,.95))}
+.szbody .syb-hsvg .fhead{filter:none}
+.szbody.syb-off *{animation-play-state:paused !important}
+@keyframes sybring{50%{opacity:.5;transform:scale(1.05)}}
+@keyframes sybbeam{50%{opacity:.55}}
+@keyframes sybdot{0%{transform:translateY(0);opacity:0}20%{opacity:1}100%{transform:translateY(-38px);opacity:0}}
+@keyframes sybfloat{to{transform:translateY(-9px)}}
 @keyframes sybhead{0%,100%{transform:rotate(0)}30%{transform:rotate(-2.5deg)}70%{transform:rotate(2deg)}}
 @keyframes sybswayL{to{transform:rotate(3deg)}}
 @keyframes sybswayR{to{transform:rotate(-3deg)}}
 @keyframes sybwave{0%,100%{transform:rotate(10deg)}50%{transform:rotate(-16deg)}}
-@keyframes sybtype{to{transform:rotate(5deg) translateY(1%)}}
-@keyframes sybblink{0%,90%,100%{transform:scaleY(1)}93%{transform:scaleY(.08)}96%{transform:scaleY(1)}}
+@keyframes sybtype{to{transform:rotate(5deg) translateY(3px)}}
+@keyframes sybwavex{to{transform:translateX(-26px)}}
+@keyframes sybliqA{to{transform:translate(52px,40px)}}
+@keyframes sybliqB{to{transform:translate(-58px,-46px)}}
+@keyframes sybhalo{50%{opacity:.55;transform:scale(1.12)}}
 @media (prefers-reduced-motion:reduce){.szbody *{animation:none !important;transition:none !important}}
 html.noanim .szface .fx,html.noanim .szface .fe,html.noanim .szbody *{animation:none !important}
 /* ===== v2.5 · logos del boceto ===== */
@@ -1097,3 +1108,46 @@ html[data-scheme="light"] .zw,html[data-scheme="light"] .flw-w .fw-t{color:#1b10
 .logo .lgz.mark,.sf-b .lgz.mark{width:auto}
 .gico .zmini{width:86%;height:86%;object-fit:contain;filter:drop-shadow(0 0 4px rgba(176,92,255,.5))}
 :where(a,button,[role="button"],summary,input,textarea,select,[tabindex]):focus-visible{outline:2px solid #3de0ff;outline-offset:2px}
+/* v2.7 · íconos de vidrio dibujados en código (core 25g): el dibujo brilla con su color y se mueve al pasar por su tarjeta */
+.gi{display:inline-block;width:1.4em;height:1.4em;flex:none;line-height:0;vertical-align:middle}
+.gi svg,svg.fico{display:block;width:100%;height:100%;overflow:visible;stroke:none;filter:none}
+.gi .gi-g{filter:drop-shadow(0 0 2.2px var(--gg))}
+.gi .gi-tw,.gi .gi-dot,.gi .gi-w,.gi .gi-lens,.gi .gi-brush,.gi .gi-sync,.gi .gi-star,.gi .gi-beam,.gi .gi-sun,.gi .gi-eyes,.gi .gi-pie{transform-box:fill-box;transform-origin:center}
+.gi .gi-tassel{transform-box:fill-box;transform-origin:50% 0}
+.gi .gi-run{stroke-dasharray:12 88;opacity:0}
+/* en reposo, los tres modos ya están vivos (son los grandes); el resto despierta al pasar el mouse o al enfocarlo */
+.mode .gi .gi-tw{animation:gitw 2.4s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.34s)}
+.mode .gi .gi-dot{animation:gidot 1.4s ease-in-out infinite;animation-delay:calc(var(--i,0) * .18s)}
+.mode .gi[data-gi=rayo] .gi-g{animation:giflick 5s steps(1) infinite}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-tw{animation:gitw 1.2s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.17s)}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-dot{animation:gidot .8s ease-in-out infinite;animation-delay:calc(var(--i,0) * .12s)}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-run{opacity:1;animation:girun 1.8s linear infinite}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-w{animation:giw 1.2s ease-in-out infinite}
+.gi .gi-w.w2{animation-delay:.18s !important}.gi .gi-w.w3{animation-delay:.36s !important}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-lens{animation:gilens 1.6s ease-in-out infinite alternate}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-brush{animation:gibrush .9s ease-in-out infinite alternate}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-sync{animation:gispin 1.6s linear infinite}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-star{animation:gistar 1.8s ease-in-out infinite}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-beam{animation:gibeam 1.6s ease-in-out infinite alternate}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-tassel{animation:gitassel 1s ease-in-out infinite alternate}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-sun{animation:gisun 1.4s ease-in-out infinite alternate}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-eyes{animation:gieyes 2.2s ease-in-out infinite}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-pie{animation:gipie 1.2s ease-in-out infinite alternate}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-ink{animation:giink 1.6s ease-in-out infinite}
+@keyframes gitw{50%{opacity:.45;transform:scale(.72)}}
+@keyframes gidot{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-3px)}}
+@keyframes giflick{0%,100%{opacity:1}91%{opacity:.55}93%{opacity:1}95%{opacity:.7}}
+@keyframes girun{to{stroke-dashoffset:-100}}
+@keyframes giw{0%,100%{opacity:.25}45%{opacity:1}}
+@keyframes gilens{to{transform:translate(-3px,-3px) rotate(-10deg)}}
+@keyframes gibrush{to{transform:rotate(-14deg) translate(-1px,1px)}}
+@keyframes gispin{to{transform:rotate(360deg)}}
+@keyframes gistar{50%{transform:rotate(45deg) scale(.86)}}
+@keyframes gibeam{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
+@keyframes gitassel{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
+@keyframes gisun{to{transform:scale(1.25)}}
+@keyframes gieyes{0%,40%,48%,100%{transform:scaleY(1)}44%{transform:scaleY(.12)}}
+@keyframes gipie{to{transform:translate(1.6px,-1.6px)}}
+@keyframes giink{0%{stroke-dasharray:1 1;stroke-dashoffset:1}60%,100%{stroke-dasharray:1 1;stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){.gi *{animation:none !important}}
+html.noanim .gi *{animation:none !important}

@@ -1,0 +1,43 @@
+/* v2.7 · íconos de vidrio dibujados en código (core 25g): el dibujo brilla con su color y se mueve al pasar por su tarjeta */
+.gi{display:inline-block;width:1.4em;height:1.4em;flex:none;line-height:0;vertical-align:middle}
+.gi svg,svg.fico{display:block;width:100%;height:100%;overflow:visible;stroke:none;filter:none}
+.gi .gi-g{filter:drop-shadow(0 0 2.2px var(--gg))}
+.gi .gi-tw,.gi .gi-dot,.gi .gi-w,.gi .gi-lens,.gi .gi-brush,.gi .gi-sync,.gi .gi-star,.gi .gi-beam,.gi .gi-sun,.gi .gi-eyes,.gi .gi-pie{transform-box:fill-box;transform-origin:center}
+.gi .gi-tassel{transform-box:fill-box;transform-origin:50% 0}
+.gi .gi-run{stroke-dasharray:12 88;opacity:0}
+/* en reposo, los tres modos ya están vivos (son los grandes); el resto despierta al pasar el mouse o al enfocarlo */
+.mode .gi .gi-tw{animation:gitw 2.4s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.34s)}
+.mode .gi .gi-dot{animation:gidot 1.4s ease-in-out infinite;animation-delay:calc(var(--i,0) * .18s)}
+.mode .gi[data-gi=rayo] .gi-g{animation:giflick 5s steps(1) infinite}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-tw{animation:gitw 1.2s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.17s)}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-dot{animation:gidot .8s ease-in-out infinite;animation-delay:calc(var(--i,0) * .12s)}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-run{opacity:1;animation:girun 1.8s linear infinite}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-w{animation:giw 1.2s ease-in-out infinite}
+.gi .gi-w.w2{animation-delay:.18s !important}.gi .gi-w.w3{animation-delay:.36s !important}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-lens{animation:gilens 1.6s ease-in-out infinite alternate}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-brush{animation:gibrush .9s ease-in-out infinite alternate}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-sync{animation:gispin 1.6s linear infinite}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-star{animation:gistar 1.8s ease-in-out infinite}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-beam{animation:gibeam 1.6s ease-in-out infinite alternate}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-tassel{animation:gitassel 1s ease-in-out infinite alternate}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-sun{animation:gisun 1.4s ease-in-out infinite alternate}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-eyes{animation:gieyes 2.2s ease-in-out infinite}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-pie{animation:gipie 1.2s ease-in-out infinite alternate}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-ink{animation:giink 1.6s ease-in-out infinite}
+@keyframes gitw{50%{opacity:.45;transform:scale(.72)}}
+@keyframes gidot{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-3px)}}
+@keyframes giflick{0%,100%{opacity:1}91%{opacity:.55}93%{opacity:1}95%{opacity:.7}}
+@keyframes girun{to{stroke-dashoffset:-100}}
+@keyframes giw{0%,100%{opacity:.25}45%{opacity:1}}
+@keyframes gilens{to{transform:translate(-3px,-3px) rotate(-10deg)}}
+@keyframes gibrush{to{transform:rotate(-14deg) translate(-1px,1px)}}
+@keyframes gispin{to{transform:rotate(360deg)}}
+@keyframes gistar{50%{transform:rotate(45deg) scale(.86)}}
+@keyframes gibeam{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
+@keyframes gitassel{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
+@keyframes gisun{to{transform:scale(1.25)}}
+@keyframes gieyes{0%,40%,48%,100%{transform:scaleY(1)}44%{transform:scaleY(.12)}}
+@keyframes gipie{to{transform:translate(1.6px,-1.6px)}}
+@keyframes giink{0%{stroke-dasharray:1 1;stroke-dashoffset:1}60%,100%{stroke-dasharray:1 1;stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){.gi *{animation:none !important}}
+html.noanim .gi *{animation:none !important}

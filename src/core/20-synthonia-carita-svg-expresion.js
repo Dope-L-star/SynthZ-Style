@@ -11,19 +11,33 @@ const FACE_EYE = '#3de0ff';
   d.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
   d.innerHTML = '<svg width="0" height="0"><defs>'
     /* vidrio perlado: brillo blanco rosado arriba a la izquierda, rosa, lila y violeta en el borde */
-    + '<radialGradient id="szPearl" cx=".5" cy=".56" r=".6"><stop offset="0" stop-color="#8a74e4" stop-opacity=".78"/><stop offset=".55" stop-color="#b19cf2" stop-opacity=".86"/><stop offset=".86" stop-color="#d3c2fa" stop-opacity=".95"/><stop offset="1" stop-color="#e9defe"/></radialGradient>'
+    + '<radialGradient id="szPearl" cx=".46" cy=".42" r=".62"><stop offset="0" stop-color="#2b1a6e" stop-opacity=".62"/><stop offset=".58" stop-color="#4630b8" stop-opacity=".5"/><stop offset=".84" stop-color="#78c8ff" stop-opacity=".62"/><stop offset="1" stop-color="#e9fdff" stop-opacity=".95"/></radialGradient>'
     /* filo de luz cian abajo y a los lados (la luz del ambiente rebota en el vidrio) */
-    + '<radialGradient id="szRimL" cx=".5" cy=".08" r="1"><stop offset=".68" stop-color="#9fe9ff" stop-opacity="0"/><stop offset=".9" stop-color="#9fe9ff" stop-opacity=".45"/><stop offset="1" stop-color="#8ce6ff" stop-opacity=".95"/></radialGradient>'
+    + '<radialGradient id="szRimL" cx=".5" cy=".1" r="1"><stop offset=".66" stop-color="#bff6ff" stop-opacity="0"/><stop offset=".9" stop-color="#9ff0ff" stop-opacity=".5"/><stop offset="1" stop-color="#e6fdff" stop-opacity=".95"/></radialGradient>'
     /* el rosa que se ve a través del vidrio, más fuerte a la derecha */
-    + '<radialGradient id="szSub" cx=".66" cy=".3" r=".75"><stop offset="0" stop-color="#ff9ee6" stop-opacity=".7"/><stop offset=".6" stop-color="#ff86da" stop-opacity=".25"/><stop offset="1" stop-color="#ff86da" stop-opacity="0"/></radialGradient>'
+    + '<radialGradient id="szSub" cx=".7" cy=".86" r=".7"><stop offset="0" stop-color="#5ff4ff" stop-opacity=".55"/><stop offset=".55" stop-color="#ff3d9a" stop-opacity=".16"/><stop offset="1" stop-color="#ff3d9a" stop-opacity="0"/></radialGradient>'
     + '<radialGradient id="szVisor" cx=".42" cy=".32" r=".8"><stop offset="0" stop-color="#1d1236"/><stop offset=".55" stop-color="#0b0719"/><stop offset="1" stop-color="#030209"/></radialGradient>'
     /* piezas cilíndricas (cuello, brazos, base): luz al centro y lila en los bordes */
     + '<linearGradient id="szCyl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f3ecff"/><stop offset=".2" stop-color="#c3aef6"/><stop offset=".42" stop-color="#e9dcfd"/><stop offset=".6" stop-color="#a990f0"/><stop offset=".85" stop-color="#e3a3ea"/><stop offset="1" stop-color="#fbe9ff"/></linearGradient>'
-    + '<linearGradient id="szCylV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6efff"/><stop offset=".45" stop-color="#c9b2f6"/><stop offset="1" stop-color="#9a80ef"/></linearGradient>'
+    + '<linearGradient id="szCylV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd1a8"/><stop offset=".5" stop-color="#ff7a45"/><stop offset="1" stop-color="#ff3d9a"/></linearGradient>'
     + '<radialGradient id="szTorso" cx=".5" cy=".62" r=".62"><stop offset="0" stop-color="#f08fdc" stop-opacity=".92"/><stop offset=".45" stop-color="#b39bf2" stop-opacity=".88"/><stop offset=".82" stop-color="#d8c8fa" stop-opacity=".96"/><stop offset="1" stop-color="#f7f0ff"/></radialGradient>'
     + '<linearGradient id="szBase" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f6efff"/><stop offset=".18" stop-color="#c2acf6"/><stop offset=".45" stop-color="#e8dafd"/><stop offset=".62" stop-color="#ad94f1"/><stop offset=".85" stop-color="#ee9fe4"/><stop offset="1" stop-color="#fde8ff"/></linearGradient>'
     + '<radialGradient id="szCore" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#f2ffff"/><stop offset=".35" stop-color="#7befff"/><stop offset=".7" stop-color="#3de0ff" stop-opacity=".55"/><stop offset="1" stop-color="#3de0ff" stop-opacity="0"/></radialGradient>'
     + '<linearGradient id="szRingG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff7ad0"/><stop offset=".5" stop-color="#bfe9ff"/><stop offset="1" stop-color="#3de0ff"/></linearGradient>'
+    /* v2.7 · cuerpo de cristal líquido: vidrio casi transparente, filo de luz cian, borde iridiscente con los colores de la marca */
+    + '<radialGradient id="sgGlass" cx=".42" cy=".36" r=".75"><stop offset="0" stop-color="#5a44d0" stop-opacity=".34"/><stop offset=".6" stop-color="#2f2190" stop-opacity=".42"/><stop offset=".86" stop-color="#76d4ff" stop-opacity=".55"/><stop offset="1" stop-color="#eafdff" stop-opacity=".9"/></radialGradient>'
+    + '<radialGradient id="sgCaus" cx=".5" cy=".96" r=".62"><stop offset="0" stop-color="#9af7ff" stop-opacity=".85"/><stop offset=".5" stop-color="#3de0ff" stop-opacity=".22"/><stop offset="1" stop-color="#3de0ff" stop-opacity="0"/></radialGradient>'
+    + '<linearGradient id="sgIri" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3de0ff"/><stop offset=".38" stop-color="#9b7bff"/><stop offset=".7" stop-color="#ff3d9a"/><stop offset="1" stop-color="#ff7a45"/></linearGradient>'
+    + '<linearGradient id="sgArm" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e4fbff" stop-opacity=".9"/><stop offset=".22" stop-color="#7d6be8" stop-opacity=".5"/><stop offset=".55" stop-color="#2f2190" stop-opacity=".45"/><stop offset=".82" stop-color="#7fe6ff" stop-opacity=".6"/><stop offset="1" stop-color="#ffffff" stop-opacity=".85"/></linearGradient>'
+    + '<linearGradient id="sgSpec" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'
+    + '<linearGradient id="sgWave" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3de0ff"/><stop offset=".35" stop-color="#7b3ff2"/><stop offset=".7" stop-color="#ff3d9a"/><stop offset="1" stop-color="#ff7a45"/></linearGradient>'
+    + '<linearGradient id="sgBeam" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#3de0ff" stop-opacity=".55"/><stop offset=".6" stop-color="#7b3ff2" stop-opacity=".16"/><stop offset="1" stop-color="#7b3ff2" stop-opacity="0"/></linearGradient>'
+    + '<radialGradient id="sgCoreIn" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#1b1048"/><stop offset=".7" stop-color="#0a0620"/><stop offset="1" stop-color="#05030f"/></radialGradient>'
+    + '<radialGradient id="sgHalo" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#3de0ff" stop-opacity=".55"/><stop offset=".55" stop-color="#7b3ff2" stop-opacity=".18"/><stop offset="1" stop-color="#7b3ff2" stop-opacity="0"/></radialGradient>'
+    + '<clipPath id="sgCoreClip"><circle cx="150" cy="256" r="19"/></clipPath>'
+    + '<clipPath id="sgTorsoClip"><path d="M150 206C198 206 216 228 214 258C212 290 190 312 150 312C110 312 88 290 86 258C84 228 102 206 150 206Z"/></clipPath>'
+    + '<radialGradient id="sgBlobA" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#9b7bff" stop-opacity=".75"/><stop offset="1" stop-color="#9b7bff" stop-opacity="0"/></radialGradient>'
+    + '<radialGradient id="sgBlobB" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ff3d9a" stop-opacity=".55"/><stop offset=".5" stop-color="#3de0ff" stop-opacity=".25"/><stop offset="1" stop-color="#3de0ff" stop-opacity="0"/></radialGradient>'
     + '<filter id="szBlur3" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2"/></filter>'
     + '<filter id="szBlur1" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1"/></filter>'
     + '</defs></svg>';
@@ -108,12 +122,12 @@ function headSvg(f, big){
     + '<g class="fhead"><ellipse cx="50" cy="53" rx="39.5" ry="37.5" fill="url(#szPearl)"/>'
     + '<ellipse cx="50" cy="53" rx="39.5" ry="37.5" fill="url(#szSub)"/>'
     + '<ellipse cx="50" cy="53" rx="39.5" ry="37.5" fill="url(#szRimL)"/>'
-    + '<ellipse cx="50" cy="53" rx="39" ry="37" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width=".7"/></g>'
+    + '<ellipse cx="50" cy="53" rx="39" ry="37" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width=".7"/><ellipse cx="50" cy="53" rx="39.5" ry="37.5" fill="none" stroke="url(#sgIri)" stroke-width="1.1" stroke-opacity=".75"/></g>'
     + (big ? '<ellipse cx="34" cy="26" rx="14" ry="6" transform="rotate(-26 34 26)" fill="#fff" opacity=".8" filter="url(#szBlur3)"/>' : '<ellipse cx="34" cy="27" rx="11" ry="4.6" transform="rotate(-26 34 27)" fill="#fff" opacity=".6"/>')
     + '<path d="M24.5 37q4-11 15.5-15.5" stroke="#fff" stroke-opacity=".95" stroke-width="2.2" stroke-linecap="round" fill="none"/>'
-    + '<ellipse class="frim" cx="50" cy="56" rx="31.4" ry="28.2" fill="none" stroke="#ff4fc0" stroke-width="' + (big ? 6 : 4) + '" opacity="' + (big ? .85 : .6) + '"' + (big ? ' filter="url(#szBlur3)"' : '') + '/>'
-    + '<ellipse cx="50" cy="56" rx="30.6" ry="27.4" fill="url(#szVisor)" stroke="#ff7ad0" stroke-width="2.2"/>'
-    + (big ? '<ellipse cx="50" cy="56" rx="28.6" ry="25.4" fill="none" stroke="#ff4fc0" stroke-width="3" opacity=".35" filter="url(#szBlur3)"/>' : '') + ''
+    + '<ellipse class="frim" cx="50" cy="56" rx="31.4" ry="28.2" fill="none" stroke="#8b5cff" stroke-width="' + (big ? 6 : 4) + '" opacity="' + (big ? .85 : .6) + '"' + (big ? ' filter="url(#szBlur3)"' : '') + '/>'
+    + '<ellipse cx="50" cy="56" rx="30.6" ry="27.4" fill="url(#szVisor)" stroke="url(#sgIri)" stroke-width="2.2"/>'
+    + (big ? '<ellipse cx="50" cy="56" rx="28.6" ry="25.4" fill="none" stroke="#3de0ff" stroke-width="3" opacity=".3" filter="url(#szBlur3)"/>' : '') + ''
     + '<path d="M28.5 49q5-15 21.5-18" stroke="#fff" stroke-opacity=".13" stroke-width="3.2" stroke-linecap="round" fill="none"/>'
     + '<g class="fe" fill="' + G + '" stroke="' + G + '" stroke-width="0">' + eyesOf(f) + '</g>';
 }
@@ -130,10 +144,11 @@ function face(mood, size, cls){
     + (f.x ? FFX[f.x] : '')
     + '</svg>';
 }
-/* ---------- cuerpo entero · v2.6: el render de Sammuel (Leonardo) cortado en piezas ----------
-   cabeza, torso, dos brazos y base son imágenes; los ojos, las expresiones y las ondas se dibujan encima del visor.
-   Los brazos giran en el hombro (CSS), así que cambiar de pose es un movimiento suave, no un cambio de dibujo.
-   Medidas en % del escenario (3:4) que sale del render: x 429–913, y 56–702. */
+/* ---------- cuerpo entero · v2.7: SynthonIA de cristal líquido, toda en código (SVG) ----------
+   La cabeza es la de siempre (casco, visor y ojos cian de la carita); el cuerpo es nuevo:
+   cuello de anillos, torso de vidrio con el corazón de SynthFlow (la onda de la marca), brazos por partes
+   que giran en el hombro, y un pedestal flotante con su luz. Nada es imagen: se dibuja y se anima en vivo,
+   y se pausa solo cuando no se ve. Escenario 300 × 400 (3:4). */
 const SPOSE = {
   idle:     { l:0,   r:0 },
   saluda:   { l:0,   r:-122, wave:'r' },
@@ -144,43 +159,71 @@ const SPOSE = {
   escucha:  { l:0,   r:-116 },
   presenta: { l:0,   r:-56 },
   sorpresa: { l:42,  r:-42 },
-  escribe:  { l:22,  r:-22, type:1 }
+  escribe:  { l:22,  r:-22, type:1 },
+  lee:      { l:30,  r:-30 }
 };
-const SYB = 'media/v26/syn-';
-function synFace(mood){
-  const f = FACE[mood] || FACE.feliz, G = f.c || FACE_EYE;
-  /* los ojos del render miden más y van más separados que los de la carita chica */
-  const eyes = f.e.map((s, i) => { const x = (i ? 63 : 37) + (f.dx || 0) * .8, y = 55 + (f.dy || 0) * .8, k = s[0];
-    if (k === 'cap') return FEYE.cap(x, y + (s[1] && s[1] < 1 ? 3 : 0), (s[1] || 1) * 1.15);
-    if (k === 'tilt') return FEYE.tilt(x, y, s[2] || 0);
-    if (k === 'talk') return FEYE.talk(x, y, i ? -1 : 1);
-    if (k === 'sad') return FEYE.sad(x, y, i ? 1 : -1);
-    if (k === 'cross') return i ? FEYE.smile(x, y) : FEYE.cross(x, y, -1);
-    return FEYE[k](x, y); }).join('');
-  return '<svg class="syb-face" viewBox="0 0 100 100" aria-hidden="true">' + wavesSvg()
-    + '<path d="M29 46q5-13 19-16" stroke="#fff" stroke-opacity=".12" stroke-width="3" stroke-linecap="round" fill="none"/>'
-    + '<g class="fe" fill="' + G + '" stroke="' + G + '" stroke-width="0"><g class="fbl">' + eyes + '</g></g>'
-    + '<path class="fm" d="M45 66h10" style="display:none"/>' + (f.x ? FFX[f.x] : '') + '</svg>';
+/* una pieza de vidrio: relleno casi transparente, luz que se junta abajo, borde iridiscente y filo blanco */
+const sgPiece = (d, rim) => '<path d="' + d + '" fill="url(#sgGlass)"/><path d="' + d + '" fill="url(#sgCaus)"/>'
+  + '<path d="' + d + '" fill="none" stroke="url(#sgIri)" stroke-width="' + (rim || 1.6) + '" stroke-opacity=".85"/><path d="' + d + '" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width=".7"/>';
+const sgOval = (cx, cy, rx, ry) => 'M' + (cx - rx) + ' ' + cy + 'a' + rx + ' ' + ry + ' 0 1 0 ' + 2 * rx + ' 0a' + rx + ' ' + ry + ' 0 1 0 ' + -2 * rx + ' 0z';
+/* el brazo izquierdo, colgando desde el hombro (0,0): brazo, codo, antebrazo y mano con pulgar. El derecho es su espejo */
+const SG_ARM = '<g transform="rotate(10)"><rect x="-12" y="-6" width="24" height="44" rx="12" fill="url(#sgArm)"/><rect x="-12" y="-6" width="24" height="44" rx="12" fill="none" stroke="url(#sgIri)" stroke-width="1.3" stroke-opacity=".85"/>'
+  + '<circle cx="0" cy="38" r="10.5" fill="url(#sgGlass)" stroke="#bff6ff" stroke-opacity=".6" stroke-width="1"/>'
+  + '<g transform="translate(0 38) rotate(-14)"><rect x="-11" y="0" width="22" height="32" rx="11" fill="url(#sgArm)"/><rect x="-11" y="0" width="22" height="32" rx="11" fill="none" stroke="url(#sgIri)" stroke-width="1.2" stroke-opacity=".85"/>'
+  +   '<g class="syb-hand" transform="translate(0 41) scale(1.18)">' + sgPiece('M-12 -6q0-8 12-8t12 8v8q0 12-12 12t-12-12z', 1.2)
+  +     '<path d="M9 -2q9-3 10 4t-7 7" fill="url(#sgArm)" stroke="url(#sgIri)" stroke-width="1"/><path d="M-6 -9q4-3 9-1" stroke="#fff" stroke-opacity=".8" stroke-width="1.6" stroke-linecap="round" fill="none"/></g>'
+  + '</g><path d="M-6 0q-2 16 0 30" stroke="#fff" stroke-opacity=".6" stroke-width="2.4" stroke-linecap="round" fill="none"/></g>';
+const SG_TORSO = 'M150 206C198 206 216 228 214 258C212 290 190 312 150 312C110 312 88 290 86 258C84 228 102 206 150 206Z';
+function synHead(mood){
+  const m = FACE[mood] ? mood : 'feliz', f = FACE[m];
+  return '<svg class="szface syb-hsvg' + (f.w ? ' w' + f.w : '') + '" data-mood="' + m + '" x="50" y="14" width="200" height="200" viewBox="0 0 100 100" overflow="visible">'
+    + wavesSvg() + headSvg(f, true) + '<path class="fm" d="M45 66h10" style="display:none"/>' + (f.x ? FFX[f.x] : '') + '</svg>';
 }
 function synBody(mood, pose, size){
   const m = FACE[mood] ? mood : 'feliz', p = SPOSE[pose] ? pose : 'idle', P = SPOSE[p];
-  const img = (n, cls) => '<img class="' + cls + '" src="' + SYB + n + '.webp" alt="" draggable="false" decoding="async">';
+  const torso = SG_TORSO;
   return '<div class="szbody" data-mood="' + m + '" data-pose="' + p + '" style="--al:' + P.l + 'deg;--ar:' + P.r + 'deg' + (size ? ';--sz:' + size + 'px' : '') + '" aria-hidden="true">'
-    + '<i class="syb-glow"></i><i class="syb-ring"></i>'
-    + img('base', 'syb-base')
-    + '<div class="syb-up">'
-    +   '<div class="syb-arm al">' + img('arm-l', '') + '</div><div class="syb-arm ar' + (P.wave === 'r' ? ' wave' : '') + '">' + img('arm-r', '') + '</div>'
-    +   img('torso', 'syb-torso') + '<i class="syb-core"></i>'
-    +   '<div class="syb-head"><div class="syb-hd">' + img('head', '') + synFace(m) + '</div></div>'
-    + '</div></div>';
+    + '<i class="syb-glow"></i>'
+    + '<svg class="syb-svg" viewBox="0 0 300 400" overflow="visible" aria-hidden="true">'
+    /* piso: anillo que late y la luz del pedestal */
+    + '<g class="syb-floor"><ellipse class="syb-ring" cx="150" cy="380" rx="86" ry="13" fill="none" stroke="url(#sgIri)" stroke-width="2.2"/><ellipse cx="150" cy="380" rx="62" ry="8" fill="url(#sgHalo)"/></g>'
+    + '<path class="syb-beam" d="M112 340L128 300H172L188 340Z" fill="url(#sgBeam)"/>'
+    + '<g class="syb-dots" fill="#bff6ff"><circle cx="136" cy="330" r="1.6"/><circle cx="150" cy="336" r="1.2"/><circle cx="163" cy="328" r="1.8"/><circle cx="144" cy="322" r="1"/><circle cx="158" cy="340" r="1.3"/></g>'
+    /* pedestal flotante de vidrio */
+    + '<g class="syb-base">' + sgPiece('M96 340a54 12 0 0 1 108 0v14a54 12 0 0 1 -108 0z', 1.4)
+    +   '<ellipse cx="150" cy="340" rx="54" ry="12" fill="url(#sgGlass)" stroke="url(#sgIri)" stroke-width="1.6"/><ellipse cx="150" cy="340" rx="34" ry="6.5" fill="none" stroke="#9ff0ff" stroke-opacity=".8" stroke-width="1.4"/>'
+    +   '<path d="M104 350q46 10 92 0" stroke="#fff" stroke-opacity=".35" stroke-width="1.2" fill="none"/></g>'
+    /* todo lo de arriba flota sobre el pedestal */
+    + '<g class="syb-up">'
+    +   '<g class="syb-arm al"><g class="syb-sway"><g transform="translate(100 222)">' + SG_ARM + '</g></g></g>'
+    +   '<g class="syb-arm ar' + (P.wave === 'r' ? ' wave' : '') + '"><g class="syb-sway"><g transform="translate(200 222) scale(-1 1)">' + SG_ARM + '</g></g></g>'
+    +   '<g class="syb-torso">' + sgPiece(torso, 1.8)
+    +     '<g clip-path="url(#sgTorsoClip)" opacity=".75"><circle class="syb-liq a" cx="120" cy="240" r="46" fill="url(#sgBlobA)"/><circle class="syb-liq b" cx="182" cy="284" r="42" fill="url(#sgBlobB)"/></g>'
+    +     '<path d="M108 236q10-20 38-24" stroke="url(#sgSpec)" stroke-width="5" stroke-linecap="round" fill="none" opacity=".7"/>'
+    +     '<path d="M118 304q32 11 64 0" stroke="#9ff0ff" stroke-opacity=".5" stroke-width="2" stroke-linecap="round" fill="none"/>'
+    /*    el corazón: la esfera de SynthFlow con su onda de colores */
+    +     '<circle cx="150" cy="256" r="30" fill="url(#sgHalo)" class="syb-halo"/>'
+    +     '<circle cx="150" cy="256" r="19" fill="url(#sgCoreIn)" stroke="url(#sgIri)" stroke-width="1.6"/>'
+    +     '<g clip-path="url(#sgCoreClip)"><path class="syb-wave" d="M100 256q6.5-11 13 0t13 0t13 0t13 0t13 0t13 0t13 0t13 0" stroke="url(#sgWave)" stroke-width="3.6" stroke-linecap="round" fill="none"/></g>'
+    +     '<ellipse cx="143" cy="246" rx="7" ry="3.4" transform="rotate(-30 143 246)" fill="#fff" opacity=".55"/>'
+    +     '<path d="M126 318q24 9 48 0" stroke="url(#sgIri)" stroke-width="5" stroke-linecap="round" fill="none" opacity=".75"/></g>'
+    /*    cuello de anillos */
+    +   '<g class="syb-neck">' + sgPiece(sgOval(150, 208, 26, 7), 1.3) + sgPiece(sgOval(150, 200, 21, 6), 1.2) + '</g>'
+    +   '<g class="syb-head"><g class="syb-hd">' + synHead(m) + '</g></g>'
+    + '</g></svg></div>';
 }
+/* las animaciones de SynthonIA se pausan cuando no está en pantalla (cero trabajo de más) */
+const synIO = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('syb-off', !e.isIntersecting)), { rootMargin:'80px' }) : null;
+function synWatch(host){ if (!synIO || !host) return; host.querySelectorAll('.szbody').forEach(b => { if (!b._sw){ b._sw = 1; synIO.observe(b); } }); }
+if (synIO) new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType === 1){ if (n.classList.contains('szbody')){ if (!n._sw){ n._sw = 1; synIO.observe(n); } } else if (n.querySelector) synWatch(n); } }))).observe(document.documentElement, { childList:true, subtree:true });
 /* cambia la cara y la pose de un cuerpo que ya está en pantalla (los brazos se mueven suave); si no hay, lo dibuja */
 function synSet(host, mood, pose, size){
   const b = host && host.querySelector('.szbody'); if (!host) return;
   if (!b){ host.innerHTML = synBody(mood, pose, size); return; }
   const m = FACE[mood] ? mood : 'feliz', p = SPOSE[pose] ? pose : 'idle', P = SPOSE[p];
-  if (b.dataset.mood !== m){ const hd = b.querySelector('.syb-hd'), old = hd.querySelector('.syb-face'); old.insertAdjacentHTML('afterend', synFace(m)); old.remove(); b.dataset.mood = m; }
+  if (b.dataset.mood !== m){ const hd = b.querySelector('.syb-hd'); hd.innerHTML = synHead(m); b.dataset.mood = m; }
   if (b.dataset.pose !== p){ b.dataset.pose = p; b.style.setProperty('--al', P.l + 'deg'); b.style.setProperty('--ar', P.r + 'deg'); b.querySelector('.syb-arm.ar').classList.toggle('wave', P.wave === 'r'); }
+  if (size) b.style.setProperty('--sz', size + 'px');
 }
 /* v1.9 · SynthonIA mueve la boca con cada letra que dice: a (abierta), e/i (ancha), o/u (redonda), m/b/p (cerrada) */
 const VIS = { a:['M42 61.5q8-2 16 0q-1 9-8 9q-7 0-8-9z', 1], e:['M40.5 62.5q9.5-1.5 19 0q-2 5.5-9.5 5.5q-7.5 0-9.5-5.5z', 1], o:['M45.5 60.5q4.5-2 9 0q2.5 4.5 0 9q-4.5 2-9 0q-2.5-4.5 0-9z', 1], m:['M43 65h14', 0], c:['M42.5 63q7.5 4.5 15 0', 0] };
