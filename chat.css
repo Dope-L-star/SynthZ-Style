@@ -2007,3 +2007,8 @@ html:not(.simple) .m.user .bub{background:var(--lg-bg),rgba(123,63,242,.14);bord
 
 /* ventanas flotantes y menús (Ajustes, cuenta, selector): vidrio más denso para leer bien */
 html:not(.noglass) .tcard,html:not(.noglass) .amenu,html:not(.noglass) .ctxm,html:not(.noglass) #side.side{background:var(--lg-bg),rgba(16,9,38,.55) !important;border:1px solid var(--lg-edge) !important;backdrop-filter:blur(22px) saturate(170%) !important;-webkit-backdrop-filter:blur(22px) saturate(170%) !important;box-shadow:var(--lg-shadow),0 40px 120px -30px rgba(0,0,0,.8) !important}
+/* en computador el selector son dos tarjetas («Filtros» y «Las IA»): el vidrio va en cada una y no en una caja grande detrás */
+@media (min-width:900px){
+  html:not(.noglass) #side.side.two-p{background:none !important;border:0 !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;box-shadow:none !important}
+  html:not(.noglass) #side.two-p .pf-l,html:not(.noglass) #side.two-p .pf-r{background:var(--lg-bg),rgba(16,9,38,.6);border-color:var(--lg-edge);backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%);box-shadow:var(--lg-shadow),0 40px 120px -30px rgba(0,0,0,.8)}
+}

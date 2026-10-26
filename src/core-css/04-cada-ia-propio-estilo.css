@@ -83,6 +83,9 @@ body:has(#vintro) #szBot,body:has(#intro) #szBot,body:has(#intro) #szBotB,body:h
   #side.two-p:not(.two) .pf-l{transform:none}
   #side.two-p .pr-head b{font-size:26px}
 }
+/* v2.4: con el selector cerrado nada suyo recibe clics (antes la lista «Las IA» quedaba invisible encima de la página y se robaba los clics: no dejaba escribir ni elegir) */
+#side.side:not(.open),#side.side:not(.open) *{pointer-events:none !important}
+#side.side:not(.open) .pf-r{visibility:hidden !important}
 html.noanim #side.two-p .pf-l,html.noanim #side.two-p .pf-r{transition-duration:.01s !important;transition-delay:0s !important}
 /* ===== límite de hoy (reemplaza a los SynXCoins) ===== */
 .lring{flex:none;color:#7fd6b8;filter:drop-shadow(0 0 6px rgba(127,214,184,.45))}

@@ -1051,9 +1051,10 @@ addEventListener('unhandledrejection', e => { const m = e && e.reason && (e.reas
 try{ const nv = performance.getEntriesByType('navigation')[0]; if (nv && nv.type === 'reload') setTimeout(() => telEv('reload', 'recargó la página'), 2500); }catch(e){}
 
 /* ===== catálogo de modelos de OpenRouter, en vivo (la lista es pública: no necesita llave) ===== */
-const CAT_KEY = 'synthz:catalog-v5';
+const CAT_KEY = 'synthz:catalog-v6';
 /* «Qwen: Qwen3 235B (free)» → «Qwen3 235B»: solo el nombre */
-const cleanName = n => String(n || '').replace(/\s*\([^)]*\)\s*/g, ' ').replace(/^[^:]{1,24}:\s*/, '').replace(/\s+/g, ' ').trim() || String(n || '');
+/* «OpenAI: GPT-5» → «GPT-5», pero «Deepseek V4 Pro:0813» → «Deepseek V4 Pro 0813» (antes quedaba solo «0813») */
+const cleanName = n => String(n || '').replace(/\s*\([^)]*\)\s*/g, ' ').replace(/^[^:]{1,24}:\s+/, '').replace(/:(?=\S)/g, ' ').replace(/\s+/g, ' ').trim() || String(n || '');
 const VENDORS = { 'meta-llama':'Meta', google:'Google', mistralai:'Mistral', openai:'OpenAI', qwen:'Qwen', deepseek:'DeepSeek', nvidia:'NVIDIA', microsoft:'Microsoft', moonshotai:'Moonshot', 'z-ai':'Z.ai', 'x-ai':'xAI', anthropic:'Anthropic', cohere:'Cohere', nousresearch:'Nous', thudm:'THUDM', tngtech:'TNG', minimax:'MiniMax', inception:'Inception', liquid:'Liquid', allenai:'Ai2', ai21:'AI21', amazon:'Amazon', baidu:'Baidu', tencent:'Tencent', bytedance:'ByteDance', 'stepfun-ai':'StepFun', cognitivecomputations:'Cognitive', rekaai:'Reka', arliai:'ArliAI', 'shisa-ai':'Shisa' };
 const vendorLabel = v => VENDORS[v] || (v ? v.charAt(0).toUpperCase() + v.slice(1) : 'Otro');
 function vendorColor(v){ let h = 0; for (const ch of String(v)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return 'hsl(' + (h % 360) + ' 72% 74%)'; }
