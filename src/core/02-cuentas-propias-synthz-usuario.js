@@ -30,10 +30,39 @@ function slimChat(arr){
 function prefsOut(){
   return { v:2, t:Date.now(), model:state.model, fav:state.fav, cmp:state.cmp, sx:state.sx, pinned:state.pinned || '', threads:state.threads || {}, del:(state.del || []).slice(-300),
     arena:state.arena || {}, survey:state.survey || null, useTeam:state.useTeam || '', battle:!!state.battle, cfg:CFG, mem:state.mem,
+    projects:projSlim(), projOf:state.projOf || {}, pjDel:(state.pjDel || []).slice(-200),
     chatKeys:Object.keys(state.chats).filter(k => Array.isArray(state.chats[k]) && state.chats[k].length) };
+}
+/* v2.6 · proyectos: si los archivos pesan mucho, viaja solo su nombre y el texto se queda en este equipo */
+function projSlim(){
+  const P = (state.projects || []).map(p => Object.assign({}, p, { files:(p.files || []).map(f => ({ id:f.id, name:f.name, text:f.text })) }));
+  if (JSON.stringify(P).length > 150000) P.forEach(p => p.files.forEach(f => { delete f.text; }));
+  return P;
+}
+const pjStr = (v, n) => typeof v === 'string' ? v.slice(0, n) : '';
+function cleanProj(r){
+  return { id:pjStr(r.id, 40), name:pjStr(r.name, 60) || 'Proyecto', desc:pjStr(r.desc, 300), instr:pjStr(r.instr, 8000), star:!!r.star, arch:!!r.arch, c:+r.c || 0, c0:+r.c0 || 0, t:+r.t || 0, u:+r.u || 0,
+    files:(Array.isArray(r.files) ? r.files : []).filter(f => f && typeof f.id === 'string').slice(0, 60).map(f => Object.assign({ id:pjStr(f.id, 40), name:pjStr(f.name, 120) || 'archivo' }, typeof f.text === 'string' ? { text:f.text.slice(0, 200000) } : {})) };
+}
+function mergeProjects(p){
+  if (Array.isArray(p.pjDel)) state.pjDel = [...new Set([...(state.pjDel || []), ...p.pjDel.filter(x => typeof x === 'string')])].slice(-200);
+  const del = state.pjDel || [];
+  if (Array.isArray(p.projects)){
+    state.projects = state.projects || [];
+    p.projects.forEach(r => {
+      if (!r || typeof r.id !== 'string' || del.includes(r.id)) return;
+      const l = state.projects.find(x => x.id === r.id), c = cleanProj(r);
+      if (!l){ state.projects.push(c); return; }
+      if (c.u > (+l.u || 0)){ c.files = c.files.map(f => f.text != null ? f : ((l.files || []).find(x => x.id === f.id) || f)); c.t = Math.max(c.t, +l.t || 0); Object.assign(l, c); }
+      else l.t = Math.max(+l.t || 0, c.t);
+    });
+  }
+  if (state.projects) state.projects = state.projects.filter(x => !del.includes(x.id));
+  if (p.projOf && typeof p.projOf === 'object'){ const o = {}; Object.keys(p.projOf).forEach(k => { if (typeof p.projOf[k] === 'string' && /^openrouter::./.test(k)) o[k] = p.projOf[k]; }); state.projOf = Object.assign(o, state.projOf || {}); }
 }
 function mergeIn(p, chats){
   if (p && typeof p === 'object'){
+    mergeProjects(p);
     if (Array.isArray(p.fav)) state.fav = [...new Set([...(state.fav || []), ...p.fav.filter(x => typeof x === 'string')])];
     if (p.model && typeof p.model === 'object' && typeof p.model.openrouter === 'string') state.model = Object.assign({}, state.model, { openrouter:p.model.openrouter });
     if (typeof p.pinned === 'string' && p.pinned) state.pinned = p.pinned;
@@ -174,6 +203,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
    Al cerrar sesión se guardan en la nube y se borran de aquí; si entra otra cuenta y quedaron datos ajenos, se borran antes. */
 function wipeAccountData(){
   state.chats = {}; state.threads = {}; state.fav = []; state.cmp = []; state.pinned = ''; state.del = []; state.arena = {}; state.survey = null;
+  state.projects = []; state.projOf = {}; state.pjDel = []; state.curProj = '';
   delete state.useTeam; delete state.intent; state.battle = false;
   state.sx = { daily:0, saver:false, saved:0, hits:0, over:'', warned:'' };
   if (state.syncKey){ delete state.keys.openrouter; state.syncKey = false; }   /* esa llave vive en la cuenta: no se queda en un navegador ajeno */
