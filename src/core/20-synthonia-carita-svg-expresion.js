@@ -28,21 +28,40 @@ const FACE = (() => {
 FACE.triste = { e:['M40 53v4', 'M60 53v4'], ew:6, b:'M32 47l11-5M68 47l-11-5', m:'M41 72q9-8 18 0' };
 FACE.auch = { e:['M34 49l10 4-10 4', 'M55 53q5-4 10 0'], ew:3.4, b:'M32 43l12 5M57 45l10-3', m:'M41 70q4.5-4 9 0q4.5 4 9 0', x:'M78 30l4-6M84 36l6-2' };
 const FACE_GOOD = ['feliz', 'riendo', 'guino', 'encantada', 'celebrando', 'flow'];
+/* v2.4 · cara nueva del boceto: casco de vidrio perlado, visor oscuro con borde que brilla y ojos alargados cian; sin boca.
+   Cuando habla salen ondas naranjas a la DERECHA; cuando escucha, ondas azules a la IZQUIERDA. */
+const FACE_EYE = '#3de0ff';
+(function faceDefs(){
+  if (document.getElementById('szFaceDefs')) return;
+  const d = document.createElement('div'); d.id = 'szFaceDefs'; d.setAttribute('aria-hidden', 'true');
+  d.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+  d.innerHTML = '<svg width="0" height="0"><defs>'
+    + '<radialGradient id="szHead" cx=".35" cy=".28" r=".85"><stop offset="0" stop-color="#fff4fb"/><stop offset=".35" stop-color="#f3b9e6"/><stop offset=".7" stop-color="#b48cf0"/><stop offset="1" stop-color="#7a54d8"/></radialGradient>'
+    + '<linearGradient id="szRim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5fb4"/><stop offset=".5" stop-color="#b06bff"/><stop offset="1" stop-color="#ff7a45"/></linearGradient>'
+    + '<radialGradient id="szVisor" cx=".5" cy=".35" r=".8"><stop offset="0" stop-color="#1c1240"/><stop offset="1" stop-color="#07041a"/></radialGradient>'
+    + '</defs></svg>';
+  (document.body || document.documentElement).appendChild(d);
+})();
 function face(mood, size, cls){
-  const f = FACE[mood] || FACE.feliz, z = size || 40, G = FACE_G;
+  const f = FACE[mood] || FACE.feliz, z = size || 40, G = FACE_EYE;
   const P = (d, st) => d ? '<path d="' + d + '" ' + st + '/>' : '';
+  /* los ojos de antes (rayitas verticales) se estiran un poco: así quedan alargados como en el boceto */
+  const tall = d => d.replace(/^M(\d+(?:\.\d+)?) (\d+(?:\.\d+)?)v(\d+)$/, (m, x, y, l) => 'M' + x + ' ' + (+y - 2) + 'v' + (+l + 4));
   const eyes = f.glasses
-    ? '<path d="M27 45h20v6.5a7 7 0 0 1-7 7h-6a7 7 0 0 1-7-7z" fill="#07070a" stroke="#e6b65f" stroke-width="2.2"/><path d="M53 45h20v6.5a7 7 0 0 1-7 7h-6a7 7 0 0 1-7-7z" fill="#07070a" stroke="#e6b65f" stroke-width="2.2"/><path d="M47 47.5q3-2.5 6 0" stroke="#e6b65f" stroke-width="2.2" fill="none"/><path d="M31 49l5-3M57 49l5-3" stroke="rgba(255,255,255,.55)" stroke-width="1.6" stroke-linecap="round"/>'
-    : f.e.map(d => P(d, 'stroke="' + (f.ec || G) + '" stroke-width="' + (f.ew || 7) + '" stroke-linecap="round" stroke-linejoin="round" fill="' + (f.ef || 'none') + '"')).join('');
+    ? '<path d="M28 46h18v6a7 7 0 0 1-7 7h-4a7 7 0 0 1-7-7z" fill="#05030f" stroke="' + G + '" stroke-width="2.2"/><path d="M54 46h18v6a7 7 0 0 1-7 7h-4a7 7 0 0 1-7-7z" fill="#05030f" stroke="' + G + '" stroke-width="2.2"/><path d="M46 48q4-2.5 8 0" stroke="' + G + '" stroke-width="2.2" fill="none"/>'
+    : f.e.map(d => P(tall(d), 'stroke="' + (f.ec || G) + '" stroke-width="' + (f.ew || 7.5) + '" stroke-linecap="round" stroke-linejoin="round" fill="' + (f.ef === FACE_G ? G : (f.ef || 'none')) + '"')).join('');
+  const W = (x, dir, c, k) => '<g class="' + k + '" stroke="' + c + '" stroke-width="2.6" stroke-linecap="round" fill="none">'
+    + [5, 10.5, 16].map((r, i) => '<path style="--i:' + i + '" d="M' + x + ' ' + (55 - r) + 'a' + r + ' ' + r + ' 0 0 ' + (dir > 0 ? 1 : 0) + ' 0 ' + (2 * r) + '"/>').join('') + '</g>';
   return '<svg class="szface' + (cls ? ' ' + cls : '') + '" data-mood="' + (FACE[mood] ? mood : 'feliz') + '" viewBox="0 0 100 100" width="' + z + '" height="' + z + '" aria-hidden="true">'
-    + '<path class="fa" d="M50 20V10" stroke="#e6b65f" stroke-width="2.5" stroke-linecap="round"/><circle class="fb" cx="50" cy="8" r="4.5" fill="#c9566c"/>'
-    + '<rect x="6" y="46" width="8" height="18" rx="4" fill="#c9566c"/><rect x="86" y="46" width="8" height="18" rx="4" fill="#c9566c"/>'
-    + '<rect x="12" y="20" width="76" height="70" rx="30" fill="#1d1518" stroke="#e6b65f" stroke-opacity=".55" stroke-width="2"/><rect x="21" y="31" width="58" height="49" rx="21" fill="#110c0e"/>'
-    + (f.ck ? '<circle cx="31" cy="64" r="4.5" fill="#c9566c" fill-opacity=".55"/><circle cx="69" cy="64" r="4.5" fill="#c9566c" fill-opacity=".55"/>' : '')
-    + P(f.b, 'stroke="' + G + '" stroke-width="2.6" stroke-linecap="round" fill="none"')
+    + W(83, 1, '#ff8a3d', 'fwr') + W(17, -1, '#3de0ff', 'fwl')
+    + '<rect x="9" y="47" width="7" height="16" rx="3.5" fill="url(#szRim)"/><rect x="84" y="47" width="7" height="16" rx="3.5" fill="url(#szRim)"/>'
+    + '<rect class="fhead" x="13" y="16" width="74" height="74" rx="35" fill="url(#szHead)"/>'
+    + '<path d="M26 24q14-8 32-6" stroke="#fff" stroke-opacity=".75" stroke-width="3" stroke-linecap="round" fill="none"/>'
+    + '<rect x="21" y="30" width="58" height="48" rx="22" fill="url(#szVisor)" stroke="url(#szRim)" stroke-width="2.4"/>'
+    + P(f.b, 'stroke="' + G + '" stroke-opacity=".8" stroke-width="2.4" stroke-linecap="round" fill="none"')
     + '<g class="fe">' + eyes + '</g>'
-    + P(f.m, 'class="fm" stroke="' + G + '" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" fill="' + (f.mf ? G : 'none') + '"')
-    + P(f.x, 'stroke="#e6b65f" stroke-width="' + (f.xw || 2.4) + '" stroke-linecap="round" stroke-linejoin="round" fill="none"')
+    + (f.m ? '<path class="fm" d="' + f.m + '" style="display:none"/>' : '')
+    + P(f.x, 'stroke="' + G + '" stroke-width="' + (f.xw || 2.4) + '" stroke-linecap="round" stroke-linejoin="round" fill="none"')
     + (f.drop ? '<path class="fdrop" d="M83 28q-6 9-1 12.5q6 2.5 7-3.5q0-3-6-9z" fill="#8fd3e8" fill-opacity=".9"/>' : '')
     + '</svg>';
 }
@@ -75,12 +94,7 @@ function syllables(text){
 }
 function talkEls(svg){
   if (svg._talk) return svg._talk;
-  const NS = 'http://www.w3.org/2000/svg', g = document.createElementNS(NS, 'g'); g.setAttribute('class', 'ftalk');
-  const mo = document.createElementNS(NS, 'ellipse'), tg = document.createElementNS(NS, 'ellipse');
-  mo.setAttribute('cx', '50'); mo.setAttribute('cy', '65'); mo.setAttribute('fill', '#2a0d18'); mo.setAttribute('stroke', FACE_G); mo.setAttribute('stroke-width', '3');
-  tg.setAttribute('cx', '50'); tg.setAttribute('fill', '#e07a93');
-  g.appendChild(mo); g.appendChild(tg); svg.appendChild(g);
-  return (svg._talk = { g, mo, tg });
+  return (svg._talk = { g:svg.querySelector('.fwr') });
 }
 function lipSync(svgs, text){
   svgs = (svgs || []).filter(Boolean); if (!svgs.length || reduce) return undefined;
@@ -89,12 +103,9 @@ function lipSync(svgs, text){
   const fm = svg => svg.querySelector('.fm');
   const L = svgs.map(el => ({ el, ball:!!(el.closest && el.closest('#szBot')) }));
   const live = () => L.map(o => { if (!o.el.isConnected && o.ball) o.el = ballFace() || o.el; return o.el; }).filter(e => e.isConnected);
-  const paint = () => live().forEach(svg => { const T = talkEls(svg), m = fm(svg);
-    if (m) m.style.opacity = '0';
-    T.mo.setAttribute('rx', rx.toFixed(2)); T.mo.setAttribute('ry', Math.max(.4, ry).toFixed(2));
-    T.tg.setAttribute('rx', (rx * .55).toFixed(2)); T.tg.setAttribute('ry', Math.max(0, ry * .32).toFixed(2)); T.tg.setAttribute('cy', (65 + ry * .55).toFixed(2));
-    T.g.style.opacity = '1'; });
-  const stop = () => { cancelAnimationFrame(raf); raf = 0; L.map(o => o.el).forEach(svg => { const T = svg._talk, m = fm(svg); if (T) T.g.style.opacity = '0'; if (m) m.style.opacity = ''; }); };
+  const paint = () => live().forEach(svg => { const T = talkEls(svg); if (!T.g) return;
+    svg.classList.add('talking'); T.g.style.setProperty('--amp', Math.min(1, ry / 6).toFixed(2)); });
+  const stop = () => { cancelAnimationFrame(raf); raf = 0; L.map(o => o.el).forEach(svg => { svg.classList.remove('talking'); const T = svg._talk; if (T && T.g) T.g.style.removeProperty('--amp'); }); };
   const SYL = 140;                                    /* ms por sílaba: ritmo de voz */
   function loop(now){
     if (!t0) t0 = now;
@@ -175,3 +186,12 @@ const SND = (() => {
   };
 })();
 
+/* v2.4 · SynthonIA te escucha: mientras escribes (en el chat o en su ventanita) le salen ondas azules a la izquierda */
+(function listen(){
+  let t = 0;
+  addEventListener('input', e => {
+    const el = e.target; if (!el || !el.matches || !el.matches('textarea, input[type=text], input:not([type]), [contenteditable=true]')) return;
+    document.documentElement.classList.add('szlisten'); clearTimeout(t);
+    t = setTimeout(() => document.documentElement.classList.remove('szlisten'), 1300);
+  }, true);
+})();

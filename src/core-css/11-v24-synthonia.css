@@ -1,0 +1,15 @@
+/* ===== v2.4 · SynthonIA nueva: ojos cian que brillan, ondas de voz a la derecha (habla) y a la izquierda (escucha) ===== */
+.szface .fe{filter:drop-shadow(0 0 2.5px rgba(61,224,255,.95)) drop-shadow(0 0 6px rgba(61,224,255,.55))}
+.szface .fhead{filter:drop-shadow(0 0 5px rgba(255,95,180,.35))}
+.szface .fwr,.szface .fwl{opacity:0;transition:opacity .25s}
+.szface .fwr path,.szface .fwl path{transform-box:view-box;opacity:calc(1 - var(--i)*.25)}
+.szface .fwr path{transform-origin:83px 55px}
+.szface .fwl path{transform-origin:17px 55px}
+/* habla: las ondas laten con cada sílaba (--amp lo pone el «lipSync») */
+.szface.talking .fwr{opacity:calc(.35 + var(--amp,.6)*.65)}
+.szface.talking .fwr path{animation:szwave .42s ease-in-out infinite alternate;animation-delay:calc(var(--i)*-.12s)}
+/* escucha: mientras escribes, ondas azules del otro lado */
+html.szlisten .szface .fwl{opacity:.95}
+html.szlisten .szface .fwl path{animation:szwave .8s ease-in-out infinite alternate;animation-delay:calc(var(--i)*-.2s)}
+@keyframes szwave{from{transform:scale(.82);opacity:.35}to{transform:scale(1.06)}}
+html.noanim .szface .fwr path,html.noanim .szface .fwl path{animation:none}
