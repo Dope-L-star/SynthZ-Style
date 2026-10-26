@@ -48,8 +48,12 @@ const SPACE = (() => {
     S = Array.from({ length:n }, (_, k) => { const g = rnd() < .22; return { x:rnd() * w, y:rnd() * h, z:.25 + rnd() * .75, g, k, r:g ? .8 + rnd() * 1.2 : .3 + rnd() * 1.1, ph:rnd() * 6.28, sp:.4 + rnd() * 1.4 }; });
     paint();
   };
+  /* las estrellas titilan despacio: con 30 cuadros por segundo se ven igual y la página trabaja la mitad */
+  let last = -1e9;
   const draw = t => {
-    raf = 0; ctx.clearRect(0, 0, w, h);
+    raf = 0;
+    if (!still && t - last < 33){ if (!document.hidden && CFG.bg && !document.documentElement.classList.contains('sb-off')) raf = requestAnimationFrame(draw); return; }
+    last = t; ctx.clearRect(0, 0, w, h);
     for (const s of S){
       const y = (((s.y - sc * s.z * .12 - (s.g ? t * .004 : 0)) % h) + h) % h;
       const tw = still ? .8 : .5 + .5 * Math.sin(t / 1000 * s.sp + s.ph);

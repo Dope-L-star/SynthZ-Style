@@ -45,6 +45,8 @@ function botMatch(q){
   return bs >= Math.max(.6, w.length * .45) ? best : null;
 }
 const BOT = { el:null, panel:null, open:false, hist:[], help:null, poll:0, seen:0, team:null, inbox:[], cur:null, mode:'chat', teamSeen:{} };
+/* v2.6: en la portada no hay bolita; la ventanita y las frases salen de donde esté parada SynthonIA */
+const botAt = () => { const a = BOT.anchor && BOT.anchor(); return a && a.getClientRects().length ? a : BOT.el; };
 const vis = sel => (Array.isArray(sel) ? sel : [sel]).map(x => $(x)).find(n => n && n.getClientRects().length && n.getBoundingClientRect().width > 0) || null;
 function botMount(){
   if (BOT.el || !document.body) return;
@@ -127,18 +129,26 @@ function botBubble(text, ms){
   const D = demoji(text), md = D.mood || BOT.mood || 'feliz';
   bb.innerHTML = '<span class="bbf">' + face(md, 52) + '</span><p></p>'; $('p', bb).textContent = D.text;
   bb.classList.toggle('big', BOT.el.classList.contains('g2'));
-  const r = BOT.el.getBoundingClientRect(), W = Math.min(BOT.el.classList.contains('g2') ? 380 : 330, innerWidth - 24);
+  const r = botAt().getBoundingClientRect(), W = Math.min(BOT.el.classList.contains('g2') ? 380 : 330, innerWidth - 24);
   bb.style.width = W + 'px'; bb.style.left = clamp(r.left + r.width / 2 - W / 2, 12, innerWidth - W - 12) + 'px';
   const up = r.top > 140; bb.style.top = up ? 'auto' : (r.bottom + 12) + 'px'; bb.style.bottom = up ? (innerHeight - r.top + 12) + 'px' : 'auto'; bb.classList.toggle('dn', !up);
   bb.classList.remove('on'); void bb.offsetWidth; bb.classList.add('on'); clearTimeout(bb._t); bb._t = setTimeout(() => bb.classList.remove('on'), (ms || 5200) + Math.min(3000, D.text.length * 18));
   typeIn($('p', bb), { cps:45, max:4, onFrame:lipSync([$('.bbf .szface', bb), ballFace()], D.text) }).catch(() => {});
 }
 function botPlace(){
-  const P = BOT.panel, b = BOT.el; if (!P || !b) return;
+  const P = BOT.panel, b = BOT.el && botAt(); if (!P || !b) return;
   if (matchMedia('(max-width:760px)').matches){ P.classList.add('sheet'); P.style.left = P.style.top = P.style.right = P.style.bottom = ''; return; }
   P.classList.remove('sheet');
   const r = b.getBoundingClientRect(), W = Math.min(390, innerWidth - 24), H = Math.min(560, innerHeight - 40);
   P.style.width = W + 'px'; P.style.height = H + 'px';
+  if (b !== BOT.el){
+    /* junto a SynthonIA (del lado con más espacio), sin taparla */
+    const R = innerWidth - r.right, L = r.left, top = Math.min(84, innerHeight - H - 12);
+    /* si no cabe al lado sin tapar el título, ella la sostiene: la ventanita sale debajo de su cara */
+    if (Math.max(R, L) < W + 28 || r.width > 220){ P.style.left = clamp(r.left + r.width / 2 - W / 2, 12, innerWidth - W - 12) + 'px'; P.style.top = clamp(r.top + Math.min(150, r.height * .42), top, innerHeight - H - 12) + 'px'; return; }
+    const x = R >= L ? r.right + 14 : r.left - W - 14;
+    P.style.left = clamp(x, 12, innerWidth - W - 12) + 'px'; P.style.top = clamp(r.top + r.height / 2 - H / 2, top, innerHeight - H - 12) + 'px'; return;
+  }
   P.style.left = clamp(r.right - W, 12, innerWidth - W - 12) + 'px';
   P.style.top = (r.top - H - 14 > 12 ? r.top - H - 14 : clamp(r.bottom + 14, 12, innerHeight - H - 12)) + 'px';
 }

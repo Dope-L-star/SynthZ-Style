@@ -130,59 +130,57 @@ function face(mood, size, cls){
     + (f.x ? FFX[f.x] : '')
     + '</svg>';
 }
-/* ---------- cuerpo entero (boceto «Proporciones»: cabeza 45 %, torso 30 %, base 25 %) ----------
-   viewBox 0 0 240 320; los brazos son grupos que giran en el hombro y el codo, así se pueden animar. */
+/* ---------- cuerpo entero · v2.6: el render de Sammuel (Leonardo) cortado en piezas ----------
+   cabeza, torso, dos brazos y base son imágenes; los ojos, las expresiones y las ondas se dibujan encima del visor.
+   Los brazos giran en el hombro (CSS), así que cambiar de pose es un movimiento suave, no un cambio de dibujo.
+   Medidas en % del escenario (3:4) que sale del render: x 429–913, y 56–702. */
 const SPOSE = {
-  idle:     { r:[-14, -10, 'open'], l:[14, 10, 'open'] },
-  saluda:   { r:[-128, -42, 'wave'], l:[12, 10, 'open'] },
-  senala:   { r:[-84, -4, 'point'], l:[14, 10, 'open'] },
-  senalaL:  { r:[-14, -10, 'open'], l:[84, 4, 'point'] },
-  celebra:  { r:[-140, -12, 'open'], l:[140, 12, 'open'] },
-  piensa:   { r:[-14, -10, 'open'], l:[22, -168, 'point'] },
-  escucha:  { r:[-36, -150, 'open'], l:[14, 10, 'open'] },
-  presenta: { r:[-52, -58, 'open'], l:[14, 10, 'open'] },
-  sorpresa: { r:[-128, -30, 'open'], l:[128, 30, 'open'] },
-  escribe:  { r:[-22, -70, 'open'], l:[22, 70, 'open'] }
+  idle:     { l:0,   r:0 },
+  saluda:   { l:0,   r:-122, wave:'r' },
+  senala:   { l:0,   r:-82 },
+  senalaL:  { l:82,  r:0 },
+  celebra:  { l:122, r:-122 },
+  piensa:   { l:6,   r:-36 },
+  escucha:  { l:0,   r:-116 },
+  presenta: { l:0,   r:-56 },
+  sorpresa: { l:42,  r:-42 },
+  escribe:  { l:22,  r:-22, type:1 }
 };
-function handSvg(kind, side){
-  const s = side;   /* 1 derecha (en pantalla), -1 izquierda */
-  if (kind === 'point') return '<g class="hand"><ellipse cx="0" cy="8" rx="8.5" ry="9.5" fill="url(#szCyl)"/><rect x="-3.2" y="10" width="6.4" height="17" rx="3.2" fill="url(#szCyl)"/><ellipse cx="' + (6 * s) + '" cy="6" rx="3" ry="5" fill="url(#szCyl)" transform="rotate(' + (-30 * s) + ' ' + (6 * s) + ' 6)"/></g>';
-  if (kind === 'wave') return '<g class="hand"><ellipse cx="0" cy="9" rx="9.5" ry="10.5" fill="url(#szCyl)"/>' + [-6, -2, 2, 6].map((x, i) => '<rect x="' + (x - 2.2) + '" y="' + (12 + Math.abs(i - 1.5) * 1.5) + '" width="4.4" height="' + (11 - Math.abs(i - 1.5) * 2) + '" rx="2.2" fill="url(#szCyl)"/>').join('') + '<ellipse cx="' + (-10 * s) + '" cy="6" rx="3" ry="5.5" fill="url(#szCyl)" transform="rotate(' + (40 * s) + ' ' + (-10 * s) + ' 6)"/></g>';
-  return '<g class="hand"><ellipse cx="0" cy="9" rx="9" ry="10.5" fill="url(#szCyl)"/><path d="M-6 15q6 8 12 0" stroke="#a487ef" stroke-opacity=".5" stroke-width="1.2" fill="none"/><ellipse cx="' + (8 * s) + '" cy="6" rx="3" ry="5.4" fill="url(#szCyl)" transform="rotate(' + (-26 * s) + ' ' + (8 * s) + ' 6)"/></g>';
-}
-function armSvg(side, a1, a2, hand){
-  const sx = side > 0 ? 160 : 80, sy = 176;
-  return '<g class="arm ' + (side > 0 ? 'ar' : 'al') + '" style="--a1:' + a1 + 'deg;--a2:' + a2 + 'deg" transform="translate(' + sx + ' ' + sy + ')">'
-    + '<g class="up" transform="rotate(' + a1 + ')"><circle r="15" fill="url(#szCylV)"/>'
-    + '<rect x="-12.5" y="2" width="25" height="38" rx="12.5" fill="url(#szCyl)"/>'
-    + '<circle cy="40" r="10.5" fill="url(#szCylV)"/>'
-    + '<g class="lo" transform="translate(0 40) rotate(' + a2 + ')">' + (hand === 'wave' && !reduce ? '<g><animateTransform attributeName="transform" type="rotate" values="0;-24;6;-24;0" keyTimes="0;.25;.5;.75;1" dur="1.5s" repeatCount="indefinite"/>' : '<g>') + '<rect x="-11" y="0" width="22" height="34" rx="11" fill="url(#szCyl)"/><path d="M-10.5 10h21" stroke="#9a80ef" stroke-opacity=".45" stroke-width="1.4"/>'
-    + '<g transform="translate(0 30) scale(1.45)">' + handSvg(hand, side) + '</g></g></g></g></g>';
+const SYB = 'media/v26/syn-';
+function synFace(mood){
+  const f = FACE[mood] || FACE.feliz, G = f.c || FACE_EYE;
+  /* los ojos del render miden más y van más separados que los de la carita chica */
+  const eyes = f.e.map((s, i) => { const x = (i ? 63 : 37) + (f.dx || 0) * .8, y = 55 + (f.dy || 0) * .8, k = s[0];
+    if (k === 'cap') return FEYE.cap(x, y + (s[1] && s[1] < 1 ? 3 : 0), (s[1] || 1) * 1.15);
+    if (k === 'tilt') return FEYE.tilt(x, y, s[2] || 0);
+    if (k === 'talk') return FEYE.talk(x, y, i ? -1 : 1);
+    if (k === 'sad') return FEYE.sad(x, y, i ? 1 : -1);
+    if (k === 'cross') return i ? FEYE.smile(x, y) : FEYE.cross(x, y, -1);
+    return FEYE[k](x, y); }).join('');
+  return '<svg class="syb-face" viewBox="0 0 100 100" aria-hidden="true">' + wavesSvg()
+    + '<path d="M29 46q5-13 19-16" stroke="#fff" stroke-opacity=".12" stroke-width="3" stroke-linecap="round" fill="none"/>'
+    + '<g class="fe" fill="' + G + '" stroke="' + G + '" stroke-width="0"><g class="fbl">' + eyes + '</g></g>'
+    + '<path class="fm" d="M45 66h10" style="display:none"/>' + (f.x ? FFX[f.x] : '') + '</svg>';
 }
 function synBody(mood, pose, size){
-  const f = FACE[mood] || FACE.feliz, P = SPOSE[pose] || SPOSE.idle, z = size || 240;
-  return '<svg class="szbody" data-mood="' + (FACE[mood] ? mood : 'feliz') + '" data-pose="' + (SPOSE[pose] ? pose : 'idle') + '" viewBox="0 0 240 320" width="' + z + '" height="' + Math.round(z * 4 / 3) + '" aria-hidden="true">'
-    /* anillo flotante y su luz en el piso */
-    + '<g class="syb-ring"><ellipse cx="120" cy="306" rx="58" ry="9" fill="none" stroke="url(#szRingG)" stroke-width="5" opacity=".5" filter="url(#szBlur3)"/><ellipse cx="120" cy="306" rx="58" ry="9" fill="none" stroke="url(#szRingG)" stroke-width="2.4"/></g>'
-    /* base de pedestal: campana que se abre con borde rosa brillante */
-    + '<g class="syb-base"><path d="M98 250h44l4 10q16 8 22 22q3 9-8 11H74q-11-2-8-11q6-14 22-22z" fill="url(#szBase)"/>'
-    + '<path d="M70 286q50 12 100 0" stroke="#ff5fb4" stroke-width="3" stroke-linecap="round" fill="none" opacity=".85"/><path d="M84 268q36 8 72 0M76 278q44 10 88 0" stroke="#fff" stroke-opacity=".35" stroke-width="1.4" fill="none"/>'
-    + '<path d="M86 270q16-8 32-8" stroke="#fff" stroke-opacity=".6" stroke-width="2.4" stroke-linecap="round" fill="none"/>'
-    + '<rect x="100" y="236" width="40" height="18" rx="7" fill="url(#szCyl)"/></g>'
-    /* brazo de atrás (izquierdo en pantalla) */
-    + armSvg(-1, P.l[0], P.l[1], P.l[2])
-    /* torso: barril de vidrio con el núcleo cian */
-    + '<g class="syb-torso"><path d="M80 176q0-20 40-21q40 1 40 21l-5 44q-3 22-35 22t-35-22z" fill="url(#szTorso)"/>'
-    + '<path d="M80 176q0-20 40-21q40 1 40 21l-5 44q-3 22-35 22t-35-22z" fill="url(#szRimL)"/>'
-    + '<path d="M89 176q4-11 19-13" stroke="#fff" stroke-opacity=".85" stroke-width="3" stroke-linecap="round" fill="none"/>'
-    + '<circle class="syb-core" cx="120" cy="200" r="13" fill="url(#szCore)" opacity=".85"/><circle cx="120" cy="200" r="4" fill="#e9ffff" opacity=".8"/></g>'
-    /* cuello de anillos */
-    + '<g class="syb-neck"><rect x="104" y="140" width="32" height="20" rx="8" fill="url(#szCyl)"/><path d="M106 147h28M106 153h28" stroke="#9f86f2" stroke-opacity=".55" stroke-width="1.4"/></g>'
-    /* brazo de adelante (derecho en pantalla) */
-    + armSvg(1, P.r[0], P.r[1], P.r[2])
-    /* cabeza */
-    + '<g class="syb-head" transform="translate(26.5 -27) scale(1.87)"><g>' + (reduce ? '' : '<animateTransform attributeName="transform" type="rotate" values="0 50 90;-3 50 90;0 50 90;2.5 50 90;0 50 90" dur="7s" repeatCount="indefinite"/>') + wavesSvg() + headSvg(f, true) + (f.x ? FFX[f.x] : '') + '</g></g>'
-    + '</svg>';
+  const m = FACE[mood] ? mood : 'feliz', p = SPOSE[pose] ? pose : 'idle', P = SPOSE[p];
+  const img = (n, cls) => '<img class="' + cls + '" src="' + SYB + n + '.webp" alt="" draggable="false" decoding="async">';
+  return '<div class="szbody" data-mood="' + m + '" data-pose="' + p + '" style="--al:' + P.l + 'deg;--ar:' + P.r + 'deg' + (size ? ';--sz:' + size + 'px' : '') + '" aria-hidden="true">'
+    + '<i class="syb-glow"></i><i class="syb-ring"></i>'
+    + img('base', 'syb-base')
+    + '<div class="syb-up">'
+    +   '<div class="syb-arm al">' + img('arm-l', '') + '</div><div class="syb-arm ar' + (P.wave === 'r' ? ' wave' : '') + '">' + img('arm-r', '') + '</div>'
+    +   img('torso', 'syb-torso') + '<i class="syb-core"></i>'
+    +   '<div class="syb-head"><div class="syb-hd">' + img('head', '') + synFace(m) + '</div></div>'
+    + '</div></div>';
+}
+/* cambia la cara y la pose de un cuerpo que ya está en pantalla (los brazos se mueven suave); si no hay, lo dibuja */
+function synSet(host, mood, pose, size){
+  const b = host && host.querySelector('.szbody'); if (!host) return;
+  if (!b){ host.innerHTML = synBody(mood, pose, size); return; }
+  const m = FACE[mood] ? mood : 'feliz', p = SPOSE[pose] ? pose : 'idle', P = SPOSE[p];
+  if (b.dataset.mood !== m){ const hd = b.querySelector('.syb-hd'), old = hd.querySelector('.syb-face'); old.insertAdjacentHTML('afterend', synFace(m)); old.remove(); b.dataset.mood = m; }
+  if (b.dataset.pose !== p){ b.dataset.pose = p; b.style.setProperty('--al', P.l + 'deg'); b.style.setProperty('--ar', P.r + 'deg'); b.querySelector('.syb-arm.ar').classList.toggle('wave', P.wave === 'r'); }
 }
 /* v1.9 · SynthonIA mueve la boca con cada letra que dice: a (abierta), e/i (ancha), o/u (redonda), m/b/p (cerrada) */
 const VIS = { a:['M42 61.5q8-2 16 0q-1 9-8 9q-7 0-8-9z', 1], e:['M40.5 62.5q9.5-1.5 19 0q-2 5.5-9.5 5.5q-7.5 0-9.5-5.5z', 1], o:['M45.5 60.5q4.5-2 9 0q2.5 4.5 0 9q-4.5 2-9 0q-2.5-4.5 0-9z', 1], m:['M43 65h14', 0], c:['M42.5 63q7.5 4.5 15 0', 0] };

@@ -238,6 +238,8 @@ function renderUsage(){
   /* «día más activo»: siempre es la barra más alta (si hay empate, el más reciente) */
   const sums = per.map(a => a.reduce((s2, x) => s2 + x.v, 0)), top = sums.lastIndexOf(Math.max(...sums)), k = $('#chartKpi');
   [...chart.children].forEach((c, i) => c.classList.toggle('top', sums[top] > 0 && i === top));
+  /* v2.6: la primera vez la gráfica está vacía: se dice qué va a aparecer ahí, en vez de dejar barras invisibles */
+  const pan = $('#chartPanel'); if (pan){ pan.classList.toggle('empty', !sums.some(Boolean)); if (!$('.ch-empty', pan)) pan.insertAdjacentHTML('beforeend', '<p class="ch-empty">Aún no has chateado. Cuando escribas tu primer mensaje, aquí verás cuántos mandas cada día.</p>'); }
   if (k){ const dl = s => new Date(s + 'T12:00').toLocaleDateString('es', { weekday:'long', day:'numeric' }), all = sums.reduce((a, b) => a + b, 0);
     k.innerHTML = '<span><b>' + fmt(sums[13]) + '</b> hoy</span><span><b>' + fmt(all) + '</b> en 14 días</span>' + (sums[top] > 0 ? '<span class="ck-top"><b>' + esc(dl(days[top])) + '</b> tu día más activo · ' + fmt(sums[top]) + (sums[top] === 1 ? ' mensaje' : ' mensajes') + '</span>' : '<span>Aún sin día más activo</span>'); }
 }
@@ -307,6 +309,8 @@ function loop(now){
 let heroDone = false;
 async function heroSeq(){
   if (heroDone) return; heroDone = true;
+  /* v2.6: SynthonIA saluda mientras se escribe el título (antes aparecía 5 segundos después) */
+  $$('.hstage.hero-fade').forEach(el => setTimeout(() => el.classList.add('show'), 350));
   await typeIn($('#h1'), { cps:22, max:2.8 });
   await typeIn($('#heroSub'), { cps:120, max:2.4 });
   $$('.hero-fade').forEach((el, i) => setTimeout(() => el.classList.add('show'), i * 160));
@@ -679,19 +683,25 @@ const q = s => document.querySelector(s);
 
 /* v2.5 · SynthonIA de cuerpo entero, igual al boceto (cabeza 45 %, torso 30 %, base 25 %) */
 const body = (mood, pose, size) => SZ.synBody(mood, pose, size);
+/* v2.6: cambia cara y pose sobre el mismo cuerpo, así los brazos se mueven suave */
+const set = (host, mood, pose, size) => SZ.synSet(host, mood, pose, size);
 const hb = q('#heroBot');
 if (hb){
-  hb.innerHTML = body('feliz', 'saluda', 300);
+  set(hb, 'feliz', 'saluda', 300);
   /* después del saludo, señala la tarjeta de ejemplo (como en el boceto) */
-  const calm = () => { if (!hb.matches(':hover')) hb.innerHTML = body('neutral', innerWidth > 980 ? 'senalaL' : 'presenta', 300); };
+  const calm = () => { if (!hb.matches(':hover')) set(hb, 'neutral', innerWidth > 980 ? 'senalaL' : 'presenta', 300); };
   setTimeout(calm, 3800);
   /* detalle: si la tocas, se emociona, celebra y suelta un destello */
   hb.parentElement.style.pointerEvents = 'auto';
   hb.addEventListener('click', () => {
-    hb.innerHTML = body('celebrando', 'celebra', 300); hb.classList.remove('boop'); void hb.offsetWidth; hb.classList.add('boop');
+    set(hb, 'celebrando', 'celebra', 300); hb.classList.remove('boop'); void hb.offsetWidth; hb.classList.add('boop');
     try{ SZ.SND && SZ.SND.blip && SZ.SND.blip('feliz'); SZ.burst && SZ.burst(hb); }catch(e){}
-    setTimeout(() => { hb.innerHTML = body('feliz', 'saluda', 300); setTimeout(calm, 2600); }, 1600);
+    setTimeout(() => { set(hb, 'feliz', 'saluda', 300); setTimeout(calm, 2600); }, 1600);
+    /* v2.6: ella es la ayudante (ya no hay bolita): tocarla abre su ventanita para hablarle */
+    try{ SZ.BOT && SZ.BOT.open && SZ.BOT.open(); }catch(e){}
   });
+  hb.setAttribute('role', 'button'); hb.tabIndex = 0; hb.setAttribute('aria-label', 'SynthonIA: tócala para hablar con ella');
+  hb.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); hb.click(); } });
   /* detalle: los ojos y la cabeza siguen al mouse */
   if (!reduce && matchMedia('(pointer: fine)').matches){
     let raf = 0, ex = 0, ey = 0;
@@ -701,7 +711,13 @@ if (hb){
 /* chispitas doradas que flotan alrededor de SynthonIA */
 const dust = q('#heroDust');
 if (dust && !reduce) dust.innerHTML = Array.from({ length:26 }, (_, i) => '<i style="--x:' + (Math.random() * 100).toFixed(1) + '%;--y:' + (Math.random() * 100).toFixed(1) + '%;--t:' + (3 + Math.random() * 5).toFixed(1) + 's;--dl:-' + (Math.random() * 6).toFixed(1) + 's;--s:' + (1.5 + Math.random() * 2.5).toFixed(1) + 'px"></i>').join('');
-const rf = q('#readyFace'); if (rf) rf.innerHTML = body('celebrando', 'celebra', 230);
+const rf = q('#readyFace');
+if (rf){
+  rf.innerHTML = body('celebrando', 'celebra', 230);
+  rf.removeAttribute('aria-hidden'); rf.setAttribute('role', 'button'); rf.tabIndex = 0; rf.setAttribute('aria-label', 'SynthonIA: tócala para hablar con ella');
+  const go = () => { try{ SZ.SND && SZ.SND.blip && SZ.SND.blip('feliz'); SZ.BOT && SZ.BOT.open && SZ.BOT.open(); }catch(e){} };
+  rf.addEventListener('click', go); rf.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); go(); } });
+}
 
 /* «¿Qué es estar synthonized?»: una onda de estática que, al pasar, se vuelve una onda limpia */
 const cv = q('#szWave');
@@ -740,7 +756,20 @@ $$('.bl-v').forEach((b, i) => b.addEventListener('click', () => {
 
 /* el centro «Todas las IAs»: las etiquetas se acomodan en círculo alrededor de la onda */
 const hub = q('.hub');
-if (hub){ const place = () => { const r = hub.getBoundingClientRect(), R = Math.min(r.width * .38, 300); $$('.hub-i', hub).forEach(el => { const a = parseFloat(el.style.getPropertyValue('--a')) * Math.PI / 180; el.style.transform = 'translate(-50%,-50%) translate(' + (Math.cos(a) * R).toFixed(1) + 'px,' + (Math.sin(a) * R * .55).toFixed(1) + 'px)'; }); }; place(); addEventListener('resize', place); }
+/* v2.6: cada etiqueta se mide; nunca toca la onda, nunca se sale de su lado y nunca pisa a la de arriba o abajo */
+if (hub){ const place = () => {
+  const W = hub.clientWidth, c = $('.hub-c', hub), oR = c && c.offsetParent ? c.offsetWidth / 2 : 0;
+  if (!c || getComputedStyle($('.hub-i', hub)).position === 'static') return;      /* celular: van en fila, sin círculo */
+  const items = $$('.hub-i', hub), room = Math.max(120, W / 2 - oR - 16);
+  items.forEach(el => { el.style.maxWidth = Math.min(220, room) + 'px'; });
+  const hMax = Math.max(...items.map(el => el.offsetHeight));
+  items.forEach(el => {
+    const a = parseFloat(el.style.getPropertyValue('--a')) * Math.PI / 180, side = Math.cos(a) < 0 ? -1 : 1, row = Math.round(Math.sin(a) * 2), w = el.offsetWidth;
+    const near = oR + 16 + w / 2 + (row ? 0 : 26), far = W / 2 - w / 2;
+    const x = side * Math.max(Math.min(near, far), Math.min(far, oR + 8 + w / 2));
+    el.style.transform = 'translate(-50%,-50%) translate(' + x.toFixed(1) + 'px,' + (row * (hMax + 12)).toFixed(1) + 'px)';
+  });
+}; place(); addEventListener('resize', place); if (document.fonts) document.fonts.ready.then(place); }
 
 /* detalle: el «Ver demo» baja con suavidad hasta «Así de fácil» y lo hace brillar un momento */
 const demo = q('#demoBtn');
@@ -756,7 +785,7 @@ const STOPS = {
   como:     { side:'r', mood:'feliz',      pose:'saluda',   say:'¡Así de fácil! Pregunta lo que sea.' },
   modos:    { side:'l', mood:'neutral',    pose:'senala',   say:'Si no sabes cuál elegir, déjalo en Automático.' },
   usos:     { side:'r', mood:'creando',    pose:'presenta', say:'Estudia, programa o crea ideas conmigo.' },
-  comparar: { side:'l', mood:'pensando',   pose:'piensa',   say:'¿Cuál tiene más Flow? Tú decides.', at:'.blind h3' },
+  comparar: { side:'l', mood:'pensando',   pose:'piensa',   say:'¿Cuál tiene más Flow? Tú decides.', at:'.blind h3|.cmp-top h2' },
   conectar: { side:'r', mood:'feliz',      pose:'presenta', say:'Tu IA ya está lista, sin configurar nada.' },
   chat:     { side:'l', mood:'hablando',   pose:'senala',   say:'Escribe aquí y te llevo a SynthFlow.' },
   consumo:  { side:'r', mood:'analizando', pose:'escribe',  say:'Aquí ves cuánto te queda hoy.' },
@@ -774,13 +803,26 @@ const small = () => matchMedia('(max-width:760px)').matches;
 function paint(k){
   const S = STOPS[k]; if (!S) return;
   const side = el.dataset.side || S.side, key = S.mood + S.pose + side;
-  if (key !== posed){ fig.innerHTML = SZ.synBody(S.mood, S.pose === 'senala' ? (side === 'l' ? 'senala' : 'senalaL') : S.pose, small() ? 96 : 132); posed = key; }
+  if (key !== posed){ SZ.synSet(fig, S.mood, S.pose === 'senala' ? (side === 'l' ? 'senala' : 'senalaL') : S.pose, small() ? 96 : 132); posed = key; }
 }
-/* en PC se para junto al título de cada sección (del lado con más espacio); en el celular, en una esquina */
+/* en PC se para junto al título de cada sección (del lado con más espacio); en el celular, encima del título */
 function anchor(k){
   const S = STOPS[k], sec = document.getElementById(k); if (!S || !sec) return;
-  if (small()){ el.classList.remove('abs', 'bside'); el.style.left = el.style.top = ''; el.dataset.side = 'l'; return; } /* celular: siempre a la izquierda, la bolita de ayuda está a la derecha */
-  const h = (S.at && sec.querySelector(S.at)) || sec.querySelector('.head h2') || sec.querySelector('h2'); if (!h) return;
+  /* prueba cada título posible de la sección hasta encontrar uno donde quepa sin tapar nada */
+  const hs = [...new Set([...(S.at ? S.at.split('|') : []), '.head h2', 'h2'].map(q => sec.querySelector(q)).filter(Boolean))];
+  for (const h of hs){ standAt(S, sec, h); if (!el.hidden) return; }
+}
+/* todo lo que se ve en la página (textos, tarjetas, botones, etiquetas): ella nunca se para encima de nada de esto */
+const nearOf = h => [...document.querySelectorAll('main h2,main h3,main h4,main p,main a,main button,main img,main li,main summary,main .lqg,main .card,main .band,main .chip,main canvas')].filter(e => e !== h && !h.contains(e) && !e.contains(h) && !el.contains(e));
+const hitsIn = (near, x0, y0, ww, hh) => near.some(e => { const r = e.getBoundingClientRect(); return r.width && r.height && Math.min(x0 + ww, r.right) - Math.max(x0, r.left) > 4 && Math.min(y0 + hh, r.bottom) - Math.max(y0, r.top) > 4; });
+/* celular: ya no flota fija tapando tarjetas; se para en el espacio libre encima del título de cada sección */
+function standSmall(t, w, H){
+  const near = nearOf(document.createElement('i')), x = innerWidth - w - 12, top = t.top - H + 4;
+  el.hidden = hitsIn(near, x + w * .15, top + H * .04, w * .7, H * .92) || top + scrollY < 90; if (el.hidden) return;
+  el._mute = true; el.classList.add('abs'); el.classList.remove('bside'); el.dataset.side = 'r';
+  el._x = Math.round(x + scrollX); el._top = Math.round(top + scrollY); stick();
+}
+function standAt(S, sec, h){
   /* el título se escribe letra por letra: se mide el texto completo (no lo que ya se ve) */
   const cs = getComputedStyle(h), R = h.getBoundingClientRect(), fs = parseFloat(cs.fontSize) || 40;
   const cx = (anchor.cv || (anchor.cv = document.createElement('canvas'))).getContext('2d'); cx.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
@@ -789,18 +831,28 @@ function anchor(k){
   const l0 = al === 'center' ? R.left + (R.width - tw) / 2 : al === 'right' || al === 'end' ? R.right - tw : R.left;
   const t = { left:l0, right:l0 + tw, top:R.top, height:lh };
   const w = el.offsetWidth || 132, H = el.offsetHeight || 176, gap = 26;
+  if (small()) return standSmall(t, w, H);
   /* la frase va al lado de ella (no encima), así no tapa lo que hay arriba; se mide con el texto ya puesto */
   bub.textContent = S.say; const bw = Math.min(230, bub.offsetWidth || 200) + 10;
   const roomR = innerWidth - t.right - gap, roomL = t.left - gap;
   /* primero el lado donde caben ella y su frase; si no, donde quepa ella sola */
   const need = w + bw + 12, pr = S.side === 'r' ? roomR : roomL, ot = S.side === 'r' ? roomL : roomR, other = S.side === 'r' ? 'l' : 'r';
-  const side = pr >= need ? S.side : ot >= need ? other : pr >= w ? S.side : ot >= w ? other : S.side;
-  let x = side === 'r' ? t.right + gap : t.left - gap - w;
-  x = Math.max(8, Math.min(innerWidth - w - 8, x));
-  const bside = side === 'r' ? innerWidth - (x + w) - 12 >= bw : x - 12 >= bw;
+  const pick = pr >= need ? S.side : ot >= need ? other : pr >= w ? S.side : ot >= w ? other : S.side;
+  const top = t.top + t.height - H + 14;
+  const xOf = sd => Math.max(8, Math.min(innerWidth - w - 8, sd === 'r' ? t.right + gap : t.left - gap - w));
+  /* v2.6: nunca encima de nada: si de un lado pisa un texto, una tarjeta o una etiqueta, prueba el otro; si pisa en los dos, esa sección no la muestra */
+  const near = nearOf(h);
+  const hits = (x0, y0, ww, hh) => hitsIn(near, x0, y0, ww, hh);
+  const figHits = sd => { const x0 = xOf(sd); return hits(x0 + w * .18, top + H * .04, w * .64, H * .92) || (sd === 'r' ? x0 < t.right - 6 : x0 + w > t.left + 6); };
+  let side = pick; if (figHits(side)) side = side === 'r' ? 'l' : 'r';
+  el.hidden = figHits(side); if (el.hidden) return;
+  const x = xOf(side);
+  /* la frase va a su lado solo si cabe sin tapar nada; si no, no habla sola (si la tocas, te contesta en su ventanita) */
+  const bside = (side === 'r' ? innerWidth - (x + w) - 12 >= bw : x - 12 >= bw) && !hits(side === 'r' ? x + w + 6 : x - bw - 6, top + H * .15, bw, 64);
+  el._mute = !bside;
   el.classList.add('abs'); el.classList.toggle('bside', bside); el.dataset.side = side;
   /* parada sobre la línea del título: los pies a la altura de las letras, nunca encima del texto de abajo */
-  el._x = Math.round(x + scrollX); el._top = Math.round(t.top + scrollY + t.height - H + 14); stick();
+  el._x = Math.round(x + scrollX); el._top = Math.round(top + scrollY); stick();
 }
 /* se queda junto a su título y sube con él: nunca flota encima de las tarjetas ni del texto */
 function stick(){
@@ -820,7 +872,8 @@ function place(k, fly){
         { transform:'translate(0,0) rotate(0deg)' }
       ], { duration:1100, easing:'cubic-bezier(.45,0,.2,1)' });
   }
-  if (!said.has(k)){ said.add(k); say(S.say, fly ? 1100 : 300); }
+  /* en el celular no habla sola: la frase taparía las tarjetas (si la tocas, te habla en su ventanita) */
+  if (!said.has(k) && !small() && !el._mute){ said.add(k); say(S.say, fly ? 1100 : 300); }
 }
 function say(t, delay){
   clearTimeout(sayT);
@@ -852,7 +905,7 @@ if (!reduce && matchMedia('(pointer: fine)').matches){
 }
 /* tocarla: se pone contenta y abre su ventanita */
 const open = () => {
-  posed = ''; fig.innerHTML = SZ.synBody('celebrando', 'celebra', small() ? 96 : 132);
+  posed = ''; SZ.synSet(fig, 'celebrando', 'celebra', small() ? 96 : 132);
   try{ SZ.SND && SZ.SND.blip && SZ.SND.blip('feliz'); }catch(e){}
   setTimeout(() => { if (cur) paint(cur); }, 1500);
   try{ SZ.BOT && SZ.BOT.open && SZ.BOT.open(); }catch(e){}
@@ -864,12 +917,17 @@ if (!reduce) setInterval(() => {
   if (!el.classList.contains('on') || el.classList.contains('talk') || document.hidden) return;
   const k = cur, S = STOPS[k]; if (!S) return;
   const alt = ['guino', 'feliz', 'sorprendida', 'pensando'][Math.floor(Math.random() * 4)];
-  fig.innerHTML = SZ.synBody(alt, S.pose, small() ? 96 : 132); posed = '';
+  SZ.synSet(fig, alt, S.pose, small() ? 96 : 132); posed = '';
   setTimeout(() => { if (cur === k) paint(k); }, 1400);
 }, 9000);
+/* v2.6: en la portada SynthonIA de cuerpo entero ES la ayudante: no hay bolita, y su ventanita sale de donde esté parada
+   (arriba en la portada, caminando por las secciones o celebrando al final) */
+document.documentElement.classList.add('szlive');
+const shown = n => { if (!n) return false; const r = n.getBoundingClientRect(); return r.width > 0 && r.bottom > 0 && r.top < innerHeight; };
+if (SZ.BOT && SZ.BOT.anchor) SZ.BOT.anchor(() => el.classList.contains('on') ? el : shown(document.getElementById('heroBot')) ? document.getElementById('heroBot') : shown(document.getElementById('readyFace')) ? document.getElementById('readyFace') : el);
 update();
 })();
-/* ===== v2.6 · fondos livianos: cada fondo de sección solo se mueve mientras lo ves
+/* ===== v2.6 · un solo fondo liviano: cada sección solo se mueve mientras la ves
    y el fondo espacial de arriba se apaga cuando ya bajaste de la portada ===== */
 (() => {
 const bgs = [...document.querySelectorAll('.secbg')];
@@ -877,6 +935,9 @@ if (!('IntersectionObserver' in window)){ bgs.forEach(b => b.classList.add('run'
 const io = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('run', e.isIntersecting)), { rootMargin:'60px 0px' });
 bgs.forEach(b => io.observe(b));
 const hero = document.getElementById('top'), H = document.documentElement;
+/* el espacio de arriba (cinta de neón, estrellas, brillos) mide lo que mide la portada y baja con la página */
+const fitHero = () => { if (hero) H.style.setProperty('--heroH', (hero.offsetHeight + 180) + 'px'); };
+fitHero(); addEventListener('resize', fitHero); addEventListener('load', fitHero);
 if (hero) new IntersectionObserver(([e]) => {
   H.classList.toggle('sb-off', !e.isIntersecting);
   if (e.isIntersecting && SZ.SPACE && SZ.SPACE.wake) SZ.SPACE.wake();

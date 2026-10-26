@@ -16,6 +16,8 @@ function loop(now){
 let heroDone = false;
 async function heroSeq(){
   if (heroDone) return; heroDone = true;
+  /* v2.6: SynthonIA saluda mientras se escribe el título (antes aparecía 5 segundos después) */
+  $$('.hstage.hero-fade').forEach(el => setTimeout(() => el.classList.add('show'), 350));
   await typeIn($('#h1'), { cps:22, max:2.8 });
   await typeIn($('#heroSub'), { cps:120, max:2.4 });
   $$('.hero-fade').forEach((el, i) => setTimeout(() => el.classList.add('show'), i * 160));

@@ -3,6 +3,8 @@
 html.noglass .lqg{background:rgba(24,16,50,.92);backdrop-filter:none;-webkit-backdrop-filter:none}
 .gt{background:var(--grad-text);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
 .gt .tc{-webkit-text-fill-color:transparent}
+.gt.gtc{background:none}
+.gt.gtc .tc{background:var(--grad-text);background-size:var(--gw) var(--gh);background-position:var(--gx) var(--gy);background-repeat:no-repeat;-webkit-background-clip:text;background-clip:text}
 
 /* menú de arriba: una barra de vidrio flotante */
 nav#nav{top:12px;left:clamp(12px,3vw,40px);right:clamp(12px,3vw,40px);padding:10px 14px 10px 20px;border-radius:20px;border:1px solid var(--lg-edge);background:var(--lg-bg),rgba(20,12,44,.18);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);box-shadow:var(--lg-shadow)}

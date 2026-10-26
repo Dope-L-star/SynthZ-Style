@@ -31,6 +31,8 @@ function renderUsage(){
   /* «día más activo»: siempre es la barra más alta (si hay empate, el más reciente) */
   const sums = per.map(a => a.reduce((s2, x) => s2 + x.v, 0)), top = sums.lastIndexOf(Math.max(...sums)), k = $('#chartKpi');
   [...chart.children].forEach((c, i) => c.classList.toggle('top', sums[top] > 0 && i === top));
+  /* v2.6: la primera vez la gráfica está vacía: se dice qué va a aparecer ahí, en vez de dejar barras invisibles */
+  const pan = $('#chartPanel'); if (pan){ pan.classList.toggle('empty', !sums.some(Boolean)); if (!$('.ch-empty', pan)) pan.insertAdjacentHTML('beforeend', '<p class="ch-empty">Aún no has chateado. Cuando escribas tu primer mensaje, aquí verás cuántos mandas cada día.</p>'); }
   if (k){ const dl = s => new Date(s + 'T12:00').toLocaleDateString('es', { weekday:'long', day:'numeric' }), all = sums.reduce((a, b) => a + b, 0);
     k.innerHTML = '<span><b>' + fmt(sums[13]) + '</b> hoy</span><span><b>' + fmt(all) + '</b> en 14 días</span>' + (sums[top] > 0 ? '<span class="ck-top"><b>' + esc(dl(days[top])) + '</b> tu día más activo · ' + fmt(sums[top]) + (sums[top] === 1 ? ' mensaje' : ' mensajes') + '</span>' : '<span>Aún sin día más activo</span>'); }
 }

@@ -36,7 +36,24 @@ function charify(el){
   walk(el);
   chars.forEach(c => { const b = c.closest('li,pre,h4'); if (b && b !== el && el.contains(b)) c._b = b; });
   el._chars = chars; el.setAttribute('data-typed', '');
+  gtPaint(el);
   return chars;
+}
+/* el texto con degradado (.gt) pinta el color en el padre, así que se veía entero antes de escribirse
+   y el cursor pasaba por encima como una barra de carga: cada letra lleva su trozo del degradado */
+function gtPaint(el){
+  const gts = $$('.gt', el); if (!gts.length) return;
+  const fit = () => gts.forEach(g => {
+    /* igual que el navegador: las líneas del degradado van una detrás de otra como una sola tira */
+    const L = [...g.getClientRects()].filter(q => q.width > 1); let acc = 0; L.forEach(q => { q._x = acc; acc += q.width; });
+    $$('.tc', g).forEach(c => {
+      const r = c.getBoundingClientRect(), q = L.find(q => r.top + r.height / 2 >= q.top && r.top + r.height / 2 <= q.bottom) || L[0];
+      if (q) c.style.cssText = '--gw:' + acc + 'px;--gh:' + q.height + 'px;--gx:' + (-(q._x + r.left - q.left)) + 'px;--gy:' + (q.top - r.top) + 'px';
+    });
+    g.classList.add('gtc');
+  });
+  fit(); if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  let tm; addEventListener('resize', () => { clearTimeout(tm); tm = setTimeout(fit, 120); });
 }
 /* cps = letras por segundo; max = segundos máximos que puede tardar */
 function typeIn(el, o = {}){

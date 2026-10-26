@@ -6,19 +6,25 @@ const q = s => document.querySelector(s);
 
 /* v2.5 · SynthonIA de cuerpo entero, igual al boceto (cabeza 45 %, torso 30 %, base 25 %) */
 const body = (mood, pose, size) => SZ.synBody(mood, pose, size);
+/* v2.6: cambia cara y pose sobre el mismo cuerpo, así los brazos se mueven suave */
+const set = (host, mood, pose, size) => SZ.synSet(host, mood, pose, size);
 const hb = q('#heroBot');
 if (hb){
-  hb.innerHTML = body('feliz', 'saluda', 300);
+  set(hb, 'feliz', 'saluda', 300);
   /* después del saludo, señala la tarjeta de ejemplo (como en el boceto) */
-  const calm = () => { if (!hb.matches(':hover')) hb.innerHTML = body('neutral', innerWidth > 980 ? 'senalaL' : 'presenta', 300); };
+  const calm = () => { if (!hb.matches(':hover')) set(hb, 'neutral', innerWidth > 980 ? 'senalaL' : 'presenta', 300); };
   setTimeout(calm, 3800);
   /* detalle: si la tocas, se emociona, celebra y suelta un destello */
   hb.parentElement.style.pointerEvents = 'auto';
   hb.addEventListener('click', () => {
-    hb.innerHTML = body('celebrando', 'celebra', 300); hb.classList.remove('boop'); void hb.offsetWidth; hb.classList.add('boop');
+    set(hb, 'celebrando', 'celebra', 300); hb.classList.remove('boop'); void hb.offsetWidth; hb.classList.add('boop');
     try{ SZ.SND && SZ.SND.blip && SZ.SND.blip('feliz'); SZ.burst && SZ.burst(hb); }catch(e){}
-    setTimeout(() => { hb.innerHTML = body('feliz', 'saluda', 300); setTimeout(calm, 2600); }, 1600);
+    setTimeout(() => { set(hb, 'feliz', 'saluda', 300); setTimeout(calm, 2600); }, 1600);
+    /* v2.6: ella es la ayudante (ya no hay bolita): tocarla abre su ventanita para hablarle */
+    try{ SZ.BOT && SZ.BOT.open && SZ.BOT.open(); }catch(e){}
   });
+  hb.setAttribute('role', 'button'); hb.tabIndex = 0; hb.setAttribute('aria-label', 'SynthonIA: tócala para hablar con ella');
+  hb.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); hb.click(); } });
   /* detalle: los ojos y la cabeza siguen al mouse */
   if (!reduce && matchMedia('(pointer: fine)').matches){
     let raf = 0, ex = 0, ey = 0;
@@ -28,7 +34,13 @@ if (hb){
 /* chispitas doradas que flotan alrededor de SynthonIA */
 const dust = q('#heroDust');
 if (dust && !reduce) dust.innerHTML = Array.from({ length:26 }, (_, i) => '<i style="--x:' + (Math.random() * 100).toFixed(1) + '%;--y:' + (Math.random() * 100).toFixed(1) + '%;--t:' + (3 + Math.random() * 5).toFixed(1) + 's;--dl:-' + (Math.random() * 6).toFixed(1) + 's;--s:' + (1.5 + Math.random() * 2.5).toFixed(1) + 'px"></i>').join('');
-const rf = q('#readyFace'); if (rf) rf.innerHTML = body('celebrando', 'celebra', 230);
+const rf = q('#readyFace');
+if (rf){
+  rf.innerHTML = body('celebrando', 'celebra', 230);
+  rf.removeAttribute('aria-hidden'); rf.setAttribute('role', 'button'); rf.tabIndex = 0; rf.setAttribute('aria-label', 'SynthonIA: tócala para hablar con ella');
+  const go = () => { try{ SZ.SND && SZ.SND.blip && SZ.SND.blip('feliz'); SZ.BOT && SZ.BOT.open && SZ.BOT.open(); }catch(e){} };
+  rf.addEventListener('click', go); rf.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); go(); } });
+}
 
 /* «¿Qué es estar synthonized?»: una onda de estática que, al pasar, se vuelve una onda limpia */
 const cv = q('#szWave');
@@ -67,7 +79,20 @@ $$('.bl-v').forEach((b, i) => b.addEventListener('click', () => {
 
 /* el centro «Todas las IAs»: las etiquetas se acomodan en círculo alrededor de la onda */
 const hub = q('.hub');
-if (hub){ const place = () => { const r = hub.getBoundingClientRect(), R = Math.min(r.width * .38, 300); $$('.hub-i', hub).forEach(el => { const a = parseFloat(el.style.getPropertyValue('--a')) * Math.PI / 180; el.style.transform = 'translate(-50%,-50%) translate(' + (Math.cos(a) * R).toFixed(1) + 'px,' + (Math.sin(a) * R * .55).toFixed(1) + 'px)'; }); }; place(); addEventListener('resize', place); }
+/* v2.6: cada etiqueta se mide; nunca toca la onda, nunca se sale de su lado y nunca pisa a la de arriba o abajo */
+if (hub){ const place = () => {
+  const W = hub.clientWidth, c = $('.hub-c', hub), oR = c && c.offsetParent ? c.offsetWidth / 2 : 0;
+  if (!c || getComputedStyle($('.hub-i', hub)).position === 'static') return;      /* celular: van en fila, sin círculo */
+  const items = $$('.hub-i', hub), room = Math.max(120, W / 2 - oR - 16);
+  items.forEach(el => { el.style.maxWidth = Math.min(220, room) + 'px'; });
+  const hMax = Math.max(...items.map(el => el.offsetHeight));
+  items.forEach(el => {
+    const a = parseFloat(el.style.getPropertyValue('--a')) * Math.PI / 180, side = Math.cos(a) < 0 ? -1 : 1, row = Math.round(Math.sin(a) * 2), w = el.offsetWidth;
+    const near = oR + 16 + w / 2 + (row ? 0 : 26), far = W / 2 - w / 2;
+    const x = side * Math.max(Math.min(near, far), Math.min(far, oR + 8 + w / 2));
+    el.style.transform = 'translate(-50%,-50%) translate(' + x.toFixed(1) + 'px,' + (row * (hMax + 12)).toFixed(1) + 'px)';
+  });
+}; place(); addEventListener('resize', place); if (document.fonts) document.fonts.ready.then(place); }
 
 /* detalle: el «Ver demo» baja con suavidad hasta «Así de fácil» y lo hace brillar un momento */
 const demo = q('#demoBtn');

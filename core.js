@@ -773,7 +773,24 @@ function charify(el){
   walk(el);
   chars.forEach(c => { const b = c.closest('li,pre,h4'); if (b && b !== el && el.contains(b)) c._b = b; });
   el._chars = chars; el.setAttribute('data-typed', '');
+  gtPaint(el);
   return chars;
+}
+/* el texto con degradado (.gt) pinta el color en el padre, así que se veía entero antes de escribirse
+   y el cursor pasaba por encima como una barra de carga: cada letra lleva su trozo del degradado */
+function gtPaint(el){
+  const gts = $$('.gt', el); if (!gts.length) return;
+  const fit = () => gts.forEach(g => {
+    /* igual que el navegador: las líneas del degradado van una detrás de otra como una sola tira */
+    const L = [...g.getClientRects()].filter(q => q.width > 1); let acc = 0; L.forEach(q => { q._x = acc; acc += q.width; });
+    $$('.tc', g).forEach(c => {
+      const r = c.getBoundingClientRect(), q = L.find(q => r.top + r.height / 2 >= q.top && r.top + r.height / 2 <= q.bottom) || L[0];
+      if (q) c.style.cssText = '--gw:' + acc + 'px;--gh:' + q.height + 'px;--gx:' + (-(q._x + r.left - q.left)) + 'px;--gy:' + (q.top - r.top) + 'px';
+    });
+    g.classList.add('gtc');
+  });
+  fit(); if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  let tm; addEventListener('resize', () => { clearTimeout(tm); tm = setTimeout(fit, 120); });
 }
 /* cps = letras por segundo; max = segundos máximos que puede tardar */
 function typeIn(el, o = {}){
@@ -1398,18 +1415,18 @@ function mirrorType(ta){
   ta.addEventListener('focus', () => { cssOk = false; });
   m.appendChild(document.createTextNode('​')); sync();
 }
-/* golpe suave de cristal: como el clic del mouse pero más lento, borroso y con efecto glass */
+/* golpe suave de cristal: como el clic del mouse pero más lento, con un aro de luz que se abre.
+   v2.6: el aro ya no desenfoca lo de atrás ni crece a toda la pantalla (eso trababa la página 3 segundos en cada clic) */
 function thud(x, y){
-  if (reduce || !CFG.glass) return;   /* v2.3: sin vidrio (celulares) no hay golpe de cristal: era de lo más pesado al tocar */
-  const big = Math.hypot(innerWidth, innerHeight) * 2.2 / 46, ring = 'radial-gradient(circle,transparent 58%,#000 60%,#000 72%,transparent 74%)';
-  const base = 'position:fixed;left:' + x + 'px;top:' + y + 'px;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;pointer-events:none;';
+  if (reduce || !CFG.glass) return;   /* v2.3: sin vidrio (celulares) no hay golpe de cristal */
+  const base = 'position:fixed;left:' + x + 'px;top:' + y + 'px;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;pointer-events:none;will-change:transform,opacity;';
   const g = document.createElement('i');
-  g.style.cssText = base + 'z-index:9989;mix-blend-mode:screen;filter:blur(7px);background:radial-gradient(circle,rgba(214,204,255,.85),rgba(143,176,255,.42) 36%,rgba(255,143,122,.16) 56%,transparent 70%)';
+  g.style.cssText = base + 'z-index:9989;background:radial-gradient(circle,rgba(214,204,255,.5),rgba(143,176,255,.22) 36%,rgba(255,143,122,.08) 56%,transparent 70%)';
   const r = document.createElement('i');
-  r.style.cssText = base + 'z-index:9990;background:rgba(255,255,255,.1);backdrop-filter:blur(9px) saturate(1.6) brightness(1.18);-webkit-backdrop-filter:blur(9px) saturate(1.6) brightness(1.18);box-shadow:inset 0 0 0 1px rgba(255,255,255,.3);-webkit-mask:' + ring + ';mask:' + ring + ';filter:blur(1.5px)';
+  r.style.cssText = base + 'z-index:9990;border:1.5px solid rgba(255,255,255,.55);box-shadow:0 0 12px rgba(160,180,255,.45),inset 0 0 10px rgba(255,255,255,.25)';
   document.body.append(g, r);
-  g.animate([{ transform:'scale(.2)', opacity:0 }, { transform:'scale(3.2)', opacity:1, offset:.14 }, { transform:'scale(' + (big * .6).toFixed(1) + ')', opacity:0 }], { duration:2700, easing:'cubic-bezier(.16,.8,.3,1)', fill:'both' }).onfinish = () => g.remove();
-  r.animate([{ transform:'scale(.3)', opacity:0 }, { transform:'scale(1.2)', opacity:1, offset:.1 }, { transform:'scale(' + big.toFixed(1) + ')', opacity:0 }], { duration:3000, easing:'cubic-bezier(.16,.8,.3,1)', fill:'both' }).onfinish = () => r.remove();
+  g.animate([{ transform:'scale(.2)', opacity:0 }, { transform:'scale(2.6)', opacity:1, offset:.2 }, { transform:'scale(5)', opacity:0 }], { duration:1100, easing:'cubic-bezier(.16,.8,.3,1)', fill:'both' }).onfinish = () => g.remove();
+  r.animate([{ transform:'scale(.3)', opacity:0 }, { transform:'scale(1.2)', opacity:1, offset:.15 }, { transform:'scale(4.2)', opacity:0 }], { duration:1300, easing:'cubic-bezier(.16,.8,.3,1)', fill:'both' }).onfinish = () => r.remove();
 }
 /* portal: la Z carga, se hace zoom hacia adentro y se entra al chat */
 const zoomK = () => Math.hypot(innerWidth, innerHeight) / 2 / ((132 / 48) * 4.7) * 1.12;
@@ -2801,59 +2818,57 @@ function face(mood, size, cls){
     + (f.x ? FFX[f.x] : '')
     + '</svg>';
 }
-/* ---------- cuerpo entero (boceto «Proporciones»: cabeza 45 %, torso 30 %, base 25 %) ----------
-   viewBox 0 0 240 320; los brazos son grupos que giran en el hombro y el codo, así se pueden animar. */
+/* ---------- cuerpo entero · v2.6: el render de Sammuel (Leonardo) cortado en piezas ----------
+   cabeza, torso, dos brazos y base son imágenes; los ojos, las expresiones y las ondas se dibujan encima del visor.
+   Los brazos giran en el hombro (CSS), así que cambiar de pose es un movimiento suave, no un cambio de dibujo.
+   Medidas en % del escenario (3:4) que sale del render: x 429–913, y 56–702. */
 const SPOSE = {
-  idle:     { r:[-14, -10, 'open'], l:[14, 10, 'open'] },
-  saluda:   { r:[-128, -42, 'wave'], l:[12, 10, 'open'] },
-  senala:   { r:[-84, -4, 'point'], l:[14, 10, 'open'] },
-  senalaL:  { r:[-14, -10, 'open'], l:[84, 4, 'point'] },
-  celebra:  { r:[-140, -12, 'open'], l:[140, 12, 'open'] },
-  piensa:   { r:[-14, -10, 'open'], l:[22, -168, 'point'] },
-  escucha:  { r:[-36, -150, 'open'], l:[14, 10, 'open'] },
-  presenta: { r:[-52, -58, 'open'], l:[14, 10, 'open'] },
-  sorpresa: { r:[-128, -30, 'open'], l:[128, 30, 'open'] },
-  escribe:  { r:[-22, -70, 'open'], l:[22, 70, 'open'] }
+  idle:     { l:0,   r:0 },
+  saluda:   { l:0,   r:-122, wave:'r' },
+  senala:   { l:0,   r:-82 },
+  senalaL:  { l:82,  r:0 },
+  celebra:  { l:122, r:-122 },
+  piensa:   { l:6,   r:-36 },
+  escucha:  { l:0,   r:-116 },
+  presenta: { l:0,   r:-56 },
+  sorpresa: { l:42,  r:-42 },
+  escribe:  { l:22,  r:-22, type:1 }
 };
-function handSvg(kind, side){
-  const s = side;   /* 1 derecha (en pantalla), -1 izquierda */
-  if (kind === 'point') return '<g class="hand"><ellipse cx="0" cy="8" rx="8.5" ry="9.5" fill="url(#szCyl)"/><rect x="-3.2" y="10" width="6.4" height="17" rx="3.2" fill="url(#szCyl)"/><ellipse cx="' + (6 * s) + '" cy="6" rx="3" ry="5" fill="url(#szCyl)" transform="rotate(' + (-30 * s) + ' ' + (6 * s) + ' 6)"/></g>';
-  if (kind === 'wave') return '<g class="hand"><ellipse cx="0" cy="9" rx="9.5" ry="10.5" fill="url(#szCyl)"/>' + [-6, -2, 2, 6].map((x, i) => '<rect x="' + (x - 2.2) + '" y="' + (12 + Math.abs(i - 1.5) * 1.5) + '" width="4.4" height="' + (11 - Math.abs(i - 1.5) * 2) + '" rx="2.2" fill="url(#szCyl)"/>').join('') + '<ellipse cx="' + (-10 * s) + '" cy="6" rx="3" ry="5.5" fill="url(#szCyl)" transform="rotate(' + (40 * s) + ' ' + (-10 * s) + ' 6)"/></g>';
-  return '<g class="hand"><ellipse cx="0" cy="9" rx="9" ry="10.5" fill="url(#szCyl)"/><path d="M-6 15q6 8 12 0" stroke="#a487ef" stroke-opacity=".5" stroke-width="1.2" fill="none"/><ellipse cx="' + (8 * s) + '" cy="6" rx="3" ry="5.4" fill="url(#szCyl)" transform="rotate(' + (-26 * s) + ' ' + (8 * s) + ' 6)"/></g>';
-}
-function armSvg(side, a1, a2, hand){
-  const sx = side > 0 ? 160 : 80, sy = 176;
-  return '<g class="arm ' + (side > 0 ? 'ar' : 'al') + '" style="--a1:' + a1 + 'deg;--a2:' + a2 + 'deg" transform="translate(' + sx + ' ' + sy + ')">'
-    + '<g class="up" transform="rotate(' + a1 + ')"><circle r="15" fill="url(#szCylV)"/>'
-    + '<rect x="-12.5" y="2" width="25" height="38" rx="12.5" fill="url(#szCyl)"/>'
-    + '<circle cy="40" r="10.5" fill="url(#szCylV)"/>'
-    + '<g class="lo" transform="translate(0 40) rotate(' + a2 + ')">' + (hand === 'wave' && !reduce ? '<g><animateTransform attributeName="transform" type="rotate" values="0;-24;6;-24;0" keyTimes="0;.25;.5;.75;1" dur="1.5s" repeatCount="indefinite"/>' : '<g>') + '<rect x="-11" y="0" width="22" height="34" rx="11" fill="url(#szCyl)"/><path d="M-10.5 10h21" stroke="#9a80ef" stroke-opacity=".45" stroke-width="1.4"/>'
-    + '<g transform="translate(0 30) scale(1.45)">' + handSvg(hand, side) + '</g></g></g></g></g>';
+const SYB = 'media/v26/syn-';
+function synFace(mood){
+  const f = FACE[mood] || FACE.feliz, G = f.c || FACE_EYE;
+  /* los ojos del render miden más y van más separados que los de la carita chica */
+  const eyes = f.e.map((s, i) => { const x = (i ? 63 : 37) + (f.dx || 0) * .8, y = 55 + (f.dy || 0) * .8, k = s[0];
+    if (k === 'cap') return FEYE.cap(x, y + (s[1] && s[1] < 1 ? 3 : 0), (s[1] || 1) * 1.15);
+    if (k === 'tilt') return FEYE.tilt(x, y, s[2] || 0);
+    if (k === 'talk') return FEYE.talk(x, y, i ? -1 : 1);
+    if (k === 'sad') return FEYE.sad(x, y, i ? 1 : -1);
+    if (k === 'cross') return i ? FEYE.smile(x, y) : FEYE.cross(x, y, -1);
+    return FEYE[k](x, y); }).join('');
+  return '<svg class="syb-face" viewBox="0 0 100 100" aria-hidden="true">' + wavesSvg()
+    + '<path d="M29 46q5-13 19-16" stroke="#fff" stroke-opacity=".12" stroke-width="3" stroke-linecap="round" fill="none"/>'
+    + '<g class="fe" fill="' + G + '" stroke="' + G + '" stroke-width="0"><g class="fbl">' + eyes + '</g></g>'
+    + '<path class="fm" d="M45 66h10" style="display:none"/>' + (f.x ? FFX[f.x] : '') + '</svg>';
 }
 function synBody(mood, pose, size){
-  const f = FACE[mood] || FACE.feliz, P = SPOSE[pose] || SPOSE.idle, z = size || 240;
-  return '<svg class="szbody" data-mood="' + (FACE[mood] ? mood : 'feliz') + '" data-pose="' + (SPOSE[pose] ? pose : 'idle') + '" viewBox="0 0 240 320" width="' + z + '" height="' + Math.round(z * 4 / 3) + '" aria-hidden="true">'
-    /* anillo flotante y su luz en el piso */
-    + '<g class="syb-ring"><ellipse cx="120" cy="306" rx="58" ry="9" fill="none" stroke="url(#szRingG)" stroke-width="5" opacity=".5" filter="url(#szBlur3)"/><ellipse cx="120" cy="306" rx="58" ry="9" fill="none" stroke="url(#szRingG)" stroke-width="2.4"/></g>'
-    /* base de pedestal: campana que se abre con borde rosa brillante */
-    + '<g class="syb-base"><path d="M98 250h44l4 10q16 8 22 22q3 9-8 11H74q-11-2-8-11q6-14 22-22z" fill="url(#szBase)"/>'
-    + '<path d="M70 286q50 12 100 0" stroke="#ff5fb4" stroke-width="3" stroke-linecap="round" fill="none" opacity=".85"/><path d="M84 268q36 8 72 0M76 278q44 10 88 0" stroke="#fff" stroke-opacity=".35" stroke-width="1.4" fill="none"/>'
-    + '<path d="M86 270q16-8 32-8" stroke="#fff" stroke-opacity=".6" stroke-width="2.4" stroke-linecap="round" fill="none"/>'
-    + '<rect x="100" y="236" width="40" height="18" rx="7" fill="url(#szCyl)"/></g>'
-    /* brazo de atrás (izquierdo en pantalla) */
-    + armSvg(-1, P.l[0], P.l[1], P.l[2])
-    /* torso: barril de vidrio con el núcleo cian */
-    + '<g class="syb-torso"><path d="M80 176q0-20 40-21q40 1 40 21l-5 44q-3 22-35 22t-35-22z" fill="url(#szTorso)"/>'
-    + '<path d="M80 176q0-20 40-21q40 1 40 21l-5 44q-3 22-35 22t-35-22z" fill="url(#szRimL)"/>'
-    + '<path d="M89 176q4-11 19-13" stroke="#fff" stroke-opacity=".85" stroke-width="3" stroke-linecap="round" fill="none"/>'
-    + '<circle class="syb-core" cx="120" cy="200" r="13" fill="url(#szCore)" opacity=".85"/><circle cx="120" cy="200" r="4" fill="#e9ffff" opacity=".8"/></g>'
-    /* cuello de anillos */
-    + '<g class="syb-neck"><rect x="104" y="140" width="32" height="20" rx="8" fill="url(#szCyl)"/><path d="M106 147h28M106 153h28" stroke="#9f86f2" stroke-opacity=".55" stroke-width="1.4"/></g>'
-    /* brazo de adelante (derecho en pantalla) */
-    + armSvg(1, P.r[0], P.r[1], P.r[2])
-    /* cabeza */
-    + '<g class="syb-head" transform="translate(26.5 -27) scale(1.87)"><g>' + (reduce ? '' : '<animateTransform attributeName="transform" type="rotate" values="0 50 90;-3 50 90;0 50 90;2.5 50 90;0 50 90" dur="7s" repeatCount="indefinite"/>') + wavesSvg() + headSvg(f, true) + (f.x ? FFX[f.x] : '') + '</g></g>'
-    + '</svg>';
+  const m = FACE[mood] ? mood : 'feliz', p = SPOSE[pose] ? pose : 'idle', P = SPOSE[p];
+  const img = (n, cls) => '<img class="' + cls + '" src="' + SYB + n + '.webp" alt="" draggable="false" decoding="async">';
+  return '<div class="szbody" data-mood="' + m + '" data-pose="' + p + '" style="--al:' + P.l + 'deg;--ar:' + P.r + 'deg' + (size ? ';--sz:' + size + 'px' : '') + '" aria-hidden="true">'
+    + '<i class="syb-glow"></i><i class="syb-ring"></i>'
+    + img('base', 'syb-base')
+    + '<div class="syb-up">'
+    +   '<div class="syb-arm al">' + img('arm-l', '') + '</div><div class="syb-arm ar' + (P.wave === 'r' ? ' wave' : '') + '">' + img('arm-r', '') + '</div>'
+    +   img('torso', 'syb-torso') + '<i class="syb-core"></i>'
+    +   '<div class="syb-head"><div class="syb-hd">' + img('head', '') + synFace(m) + '</div></div>'
+    + '</div></div>';
+}
+/* cambia la cara y la pose de un cuerpo que ya está en pantalla (los brazos se mueven suave); si no hay, lo dibuja */
+function synSet(host, mood, pose, size){
+  const b = host && host.querySelector('.szbody'); if (!host) return;
+  if (!b){ host.innerHTML = synBody(mood, pose, size); return; }
+  const m = FACE[mood] ? mood : 'feliz', p = SPOSE[pose] ? pose : 'idle', P = SPOSE[p];
+  if (b.dataset.mood !== m){ const hd = b.querySelector('.syb-hd'), old = hd.querySelector('.syb-face'); old.insertAdjacentHTML('afterend', synFace(m)); old.remove(); b.dataset.mood = m; }
+  if (b.dataset.pose !== p){ b.dataset.pose = p; b.style.setProperty('--al', P.l + 'deg'); b.style.setProperty('--ar', P.r + 'deg'); b.querySelector('.syb-arm.ar').classList.toggle('wave', P.wave === 'r'); }
 }
 /* v1.9 · SynthonIA mueve la boca con cada letra que dice: a (abierta), e/i (ancha), o/u (redonda), m/b/p (cerrada) */
 const VIS = { a:['M42 61.5q8-2 16 0q-1 9-8 9q-7 0-8-9z', 1], e:['M40.5 62.5q9.5-1.5 19 0q-2 5.5-9.5 5.5q-7.5 0-9.5-5.5z', 1], o:['M45.5 60.5q4.5-2 9 0q2.5 4.5 0 9q-4.5 2-9 0q-2.5-4.5 0-9z', 1], m:['M43 65h14', 0], c:['M42.5 63q7.5 4.5 15 0', 0] };
@@ -3184,6 +3199,8 @@ function botMatch(q){
   return bs >= Math.max(.6, w.length * .45) ? best : null;
 }
 const BOT = { el:null, panel:null, open:false, hist:[], help:null, poll:0, seen:0, team:null, inbox:[], cur:null, mode:'chat', teamSeen:{} };
+/* v2.6: en la portada no hay bolita; la ventanita y las frases salen de donde esté parada SynthonIA */
+const botAt = () => { const a = BOT.anchor && BOT.anchor(); return a && a.getClientRects().length ? a : BOT.el; };
 const vis = sel => (Array.isArray(sel) ? sel : [sel]).map(x => $(x)).find(n => n && n.getClientRects().length && n.getBoundingClientRect().width > 0) || null;
 function botMount(){
   if (BOT.el || !document.body) return;
@@ -3266,18 +3283,26 @@ function botBubble(text, ms){
   const D = demoji(text), md = D.mood || BOT.mood || 'feliz';
   bb.innerHTML = '<span class="bbf">' + face(md, 52) + '</span><p></p>'; $('p', bb).textContent = D.text;
   bb.classList.toggle('big', BOT.el.classList.contains('g2'));
-  const r = BOT.el.getBoundingClientRect(), W = Math.min(BOT.el.classList.contains('g2') ? 380 : 330, innerWidth - 24);
+  const r = botAt().getBoundingClientRect(), W = Math.min(BOT.el.classList.contains('g2') ? 380 : 330, innerWidth - 24);
   bb.style.width = W + 'px'; bb.style.left = clamp(r.left + r.width / 2 - W / 2, 12, innerWidth - W - 12) + 'px';
   const up = r.top > 140; bb.style.top = up ? 'auto' : (r.bottom + 12) + 'px'; bb.style.bottom = up ? (innerHeight - r.top + 12) + 'px' : 'auto'; bb.classList.toggle('dn', !up);
   bb.classList.remove('on'); void bb.offsetWidth; bb.classList.add('on'); clearTimeout(bb._t); bb._t = setTimeout(() => bb.classList.remove('on'), (ms || 5200) + Math.min(3000, D.text.length * 18));
   typeIn($('p', bb), { cps:45, max:4, onFrame:lipSync([$('.bbf .szface', bb), ballFace()], D.text) }).catch(() => {});
 }
 function botPlace(){
-  const P = BOT.panel, b = BOT.el; if (!P || !b) return;
+  const P = BOT.panel, b = BOT.el && botAt(); if (!P || !b) return;
   if (matchMedia('(max-width:760px)').matches){ P.classList.add('sheet'); P.style.left = P.style.top = P.style.right = P.style.bottom = ''; return; }
   P.classList.remove('sheet');
   const r = b.getBoundingClientRect(), W = Math.min(390, innerWidth - 24), H = Math.min(560, innerHeight - 40);
   P.style.width = W + 'px'; P.style.height = H + 'px';
+  if (b !== BOT.el){
+    /* junto a SynthonIA (del lado con más espacio), sin taparla */
+    const R = innerWidth - r.right, L = r.left, top = Math.min(84, innerHeight - H - 12);
+    /* si no cabe al lado sin tapar el título, ella la sostiene: la ventanita sale debajo de su cara */
+    if (Math.max(R, L) < W + 28 || r.width > 220){ P.style.left = clamp(r.left + r.width / 2 - W / 2, 12, innerWidth - W - 12) + 'px'; P.style.top = clamp(r.top + Math.min(150, r.height * .42), top, innerHeight - H - 12) + 'px'; return; }
+    const x = R >= L ? r.right + 14 : r.left - W - 14;
+    P.style.left = clamp(x, 12, innerWidth - W - 12) + 'px'; P.style.top = clamp(r.top + r.height / 2 - H / 2, top, innerHeight - H - 12) + 'px'; return;
+  }
   P.style.left = clamp(r.right - W, 12, innerWidth - W - 12) + 'px';
   P.style.top = (r.top - H - 14 > 12 ? r.top - H - 14 : clamp(r.bottom + 14, 12, innerHeight - H - 12)) + 'px';
 }
@@ -3569,7 +3594,7 @@ function betaBot(){
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(betaTags, 400)); else setTimeout(betaTags, 400);
 addEventListener('synthz-ready-bot', botMount);
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(botMount, 900)); else setTimeout(botMount, 900);
-const BOTAPI = { open:botOpen, close:botClose, mount:botMount, say:botSay, sync:botSync, team:botTeam, chatOpen, chatClose, match:q => { const f = botMatch(q); return f ? BOT_FAQ.indexOf(f) : -1; }, get el(){ return BOT.el; } };
+const BOTAPI = { anchor:fn => { BOT.anchor = fn; }, open:botOpen, close:botClose, mount:botMount, say:botSay, sync:botSync, team:botTeam, chatOpen, chatClose, match:q => { const f = botMatch(q); return f ? BOT_FAQ.indexOf(f) : -1; }, get el(){ return BOT.el; } };
 /* ---------- Guía: elegir cómo aprender (Asistida con SynthonIA o Lectura) ---------- */
 function guideChooser(o = {}){
   if ($('#szGch')) return;
@@ -4006,7 +4031,8 @@ function appPromo(force){
   if ($('#appPromo') || appStandalone()) return;
   if (!force){
     if (!appPhone()) return;
-    try{ if (localStorage.getItem('synthz:appok')) return; const t = +localStorage.getItem('synthz:apppromo') || 0; if (Date.now() - t < 7 * 864e5) return; }catch(e){ return; }
+    /* v2.6: no interrumpe la primera visita: se ofrece desde la tercera vez que abres SynthZ (y una vez por semana) */
+    try{ if (localStorage.getItem('synthz:appok')) return; if ((+localStorage.getItem('synthz:loads') || 0) < 3) return; const t = +localStorage.getItem('synthz:apppromo') || 0; if (Date.now() - t < 7 * 864e5) return; }catch(e){ return; }
     if (document.querySelector('.szm.on, #ptour, #guide, #szMaint, .tcard[role="dialog"]')) return;   /* no interrumpe otra ventana */
   }
   try{ localStorage.setItem('synthz:apppromo', String(Date.now())); }catch(e){}
@@ -4028,6 +4054,7 @@ function appPromo(force){
   addEventListener('keydown', function k(e){ if (e.key === 'Escape'){ close(); removeEventListener('keydown', k); } });
 }
 /* en el celular, un ratico después de entrar (nunca encima de otra ventana) */
+try{ localStorage.setItem('synthz:loads', String((+localStorage.getItem('synthz:loads') || 0) + 1)); }catch(e){}
 if (!appStandalone() && !/pulsem/.test(location.pathname)) setTimeout(() => { try{ appPromo(false); }catch(e){} }, 24000);
 /* ---------- v2.2 · etiquetas al pasar el mouse: cada botón con ícono dice qué hace (como en Claude) ---------- */
 if (matchMedia('(hover: hover) and (pointer: fine)').matches){
@@ -4226,8 +4253,12 @@ const SPACE = (() => {
     S = Array.from({ length:n }, (_, k) => { const g = rnd() < .22; return { x:rnd() * w, y:rnd() * h, z:.25 + rnd() * .75, g, k, r:g ? .8 + rnd() * 1.2 : .3 + rnd() * 1.1, ph:rnd() * 6.28, sp:.4 + rnd() * 1.4 }; });
     paint();
   };
+  /* las estrellas titilan despacio: con 30 cuadros por segundo se ven igual y la página trabaja la mitad */
+  let last = -1e9;
   const draw = t => {
-    raf = 0; ctx.clearRect(0, 0, w, h);
+    raf = 0;
+    if (!still && t - last < 33){ if (!document.hidden && CFG.bg && !document.documentElement.classList.contains('sb-off')) raf = requestAnimationFrame(draw); return; }
+    last = t; ctx.clearRect(0, 0, w, h);
     for (const s of S){
       const y = (((s.y - sc * s.z * .12 - (s.g ? t * .004 : 0)) % h) + h) % h;
       const tw = still ? .8 : .5 + .5 * Math.sin(t / 1000 * s.sp + s.ph);
@@ -4347,5 +4378,5 @@ const EV = (() => {
 window.SZ = { root, $, $$, clamp, fmt, reduce, today, sleepRaw, esc, est, Z_PATH, ICONS, ico, zWord, API, MANUAL, ALL, byId,
   get state(){ return state; }, set state(v){ state = v; normalize(); },
   normalize, cleanUsage, cleanChats, cleanStrMap, save, total, addUsage, resetUsage, estAll, todayEst, todayReq, providerBalance, balanceHtml, splitHtml, syncNote, helpGuide, smoothDetails, szPrompt, swapDir, swapDir, face, FACE_GOOD, randomGoodFace, welcomeBack, wasAway, accSignOutAll, accClaim, ROLE_NAME, trialGet, trialSet, trialStart, legacyRow, cleanLedger, mergeLedger, DEV, hooks, toast, hydrateIcons, md, countTo,
-  BRAND, SPACE, isFlow, flowWord, flowOrb, LOGO_Z, fileIco, zMark, synBody, SPOSE, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, BRANDS, brandOf, glassIcon, PIXART, pixelRun, pixelGrid, workView, workSaved, mdLoad, MDLIB, SZ_P, SZQ, SZ_AUTO, szqSet, msgsLeft, msgsTotal, coinsOf, coinsLeft, coinsTotal, coinsFmt, coinsShort, coinNote, limTxt, limShort, limLvl, limPct, limRing, limBar, szCatalog, szHeaders, guestGate, guestFull, isGuestQ, setTurn, puterOut, puterOutNote, TEL, telEv, telBeat, DEVH, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, feedbackModal, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI, EV, lipSync, ballFace, guideAsk, GTOPICS, whatsNew, signedish, cfgLinks, memAddCore, memPanel, menuOpen, menuClose, MICO, appInstall, appPromo, appStandalone, appPhone };
+  BRAND, SPACE, isFlow, flowWord, flowOrb, LOGO_Z, fileIco, zMark, synBody, synSet, SPOSE, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, BRANDS, brandOf, glassIcon, PIXART, pixelRun, pixelGrid, workView, workSaved, mdLoad, MDLIB, SZ_P, SZQ, SZ_AUTO, szqSet, msgsLeft, msgsTotal, coinsOf, coinsLeft, coinsTotal, coinsFmt, coinsShort, coinNote, limTxt, limShort, limLvl, limPct, limRing, limBar, szCatalog, szHeaders, guestGate, guestFull, isGuestQ, setTurn, puterOut, puterOutNote, TEL, telEv, telBeat, DEVH, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, feedbackModal, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI, EV, lipSync, ballFace, guideAsk, GTOPICS, whatsNew, signedish, cfgLinks, memAddCore, memPanel, menuOpen, menuClose, MICO, appInstall, appPromo, appStandalone, appPhone };
 })();

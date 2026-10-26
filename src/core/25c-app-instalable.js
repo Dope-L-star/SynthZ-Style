@@ -35,7 +35,8 @@ function appPromo(force){
   if ($('#appPromo') || appStandalone()) return;
   if (!force){
     if (!appPhone()) return;
-    try{ if (localStorage.getItem('synthz:appok')) return; const t = +localStorage.getItem('synthz:apppromo') || 0; if (Date.now() - t < 7 * 864e5) return; }catch(e){ return; }
+    /* v2.6: no interrumpe la primera visita: se ofrece desde la tercera vez que abres SynthZ (y una vez por semana) */
+    try{ if (localStorage.getItem('synthz:appok')) return; if ((+localStorage.getItem('synthz:loads') || 0) < 3) return; const t = +localStorage.getItem('synthz:apppromo') || 0; if (Date.now() - t < 7 * 864e5) return; }catch(e){ return; }
     if (document.querySelector('.szm.on, #ptour, #guide, #szMaint, .tcard[role="dialog"]')) return;   /* no interrumpe otra ventana */
   }
   try{ localStorage.setItem('synthz:apppromo', String(Date.now())); }catch(e){}
@@ -57,4 +58,5 @@ function appPromo(force){
   addEventListener('keydown', function k(e){ if (e.key === 'Escape'){ close(); removeEventListener('keydown', k); } });
 }
 /* en el celular, un ratico después de entrar (nunca encima de otra ventana) */
+try{ localStorage.setItem('synthz:loads', String((+localStorage.getItem('synthz:loads') || 0) + 1)); }catch(e){}
 if (!appStandalone() && !/pulsem/.test(location.pathname)) setTimeout(() => { try{ appPromo(false); }catch(e){} }, 24000);
