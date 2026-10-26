@@ -938,3 +938,64 @@ html{-webkit-tap-highlight-color:transparent}
 .cfgth button[aria-pressed="true"]::after{content:"✓";position:absolute;top:6px;right:8px;font-size:11px;color:var(--t1)}
 .cfgth button:disabled{opacity:.5;cursor:not-allowed}
 .cfgth button em{position:absolute;top:6px;right:6px;font-style:normal;font-size:9.5px;padding:2px 6px;border-radius:99px;background:rgba(255,255,255,.08);color:var(--mute);letter-spacing:.03em}
+/* ===== v2.4 · «Noche Synth»: colores del boceto, fondo espacial y vidrio líquido ===== */
+:root{
+  --sb-bg:#0b0820;--sb-deep:#2a1458;--sb-primary:#7b3ff2;--sb-secondary:#ff3d9a;--sb-warm:#ff7a45;--sb-spark:#ffc857;--sb-light:#3de0ff;--sb-text:#f6f3ff;
+  /* los dos colores de siempre ahora salen del tema nuevo: el «dorado» es el naranja cálido y el «vino» es el rosa */
+  --gold:#ff9a52;--gold-rgb:255,154,82;--wine:#ff3d9a;--wine-rgb:255,61,154;--accent:#3de0ff;
+  --bg:#0b0820;--text:#f6f3ff;--soft:#cfc8e6;--mute:#9a92b8;--line:rgba(255,255,255,.12);--card:rgba(255,255,255,.05);
+  --grad:linear-gradient(100deg,var(--sb-primary),var(--sb-secondary) 55%,var(--sb-warm));
+  --grad-text:linear-gradient(95deg,var(--sb-light),var(--sb-primary) 38%,var(--sb-secondary) 70%,var(--sb-warm));
+  /* vidrio líquido: casi transparente (se ve 60-75 % de lo de atrás), con desenfoque suave, borde de luz y un brillo en la esquina */
+  --lg-blur:blur(14px) saturate(175%) brightness(1.06);
+  --lg-fill:rgba(255,255,255,.065);
+  --lg-bg:radial-gradient(130% 70% at 0% 0%,rgba(255,255,255,.13),transparent 46%),linear-gradient(160deg,rgba(255,255,255,.075),rgba(255,255,255,.025) 60%,rgba(255,255,255,.05));
+  --lg-edge:rgba(255,255,255,.2);
+  --lg-shadow:inset 0 1px 0 rgba(255,255,255,.32),inset 0 -1px 0 rgba(255,255,255,.06),inset 0 0 0 1px rgba(255,255,255,.03),0 18px 50px -18px rgba(4,1,18,.75);
+}
+html[data-theme="oceano"]{--sb-bg:#060b1f;--sb-deep:#0f2a66;--sb-primary:#2f6bff;--sb-secondary:#3de0ff;--sb-warm:#ffd166;--sb-spark:#9ae6ff;--sb-light:#a5b4ff;--sb-text:#eef4ff;
+  --gold:#7cc9e3;--gold-rgb:124,201,227;--wine:#5a7bd6;--wine-rgb:90,123,214;--bg:#060b1f}
+html[data-theme="bosque"]{--sb-bg:#051a1c;--sb-deep:#0b3d42;--sb-primary:#14c8a8;--sb-secondary:#3da9ff;--sb-warm:#b8f25c;--sb-spark:#ffe66d;--sb-light:#7df9ff;--sb-text:#efffFB;
+  --gold:#9bd68f;--gold-rgb:155,214,143;--wine:#3fa58a;--wine-rgb:63,165,138;--bg:#051a1c}
+html[data-theme="lavanda"]{--sb-bg:#120a24;--sb-deep:#34205e;--sb-primary:#a98bff;--sb-secondary:#d46fb0;--sb-warm:#ffb3c7;--sb-spark:#fff0c2;--sb-light:#bfa9f2;--sb-text:#f7f2ff;
+  --gold:#bfa9f2;--gold-rgb:191,169,242;--wine:#d46fb0;--wine-rgb:212,111,176;--bg:#120a24}
+@property --sb-bg{syntax:'<color>';inherits:true;initial-value:#0b0820}
+@property --sb-deep{syntax:'<color>';inherits:true;initial-value:#2a1458}
+@property --sb-primary{syntax:'<color>';inherits:true;initial-value:#7b3ff2}
+@property --sb-secondary{syntax:'<color>';inherits:true;initial-value:#ff3d9a}
+@property --sb-warm{syntax:'<color>';inherits:true;initial-value:#ff7a45}
+@property --sb-light{syntax:'<color>';inherits:true;initial-value:#3de0ff}
+:root{transition:--sb-bg .9s ease,--sb-deep .9s ease,--sb-primary .9s ease,--sb-secondary .9s ease,--sb-warm .9s ease,--sb-light .9s ease}
+html,body{background:var(--sb-bg)}
+::selection{background:rgba(123,63,242,.45)}
+
+/* el fondo viejo se queda como contenedor (los ajustes y scripts lo siguen usando), pero sus manchas se esconden */
+.aurora{z-index:-2;background:var(--sb-bg)}
+.aurora>i,.aurora .orbit{display:none !important}
+.grain{opacity:.045 !important}
+
+.sb-root{position:absolute;inset:0;overflow:hidden;pointer-events:none;--sy:0;--mx:0;--my:0;--p:0;--dim:1}
+.sb-root *{pointer-events:none}
+.sb-base{position:absolute;inset:0;background:radial-gradient(130% 100% at 50% 0%,color-mix(in srgb,var(--sb-deep) 70%,transparent),transparent 75%)}
+.sb-layer{position:absolute;inset:0;will-change:transform;transform:translate3d(calc((var(--mx)*1px - var(--p)*3vw)*var(--k)),calc((var(--my)*8px - var(--sy)*.05px)*var(--k)),0)}
+.sb-pos{position:absolute;left:0;top:0;transform:translate(calc(var(--x)*1vw),calc(var(--y)*1vh)) scale(var(--s,1))}
+.sb-glow{width:62vmax;height:62vmax;margin:-31vmax 0 0 -31vmax;border-radius:50%;filter:blur(30px);background:radial-gradient(circle,var(--c) 0%,transparent 68%);opacity:calc(.62*var(--dim));animation:sb-float 24s ease-in-out infinite alternate}
+.sb-canvas{position:absolute;inset:0;width:100%;height:100%}
+.sb-rib svg{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;opacity:calc(.95*var(--dim))}
+.sb-rib g{animation:sb-sway 14s ease-in-out infinite alternate}
+.rb-glow{filter:blur(14px);opacity:.75}
+.rb-sharp .rb{opacity:.95}
+.rb-sharp .rb4{opacity:.9}
+.sb-bubble{position:relative;width:var(--d);height:var(--d);margin:calc(var(--d)/-2) 0 0 calc(var(--d)/-2);border-radius:50%;opacity:.75;border:1px solid rgba(255,255,255,.35);
+  background:radial-gradient(circle at 32% 26%,rgba(255,255,255,.9) 0 4%,transparent 15%),radial-gradient(circle,transparent 50%,color-mix(in srgb,var(--sb-light) 30%,transparent) 100%);
+  box-shadow:inset 0 0 18px color-mix(in srgb,var(--sb-secondary) 45%,transparent),0 0 26px -6px var(--sb-light);animation:sb-bob 9s ease-in-out infinite alternate}
+.sb-bubble::before{content:"";position:absolute;inset:0;border-radius:50%;opacity:.55;mix-blend-mode:screen;background:conic-gradient(from 210deg,var(--sb-light),var(--sb-secondary),var(--sb-spark),var(--sb-primary),var(--sb-light));
+  -webkit-mask:radial-gradient(circle,transparent 58%,#000 78%,transparent 100%);mask:radial-gradient(circle,transparent 58%,#000 78%,transparent 100%)}
+@keyframes sb-float{to{transform:translate3d(3vw,-3vh,0) scale(1.07)}}
+@keyframes sb-bob{to{transform:translate3d(0,-22px,0) rotate(8deg)}}
+@keyframes sb-sway{from{transform:translate3d(-1.5%,0,0)}to{transform:translate3d(1.5%,-16px,0)}}
+html.nobg .sb-root{display:none}
+html.noanim .sb-root *,html.pmode .sb-root *{animation:none !important}
+@media (prefers-reduced-motion:reduce){.sb-root *{animation:none !important}}
+/* en el celular: sin cintas borrosas ni burbujas (pesan), solo brillos y estrellas */
+@media (max-width:760px){.rb-glow,.sb-bubble{display:none}.sb-glow{filter:blur(22px)}}
