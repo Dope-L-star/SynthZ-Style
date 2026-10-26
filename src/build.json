@@ -6,5 +6,7 @@
   "index.js": "src/index",
   "index.css": "src/index-css",
   "pulsem.js": "src/pulsem",
-  "pulsem.css": "src/pulsem-css"
+  "pulsem.css": "src/pulsem-css",
+  "alias-tools.js": "src/alias/tools",
+  "alias.js": "src/alias"
 }
