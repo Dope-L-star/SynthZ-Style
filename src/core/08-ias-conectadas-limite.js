@@ -42,15 +42,21 @@ const guestFull = () => isGuestQ() && (SZQ.guest.used || 0) >= (SZQ.guest.max ||
 const limPct = () => Math.max(SZQ.limit ? Math.min(1, (SZQ.used || 0) / SZQ.limit) : 0, isGuestQ() ? Math.min(1, (SZQ.guest.used || 0) / (SZQ.guest.max || 5)) : 0);
 const msgsLeft = () => Math.max(0, Math.floor(((SZQ.limit || 25000) - (SZQ.used || 0)) / MSG_TOK));
 const msgsTotal = () => Math.max(1, Math.round((SZQ.limit || 25000) / MSG_TOK));
-/* v1.4: no se dice cuántos mensajes quedan (la gente lo prefiere así): solo si hay, si queda poco o si se acabó */
-const limTxt = () => SZQ.on === false ? 'Las IAs gratis están descansando' : guestFull() ? 'Entra a tu cuenta para seguir FlowIAndo' : limPct() >= 1 ? 'Usaste tu límite de hoy' : limPct() >= .8 ? 'Te queda poco por hoy' : 'Tu límite gratis está disponible';
-const limShort = () => SZQ.on === false ? 'Descansando' : guestFull() ? 'Entra para seguir' : limPct() >= 1 ? 'Agotado por hoy' : limPct() >= .8 ? 'Queda poco' : 'Disponible';
+/* v2.4: vuelven las SynXCoin's. 1 SynXCoin = 1 palabra (lo que escribes y lo que te responde). El servidor cuenta en tokens; una palabra son unos 4/3 de token */
+const WORD_TOK = 4 / 3;
+const coinsOf = tok => Math.max(0, Math.round((+tok || 0) / WORD_TOK));
+const coinsLeft = () => coinsOf((SZQ.limit || 25000) - (SZQ.used || 0));
+const coinsTotal = () => coinsOf(SZQ.limit || 25000);
+const coinsFmt = n => Math.round(n).toLocaleString('es');
+const coinsShort = n => n >= 10000 ? (Math.floor(n / 100) / 10).toLocaleString('es') + ' mil' : coinsFmt(n);
+const limTxt = () => SZQ.on === false ? 'Las IAs gratis están descansando' : guestFull() ? 'Entra a tu cuenta para seguir FlowIAndo' : isGuestQ() ? 'Te quedan ' + Math.max(0, (SZQ.guest.max || 5) - (SZQ.guest.used || 0)) + ' mensajes de prueba' : limPct() >= 1 ? 'Usaste tus SynXCoin\'s de hoy' : 'Te quedan ' + coinsFmt(coinsLeft()) + ' SynXCoin\'s';
+const limShort = () => SZQ.on === false ? 'Descansando' : guestFull() ? 'Entra para seguir' : isGuestQ() ? Math.max(0, (SZQ.guest.max || 5) - (SZQ.guest.used || 0)) + ' de prueba' : limPct() >= 1 ? 'Agotado por hoy' : coinsShort(coinsLeft()) + ' SynXCoin\'s';
 const limLvl = () => { const k = limPct(); return k >= 1 ? 'full' : k >= .8 ? 'warn' : 'ok'; };
 /* anillo de vidrio que se va vaciando */
 function limRing(size){ const k = 1 - limPct(), r = 15.5, c = 2 * Math.PI * r; return '<svg class="lring ' + limLvl() + '" viewBox="0 0 36 36" width="' + (size || 22) + '" height="' + (size || 22) + '" aria-hidden="true"><circle cx="18" cy="18" r="' + r + '" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="4"/><circle cx="18" cy="18" r="' + r + '" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="' + c.toFixed(1) + '" stroke-dashoffset="' + (c * (1 - k)).toFixed(1) + '" transform="rotate(-90 18 18)"/></svg>'; }
 function limBar(o = {}){
   const k = 1 - limPct();
-  return '<div class="lbar ' + limLvl() + '"><div class="lb-h"><b>' + (o.title || 'Tu límite de hoy') + '</b><span>' + limTxt() + '</span></div><div class="lb-t"><i style="transform:scaleX(' + k.toFixed(3) + ')"></i></div>' + (o.small === false ? '' : '<small>' + (isGuestQ() ? 'Sin cuenta tienes ' + (SZQ.guest.max || 5) + ' mensajes de prueba al día. Con tu cuenta gratis tienes mucho más. ' : '') + 'Gratis. A medianoche se llena otra vez.' + (o.puter ? ' Si se acaba, puedes seguir con Puter: tu versión pro de las IAs más usadas.' : '') + '</small>') + '</div>';
+  return '<div class="lbar ' + limLvl() + '"><div class="lb-h"><b>' + (o.title || 'Tu límite de hoy') + '</b><span>' + limTxt() + '</span></div><div class="lb-t"><i style="transform:scaleX(' + k.toFixed(3) + ')"></i></div>' + (o.small === false ? '' : '<small>' + (isGuestQ() ? 'Sin cuenta tienes ' + (SZQ.guest.max || 5) + ' mensajes de prueba al día. Con tu cuenta gratis tienes mucho más. ' : '') + 'Gratis. 1 SynXCoin = 1 palabra, contando lo que escribes y lo que te responde. A medianoche se llenan otra vez.' + (o.puter ? ' Si se acaba, puedes seguir con Puter: tu versión pro de las IAs más usadas.' : '') + '</small>') + '</div>';
 }
 async function szCatalog(){
   let r; try{ r = await fetch('/api/ai', { headers:szHeaders() }); }catch(e){ throw Object.assign(new Error('net'), { net:true }); }

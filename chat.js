@@ -441,7 +441,7 @@ $('#pickRow').addEventListener('click', e => {
 /* quién paga lo que escribes: siempre a la vista (regla 5) */
 function payOf(id){
   if (id === TRIAL_ID) return ['tr', 'Prueba guiada · la paga SynthZ', 'Prueba · paga SynthZ'];
-  if (/^sz:/.test(id)) return ['sz', 'Gratis · ' + SZ.limTxt().toLowerCase(), 'Gratis · ' + SZ.limShort().toLowerCase()];
+  if (/^sz:/.test(id)) return ['sz', 'Gratis · ' + SZ.limTxt().replace(/^./, c => c.toLowerCase()), 'Gratis · ' + SZ.limShort().replace(/^[A-ZÁÉÍÓÚ]/, c => c.toLowerCase())];
   if (/^pu:/.test(id)) return ['pu', 'Con tu Puter · tu cuenta gratis', 'Con tu Puter'];
   return ['or off', 'Esta IA ya no está disponible: elige otra', 'Elige otra IA'];
 }
@@ -455,8 +455,8 @@ function paintPay(){
   if (M){
     const bar = !document.body.classList.contains('fresh') && mode !== 'cmp' && !trialOn && (c === 'sz' || agentOn());
     if (bar){ const k = Math.max(0, 1 - SZ.limPct()), pc = Math.round(k * 100), lv = SZ.limLvl();
-      M.className = 'paym tlim ' + lv; M.setAttribute('role', 'img'); M.setAttribute('aria-label', 'Tu límite gratis de hoy: te queda ' + pc + ' %');
-      M.innerHTML = '<span class="tl-l">Hoy</span><i class="tl-t"><b style="transform:scaleX(' + k.toFixed(3) + ')"></b></i><em>' + pc + ' %</em>'; }
+      M.className = 'paym tlim ' + lv; M.setAttribute('role', 'img'); M.setAttribute('aria-label', 'Tus SynXCoin\'s de hoy: te quedan ' + SZ.coinsFmt(SZ.coinsLeft()) + ' (1 SynXCoin = 1 palabra)');
+      M.innerHTML = '<span class="tl-l">Hoy</span><i class="tl-t"><b style="transform:scaleX(' + k.toFixed(3) + ')"></b></i><em>' + (SZ.isGuestQ() ? pc + ' %' : esc(SZ.coinsShort(SZ.coinsLeft())) + ' <small>SynXCoin\'s</small>') + '</em>'; }
     else { M.className = 'paym ' + c; M.removeAttribute('role'); M.removeAttribute('aria-label'); M.innerHTML = '<i aria-hidden="true"></i>' + esc(s); }
   }
 }
@@ -968,7 +968,7 @@ function recommend(k){
 }
 function limitsOf(m){
   const L = [];
-  if (/^sz:/.test(m.id)) L.push('Gratis: usa tus mensajes de hoy');
+  if (/^sz:/.test(m.id)) L.push('Gratis: usa tus SynXCoin\'s de hoy');
   else if (/^pu:/.test(m.id)) L.push('Con tu cuenta gratis de Puter');
 
   L.push(m.vision ? 'Acepta imágenes y PDF' : /^pu:/.test(m.id) ? 'No sabemos si esta IA ve fotos; los PDF y textos sí los lee' : 'No ve imágenes; los PDF y textos se leen como texto');

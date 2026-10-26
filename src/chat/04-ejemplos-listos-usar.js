@@ -48,7 +48,7 @@ function recommend(k){
 }
 function limitsOf(m){
   const L = [];
-  if (/^sz:/.test(m.id)) L.push('Gratis: usa tus mensajes de hoy');
+  if (/^sz:/.test(m.id)) L.push('Gratis: usa tus SynXCoin\'s de hoy');
   else if (/^pu:/.test(m.id)) L.push('Con tu cuenta gratis de Puter');
 
   L.push(m.vision ? 'Acepta imágenes y PDF' : /^pu:/.test(m.id) ? 'No sabemos si esta IA ve fotos; los PDF y textos sí los lee' : 'No ve imágenes; los PDF y textos se leen como texto');
