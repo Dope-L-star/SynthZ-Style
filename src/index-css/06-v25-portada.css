@@ -52,31 +52,39 @@ main a:focus-visible,main button:focus-visible,main summary:focus-visible,#nav a
 @keyframes hdust{0%,100%{opacity:.15;transform:translateY(0)}50%{opacity:1;transform:translateY(-14px)}}
 
 /* ---------- un fondo distinto en cada sección ---------- */
+/* v2.6: cada fondo ocupa solo su sección (ya no se monta sobre la vecina), sin desenfoques ni máscaras
+   animadas (eran el lag) y solo se mueve el de la sección que estás viendo; los demás quedan quietos */
 main>section{position:relative;isolation:isolate}
-.secbg{position:absolute;top:-70px;bottom:-70px;left:calc(50% - 50vw);width:100vw;z-index:-1;pointer-events:none;overflow:hidden;background-color:var(--sb-bg);
-  -webkit-mask:linear-gradient(180deg,transparent,#000 140px,#000 calc(100% - 140px),transparent);mask:linear-gradient(180deg,transparent,#000 140px,#000 calc(100% - 140px),transparent)}
-.secbg i{position:absolute;display:block}
+.secbg{position:absolute;top:0;bottom:0;left:calc(50% - 50vw);width:100vw;z-index:-1;pointer-events:none;overflow:hidden;contain:layout paint;background-color:var(--sb-bg)}
+.secbg::before,.secbg::after{content:"";position:absolute;left:0;right:0;height:90px;z-index:2}
+.secbg::before{top:0;background:linear-gradient(180deg,var(--sb-bg),transparent)}
+.secbg::after{bottom:0;background:linear-gradient(0deg,var(--sb-bg),transparent)}
+.secbg i{position:absolute;display:block;animation-play-state:paused}
+.secbg i::before{animation-play-state:paused}
+.secbg.run i,.secbg.run i::before{animation-play-state:running}
 /* Así de fácil: rejilla en perspectiva con luz cian (boceto «design layout») */
 .bg-grid{background:radial-gradient(55% 60% at 88% 8%,rgba(61,224,255,.32),transparent 70%),radial-gradient(45% 50% at 6% 92%,rgba(255,61,154,.26),transparent 70%),linear-gradient(180deg,#09092a,#0e0a30)}
-.bg-grid i:nth-child(1),.bg-grid i:nth-child(2){left:-40%;right:-40%;height:62%;background-image:linear-gradient(rgba(61,224,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(61,224,255,.3) 1px,transparent 1px);background-size:70px 70px}
-.bg-grid i:nth-child(1){bottom:-8%;transform:perspective(520px) rotateX(64deg);transform-origin:50% 100%;-webkit-mask:linear-gradient(0deg,#000 20%,transparent 95%);mask:linear-gradient(0deg,#000 20%,transparent 95%);animation:gridrun 5s linear infinite}
-.bg-grid i:nth-child(2){top:-10%;opacity:.45;transform:perspective(520px) rotateX(-64deg);transform-origin:50% 0;-webkit-mask:linear-gradient(180deg,#000 10%,transparent 90%);mask:linear-gradient(180deg,#000 10%,transparent 90%);animation:gridrun 7s linear infinite reverse}
-.bg-grid i:nth-child(3){right:4%;top:6%;width:42vw;height:42vw;border-radius:50%;background:radial-gradient(circle,rgba(61,224,255,.35),transparent 65%);filter:blur(20px);animation:glowp 6s ease-in-out infinite}
-@keyframes gridrun{to{background-position:0 70px,0 0}}
+.bg-grid i:nth-child(1),.bg-grid i:nth-child(2){left:-40%;right:-40%;height:62%;overflow:hidden}
+.bg-grid i:nth-child(1)::before,.bg-grid i:nth-child(2)::before{content:"";position:absolute;left:0;right:0;top:-70px;bottom:0;background-image:linear-gradient(rgba(61,224,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(61,224,255,.3) 1px,transparent 1px);background-size:70px 70px}
+.bg-grid i:nth-child(1){bottom:-8%;transform:perspective(520px) rotateX(64deg);transform-origin:50% 100%;-webkit-mask:linear-gradient(0deg,#000 20%,transparent 95%);mask:linear-gradient(0deg,#000 20%,transparent 95%)}
+.bg-grid i:nth-child(1)::before{animation:gridrun 5s linear infinite}
+.bg-grid i:nth-child(2){top:-10%;opacity:.45;transform:perspective(520px) rotateX(-64deg);transform-origin:50% 0;-webkit-mask:linear-gradient(180deg,#000 10%,transparent 90%);mask:linear-gradient(180deg,#000 10%,transparent 90%)}
+.bg-grid i:nth-child(3){right:4%;top:6%;width:42vw;height:42vw;border-radius:50%;background:radial-gradient(circle,rgba(61,224,255,.3),transparent 68%);animation:glowp 6s ease-in-out infinite}
+@keyframes gridrun{to{transform:translateY(70px)}}
 @keyframes glowp{50%{opacity:.55;transform:scale(1.08)}}
 /* Modos: nebulosa violeta con estrellas */
 .bg-nebula{background:radial-gradient(70% 60% at 50% 40%,#2a1458,transparent 70%),#0a0620}
-.bg-nebula i:nth-child(1){inset:-20%;background:radial-gradient(30% 25% at 30% 40%,rgba(123,63,242,.55),transparent 70%),radial-gradient(25% 22% at 72% 55%,rgba(255,61,154,.38),transparent 70%),radial-gradient(22% 18% at 52% 78%,rgba(61,224,255,.22),transparent 70%);filter:blur(30px);animation:nebdrift 18s ease-in-out infinite alternate}
+.bg-nebula i:nth-child(1){inset:-20%;background:radial-gradient(34% 29% at 30% 40%,rgba(123,63,242,.5),transparent 72%),radial-gradient(29% 26% at 72% 55%,rgba(255,61,154,.34),transparent 72%),radial-gradient(26% 22% at 52% 78%,rgba(61,224,255,.2),transparent 72%);animation:nebdrift 18s ease-in-out infinite alternate}
 .bg-nebula i:nth-child(2),.bg-stars i:nth-child(1){inset:0;background-image:radial-gradient(1.2px 1.2px at 12% 18%,#fff,transparent),radial-gradient(1px 1px at 72% 12%,#fff,transparent),radial-gradient(1.6px 1.6px at 40% 66%,#ffe7b0,transparent),radial-gradient(1px 1px at 86% 72%,#fff,transparent),radial-gradient(1.3px 1.3px at 22% 84%,#bfe9ff,transparent),radial-gradient(1px 1px at 58% 32%,#fff,transparent);background-size:340px 300px;opacity:.75;animation:twk 4s ease-in-out infinite alternate}
-.bg-nebula i:nth-child(3){left:50%;top:50%;width:1100px;height:1100px;margin:-550px 0 0 -550px;border-radius:50%;background:conic-gradient(from 0deg,transparent,rgba(123,63,242,.16),transparent 30%,rgba(255,61,154,.12),transparent 60%,rgba(61,224,255,.12),transparent);filter:blur(30px);animation:spin 40s linear infinite}
+.bg-nebula i:nth-child(3){left:50%;top:50%;width:1100px;height:1100px;margin:-550px 0 0 -550px;border-radius:50%;background:conic-gradient(from 0deg,transparent,rgba(123,63,242,.13),transparent 30%,rgba(255,61,154,.1),transparent 60%,rgba(61,224,255,.1),transparent);-webkit-mask:radial-gradient(closest-side,#000 40%,transparent);mask:radial-gradient(closest-side,#000 40%,transparent);animation:spin 40s linear infinite}
 @keyframes nebdrift{to{transform:translate(4%,-3%) scale(1.08) rotate(4deg)}}
 @keyframes twk{to{opacity:.35}}
 @keyframes spin{to{transform:rotate(360deg)}}
 /* SynthonIA es para ti: bandas líquidas de color abajo (boceto «liquid glass») */
 .bg-liquid{background:linear-gradient(180deg,#0b0820 0%,#140a33 55%,#1d0b3c 100%)}
-.bg-liquid i:nth-child(1){left:-10%;right:-10%;bottom:0;height:46%;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 400' preserveAspectRatio='none'><path d='M0 200C360 90 760 330 1440 130V400H0Z' fill='%235b2bd8'/><path d='M0 250C400 150 780 360 1440 200V400H0Z' fill='%23ff3d9a'/><path d='M0 300C420 210 820 390 1440 265V400H0Z' fill='%23ff7a45'/><path d='M0 345C440 280 840 410 1440 330V400H0Z' fill='%23ffc857'/></svg>") 0 100%/100% 100% no-repeat;opacity:.62;filter:saturate(1.1);animation:liq 12s ease-in-out infinite alternate;transform-origin:50% 100%}
-.bg-liquid i:nth-child(2){left:-10%;right:-10%;bottom:0;height:46%;background:linear-gradient(180deg,rgba(255,255,255,.18),transparent 30%);-webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 400' preserveAspectRatio='none'><path d='M0 200C360 90 760 330 1440 130V400H0Z'/></svg>") 0 100%/100% 100% no-repeat;mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 400' preserveAspectRatio='none'><path d='M0 200C360 90 760 330 1440 130V400H0Z'/></svg>") 0 100%/100% 100% no-repeat;animation:liq 12s ease-in-out infinite alternate}
-.bg-liquid i:nth-child(3){left:-10%;top:-10%;width:60%;height:70%;background:radial-gradient(closest-side,rgba(123,63,242,.35),transparent);filter:blur(30px)}
+.bg-liquid i:nth-child(1){left:-10%;right:-10%;bottom:0;height:46%;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 400' preserveAspectRatio='none'><path d='M0 200C360 90 760 330 1440 130V400H0Z' fill='%235b2bd8'/><path d='M0 200C360 90 760 330 1440 130' fill='none' stroke='%23fff' stroke-opacity='.35' stroke-width='3'/><path d='M0 250C400 150 780 360 1440 200V400H0Z' fill='%23ff3d9a'/><path d='M0 300C420 210 820 390 1440 265V400H0Z' fill='%23ff7a45'/><path d='M0 345C440 280 840 410 1440 330V400H0Z' fill='%23ffc857'/></svg>") 0 100%/100% 100% no-repeat;opacity:.62;animation:liq 12s ease-in-out infinite alternate;transform-origin:50% 100%}
+.bg-liquid i:nth-child(2){display:none}
+.bg-liquid i:nth-child(3){left:-10%;top:-10%;width:60%;height:70%;background:radial-gradient(closest-side,rgba(123,63,242,.3),transparent)}
 @keyframes liq{to{transform:scaleY(1.12) translateX(-3%)}}
 /* Todas las IAs: cielo de estrellas con órbitas alrededor de la esfera */
 .bg-stars{background:radial-gradient(40% 50% at 74% 26%,rgba(123,63,242,.32),transparent 70%),radial-gradient(30% 40% at 18% 80%,rgba(61,224,255,.14),transparent 70%),#05041a}
@@ -85,17 +93,17 @@ main>section{position:relative;isolation:isolate}
 .bg-stars i:nth-child(3){right:20%;top:12%;width:8px;height:8px;border-radius:50%;background:#3de0ff;box-shadow:0 0 14px 3px #3de0ff;animation:shoot 9s ease-in infinite}
 @keyframes orbit{to{transform:rotate(348deg)}}
 @keyframes shoot{0%,80%{opacity:0;transform:translate(0,0)}82%{opacity:1}100%{opacity:0;transform:translate(-40vw,26vw)}}
-/* Tu IA ya está lista y SynthFlow: auroras */
+/* Tu IA ya está lista y SynthFlow: auroras (cortinas suaves hechas con degradados, sin desenfoque) */
 .bg-aurora{background:linear-gradient(180deg,#071026,#0b0820)}
 .bg-aurora2{background:linear-gradient(180deg,#0b0820,#160a2c)}
-.bg-aurora i,.bg-aurora2 i{top:-10%;height:90%;width:34%;filter:blur(46px);opacity:.55;transform:skewX(-18deg);animation:aur 14s ease-in-out infinite alternate}
-.bg-aurora i:nth-child(1){left:6%;background:linear-gradient(180deg,transparent,rgba(61,224,255,.55),rgba(20,200,168,.25),transparent)}
-.bg-aurora i:nth-child(2){left:38%;background:linear-gradient(180deg,transparent,rgba(123,63,242,.6),transparent);animation-delay:-5s}
-.bg-aurora i:nth-child(3){left:68%;background:linear-gradient(180deg,transparent,rgba(61,224,255,.4),transparent);animation-delay:-9s}
-.bg-aurora2 i:nth-child(1){left:2%;background:linear-gradient(180deg,transparent,rgba(255,61,154,.5),transparent)}
-.bg-aurora2 i:nth-child(2){left:40%;background:linear-gradient(180deg,transparent,rgba(255,122,69,.42),transparent);animation-delay:-4s}
-.bg-aurora2 i:nth-child(3){left:72%;background:linear-gradient(180deg,transparent,rgba(123,63,242,.55),transparent);animation-delay:-8s}
-@keyframes aur{to{transform:skewX(-8deg) translateX(8%) scaleY(1.1);opacity:.8}}
+.bg-aurora i,.bg-aurora2 i{top:-6%;height:100%;width:40%;opacity:.6;transform:skewX(-18deg);animation:aur 14s ease-in-out infinite alternate}
+.bg-aurora i:nth-child(1){left:2%;background:radial-gradient(50% 50% at 50% 50%,rgba(61,224,255,.5),rgba(20,200,168,.18) 45%,transparent 100%)}
+.bg-aurora i:nth-child(2){left:34%;background:radial-gradient(50% 50% at 50% 50%,rgba(123,63,242,.55),transparent 100%);animation-delay:-5s}
+.bg-aurora i:nth-child(3){left:64%;background:radial-gradient(50% 50% at 50% 50%,rgba(61,224,255,.36),transparent 100%);animation-delay:-9s}
+.bg-aurora2 i:nth-child(1){left:-2%;background:radial-gradient(50% 50% at 50% 50%,rgba(255,61,154,.46),transparent 100%)}
+.bg-aurora2 i:nth-child(2){left:36%;background:radial-gradient(50% 50% at 50% 50%,rgba(255,122,69,.38),transparent 100%);animation-delay:-4s}
+.bg-aurora2 i:nth-child(3){left:68%;background:radial-gradient(50% 50% at 50% 50%,rgba(123,63,242,.5),transparent 100%);animation-delay:-8s}
+@keyframes aur{to{transform:skewX(-8deg) translateX(8%) scaleY(1.1);opacity:.85}}
 /* Siempre sabes cuánto tienes: tablero de puntos con un radar cian */
 .bg-dots{background:radial-gradient(rgba(255,255,255,.11) 1px,transparent 1.6px) 0 0/24px 24px,radial-gradient(50% 50% at 20% 30%,rgba(61,224,255,.16),transparent 70%),#080718}
 .bg-dots i:nth-child(1){left:6%;top:12%;width:520px;height:520px;border-radius:50%;border:2px solid rgba(61,224,255,.14);box-shadow:inset 0 0 60px rgba(61,224,255,.08),0 0 0 70px rgba(61,224,255,.03)}
@@ -103,11 +111,13 @@ main>section{position:relative;isolation:isolate}
 .bg-dots i:nth-child(3){right:-6%;bottom:-6%;width:46vw;height:46vw;border-radius:50%;background:radial-gradient(closest-side,rgba(255,200,87,.16),transparent)}
 /* Preguntas: cintas de neón (boceto FAQ) y confeti cerca de «¿Listo para sintonizar?» */
 .bg-ribbon{background:radial-gradient(60% 50% at 80% 80%,rgba(255,61,154,.2),transparent 70%),#0b0820}
-.bg-ribbon i:nth-child(1){left:-5%;right:-5%;top:34%;height:52%;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 300' preserveAspectRatio='none' fill='none' stroke-linecap='round'><path d='M0 220C300 120 520 280 820 170S1250 40 1440 90' stroke='%237b3ff2' stroke-width='14'/><path d='M0 238C300 138 520 298 820 188S1250 58 1440 108' stroke='%23ff3d9a' stroke-width='12'/><path d='M0 256C300 156 520 316 820 206S1250 76 1440 126' stroke='%23ff7a45' stroke-width='10'/><path d='M0 272C300 172 520 332 820 222S1250 92 1440 142' stroke='%23ffc857' stroke-width='6'/></svg>") 0 0/100% 100% no-repeat;filter:drop-shadow(0 0 16px rgba(255,61,154,.6));opacity:.8;animation:ribb 10s ease-in-out infinite alternate}
-.bg-ribbon i:nth-child(2){inset:0;background-image:radial-gradient(3px 6px at 70% 62%,#ff5fb4,transparent),radial-gradient(4px 3px at 78% 58%,#3de0ff,transparent),radial-gradient(3px 3px at 84% 66%,#ffc857,transparent),radial-gradient(3px 5px at 66% 70%,#b06bff,transparent);background-size:420px 380px;opacity:.7;animation:conf 6s linear infinite}
+.bg-ribbon i:nth-child(1){left:-5%;right:-5%;top:34%;height:52%;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 300' preserveAspectRatio='none' fill='none' stroke-linecap='round'><g stroke-opacity='.22'><path d='M0 220C300 120 520 280 820 170S1250 40 1440 90' stroke='%237b3ff2' stroke-width='40'/><path d='M0 248C300 148 520 308 820 198S1250 68 1440 118' stroke='%23ff3d9a' stroke-width='40'/><path d='M0 272C300 172 520 332 820 222S1250 92 1440 142' stroke='%23ff7a45' stroke-width='26'/></g><path d='M0 220C300 120 520 280 820 170S1250 40 1440 90' stroke='%237b3ff2' stroke-width='14'/><path d='M0 238C300 138 520 298 820 188S1250 58 1440 108' stroke='%23ff3d9a' stroke-width='12'/><path d='M0 256C300 156 520 316 820 206S1250 76 1440 126' stroke='%23ff7a45' stroke-width='10'/><path d='M0 272C300 172 520 332 820 222S1250 92 1440 142' stroke='%23ffc857' stroke-width='6'/></svg>") 0 0/100% 100% no-repeat;opacity:.8;animation:ribb 10s ease-in-out infinite alternate}
+.bg-ribbon i:nth-child(2){left:0;right:0;top:-380px;bottom:0;background-image:radial-gradient(3px 6px at 70% 62%,#ff5fb4,transparent),radial-gradient(4px 3px at 78% 58%,#3de0ff,transparent),radial-gradient(3px 3px at 84% 66%,#ffc857,transparent),radial-gradient(3px 5px at 66% 70%,#b06bff,transparent);background-size:420px 380px;opacity:.7;animation:conf 6s linear infinite}
 @keyframes ribb{to{transform:translateY(-4%) scaleY(1.08)}}
-@keyframes conf{to{background-position:0 380px}}
-html.noanim .secbg i,html.noanim .hb-bub,html.noanim .hb-dust i{animation:none !important}
+@keyframes conf{to{transform:translateY(380px)}}
+html.noanim .secbg i,html.noanim .secbg i::before,html.noanim .hb-bub,html.noanim .hb-dust i{animation:none !important}
+/* cuando bajas de la portada, el fondo espacial de arriba se apaga: cada sección ya trae el suyo */
+html.sb-off .sb-root{visibility:hidden}
 
 /* ---------- íconos del boceto ---------- */
 .mi-ic img{display:block;width:118px;height:118px;object-fit:contain;filter:drop-shadow(0 0 16px rgba(123,63,242,.55));transition:transform .5s var(--ease)}
@@ -133,8 +143,8 @@ html.noanim .secbg i,html.noanim .hb-bub,html.noanim .hb-dust i{animation:none !
 .cost-l img{width:48px;height:48px;border-radius:12px;flex:none;object-fit:cover}
 .cost-l b{color:#fff;font-weight:600}
 @media (max-width:760px){.cost-l{grid-template-columns:minmax(0,1fr)}}
-.ready .rd-f{margin:-110px 0 -30px}
-.ready .rd-f .szbody{width:min(230px,50vw);height:auto}
+div.ready .rd-f{margin:-110px 0 -30px}
+div.ready .rd-f .szbody{width:min(230px,50vw);height:auto}
 
 /* ---------- SynthonIA que te acompaña ---------- */
 .szroam{position:fixed;top:21vh;z-index:58;width:132px;cursor:pointer;opacity:0;pointer-events:none;transform:scale(.6) translateY(30px);transition:opacity .5s var(--ease),transform .6s cubic-bezier(.34,1.56,.64,1);--ex:0px;--ey:0px;--tilt:0deg}
@@ -148,6 +158,9 @@ html.noanim .secbg i,html.noanim .hb-bub,html.noanim .hb-dust i{animation:none !
 .szroam .rb-say{top:auto;bottom:calc(100% - 8px);left:50%;translate:-50% 0;transform-origin:50% 100%;border-bottom-left-radius:4px;text-align:center}
 .szroam[data-side="r"] .rb-say{left:30%}.szroam[data-side="l"] .rb-say{left:70%}
 .szroam.talk .rb-say{opacity:1;transform:none}
+.szroam.bside .rb-say{bottom:auto;top:16%;translate:0 0;transform-origin:0 50%}
+.szroam.bside[data-side="r"] .rb-say{left:calc(100% - 4px);right:auto;border-radius:16px 16px 16px 4px}
+.szroam.bside[data-side="l"] .rb-say{left:auto;right:calc(100% - 4px);transform-origin:100% 50%;border-radius:16px 16px 4px 16px}
 .szroam:hover .rb-fig{animation-play-state:paused;transform:translateY(-6px) scale(1.04)}
 @media (max-width:760px){
   .szroam{top:auto;width:74px;bottom:88px}
@@ -172,7 +185,7 @@ html.noanim .szroam .rb-fig{animation:none}
   .hub-i{font-size:13.5px}
   .mi-ic img{width:96px;height:96px}
   .ft img{width:64px;height:64px}
-  .secbg{-webkit-mask:linear-gradient(180deg,transparent,#000 80px,#000 calc(100% - 80px),transparent);mask:linear-gradient(180deg,transparent,#000 80px,#000 calc(100% - 80px),transparent)}
+  .secbg::before,.secbg::after{height:56px}
   .hb-bub:nth-of-type(n+4){display:none}
   #comparar .band .set{gap:8px;padding-right:8px}
 }
@@ -181,7 +194,6 @@ html.noanim .szroam .rb-fig{animation:none}
   .cta .btn{justify-content:center}
   #nav .word{font-size:23px}
 }
-.szroam.abs.stick{position:fixed}
 #railPulse[hidden]{display:none !important}
 @media (max-width:760px){
   nav#nav.scrolled{background:var(--lg-bg),rgba(14,8,34,.82)}
@@ -189,4 +201,15 @@ html.noanim .szroam .rb-fig{animation:none}
 @media (max-width:480px){
   .bl-g{grid-template-columns:minmax(0,1fr)}
   .bl-c.first p{margin-top:22px}
+}
+
+/* ---------- v2.6 · vidrio liviano ---------- */
+/* los iconitos de las IAs (la cinta que se desliza tiene 44) no necesitan desenfocar lo de atrás: un vidrio que se mueve
+   obliga a recalcular el desenfoque en cada cuadro. Se ven igual con un relleno translúcido */
+main .gico,main .hub-i{backdrop-filter:none;-webkit-backdrop-filter:none}
+main .gico{background-color:rgba(26,16,58,.55)}
+main .hub-i{background:var(--lg-bg),rgba(20,12,44,.62)}
+/* en el celular el vidrio grande desenfoca menos (pesa la mitad y casi no se nota) */
+@media (max-width:760px){
+  main .lqg,main .card,main .launch,.v24foot.lqg{backdrop-filter:blur(8px) saturate(1.6);-webkit-backdrop-filter:blur(8px) saturate(1.6)}
 }

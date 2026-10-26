@@ -58,7 +58,7 @@ const SPACE = (() => {
       ctx.beginPath(); ctx.arc(s.x, y, s.r * s.z * 1.3, 0, 6.283); ctx.fill();
       if (s.g && tw > .92 && s.r > 1.4){ ctx.globalAlpha *= .5; ctx.fillRect(s.x - 4, y - .4, 8, .8); ctx.fillRect(s.x - .4, y - 4, .8, 8); }
     }
-    if (!still && !document.hidden && CFG.bg) raf = requestAnimationFrame(draw);
+    if (!still && !document.hidden && CFG.bg && !document.documentElement.classList.contains('sb-off')) raf = requestAnimationFrame(draw);
   };
   const go = () => { if (!raf) raf = requestAnimationFrame(draw); };
   init(); go();
@@ -73,5 +73,5 @@ const SPACE = (() => {
   addEventListener('scroll', req, { passive:true });
   if (!reduce && matchMedia('(pointer: fine)').matches) addEventListener('pointermove', e => { mx = (e.clientX / innerWidth - .5) * 14; my = (e.clientY / innerHeight - .5) * 2; req(); }, { passive:true });
   push();
-  return { root, repaint:() => { paint(); go(); } };
+  return { root, repaint:() => { paint(); go(); }, wake:go };
 })();

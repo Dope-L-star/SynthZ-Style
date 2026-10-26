@@ -779,7 +779,7 @@ function paint(k){
 /* en PC se para junto al título de cada sección (del lado con más espacio); en el celular, en una esquina */
 function anchor(k){
   const S = STOPS[k], sec = document.getElementById(k); if (!S || !sec) return;
-  if (small()){ el.classList.remove('abs'); el.style.left = el.style.top = ''; el.dataset.side = S.side; return; }
+  if (small()){ el.classList.remove('abs', 'bside'); el.style.left = el.style.top = ''; el.dataset.side = 'l'; return; } /* celular: siempre a la izquierda, la bolita de ayuda está a la derecha */
   const h = (S.at && sec.querySelector(S.at)) || sec.querySelector('.head h2') || sec.querySelector('h2'); if (!h) return;
   /* el título se escribe letra por letra: se mide el texto completo (no lo que ya se ve) */
   const cs = getComputedStyle(h), R = h.getBoundingClientRect(), fs = parseFloat(cs.fontSize) || 40;
@@ -789,19 +789,23 @@ function anchor(k){
   const l0 = al === 'center' ? R.left + (R.width - tw) / 2 : al === 'right' || al === 'end' ? R.right - tw : R.left;
   const t = { left:l0, right:l0 + tw, top:R.top, height:lh };
   const w = el.offsetWidth || 132, H = el.offsetHeight || 176, gap = 26;
+  /* la frase va al lado de ella (no encima), así no tapa lo que hay arriba; se mide con el texto ya puesto */
+  bub.textContent = S.say; const bw = Math.min(230, bub.offsetWidth || 200) + 10;
   const roomR = innerWidth - t.right - gap, roomL = t.left - gap;
-  let side = S.side === 'r' ? (roomR >= w ? 'r' : roomL >= w ? 'l' : 'r') : (roomL >= w ? 'l' : roomR >= w ? 'r' : 'l');
+  /* primero el lado donde caben ella y su frase; si no, donde quepa ella sola */
+  const need = w + bw + 12, pr = S.side === 'r' ? roomR : roomL, ot = S.side === 'r' ? roomL : roomR, other = S.side === 'r' ? 'l' : 'r';
+  const side = pr >= need ? S.side : ot >= need ? other : pr >= w ? S.side : ot >= w ? other : S.side;
   let x = side === 'r' ? t.right + gap : t.left - gap - w;
   x = Math.max(8, Math.min(innerWidth - w - 8, x));
-  el.classList.add('abs'); el.dataset.side = side;
-  el._x = Math.round(x + scrollX); el._top = Math.round(t.top + scrollY + t.height / 2 - H * .42); stick();
+  const bside = side === 'r' ? innerWidth - (x + w) - 12 >= bw : x - 12 >= bw;
+  el.classList.add('abs'); el.classList.toggle('bside', bside); el.dataset.side = side;
+  /* parada sobre la línea del título: los pies a la altura de las letras, nunca encima del texto de abajo */
+  el._x = Math.round(x + scrollX); el._top = Math.round(t.top + scrollY + t.height - H + 14); stick();
 }
-/* si el título ya subió, se queda flotando arriba (debajo del menú) en vez de esconderse */
+/* se queda junto a su título y sube con él: nunca flota encima de las tarjetas ni del texto */
 function stick(){
   if (!el.classList.contains('abs') || el._top == null) return;
-  const lim = 92, up = el._top - scrollY < lim;
-  el.classList.toggle('stick', up);
-  el.style.left = (up ? el._x - scrollX : el._x) + 'px'; el.style.top = (up ? lim : el._top) + 'px';
+  el.style.left = el._x + 'px'; el.style.top = el._top + 'px';
 }
 function place(k, fly){
   const S = STOPS[k]; if (!S) return;
@@ -864,4 +868,17 @@ if (!reduce) setInterval(() => {
   setTimeout(() => { if (cur === k) paint(k); }, 1400);
 }, 9000);
 update();
+})();
+/* ===== v2.6 · fondos livianos: cada fondo de sección solo se mueve mientras lo ves
+   y el fondo espacial de arriba se apaga cuando ya bajaste de la portada ===== */
+(() => {
+const bgs = [...document.querySelectorAll('.secbg')];
+if (!('IntersectionObserver' in window)){ bgs.forEach(b => b.classList.add('run')); return; }
+const io = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('run', e.isIntersecting)), { rootMargin:'60px 0px' });
+bgs.forEach(b => io.observe(b));
+const hero = document.getElementById('top'), H = document.documentElement;
+if (hero) new IntersectionObserver(([e]) => {
+  H.classList.toggle('sb-off', !e.isIntersecting);
+  if (e.isIntersecting && SZ.SPACE && SZ.SPACE.wake) SZ.SPACE.wake();
+}).observe(hero);
 })();
