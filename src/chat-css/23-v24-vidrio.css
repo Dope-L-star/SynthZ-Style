@@ -46,3 +46,11 @@ html:not(.noglass) .tcard,html:not(.noglass) .amenu,html:not(.noglass) .ctxm,htm
 #sideFoot .sxfoot.gauge{display:flex !important;flex-direction:column;align-items:center;justify-content:center;position:relative}
 #sideFoot .sxfoot.gauge .gz{display:block;margin-top:4px}
 #sideFoot .sxfoot.gauge .gz-n{margin-top:-26px;align-items:center;justify-items:center}
+/* píldora de modo y esfuerzo (traídas de main) con el mismo vidrio; en el celular, en modo Chat la píldora queda solo con su ícono para que quepa el nombre de la IA */
+html:not(.simple) .composer .cpk3,html:not(.simple) .composer .cpk4{background:var(--lg-bg);border-color:var(--lg-edge);box-shadow:var(--lg-shadow)}
+html:not(.simple) .composer .cpk3.on{border-color:rgba(255,122,69,.55);background:linear-gradient(135deg,rgba(255,122,69,.16),rgba(255,61,154,.1));color:#fff}
+@media (max-width:600px){
+  body[data-cmode="chat"] .composer .cpk4 b,body[data-cmode="chat"] .composer .cpk4 .cm-chev{display:none}
+  body[data-cmode="chat"] .composer .cpk4{width:40px;min-width:40px;padding:0;justify-content:center}
+  .composer #cPick{overflow:hidden}
+}

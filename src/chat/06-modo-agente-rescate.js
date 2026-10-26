@@ -3,7 +3,7 @@
 let agentBusy = false;
 const agentOn = () => !!st().agent && !trialOn;
 $('#agPill').addEventListener('click', () => { if (isMobile()) closeChatsSheet && closeChatsSheet(); cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(false); });
-function paintAgent(){ $$('.agentb, #railAgent').forEach(b => { b.setAttribute('aria-pressed', String(agentOn())); b.classList.toggle('on', agentOn()); }); document.body.classList.toggle('agenting', agentOn()); inp.placeholder = agentOn() ? 'SuperiorSynth: cuéntame qué necesitas…' : (isLocked() ? inp.placeholder : 'Escribe tu mensaje...'); }
+function paintAgent(){ try{ paintMode(); }catch(e){} $$('.agentb, #railAgent').forEach(b => { b.setAttribute('aria-pressed', String(agentOn())); b.classList.toggle('on', agentOn()); }); document.body.classList.toggle('agenting', agentOn()); inp.placeholder = agentOn() ? 'SuperiorSynth: cuéntame qué necesitas…' : (isLocked() ? inp.placeholder : 'Escribe tu mensaje...'); }
 function setAgent(on){
   if (!!st().agent === !!on){ paintAgent(); return; }
   if (mode !== 'solo'){ stopNow(); cmpRun++; cmpLast = null; mode = 'solo'; }
@@ -199,7 +199,7 @@ function frustration(text, regen){
 async function runSolo(onFail, o = {}){
   const mid = selId(), chat = chatArr(), g = gen, vis = info(mid).vision, saver = st().sx.saver;
   const slowT = setTimeout(() => { if (busy[mid] === 'think' && SZ.BOT.react) SZ.BOT.react('slow'); }, 14000);
-  const sent = apiMsgs(chat, vis), naive = apiMsgs(chat, vis, { naive:true }), ck = hashStr(mid + '|' + saver + '|' + JSON.stringify(sent));
+  const sent = apiMsgs(chat, vis), naive = apiMsgs(chat, vis, { naive:true }), ck = hashStr(mid + '|' + saver + '|' + effKey() + '|' + JSON.stringify(sent));
   const canCache = !sent.some(m => Array.isArray(m.content));
   if (works[mid]) works[mid].stop();
   works[mid] = SZ.workView({ model:info(mid).name, inTok:msgCost(sent) });
@@ -222,7 +222,7 @@ async function runSolo(onFail, o = {}){
     if (r){ r = Object.assign({}, r, { ms:0, cached:true }); st().sx.saved += r.prompt + r.completion; st().sx.hits += 1; save(); mount(); if (rv) rv.push(r.text); }
     else {
       const ctl = new AbortController(); ctls.add(ctl);
-      try{ r = await SZ.askStream(OR, sent, { model:mid, maxTokens: saver ? 700 : 0, signal:ctl.signal, onReason:t => W.reason(t) }, txt => { mount(); W.write(txt); if (rv) rv.push(txt); }); }finally{ ctls.delete(ctl); }
+      try{ r = await SZ.askStream(OR, sent, Object.assign({ model:mid, maxTokens: saver ? 700 : 0, signal:ctl.signal, onReason:t => W.reason(t) }, effortOpts(saver)), txt => { mount(); W.write(txt); if (rv) rv.push(txt); }); }finally{ ctls.delete(ctl); }
       addUsage(r.prov || SZ.provOf(mid), r.prompt, r.completion, true, { est:r.est, free:/:free$/.test(mid) || r.prov === 'synthz', rid:r.rid });
       if (!r.aborted && !r.swapped) SZ.markGood(mid);
       SZ.TEL.msgs++; SZ.TEL.ai = (r.prov || SZ.provOf(mid)).slice(0, 12);
@@ -235,7 +235,7 @@ async function runSolo(onFail, o = {}){
         let r2 = null;
         try{
           r2 = await SZ.askStream(OR, [...sent, { role:'assistant', content:base }, { role:'user', content:'Continúa exactamente donde te quedaste: sigue desde la última palabra, sin repetir nada de lo anterior, sin saludar y sin decir que continúas. Escribe solo lo que falta.' }],
-            { model:mid, maxTokens:0, signal:ctl2.signal, onReason:t => W.reason(t) }, txt => { mount(); const full = base + glue(txt) + txt; W.write(full); if (rv) rv.push(full); });
+            Object.assign({ model:mid, maxTokens:0, signal:ctl2.signal, onReason:t => W.reason(t) }, effortOpts(saver)), txt => { mount(); const full = base + glue(txt) + txt; W.write(full); if (rv) rv.push(full); });
         }catch(e){ r2 = null; }
         finally{ ctls.delete(ctl2); }
         if (!r2 || r2.aborted && !r2.text) break;

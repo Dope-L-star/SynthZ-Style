@@ -23,6 +23,7 @@ export default route({
     const stream = b.stream !== false;
     const payload = { model, messages:b.messages, stream, usage:{ include:true } };
     if (+b.max_tokens > 0) payload.max_tokens = Math.min(32000, Math.round(+b.max_tokens));
+    if (b.reasoning && ['low', 'medium', 'high'].includes(b.reasoning.effort)) payload.reasoning = { effort:b.reasoning.effort };   /* esfuerzo de la IA */
     const up = await fetch((process.env.OPENROUTER_URL || 'https://openrouter.ai/api/v1') + '/chat/completions', {
       method:'POST', signal:req.signal,
       headers:{ Authorization:'Bearer ' + key, 'content-type':'application/json', 'HTTP-Referer':new URL(req.url).origin, 'X-Title':'SynthZ' },

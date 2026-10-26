@@ -2197,6 +2197,7 @@ async function askStream(p, messages, opts = {}, onDelta){
   const body = viaSz ? { messages:flat(messages), model:model0, turn:opts.turn || (TURN && Date.now() - TURN.at < 120000 ? TURN.id : turnId(messages)) } : viaGroq ? { model:model0.replace(/^gq:/, ''), messages, stream:true, stream_options:{ include_usage:true } } : { model:model0.replace(/^or:/, ''), messages, stream:true, usage:{ include:true } };
   if (viaTeam) body.teamId = state.useTeam;
   if (opts.maxTokens) body.max_tokens = opts.maxTokens;
+  if (opts.effort && p.id === 'openrouter' && !viaSz && !viaGroq && !viaTrial) body.reasoning = { effort:opts.effort };   /* v2.3.1 · esfuerzo: OpenRouter lo ignora en las IA que no razonan */
   const ctl = new AbortController(); let idle = 0;
   const bump = () => { clearTimeout(idle); idle = setTimeout(() => ctl.abort(), 70000); };
   if (sig){ if (sig.aborted) ctl.abort(); else sig.addEventListener('abort', () => ctl.abort(), { once:true }); }

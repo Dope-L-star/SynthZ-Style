@@ -138,6 +138,7 @@ function apiMsgs(chat, vision, o = {}){
   while (h.length && h[0].role !== 'user') h.shift();
   const sys = [];
   if (saver) sys.push('Responde en el idioma del usuario, de forma clara y breve, sin relleno.');
+  { const ef = effortHint(); if (ef && !o.naive) sys.push(ef); }   /* v2.3.1 · esfuerzo */
   { const mm = memSystem(); if (mm && !o.naive) sys.push(mm); }
   if (SZ.CFG.beginner) sys.push('Modo principiante: la persona no sabe nada del tema. Usa palabras sencillas y frases cortas, explica paso a paso, evita los tecnicismos (si usas uno, explícalo) y pon un ejemplo de la vida diaria.');
   if (sys.length) h.unshift({ role:'system', content:sys.join(' ') });

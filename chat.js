@@ -79,7 +79,7 @@ function topicFor(q){ const f = fold(q).trim(); if (f.length < 3) return null; c
 function visible(q){
   const fav = new Set(st().fav), qt = !ptopic && q ? topicFor(q) : null;
   const nameHit = m => (m.name + ' ' + m.id + ' ' + m.vlabel).toLowerCase().includes(q);
-  let l = cat.list.filter(m => (ui.prov === 'all' || m.id.startsWith(ui.prov + ':')) && (!ui.free || m.free) && ((!ui.fav && ptab !== 'fav') || fav.has(m.id)) && (!ui.reason || m.reasoning) && (!ui.vision || m.vision) && (!ui.long || m.ctx >= 100000) && (!ui.code || expert(m).tags.includes('code')) && (!ui.write || expert(m).tags.includes('write')) && (!ui.fast || expert(m).tags.includes('fast')) && (!ui.math || expert(m).tags.includes('math')) && (!ui.newm || isNew(m)) && true
+  let l = cat.list.filter(m => m.id !== 'sz:auto' && (ui.prov === 'all' || m.id.startsWith(ui.prov + ':')) && (!ui.free || m.free) && ((!ui.fav && ptab !== 'fav') || fav.has(m.id)) && (!ui.reason || m.reasoning) && (!ui.vision || m.vision) && (!ui.long || m.ctx >= 100000) && (!ui.code || expert(m).tags.includes('code')) && (!ui.write || expert(m).tags.includes('write')) && (!ui.fast || expert(m).tags.includes('fast')) && (!ui.math || expert(m).tags.includes('math')) && (!ui.newm || isNew(m)) && true
     && (!q || nameHit(m) || (qt && recommendTop(qt, 8).some(x => x.id === m.id))));
   const cmp = ui.sort === 'ctx' ? (a, b) => b.ctx - a.ctx || a.name.localeCompare(b.name) : ui.sort === 'az' ? (a, b) => a.name.localeCompare(b.name) : (a, b) => b.created - a.created || a.name.localeCompare(b.name);
   l.sort(cmp);
@@ -182,6 +182,7 @@ function vPaint(force){
 listEl.addEventListener('scroll', () => { if (!vQ) vQ = requestAnimationFrame(() => { vQ = 0; vPaint(false); }); }, { passive:true });
 addEventListener('resize', () => { const h = V.hM; V.hM = 0; renderList({ keep:true }); if (!V.hM) V.hM = h; });
 function paintSel(){
+  try{ paintMode(); }catch(e){}   /* v2.3.1 · el modo (Automática · Chat · SuperiorSynth) sigue a la IA elegida */
   const cmpIds = st().cmp, id = selId();
   $$('.mi', listEl).forEach(el => {
     const sel = mode === 'solo' && el.dataset.id === id, i = cmpIds.indexOf(el.dataset.id), on = mode === 'cmp' && i > -1;
@@ -1185,6 +1186,7 @@ function apiMsgs(chat, vision, o = {}){
   while (h.length && h[0].role !== 'user') h.shift();
   const sys = [];
   if (saver) sys.push('Responde en el idioma del usuario, de forma clara y breve, sin relleno.');
+  { const ef = effortHint(); if (ef && !o.naive) sys.push(ef); }   /* v2.3.1 · esfuerzo */
   { const mm = memSystem(); if (mm && !o.naive) sys.push(mm); }
   if (SZ.CFG.beginner) sys.push('Modo principiante: la persona no sabe nada del tema. Usa palabras sencillas y frases cortas, explica paso a paso, evita los tecnicismos (si usas uno, explícalo) y pon un ejemplo de la vida diaria.');
   if (sys.length) h.unshift({ role:'system', content:sys.join(' ') });
@@ -1470,7 +1472,7 @@ function memModal(){ SZ.cfgModal('mem'); }
 let agentBusy = false;
 const agentOn = () => !!st().agent && !trialOn;
 $('#agPill').addEventListener('click', () => { if (isMobile()) closeChatsSheet && closeChatsSheet(); cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(false); });
-function paintAgent(){ $$('.agentb, #railAgent').forEach(b => { b.setAttribute('aria-pressed', String(agentOn())); b.classList.toggle('on', agentOn()); }); document.body.classList.toggle('agenting', agentOn()); inp.placeholder = agentOn() ? 'SuperiorSynth: cuéntame qué necesitas…' : (isLocked() ? inp.placeholder : 'Escribe tu mensaje...'); }
+function paintAgent(){ try{ paintMode(); }catch(e){} $$('.agentb, #railAgent').forEach(b => { b.setAttribute('aria-pressed', String(agentOn())); b.classList.toggle('on', agentOn()); }); document.body.classList.toggle('agenting', agentOn()); inp.placeholder = agentOn() ? 'SuperiorSynth: cuéntame qué necesitas…' : (isLocked() ? inp.placeholder : 'Escribe tu mensaje...'); }
 function setAgent(on){
   if (!!st().agent === !!on){ paintAgent(); return; }
   if (mode !== 'solo'){ stopNow(); cmpRun++; cmpLast = null; mode = 'solo'; }
@@ -1666,7 +1668,7 @@ function frustration(text, regen){
 async function runSolo(onFail, o = {}){
   const mid = selId(), chat = chatArr(), g = gen, vis = info(mid).vision, saver = st().sx.saver;
   const slowT = setTimeout(() => { if (busy[mid] === 'think' && SZ.BOT.react) SZ.BOT.react('slow'); }, 14000);
-  const sent = apiMsgs(chat, vis), naive = apiMsgs(chat, vis, { naive:true }), ck = hashStr(mid + '|' + saver + '|' + JSON.stringify(sent));
+  const sent = apiMsgs(chat, vis), naive = apiMsgs(chat, vis, { naive:true }), ck = hashStr(mid + '|' + saver + '|' + effKey() + '|' + JSON.stringify(sent));
   const canCache = !sent.some(m => Array.isArray(m.content));
   if (works[mid]) works[mid].stop();
   works[mid] = SZ.workView({ model:info(mid).name, inTok:msgCost(sent) });
@@ -1689,7 +1691,7 @@ async function runSolo(onFail, o = {}){
     if (r){ r = Object.assign({}, r, { ms:0, cached:true }); st().sx.saved += r.prompt + r.completion; st().sx.hits += 1; save(); mount(); if (rv) rv.push(r.text); }
     else {
       const ctl = new AbortController(); ctls.add(ctl);
-      try{ r = await SZ.askStream(OR, sent, { model:mid, maxTokens: saver ? 700 : 0, signal:ctl.signal, onReason:t => W.reason(t) }, txt => { mount(); W.write(txt); if (rv) rv.push(txt); }); }finally{ ctls.delete(ctl); }
+      try{ r = await SZ.askStream(OR, sent, Object.assign({ model:mid, maxTokens: saver ? 700 : 0, signal:ctl.signal, onReason:t => W.reason(t) }, effortOpts(saver)), txt => { mount(); W.write(txt); if (rv) rv.push(txt); }); }finally{ ctls.delete(ctl); }
       addUsage(r.prov || SZ.provOf(mid), r.prompt, r.completion, true, { est:r.est, free:/:free$/.test(mid) || r.prov === 'synthz', rid:r.rid });
       if (!r.aborted && !r.swapped) SZ.markGood(mid);
       SZ.TEL.msgs++; SZ.TEL.ai = (r.prov || SZ.provOf(mid)).slice(0, 12);
@@ -1702,7 +1704,7 @@ async function runSolo(onFail, o = {}){
         let r2 = null;
         try{
           r2 = await SZ.askStream(OR, [...sent, { role:'assistant', content:base }, { role:'user', content:'Continúa exactamente donde te quedaste: sigue desde la última palabra, sin repetir nada de lo anterior, sin saludar y sin decir que continúas. Escribe solo lo que falta.' }],
-            { model:mid, maxTokens:0, signal:ctl2.signal, onReason:t => W.reason(t) }, txt => { mount(); const full = base + glue(txt) + txt; W.write(full); if (rv) rv.push(full); });
+            Object.assign({ model:mid, maxTokens:0, signal:ctl2.signal, onReason:t => W.reason(t) }, effortOpts(saver)), txt => { mount(); const full = base + glue(txt) + txt; W.write(full); if (rv) rv.push(full); });
         }catch(e){ r2 = null; }
         finally{ ctls.delete(ctl2); }
         if (!r2 || r2.aborted && !r2.text) break;
@@ -3456,6 +3458,89 @@ addEventListener('synthz-saver', () => { $$('#sxSw, #saverBtn').forEach(x => x.s
   if (!$('.tb-head', tb)) tb.insertAdjacentHTML('afterbegin', '<div class="tb-head" aria-hidden="true"><span class="tbw"></span></div>');
   const w = $('.tbw', tb); if (w) w.innerHTML = SZ.zWord('Synth');
 }
+/* ---------- v2.3.1 · esfuerzo: cuánto piensa la IA antes de responder (Auto · Bajo · Medio · Alto) ----------
+   Cómo se aplica: (1) una pista en el mensaje de sistema, que sirve con cualquier IA; (2) «Bajo» además limita el largo;
+   (3) con OpenRouter (llave propia o de equipo) también se manda reasoning.effort. «Alto» pide cuenta (es gratis). */
+const EFF = {
+  auto:   { n:'Auto',  d:'La IA decide cuánto pensar.',            hint:'',  tok:0, ico:'<path d="M4.5 16a8 8 0 1 1 15 0"/><path d="M12 14l3.5-4"/>' },
+  low:    { n:'Bajo',  d:'Respuestas rápidas y cortas.',           hint:'Responde rápido y directo, en pocas frases y sin rodeos.', tok:700, ico:'<path d="M5 19c8 0 13-5 14-14-9 0-14 5-14 14z"/><path d="M5 19l8-8"/>' },
+  medium: { n:'Medio', d:'Equilibrio entre rapidez y detalle.',    hint:'Responde con una explicación clara y equilibrada: lo importante primero y un poco de detalle.', tok:0, ico:'<path d="M4.5 16a8 8 0 1 1 15 0"/><path d="M12 14l0-6"/>' },
+  high:   { n:'Alto',  d:'Piensa con calma y revisa su respuesta.', hint:'Razona con cuidado antes de responder: analiza el problema paso a paso, revisa tu respuesta y entrega una respuesta completa y bien fundamentada.', tok:0, ico:'<path d="M5 15c0-5 3-9 9-11 1 6-1 10-5 12l-2 3z"/><path d="M9 16l-3 1 1-3"/>' }
+};
+const EFF_KEYS = ['auto', 'low', 'medium', 'high'];
+function effKey(){ const e = st().sx && st().sx.effort; return EFF[e] ? e : 'auto'; }
+function effortHint(){ return EFF[effKey()].hint; }
+function effortOpts(saver){ const k = effKey(); if (k === 'auto') return {}; const o = { effort:k }; if (EFF[k].tok && !saver) o.maxTokens = EFF[k].tok; return o; }
+(function esfuerzo(){
+  const btn = $('#cEffort'), menu = $('#effMenu'), lab = $('#cEffortL'); if (!btn || !menu) return;
+  const svg = k => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + EFF[k].ico + '</svg>';
+  const locked = k => k === 'high' && !SZ.ACC.ready;
+  function paint(){
+    const k = effKey(); lab.textContent = k === 'auto' ? '' : EFF[k].n; btn.classList.toggle('on', k !== 'auto');
+    btn.title = 'Esfuerzo: ' + EFF[k].n + ' · cuánto piensa la IA antes de responder';
+    menu.innerHTML = EFF_KEYS.map(x => '<button type="button" role="menuitemradio" data-eff="' + x + '" aria-checked="' + (x === k) + '"' + (locked(x) ? ' class="lk"' : '') + '><i aria-hidden="true">' + svg(x) + '</i><span><b>' + EFF[x].n + '</b><small>' + EFF[x].d + '</small></span>' + (locked(x) ? '<em>Con cuenta</em>' : x === k ? '<em class="ck">✓</em>' : '') + '</button>').join('');
+  }
+  function place(){ const r = btn.getBoundingClientRect(), w = Math.min(270, innerWidth - 16); menu.style.width = w + 'px'; menu.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px'; menu.style.bottom = (innerHeight - r.top + 10) + 'px'; }
+  function open(on){ menu.hidden = !on; btn.setAttribute('aria-expanded', String(on)); if (on){ paint(); place(); const c = $('[aria-checked="true"]', menu); if (c) c.focus(); } }
+  btn.addEventListener('click', e => { e.stopPropagation(); open(menu.hidden); });
+  menu.addEventListener('click', e => {
+    const b = e.target.closest('[data-eff]'); if (!b) return; const k = b.dataset.eff;
+    if (locked(k)){ open(false); toast('El esfuerzo Alto es para cuentas (entrar es gratis).'); SZ.guestGate({ mode:'signup' }); return; }
+    st().sx.effort = k; save(); paint(); open(false); btn.focus(); toast('Esfuerzo: ' + EFF[k].n + (k === 'auto' ? '' : ' · ' + EFF[k].d));
+  });
+  document.addEventListener('pointerdown', e => { if (!menu.hidden && !menu.contains(e.target) && !btn.contains(e.target)) open(false); });
+  addEventListener('keydown', e => { if (e.key === 'Escape' && !menu.hidden){ open(false); btn.focus(); } });
+  addEventListener('resize', () => { if (!menu.hidden) place(); });
+  paint();
+})();
+/* ---------- v2.3.1 · modo de uso: Automática · Chat · SuperiorSynth ----------
+   Automática: SynthZ elige sola la IA y no se muestra el selector.  Chat: eliges tú la IA (empieza en Gemini).
+   SuperiorSynth: el agente elige la IA; cuando la persona dice «me quedo con esta» pasa a Chat con esa IA al lado.
+   El modo se deduce del estado (agente encendido, IA elegida), así que sigue funcionando con todo lo que ya cambia de IA. */
+const MODES = {
+  auto:  { n:'Automática',   d:'Elige sola la mejor IA para cada pedido.',          ico:'<path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7L19 20l-.7-1.8-1.8-.7 1.8-.7z"/>' },
+  chat:  { n:'Chat',         d:'Tú eliges con qué IA hablas.',                       ico:'<path d="M4 5h16v11H9l-5 4z"/>' },
+  agent: { n:'SuperiorSynth', d:'Tareas largas: elige la IA y mejora tu pedido.',   ico:'<path d="M12 3l2 7 7 2-7 2-2 7-2-7-7-2 7-2z"/>' }
+};
+const MODE_KEYS = ['auto', 'chat', 'agent'];
+const modeSvg = k => k === 'agent' && typeof ssIco === 'function' ? ssIco() : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + MODES[k].ico + '</svg>';
+function modeKey(){ if (agentOn()) return 'agent'; return selId() === 'sz:auto' ? 'auto' : 'chat'; }   /* «Automática» es solo un modo; en Chat siempre hay una IA concreta */
+/* la IA con la que empieza «Chat»: Gemini (la más nueva que esté disponible y gratis); si no hay, la que ya tenías */
+function geminiDefault(){
+  const g = (cat.list || []).filter(m => /gemini/i.test(m.id + ' ' + m.name) && !/embed|image|tts|live|audio/i.test(m.id)), pool = g.filter(m => connected(m.id));
+  const best = (pool.length ? pool : g).slice().sort((a, b) => (b.free - a.free) || (b.created - a.created))[0];
+  if (best) return best.id;
+  const s = (st().models.openrouter || []).find(x => /gemini/i.test(x) && connected(x)); if (s) return s;
+  const any = (cat.list || []).filter(m => m.id !== 'sz:auto' && connected(m.id)).sort((a, b) => (b.free - a.free) || (b.created - a.created))[0];   /* sin Gemini: cualquier IA concreta que esté disponible */
+  return any ? any.id : '';
+}
+function setModel(id){ st().model.openrouter = id; st().pinned = id; save(); }
+function applyMode(k){
+  if (k === modeKey()) return;
+  const sx = st().sx;
+  if (k === 'agent'){ setAgent(true); return; }
+  if (agentOn()) setAgent(false);
+  if (k === 'auto'){ const cur = selId(); if (cur !== 'sz:auto') sx.lastChat = cur; sx.cmode = 'auto'; st().pinned = ''; st().model.openrouter = 'sz:auto'; }
+  else { sx.cmode = 'chat'; const want = (sx.lastChat && connected(sx.lastChat) ? sx.lastChat : '') || geminiDefault(); if (want && want !== selId()) setModel(want); }
+  save(); paintMode(); try{ paintSel(); renderTop(true); renderMsgs(); updateHint(); }catch(e){}
+  toast(k === 'auto' ? 'Modo Automática: SynthZ elige la IA por ti.' : 'Modo Chat: tú eliges la IA (' + info(selId()).name + ').');
+}
+function paintMode(){
+  const k = modeKey(), b = $('#cMode'); if (!b) return;
+  document.body.dataset.cmode = k; $('#cModeL').textContent = MODES[k].n; $('#cModeI').innerHTML = modeSvg(k); b.title = 'Modo: ' + MODES[k].n;
+}
+(function modos(){
+  const btn = $('#cMode'), menu = $('#modeMenu'); if (!btn || !menu) return;
+  function paint(){ const k = modeKey(); menu.innerHTML = MODE_KEYS.map(x => '<button type="button" role="menuitemradio" data-mode="' + x + '" aria-checked="' + (x === k) + '"><i aria-hidden="true">' + modeSvg(x) + '</i><span><b>' + MODES[x].n + '</b><small>' + MODES[x].d + '</small></span>' + (x === k ? '<em class="ck">✓</em>' : '') + '</button>').join(''); }
+  function place(){ const r = btn.getBoundingClientRect(), w = Math.min(300, innerWidth - 16); menu.style.width = w + 'px'; menu.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px'; menu.style.bottom = (innerHeight - r.top + 10) + 'px'; }
+  function open(on){ menu.hidden = !on; btn.setAttribute('aria-expanded', String(on)); if (on){ paint(); place(); const c = $('[aria-checked="true"]', menu); if (c) c.focus(); } }
+  btn.addEventListener('click', e => { e.stopPropagation(); open(menu.hidden); });
+  menu.addEventListener('click', e => { const b = e.target.closest('[data-mode]'); if (!b) return; open(false); applyMode(b.dataset.mode); btn.focus(); });
+  document.addEventListener('pointerdown', e => { if (!menu.hidden && !menu.contains(e.target) && !btn.contains(e.target)) open(false); });
+  addEventListener('keydown', e => { if (e.key === 'Escape' && !menu.hidden){ open(false); btn.focus(); } });
+  addEventListener('resize', () => { if (!menu.hidden) place(); });
+  paintMode();
+})();
 /* ---------- arranque ---------- */
 const wantModel = params.get('model');
 if (wantModel && /^(pu|or):[\w.\/:@-]{2,120}$/.test(wantModel)){ st().model.openrouter = wantModel; save(); }

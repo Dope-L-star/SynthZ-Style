@@ -1,0 +1,32 @@
+/* v2.3.1 · botón y menú de «Esfuerzo» en la caja de escribir */
+.cpk3{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:44px;min-height:44px;padding:0 12px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04);color:var(--soft);font-size:14px;white-space:nowrap;transition:background .3s,color .3s,border-color .3s}
+.cpk3 svg{width:18px;height:18px;flex:none}
+.cpk3:hover{background:rgba(255,255,255,.08);color:var(--text)}
+.cpk3.on{color:var(--text);border-color:rgba(var(--gold-rgb,230,182,95),.5);background:rgba(var(--gold-rgb,230,182,95),.1)}
+.cpk3 span:empty{display:none}
+.cpk3:focus-visible{outline:2px solid var(--accent,#b8c4ff);outline-offset:2px}
+.composer .cpk3{min-height:36px;min-width:36px;border-radius:12px;font-size:13.5px;padding:0 10px}
+#effMenu.amenu{position:fixed;left:8px;bottom:80px;z-index:120}
+#effMenu[hidden]{display:none}
+#effMenu button{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:14px;text-align:left;color:var(--soft)}
+#effMenu button:hover,#effMenu button:focus-visible{background:rgba(255,255,255,.08);color:var(--text);outline:none}
+#effMenu button[aria-checked="true"]{background:rgba(255,255,255,.07);color:var(--text)}
+#effMenu i{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:rgba(255,255,255,.06);flex:none}
+#effMenu i svg{width:17px;height:17px}
+#effMenu span{display:flex;flex-direction:column;min-width:0;flex:1}
+#effMenu b{font-weight:600;font-size:14px}
+#effMenu small{font-size:12px;color:var(--mute,#8d909c)}
+#effMenu em{font-style:normal;font-size:11px;color:var(--mute,#8d909c);border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:2px 8px;white-space:nowrap}
+#effMenu em.ck{border:0;font-size:15px;color:var(--text)}
+#effMenu .lk{opacity:.7}
+html.simple .cpk3{background:transparent !important;border-color:var(--sline) !important}
+
+/* fila de la caja de escribir, igual que el modelo de referencia: todo del mismo alto, píldoras y círculos.
+   Orden: [+] [IA] [esfuerzo] … [Comparar con otra IA] (los botones nuevos van antes de «Comparar») */
+.composer .attach,.composer .cpk,.composer .cpk2,.composer .cpk3,.composer .agpill{min-height:40px !important;height:40px;border-radius:999px !important;box-sizing:border-box}
+.composer .attach,.composer .cpk3:not(.on){width:40px;min-width:40px;padding:0 !important;justify-content:center}
+.composer .cpk{padding:0 12px 0 8px !important;border:1px solid rgba(255,255,255,.16) !important;background:rgba(255,255,255,.04) !important;gap:8px !important}
+.composer .cpk2{padding:0 14px !important;font-size:13.5px !important}
+.composer .cpick{gap:8px !important}
+.composer .cpk3.on{padding:0 14px 0 12px !important}
+@media (max-width:600px){ .composer .cpk3 span{display:none !important} .composer .cpk3.on{width:40px;min-width:40px;padding:0 !important;justify-content:center} }

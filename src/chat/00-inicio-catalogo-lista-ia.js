@@ -79,7 +79,7 @@ function topicFor(q){ const f = fold(q).trim(); if (f.length < 3) return null; c
 function visible(q){
   const fav = new Set(st().fav), qt = !ptopic && q ? topicFor(q) : null;
   const nameHit = m => (m.name + ' ' + m.id + ' ' + m.vlabel).toLowerCase().includes(q);
-  let l = cat.list.filter(m => (ui.prov === 'all' || m.id.startsWith(ui.prov + ':')) && (!ui.free || m.free) && ((!ui.fav && ptab !== 'fav') || fav.has(m.id)) && (!ui.reason || m.reasoning) && (!ui.vision || m.vision) && (!ui.long || m.ctx >= 100000) && (!ui.code || expert(m).tags.includes('code')) && (!ui.write || expert(m).tags.includes('write')) && (!ui.fast || expert(m).tags.includes('fast')) && (!ui.math || expert(m).tags.includes('math')) && (!ui.newm || isNew(m)) && true
+  let l = cat.list.filter(m => m.id !== 'sz:auto' && (ui.prov === 'all' || m.id.startsWith(ui.prov + ':')) && (!ui.free || m.free) && ((!ui.fav && ptab !== 'fav') || fav.has(m.id)) && (!ui.reason || m.reasoning) && (!ui.vision || m.vision) && (!ui.long || m.ctx >= 100000) && (!ui.code || expert(m).tags.includes('code')) && (!ui.write || expert(m).tags.includes('write')) && (!ui.fast || expert(m).tags.includes('fast')) && (!ui.math || expert(m).tags.includes('math')) && (!ui.newm || isNew(m)) && true
     && (!q || nameHit(m) || (qt && recommendTop(qt, 8).some(x => x.id === m.id))));
   const cmp = ui.sort === 'ctx' ? (a, b) => b.ctx - a.ctx || a.name.localeCompare(b.name) : ui.sort === 'az' ? (a, b) => a.name.localeCompare(b.name) : (a, b) => b.created - a.created || a.name.localeCompare(b.name);
   l.sort(cmp);
@@ -182,6 +182,7 @@ function vPaint(force){
 listEl.addEventListener('scroll', () => { if (!vQ) vQ = requestAnimationFrame(() => { vQ = 0; vPaint(false); }); }, { passive:true });
 addEventListener('resize', () => { const h = V.hM; V.hM = 0; renderList({ keep:true }); if (!V.hM) V.hM = h; });
 function paintSel(){
+  try{ paintMode(); }catch(e){}   /* v2.3.1 · el modo (Automática · Chat · SuperiorSynth) sigue a la IA elegida */
   const cmpIds = st().cmp, id = selId();
   $$('.mi', listEl).forEach(el => {
     const sel = mode === 'solo' && el.dataset.id === id, i = cmpIds.indexOf(el.dataset.id), on = mode === 'cmp' && i > -1;

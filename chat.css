@@ -1979,6 +1979,74 @@ html.simple .tcard,html.simple .ctxm,html.simple .amenu{background:#2a2927 !impo
 /* el cursor de SynthZ se queda en Simple, pero más liso: sin vidrio, sin brillo ni sombra grande */
 html.simple #cr{backdrop-filter:none !important;-webkit-backdrop-filter:none !important;box-shadow:none !important;background:rgba(255,255,255,.08) !important}
 html.simple #ca{filter:none !important}
+/* v2.3.1 · botón y menú de «Esfuerzo» en la caja de escribir */
+.cpk3{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:44px;min-height:44px;padding:0 12px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04);color:var(--soft);font-size:14px;white-space:nowrap;transition:background .3s,color .3s,border-color .3s}
+.cpk3 svg{width:18px;height:18px;flex:none}
+.cpk3:hover{background:rgba(255,255,255,.08);color:var(--text)}
+.cpk3.on{color:var(--text);border-color:rgba(var(--gold-rgb,230,182,95),.5);background:rgba(var(--gold-rgb,230,182,95),.1)}
+.cpk3 span:empty{display:none}
+.cpk3:focus-visible{outline:2px solid var(--accent,#b8c4ff);outline-offset:2px}
+.composer .cpk3{min-height:36px;min-width:36px;border-radius:12px;font-size:13.5px;padding:0 10px}
+#effMenu.amenu{position:fixed;left:8px;bottom:80px;z-index:120}
+#effMenu[hidden]{display:none}
+#effMenu button{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:14px;text-align:left;color:var(--soft)}
+#effMenu button:hover,#effMenu button:focus-visible{background:rgba(255,255,255,.08);color:var(--text);outline:none}
+#effMenu button[aria-checked="true"]{background:rgba(255,255,255,.07);color:var(--text)}
+#effMenu i{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:rgba(255,255,255,.06);flex:none}
+#effMenu i svg{width:17px;height:17px}
+#effMenu span{display:flex;flex-direction:column;min-width:0;flex:1}
+#effMenu b{font-weight:600;font-size:14px}
+#effMenu small{font-size:12px;color:var(--mute,#8d909c)}
+#effMenu em{font-style:normal;font-size:11px;color:var(--mute,#8d909c);border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:2px 8px;white-space:nowrap}
+#effMenu em.ck{border:0;font-size:15px;color:var(--text)}
+#effMenu .lk{opacity:.7}
+html.simple .cpk3{background:transparent !important;border-color:var(--sline) !important}
+
+/* fila de la caja de escribir, igual que el modelo de referencia: todo del mismo alto, píldoras y círculos.
+   Orden: [+] [IA] [esfuerzo] … [Comparar con otra IA] (los botones nuevos van antes de «Comparar») */
+.composer .attach,.composer .cpk,.composer .cpk2,.composer .cpk3,.composer .agpill{min-height:40px !important;height:40px;border-radius:999px !important;box-sizing:border-box}
+.composer .attach,.composer .cpk3:not(.on){width:40px;min-width:40px;padding:0 !important;justify-content:center}
+.composer .cpk{padding:0 12px 0 8px !important;border:1px solid rgba(255,255,255,.16) !important;background:rgba(255,255,255,.04) !important;gap:8px !important}
+.composer .cpk2{padding:0 14px !important;font-size:13.5px !important}
+.composer .cpick{gap:8px !important}
+.composer .cpk3.on{padding:0 14px 0 12px !important}
+@media (max-width:600px){ .composer .cpk3 span{display:none !important} .composer .cpk3.on{width:40px;min-width:40px;padding:0 !important;justify-content:center} }
+/* v2.3.1 · píldora de modo (Automática · Chat · SuperiorSynth) y qué se muestra en cada una */
+.cpk4{display:inline-flex;align-items:center;gap:8px;min-height:40px;height:40px;padding:0 10px 0 12px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04);color:var(--text);font-size:14px;white-space:nowrap;box-sizing:border-box;transition:background .3s,border-color .3s}
+.cpk4:hover{background:rgba(255,255,255,.08)}
+.cpk4:focus-visible{outline:2px solid var(--accent,#b8c4ff);outline-offset:2px}
+.cpk4 b{font-weight:600}
+.cpk4 .cm-ico{display:grid;place-items:center;width:18px;height:18px}
+.cpk4 .cm-ico svg{width:18px;height:18px}
+.cpk4 .cm-chev{width:15px;height:15px;opacity:.7}
+body[data-cmode="auto"] .cpk4,body[data-cmode="agent"] .cpk4{border-color:rgba(var(--gold-rgb,230,182,95),.4)}
+/* Automática y SuperiorSynth eligen la IA solos: no se muestra el selector. Chat sí. El botón «Apagar» del agente sobra: el modo ya dice dónde estás. */
+body[data-cmode="auto"] .composer #cPick,body[data-cmode="agent"] .composer #cPick,body[data-cmode="auto"] .composer #agPill,body[data-cmode="agent"] .composer #agPill{display:none !important}
+#modeMenu.amenu{position:fixed;left:8px;bottom:80px;z-index:120;width:300px}
+#modeMenu[hidden]{display:none}
+#modeMenu button{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:14px;text-align:left;color:var(--soft)}
+#modeMenu button:hover,#modeMenu button:focus-visible{background:rgba(255,255,255,.08);color:var(--text);outline:none}
+#modeMenu button[aria-checked="true"]{background:rgba(255,255,255,.07);color:var(--text)}
+#modeMenu i{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:rgba(255,255,255,.06);flex:none}
+#modeMenu i svg{width:18px;height:18px}
+#modeMenu span{display:flex;flex-direction:column;min-width:0;flex:1}
+#modeMenu b{font-weight:600;font-size:14px}
+#modeMenu small{font-size:12px;color:var(--mute,#8d909c)}
+#modeMenu em.ck{font-style:normal;font-size:15px;color:var(--text)}
+html.simple .cpk4{background:transparent !important;border-color:var(--sline) !important}
+.composer .cpk4{border-radius:999px !important}
+/* celular: la fila NO se desliza de lado (eso corría todos los íconos hacia la izquierda). Todo cabe en una línea: el nombre de la IA se acorta con «…» */
+@media (max-width:900px){
+  .composer .cpk2 span{display:none}
+  .composer .cpick,body.fresh .comp-in .cpick{flex-wrap:nowrap !important;overflow:hidden !important;min-width:0;gap:6px !important}
+  .composer .cpick>*{flex:0 0 auto}
+  .composer .cpick>#cPick{flex:1 1 0;min-width:0}
+  .composer #cPick b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .composer .cpk4{padding:0 8px 0 10px;gap:6px}
+  .composer .cpk4 .cm-chev{width:13px;height:13px}
+}
+@media (max-width:340px){ .composer .cpk4 b{display:none} .composer .cpk4{padding:0 8px} }
+
 /* ===== v2.4 · SynthFlow con vidrio líquido sobre el fondo espacial (boceto «SynthFlow escritorio») ===== */
 html:not(.simple) .main{background:transparent}
 html:not(.simple) .top{background:transparent;border-color:transparent}
@@ -2027,3 +2095,11 @@ html:not(.noglass) .tcard,html:not(.noglass) .amenu,html:not(.noglass) .ctxm,htm
 #sideFoot .sxfoot.gauge{display:flex !important;flex-direction:column;align-items:center;justify-content:center;position:relative}
 #sideFoot .sxfoot.gauge .gz{display:block;margin-top:4px}
 #sideFoot .sxfoot.gauge .gz-n{margin-top:-26px;align-items:center;justify-items:center}
+/* píldora de modo y esfuerzo (traídas de main) con el mismo vidrio; en el celular, en modo Chat la píldora queda solo con su ícono para que quepa el nombre de la IA */
+html:not(.simple) .composer .cpk3,html:not(.simple) .composer .cpk4{background:var(--lg-bg);border-color:var(--lg-edge);box-shadow:var(--lg-shadow)}
+html:not(.simple) .composer .cpk3.on{border-color:rgba(255,122,69,.55);background:linear-gradient(135deg,rgba(255,122,69,.16),rgba(255,61,154,.1));color:#fff}
+@media (max-width:600px){
+  body[data-cmode="chat"] .composer .cpk4 b,body[data-cmode="chat"] .composer .cpk4 .cm-chev{display:none}
+  body[data-cmode="chat"] .composer .cpk4{width:40px;min-width:40px;padding:0;justify-content:center}
+  .composer #cPick{overflow:hidden}
+}
