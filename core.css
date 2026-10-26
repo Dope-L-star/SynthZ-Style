@@ -813,6 +813,8 @@ html.noglass .szdisc{background:#16141a}
 .ap-acts .btn{flex:1;max-width:240px;min-height:48px;border-radius:999px;font-weight:600}
 @media (min-width:700px){.appp{align-items:center}}
 @media (prefers-reduced-motion:reduce){.ap-card{transition:none}}
+/* v2.6: con los pasos a la vista, el video se achica para que todo quepa sin bajar */
+.ap-card:has(.ap-steps) .ap-vid{height:min(16dvh,130px);transition:height .4s ease}
 /* ===== v2.2 · menús, etiquetas, ajustes con pestañas y el «!» de novedades ===== */
 .ctxm{min-width:236px;max-width:min(320px,calc(100vw - 20px));padding:6px;gap:1px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(22,22,28,.86);backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);box-shadow:0 24px 60px -18px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.06)}
 .ctxm button{display:flex;align-items:center;gap:10px;width:100%;min-height:34px;padding:7px 10px;border-radius:9px;font-size:14px;color:var(--soft,#c3c5ce);text-align:left}

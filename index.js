@@ -1,3 +1,35 @@
+/* ===== v2.6 · cada nombre propio se explica solo: pasas el mouse (o lo tocas) y dice qué es en pocas palabras.
+   Se marca la primera vez que aparece en cada sección; los títulos, botones y enlaces quedan como están.
+   Va antes que todo: la escritura letra por letra parte el texto en letras sueltas y ya no se podría encontrar la palabra. ===== */
+(() => {
+const DEF = {
+  'SynthFlow':     'El chat de SynthZ: ahí hablas con las IAs.',
+  'SuperiorSynth': 'El modo que piensa mejor tu pedido y elige la IA que más sabe.',
+  'SynthonIA':     'Tu ayudante: la robot que te guía por SynthZ.',
+  'SynXCoin':      'Tu límite diario gratis: 1 SynXCoin = 1 palabra. Se llena a medianoche.',
+  'A.L.I.A.S.':    'Un agente que cumple un objetivo paso a paso, y tú apruebas cada paso.',
+  'Puter':         'Un servicio gratis: con tu cuenta usas ChatGPT, Claude y Gemini.',
+  'IAs conectadas':'IAs gratis que ya vienen listas, sin cuenta ni tarjeta.'
+};
+const words = Object.keys(DEF).sort((a, b) => b.length - a.length);
+const rx = new RegExp('(' + words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ")(?:'s)?", 'g');
+const SKIP = 'h1,h2,h3,a,button,summary,label,input,textarea,.term,#szRoam,.hub,.band,.ready,.v24foot';
+document.querySelectorAll('main > section').forEach(sec => {
+  const done = new Set(), walker = document.createTreeWalker(sec, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentElement.closest(SKIP) || !n.nodeValue.trim() ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+  const nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(n => {
+    const t = n.nodeValue; rx.lastIndex = 0; let m, last = 0, frag = null;
+    while ((m = rx.exec(t))){
+      const w = m[1]; if (done.has(w)) continue; done.add(w);
+      frag = frag || document.createDocumentFragment();
+      frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+      const s = document.createElement('span'); s.className = 'term'; s.tabIndex = 0; s.dataset.def = DEF[w]; s.setAttribute('aria-description', DEF[w]); s.textContent = m[0];
+      frag.appendChild(s); last = m.index + m[0].length;
+    }
+    if (frag){ frag.appendChild(document.createTextNode(t.slice(last))); n.replaceWith(frag); }
+  });
+});
+})();
 (() => {
 'use strict';
 const { root, $, $$, clamp, fmt, reduce, today, sleepRaw, esc, est, Z_PATH, ico, zWord, API, MANUAL, ALL, byId, save, total, addUsage, toast, hydrateIcons, countTo, charify, typeIn, showAll, S, coins } = SZ;
@@ -162,16 +194,26 @@ function expandToOld(card, href, color){
   a.onfinish = () => setTimeout(go, 60);
   setTimeout(go, 1500);
 }
-function openChat(){
+function openChat(from){
   if (leaving) return; leaving = true;
-  const q = $('#launchInp').value.trim(), params = new URLSearchParams({ from:'home' });
+  const box = from && from.nodeType ? from : $('#launch'), inp = box.id === 'heroAsk' ? $('#heroInp') : $('#launchInp');
+  const q = inp.value.trim(), params = new URLSearchParams({ from:'home' });
   if (launchAI === 'cmp') params.set('mode', 'cmp'); else params.set('ai', launchAI);
   if (q) params.set('q', q);
   try{ if (q) sessionStorage.setItem('synthz:q', JSON.stringify({ q, t:Date.now() })); }catch(e){}
   const p = byId(launchAI);
-  expandTo($('#launch'), 'chat.html?' + params.toString(), p ? p.c : '#b8c4ff');
+  expandTo(box, 'chat.html?' + params.toString(), p ? p.c : '#b8c4ff');
 }
-$('#launchGo').addEventListener('click', openChat);
+$('#launchGo').addEventListener('click', () => openChat());
+/* v2.6: en la portada misma se puede preguntar: el cuadro se agranda y SynthFlow abre con la pregunta ya enviada */
+const hask = $('#heroAsk');
+if (hask){
+  hask.addEventListener('submit', e => { e.preventDefault(); if (!$('#heroInp').value.trim()){ $('#heroInp').focus(); hask.classList.remove('nudge'); void hask.offsetWidth; hask.classList.add('nudge'); return; } openChat(hask); });
+  /* ideas que se van turnando en el cuadro vacío, para que se vea qué se puede pedir */
+  const ideas = ['Pregúntale lo que sea…', 'Explícame la fotosíntesis fácil', 'Dame 3 ideas para un regalo barato', 'Encuentra el error en mi código', 'Escríbeme un mensaje de cumpleaños'];
+  let ii = 0;
+  if (!reduce) setInterval(() => { const i = $('#heroInp'); if (document.hidden || i.value || document.activeElement === i) return; ii = (ii + 1) % ideas.length; i.placeholder = ideas[ii]; }, 3200);
+}
 
 /* pasos que se animan con el scroll */
 const hows = $$('.how-card');
@@ -817,7 +859,7 @@ const nearOf = h => [...document.querySelectorAll('main h2,main h3,main h4,main 
 const hitsIn = (near, x0, y0, ww, hh) => near.some(e => { const r = e.getBoundingClientRect(); return r.width && r.height && Math.min(x0 + ww, r.right) - Math.max(x0, r.left) > 4 && Math.min(y0 + hh, r.bottom) - Math.max(y0, r.top) > 4; });
 /* celular: ya no flota fija tapando tarjetas; se para en el espacio libre encima del título de cada sección */
 function standSmall(t, w, H){
-  const near = nearOf(document.createElement('i')), x = innerWidth - w - 12, top = t.top - H + 4;
+  const near = nearOf(document.createElement('i')), x = innerWidth - w - 28, top = t.top - H + 4;   /* 28 px: deja espacio a su brazo cuando lo levanta */
   el.hidden = hitsIn(near, x + w * .15, top + H * .04, w * .7, H * .92) || top + scrollY < 90; if (el.hidden) return;
   el._mute = true; el.classList.add('abs'); el.classList.remove('bside'); el.dataset.side = 'r';
   el._x = Math.round(x + scrollX); el._top = Math.round(top + scrollY); stick();
@@ -942,4 +984,52 @@ if (hero) new IntersectionObserver(([e]) => {
   H.classList.toggle('sb-off', !e.isIntersecting);
   if (e.isIntersecting && SZ.SPACE && SZ.SPACE.wake) SZ.SPACE.wake();
 }).observe(hero);
+})();
+/* ===== v2.6 · la burbujita que explica cada nombre propio (las palabras se marcan en 00-aa-glosario.js) ===== */
+(() => {
+/* una sola burbujita para todos: se acomoda arriba de la palabra y nunca se sale de la pantalla */
+const tip = document.createElement('div'); tip.id = 'szTip'; tip.setAttribute('role', 'tooltip'); document.body.appendChild(tip);
+let on = null, at = 0;
+const show = el => {
+  if (on !== el) at = Date.now();
+  on = el; tip.textContent = el.dataset.def; tip.classList.add('on');
+  const r = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+  const x = Math.max(10, Math.min(innerWidth - w - 10, r.left + r.width / 2 - w / 2)), up = r.top - h - 10 > 70;
+  tip.style.left = x + 'px'; tip.style.top = (up ? r.top - h - 10 : r.bottom + 10) + 'px'; tip.dataset.up = up ? '1' : '0';
+  tip.style.setProperty('--ax', Math.max(14, Math.min(w - 14, r.left + r.width / 2 - x)) + 'px');
+};
+const hide = () => { on = null; tip.classList.remove('on'); };
+document.addEventListener('pointerover', e => { const t = e.target.closest && e.target.closest('.term'); if (t && e.pointerType === 'mouse') show(t); });
+document.addEventListener('pointerout', e => { const t = e.target.closest && e.target.closest('.term'); if (t && e.pointerType === 'mouse' && !t.contains(e.relatedTarget)) hide(); });
+document.addEventListener('focusin', e => { if (e.target.classList && e.target.classList.contains('term')) show(e.target); });
+document.addEventListener('focusout', e => { if (e.target.classList && e.target.classList.contains('term')) hide(); });
+document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('.term'); if (t){ e.preventDefault(); on === t && Date.now() - at > 400 ? hide() : show(t); }  /* al tocar, el foco ya la abrió: el mismo toque no la cierra */ else if (on) hide(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && on) hide(); });
+addEventListener('scroll', () => { if (on) hide(); }, { passive:true });
+})();
+/* ===== v2.6 · «¿Qué IA es mejor para…?»: lo que más busca la gente, al lado de «Compáralas a ciegas» ===== */
+(() => {
+document.querySelectorAll('.bf-ais').forEach(el => {
+  el.innerHTML = el.dataset.ais.split(',').map(x => { const [n, v] = x.split(':'); return '<span class="bf-ai">' + SZ.glassIcon({ id:v, vendor:v, name:n }, 'xs') + n + '</span>'; }).join('');
+});
+})();
+/* ===== v2.6 · botón «Instalar la app» (en el pie, en el menú ☰ y en Preguntas).
+   Android y computador (Chrome, Edge): abre el diálogo de instalar del navegador.
+   iPhone: muestra los pasos (Compartir › Agregar a inicio). Si ya está instalada, los botones no aparecen. ===== */
+(() => {
+const btns = () => document.querySelectorAll('[data-install],[data-install-note]');
+const hideAll = () => btns().forEach(b => { b.hidden = true; });
+if (SZ.appStandalone && SZ.appStandalone()){ hideAll(); return; }
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('button[data-install]'); if (!b) return;
+  e.preventDefault();
+  const nd = document.getElementById('navDrop'); if (nd && nd.contains(b)) nd.hidden = true;
+  /* sin instalación directa (iPhone, Firefox…), la ventana abre ya con los 3 pasos a la vista */
+  Promise.resolve(SZ.appInstall ? SZ.appInstall() : SZ.appPromo(true)).then(ok => {
+    if (ok){ hideAll(); return; }
+    const go = document.querySelector('#appPromo [data-ap="go"]'); if (!go) return;
+    go.click(); setTimeout(() => { const a = document.querySelector('#appPromo .ap-acts'); if (a) a.scrollIntoView({ block:'end', behavior:'smooth' }); }, 450);
+  }).catch(() => {});
+});
+addEventListener('appinstalled', hideAll);
 })();

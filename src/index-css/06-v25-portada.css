@@ -180,6 +180,7 @@ html.noanim .szroam .rb-fig{animation:none}
   .hstage{min-height:0;padding-top:0}
   .hdemo{position:relative !important;right:auto;bottom:auto;margin-top:-30px !important}
   .sbody .szbody{width:min(240px,58vw)}
+  #heroBot{min-height:calc(min(240px,58vw) * 4 / 3)}   /* guarda el sitio de SynthonIA antes de que aparezca: nada salta al cargar */
 }
 @media (max-width:620px){
   .v24hero{padding-top:96px}
@@ -249,3 +250,68 @@ html.szlive #szBot,html.szlive #betaBot{opacity:0 !important;pointer-events:none
 #chartPanel .ch-empty{display:none;position:absolute;left:50%;top:58%;translate:-50% -50%;width:min(360px,80%);margin:0;text-align:center;color:var(--soft);font-size:15px;line-height:1.45}
 #chartPanel.empty .ch-empty{display:block}
 #chartPanel.empty .chart{opacity:.35}
+/* nombres propios con explicación: un subrayado punteado suave, y su burbujita de vidrio */
+.term{text-decoration:underline dotted;text-decoration-color:rgba(184,196,255,.55);text-underline-offset:4px;text-decoration-thickness:1.5px;cursor:help;border-radius:4px}
+.term:hover,.term:focus-visible{text-decoration-color:var(--sb-light,#3de0ff);outline:none}
+.term:focus-visible{box-shadow:0 0 0 2px #3de0ff}
+#szTip{position:fixed;z-index:9900;left:0;top:0;max-width:min(280px,calc(100vw - 20px));padding:9px 13px;border-radius:12px;font:500 13.5px/1.4 var(--sans);color:#fff;background:linear-gradient(160deg,rgba(255,255,255,.12),rgba(255,255,255,.03)),rgba(22,13,50,.94);border:1px solid rgba(255,255,255,.18);box-shadow:0 14px 40px -10px rgba(0,0,0,.6);pointer-events:none;opacity:0;translate:0 4px;transition:opacity .18s ease,translate .18s ease}
+#szTip.on{opacity:1;translate:0 0}
+#szTip::after{content:"";position:absolute;left:var(--ax,50%);width:10px;height:10px;margin-left:-5px;background:rgba(22,13,50,.94);border:1px solid rgba(255,255,255,.18);rotate:45deg}
+#szTip[data-up="1"]::after{bottom:-6px;border-top:0;border-left:0}
+#szTip[data-up="0"]::after{top:-6px;border-bottom:0;border-right:0}
+@media (prefers-reduced-motion:reduce){#szTip{transition:none}}
+/* «Pregúntale lo que sea» en la portada: un cuadro de vidrio con flecha, como en ChatGPT o Claude */
+.hask{position:relative;display:flex;align-items:center;gap:8px;width:min(520px,100%);margin:22px 0 4px;padding:6px 6px 6px 20px;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.03)),rgba(20,12,44,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 18px 50px -20px rgba(123,63,242,.6);transition:border-color .3s,box-shadow .3s}
+.hask:focus-within{border-color:rgba(61,224,255,.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 4px rgba(61,224,255,.14),0 18px 50px -20px rgba(123,63,242,.7)}
+.hask-l{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.hask input{flex:1;min-width:0;height:44px;border:0;outline:0;background:none;color:#fff;font:400 16px var(--sans)}
+.hask input::placeholder{color:rgba(232,228,255,.55);transition:opacity .3s}
+.hask .send{width:44px;height:44px;background:var(--grad);color:#fff;box-shadow:0 8px 22px -8px rgba(255,61,154,.8)}
+.hask .send svg{width:20px;height:20px}
+.hask .send:hover{transform:translateX(2px)}
+.hask.nudge{animation:hnudge .42s ease}
+@keyframes hnudge{25%{translate:-6px 0}50%{translate:5px 0}75%{translate:-3px 0}}
+.hask+.cta{margin-top:16px}
+@media (max-width:760px){.hask{margin:18px auto 2px}}
+@media (prefers-reduced-motion:reduce){.hask.nudge{animation:none}}
+.hask input{text-overflow:ellipsis}
+/* «¿Qué IA es mejor para…?» */
+.bestfor{margin-top:22px;padding:30px clamp(18px,3vw,36px);border-radius:28px;text-align:center}
+.bestfor h3{font:700 clamp(24px,2.6vw,34px)/1.15 var(--sans);letter-spacing:-.02em}
+.bestfor .bf-lead{margin:8px auto 20px;max-width:560px;color:var(--soft);font-size:15.5px}
+.bf-g{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;text-align:left}
+.bf-g li{display:flex;flex-direction:column;gap:10px;padding:16px 18px;border-radius:18px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04)}
+.bf-g li>b{font:600 16.5px var(--sans)}
+.bf-ais{display:flex;flex-wrap:wrap;gap:8px}
+.bf-ais .bf-ai{display:inline-flex;align-items:center;gap:7px;padding:5px 11px 5px 5px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(20,12,44,.5);font-size:14px}
+.bestfor .bf-note{margin:18px auto 0;max-width:620px;color:var(--soft);font-size:14.5px}
+.bestfor .bf-note b{color:#fff}
+@media (max-width:980px){.bf-g{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.bf-g{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:520px){.bf-g li{padding:12px 14px;gap:8px}.bestfor{padding:24px 16px}}
+/* «¿Listo para sintonizar?»: el listón de colores pasaba justo detrás del texto; un velo oscuro suave del lado del texto lo hace legible */
+main div.ready.lqg{background:linear-gradient(90deg,rgba(12,7,30,.62),rgba(12,7,30,.34) 55%,rgba(12,7,30,.08)),var(--lg-bg),rgba(20,12,44,.16)}
+@media (max-width:620px){main div.ready.lqg{background:linear-gradient(180deg,rgba(12,7,30,.6),rgba(12,7,30,.3) 60%,rgba(12,7,30,.1)),var(--lg-bg),rgba(20,12,44,.16)}}
+/* celular: la caja va en columna; SynthonIA quedaba subida encima del botón «Empezar gratis». Va debajo, sin pisarlo */
+@media (max-width:620px){div.ready .rd-f{margin:14px 0 -6px}div.ready .rd-f .szbody{width:min(190px,52vw)}}
+/* el campo no empuja el ancho de la portada en celulares chicos (antes la estiraba a 347 px en una pantalla de 320) */
+.hask{width:100%;max-width:520px;box-sizing:border-box}
+.hask input{width:0}
+/* la tarjeta «Ejemplo» quedaba montada sobre el aro de luz de la base de SynthonIA: un poco más abajo, sin tocarla */
+.hdemo{bottom:0}
+@media (max-width:980px){.hdemo{margin-top:8px !important}}
+/* tablet y PC chico (561–1023 px): los enlaces del menú no cabían, se partían en dos líneas y «Entrar» quedaba cortado.
+   Ahí los enlaces pasan al botón de menú (☰), como en el celular */
+.navlinks a{white-space:nowrap}
+@media (max-width:1023px){#nav .navlinks{display:none}#nav .navmenu{display:grid}}
+@media (max-width:760px){#nav #helpBtn,#nav #cfgBtn{display:none}}   /* en el menú ☰ ya están «Guía» y «Configuración» */
+/* «Instalar la app» en el pie (llenando el espacio que estaba vacío) y en el menú ☰ */
+.vf-b{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.vf-inst{margin-top:14px;display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:0 18px;border-radius:999px;background:var(--grad);color:#fff;font-weight:600;box-shadow:0 10px 30px -12px rgba(255,61,154,.75),inset 0 1px 0 rgba(255,255,255,.35);border:0}
+.vf-inst svg,.nd-inst svg{width:18px;height:18px;flex:none}
+.vf-inst-n{max-width:300px;color:var(--mute);font-size:12.5px;line-height:1.45}
+.navdrop .nd-inst{display:flex;align-items:center;gap:9px;margin-top:4px;color:#fff;background:linear-gradient(90deg,rgba(123,63,242,.35),rgba(255,61,154,.25))}
+#faq details .lnk[data-install]{display:inline;padding:0;min-height:0;color:var(--sb-light,#3de0ff);text-decoration:underline;text-underline-offset:3px;font:inherit}
+[data-install][hidden],[data-install-note][hidden]{display:none !important}
+/* el menú ☰ con el mismo vidrio que el resto */
+.navdrop{background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.02)),rgba(18,10,40,.9);border-color:rgba(255,255,255,.14)}

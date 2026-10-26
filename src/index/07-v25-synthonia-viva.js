@@ -40,7 +40,7 @@ const nearOf = h => [...document.querySelectorAll('main h2,main h3,main h4,main 
 const hitsIn = (near, x0, y0, ww, hh) => near.some(e => { const r = e.getBoundingClientRect(); return r.width && r.height && Math.min(x0 + ww, r.right) - Math.max(x0, r.left) > 4 && Math.min(y0 + hh, r.bottom) - Math.max(y0, r.top) > 4; });
 /* celular: ya no flota fija tapando tarjetas; se para en el espacio libre encima del título de cada sección */
 function standSmall(t, w, H){
-  const near = nearOf(document.createElement('i')), x = innerWidth - w - 12, top = t.top - H + 4;
+  const near = nearOf(document.createElement('i')), x = innerWidth - w - 28, top = t.top - H + 4;   /* 28 px: deja espacio a su brazo cuando lo levanta */
   el.hidden = hitsIn(near, x + w * .15, top + H * .04, w * .7, H * .92) || top + scrollY < 90; if (el.hidden) return;
   el._mute = true; el.classList.add('abs'); el.classList.remove('bside'); el.dataset.side = 'r';
   el._x = Math.round(x + scrollX); el._top = Math.round(top + scrollY); stick();

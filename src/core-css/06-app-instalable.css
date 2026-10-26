@@ -26,3 +26,5 @@
 .ap-acts .btn{flex:1;max-width:240px;min-height:48px;border-radius:999px;font-weight:600}
 @media (min-width:700px){.appp{align-items:center}}
 @media (prefers-reduced-motion:reduce){.ap-card{transition:none}}
+/* v2.6: con los pasos a la vista, el video se achica para que todo quepa sin bajar */
+.ap-card:has(.ap-steps) .ap-vid{height:min(16dvh,130px);transition:height .4s ease}

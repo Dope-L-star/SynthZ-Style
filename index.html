@@ -70,7 +70,7 @@
     <a href="#faq" data-sec="faq">Preguntas</a>
   </div>
   <div class="navr"><button type="button" class="pill-total" id="limPill" title="Tu límite de hoy"><span id="limRing"></span><span id="navTotal">Cargando…</span></button><button class="cfgb helpb" id="helpBtn" type="button" aria-label="Ayuda: guía rápida" title="Guía rápida">?</button><button class="cfgb" id="cfgBtn" type="button" aria-label="Configuración" title="Configuración"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></button><a class="cfgb pulseb" href="pulsem.html" id="railPulse" title="Pulsem (equipo)" aria-label="Pulsem (equipo)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l2.5-6 4 12 3-8 1.5 2H22"/></svg></a><button class="accb out" id="accBtn" type="button" aria-label="Tu cuenta">Entrar</button><button class="cfgb navmenu" id="navMenu" type="button" aria-label="Abrir el menú" aria-expanded="false" aria-controls="navDrop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
-  <div class="navdrop" id="navDrop" hidden><a href="#como">Qué es</a><a href="#modos">Modos</a><a href="#usos">Para ti</a><a href="#faq">Preguntas</a><a href="chat.html">SynthFlow</a><a href="#conectar">Mis IA</a><a href="#consumo">Tu uso</a><button type="button" data-nd="acc">Mi cuenta</button><button type="button" data-nd="help">Guía</button><button type="button" data-nd="cfg">Configuración</button></div>
+  <div class="navdrop" id="navDrop" hidden><a href="#como">Qué es</a><a href="#modos">Modos</a><a href="#usos">Para ti</a><a href="#faq">Preguntas</a><a href="chat.html">SynthFlow</a><a href="#conectar">Mis IA</a><a href="#consumo">Tu uso</a><button type="button" data-nd="acc">Mi cuenta</button><button type="button" data-nd="help">Guía</button><button type="button" data-nd="cfg">Configuración</button><button type="button" class="nd-inst" data-install><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Instalar la app</button></div>
 </nav>
 
 <main>
@@ -80,6 +80,11 @@
     <h1 id="h1">Diseña a la <span class="gt">velocidad del pensamiento.</span></h1>
     <p class="hsub2">Sintonía con la IA.</p>
     <p class="sub" id="heroSub">Pregunta, crea, programa y compara muchas IAs desde un solo lugar.</p>
+    <form class="hask hero-fade" id="heroAsk" role="search" aria-label="Pregúntale a la IA">
+      <label class="hask-l" for="heroInp">Pregúntale lo que sea</label>
+      <input id="heroInp" type="text" autocomplete="off" enterkeyhint="send" maxlength="2000" placeholder="Pregúntale lo que sea…">
+      <button class="send" type="submit" aria-label="Preguntar en SynthFlow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </form>
     <div class="cta hero-fade">
       <a class="btn big flowbtn" href="chat.html" id="startBtn"><span class="fb-t">Empezar gratis</span><span class="fb-f" id="startFace" aria-hidden="true"></span><i class="fb-s s1"></i><i class="fb-s s2"></i><i class="fb-s s3"></i></a>
       <a class="btn ghost lgbtn" href="#como" id="demoBtn">Ver demo <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg></a>
@@ -191,6 +196,19 @@
     </div>
     <div class="bl-who"><span id="blFace"></span><span class="bl-say" id="blSay">Después te digo quién respondió</span></div>
   </div>
+  <div class="bestfor lqg" data-reveal>
+    <h3>¿Qué IA es mejor para…?</h3>
+    <p class="bf-lead">Una guía rápida de dónde suele destacar cada una. Con tus propias preguntas, lo mejor es compararlas.</p>
+    <ul class="bf-g">
+      <li><b>Programar</b><span class="bf-ais" data-ais="Claude:anthropic,DeepSeek:deepseek"></span></li>
+      <li><b>Escribir textos largos</b><span class="bf-ais" data-ais="Claude:anthropic,ChatGPT:openai"></span></li>
+      <li><b>Buscar e investigar</b><span class="bf-ais" data-ais="Gemini:google,ChatGPT:openai"></span></li>
+      <li><b>Preguntas del día a día</b><span class="bf-ais" data-ais="ChatGPT:openai,Gemini:google"></span></li>
+      <li><b>Matemáticas y lógica</b><span class="bf-ais" data-ais="DeepSeek:deepseek,Qwen:qwen"></span></li>
+      <li><b>Respuestas rápidas</b><span class="bf-ais" data-ais="Llama:meta-llama,Mistral:mistralai"></span></li>
+    </ul>
+    <p class="bf-note">¿No quieres elegir? El modo <b>Automático</b> manda cada pregunta a la IA que más sabe de eso. Las IAs cambian seguido, así que esta guía es general.</p>
+  </div>
 </section>
 
 <section id="conectar">
@@ -270,9 +288,13 @@
     <details class="lqg"><summary>¿Es gratis de verdad?</summary><p>Sí. Cada persona tiene un límite gratis al día que se llena otra vez a medianoche. SynthZ nunca te cobra.</p></details>
     <details class="lqg"><summary>¿Qué pasa si se me acaba el límite?</summary><p>Esperas a la medianoche, o conectas tu cuenta gratis de Puter para seguir con las IAs más famosas.</p></details>
     <details class="lqg"><summary>¿Cuánto gasta cada cosa?</summary><p>Lo ves antes de enviar, junto a la caja de escribir, y en «Tu uso» siempre sabes cuánto te queda.</p></details>
-    <details class="lqg"><summary>¿Mis chats están seguros?</summary><p>Se guardan en tu equipo. Si entras a tu cuenta, también los ves en tu celular y en cualquier computador.</p></details>
+    <details class="lqg"><summary>¿Mis chats están seguros?</summary><p>Se guardan en tu equipo. Si entras a tu cuenta, también los ves en tu celular y en cualquier computador. Para responderte, tu mensaje viaja a la IA que elijas. Más detalles en <a href="privacidad.html">Privacidad</a>.</p></details>
     <details class="lqg"><summary>¿Qué es A.L.I.A.S.?</summary><p>Un agente aparte: le cuentas un objetivo, te muestra el plan en pasos y los cumple uno a uno. Tú puedes pausar, aprobar o rehacer cada paso.</p></details>
-    <details class="lqg"><summary>¿Funciona en el celular?</summary><p>Sí, y puedes instalar SynthFlow como app desde el navegador.</p></details>
+    <details class="lqg"><summary>¿Funciona en el celular?</summary><p>Sí. La página se acomoda a cualquier pantalla, del celular más pequeño al computador.</p></details>
+    <details class="lqg"><summary>¿Funciona en español?</summary><p>Sí. Le escribes en español y te responde en español. También entiende inglés y muchos otros idiomas.</p></details>
+    <details class="lqg"><summary>¿Qué IA es la mejor?</summary><p>Depende de lo que pidas. Mira la guía «¿Qué IA es mejor para…?» o compáralas a ciegas con tu propia pregunta. Si no quieres elegir, el modo Automático lo hace por ti.</p></details>
+    <details class="lqg"><summary>¿Hay app?</summary><p>Sí, gratis y sin tiendas. Toca <button type="button" class="lnk" data-install>Instalar la app</button>: en Android y computador se instala con un toque; en iPhone te mostramos los 3 pasos (Compartir › Agregar a inicio).</p></details>
+    <details class="lqg"><summary>¿Se nota que usé IA?</summary><p>Puede notarse. Existen detectores, aunque se equivocan seguido. Lo mejor es usar la IA para aprender y revisar, escribir con tus palabras y seguir las reglas de tu colegio o trabajo.</p></details>
   </div>
   <div class="ready lqg" data-reveal>
     <div><h2>¿Listo para <span class="gt">sintonizar</span>?</h2><a class="btn big flowbtn" href="chat.html"><span class="fb-t">Empezar gratis</span></a></div>
@@ -282,7 +304,7 @@
 </main>
 
 <footer class="v24foot lqg">
-  <div class="vf-b"><b class="vf-l">Synth<span>Z</span></b><span>Sintonía con la IA.</span></div>
+  <div class="vf-b"><b class="vf-l">Synth<span>Z</span></b><span>Sintonía con la IA.</span><button type="button" class="btn vf-inst" data-install><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Instalar la app SynthFlow</button><small class="vf-inst-n" data-install-note>Gratis y sin tiendas: en Android y computador se instala con un toque; en iPhone te mostramos los pasos.</small></div>
   <div class="vf-c" role="navigation" aria-label="Producto"><b>Producto</b><a href="chat.html">SynthFlow</a><a href="#modos">SuperiorSynth</a><a href="#como">SynthonIA</a></div>
   <div class="vf-c" role="navigation" aria-label="Ayuda"><b>Ayuda</b><a href="#faq">Preguntas</a><a href="#consumo">Tu uso</a></div>
   <div class="vf-c" role="navigation" aria-label="Legal"><b>Legal</b><a href="privacidad.html">Privacidad</a><a href="terminos.html">Términos</a></div>

@@ -54,7 +54,7 @@ function appPromo(force){
   o._close = close;
   o.addEventListener('pointerdown', e => { if (e.target === o) close(); });
   $('[data-ap="no"]', o).addEventListener('click', close);
-  $('[data-ap="go"]', o).addEventListener('click', async e => { const ok = await appInstall($('.ap-how', o)); if (ok) close(); else if (!APP.evt){ e.currentTarget.textContent = 'Entendido'; e.currentTarget.dataset.ap = 'no'; e.currentTarget.onclick = close; } });
+  $('[data-ap="go"]', o).addEventListener('click', async e => { const b = e.currentTarget; const ok = await appInstall($('.ap-how', o)); if (ok) close(); else if (!APP.evt){ b.textContent = 'Entendido'; b.dataset.ap = 'no'; b.onclick = close; } });   /* v2.6: currentTarget se borra después del await; se guarda antes */
   addEventListener('keydown', function k(e){ if (e.key === 'Escape'){ close(); removeEventListener('keydown', k); } });
 }
 /* en el celular, un ratico después de entrar (nunca encima de otra ventana) */

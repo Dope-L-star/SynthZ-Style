@@ -40,16 +40,26 @@ function expandToOld(card, href, color){
   a.onfinish = () => setTimeout(go, 60);
   setTimeout(go, 1500);
 }
-function openChat(){
+function openChat(from){
   if (leaving) return; leaving = true;
-  const q = $('#launchInp').value.trim(), params = new URLSearchParams({ from:'home' });
+  const box = from && from.nodeType ? from : $('#launch'), inp = box.id === 'heroAsk' ? $('#heroInp') : $('#launchInp');
+  const q = inp.value.trim(), params = new URLSearchParams({ from:'home' });
   if (launchAI === 'cmp') params.set('mode', 'cmp'); else params.set('ai', launchAI);
   if (q) params.set('q', q);
   try{ if (q) sessionStorage.setItem('synthz:q', JSON.stringify({ q, t:Date.now() })); }catch(e){}
   const p = byId(launchAI);
-  expandTo($('#launch'), 'chat.html?' + params.toString(), p ? p.c : '#b8c4ff');
+  expandTo(box, 'chat.html?' + params.toString(), p ? p.c : '#b8c4ff');
 }
-$('#launchGo').addEventListener('click', openChat);
+$('#launchGo').addEventListener('click', () => openChat());
+/* v2.6: en la portada misma se puede preguntar: el cuadro se agranda y SynthFlow abre con la pregunta ya enviada */
+const hask = $('#heroAsk');
+if (hask){
+  hask.addEventListener('submit', e => { e.preventDefault(); if (!$('#heroInp').value.trim()){ $('#heroInp').focus(); hask.classList.remove('nudge'); void hask.offsetWidth; hask.classList.add('nudge'); return; } openChat(hask); });
+  /* ideas que se van turnando en el cuadro vacío, para que se vea qué se puede pedir */
+  const ideas = ['Pregúntale lo que sea…', 'Explícame la fotosíntesis fácil', 'Dame 3 ideas para un regalo barato', 'Encuentra el error en mi código', 'Escríbeme un mensaje de cumpleaños'];
+  let ii = 0;
+  if (!reduce) setInterval(() => { const i = $('#heroInp'); if (document.hidden || i.value || document.activeElement === i) return; ii = (ii + 1) % ideas.length; i.placeholder = ideas[ii]; }, 3200);
+}
 
 /* pasos que se animan con el scroll */
 const hows = $$('.how-card');
