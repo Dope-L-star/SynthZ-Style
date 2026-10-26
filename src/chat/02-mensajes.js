@@ -98,7 +98,7 @@ function openCanvas(M, sibs, tab){
     + '<button type="button" class="cnv-b" data-cv="copy">' + CNV_ICO.copy + '<span>Copiar</span></button><button type="button" class="cnv-b" data-cv="down">' + CNV_ICO.down + '<span>Descargar</span></button><button type="button" class="cnv-b ic" data-cx aria-label="Cerrar">✕</button></div>'
     + (pv ? '<div class="cvp-tabs" role="tablist"><button type="button" role="tab" data-tab="code">Código</button><button type="button" role="tab" data-tab="prev">Vista previa</button></div>' : '')
     + '<div class="cvp-b"><pre class="cvp-code"><code></code></pre>' + (pv ? '<div class="cvp-prev" hidden></div>' : '') + '</div></div>';
-  const code = $('code', o); code.textContent = M.text;
+  const code = $('code', o); code.innerHTML = hlCode(M.text, M.ext);   /* v2.4 · colores en el código */
   document.body.appendChild(o); cvEl = o; document.body.classList.add('canvasing');
   requestAnimationFrame(() => o.classList.add('on'));
   const box = $('.cvp-prev', o);
@@ -110,7 +110,8 @@ function openCanvas(M, sibs, tab){
       else {
         /* la vista previa corre aislada: sin acceso a tu cuenta, tus chats ni esta página */
         const f = document.createElement('iframe'); f.title = 'Vista previa de ' + M.name; f.setAttribute('sandbox', 'allow-scripts allow-modals allow-forms allow-pointer-lock'); f.setAttribute('referrerpolicy', 'no-referrer');
-        f.srcdoc = previewDoc(M, sibs); box.appendChild(f);
+        box.appendChild(f);
+        if (M.ext === 'svg') f.srcdoc = previewDoc(M, sibs); else cvTools(o, box, M, sibs).load();   /* v2.4 · consola, tamaños de pantalla y volver a cargar */
       }
     }
   };
