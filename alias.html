@@ -69,6 +69,7 @@
     <h2 id="planTitle" class="h-plan" tabindex="-1" data-i18n="plan_titulo"></h2>
     <p class="goal"><b data-i18n="plan_obj"></b> <span id="planGoal"></span></p>
     <p id="editHint" class="hint" data-i18n="plan_edit_hint"></p>
+    <label class="syn-tog"><input type="checkbox" id="synthOn" checked><span><b data-i18n="syn_tog"></b><small data-i18n="syn_tog_d"></small></span></label>
     <div class="prog"><progress id="progress" max="1" value="0"></progress><span id="progTxt" class="hint"></span></div>
     <ol id="stepList" class="steps" data-i18n-aria="pasos_lista_aria"></ol>
 
@@ -109,6 +110,7 @@
     <section id="vResult" class="result glass" hidden aria-labelledby="resTitle">
       <h2 id="resTitle" tabindex="-1" data-i18n="res_titulo"></h2>
       <p id="resNote" class="hint" hidden></p>
+      <div id="resSynth" class="syn" hidden></div>
       <div id="resText" class="rtext"></div>
       <div id="resFiles" class="btns" hidden></div>
       <div id="resSrcWrap" hidden>
