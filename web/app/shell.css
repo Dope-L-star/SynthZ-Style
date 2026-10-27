@@ -49,3 +49,50 @@
 
 @media (max-width: 1100px) { .app { grid-template-columns: 220px minmax(0, 1fr); } .panel { display: none; } }
 @media (max-width: 720px) { .app { grid-template-columns: minmax(0, 1fr); } .riel { display: none; } .barra, .hilo { padding-inline: max(16px, env(safe-area-inset-left)); } }
+
+/* Fase 2: chat real */
+.boton:disabled { opacity: .5; cursor: not-allowed; }
+.boton.secundario { background: none; border: 1px solid var(--linea); color: var(--tinta); text-align: center; text-decoration: none; }
+.chip:disabled { opacity: .55; cursor: not-allowed; }
+.vacio, .tenue { color: var(--tenue); margin: 0; }
+.pequeno { font-size: .82rem; }
+.inicio { margin: auto; text-align: center; display: flex; flex-direction: column; gap: 10px; align-items: center; padding: 24px 0; }
+.inicio h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); }
+.ideas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; width: 100%; max-width: 560px; }
+.idea { text-align: left; background: var(--superficie-2); border: 1px solid var(--linea); border-radius: var(--radio); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+.idea:hover { border-color: var(--acento); }
+.idea span { color: var(--tenue); font-size: .85rem; }
+.texto p, .texto ul { margin: 0 0 .7em; }
+.texto ul { padding-left: 1.2em; }
+.texto code { font-family: var(--f-dato); font-size: .88em; background: var(--acento-suave); padding: .1em .35em; border-radius: 4px; }
+.bloque-codigo { border: 1px solid var(--linea); border-radius: 10px; overflow: hidden; margin: .4em 0 .9em; background: var(--superficie-2); }
+.bloque-cab { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; font-family: var(--f-dato); font-size: .72rem; color: var(--tenue); border-bottom: 1px solid var(--linea); }
+.bloque-cab button { background: none; border: 0; color: var(--acento); font-size: .72rem; }
+.bloque-codigo pre { margin: 0; padding: 12px; overflow-x: auto; }
+.bloque-codigo code { background: none; padding: 0; font-size: .85rem; line-height: 1.55; }
+.pensando { display: inline-flex; gap: 5px; padding: 8px 0; }
+.pensando i { width: 7px; height: 7px; border-radius: 50%; background: var(--acento); opacity: .35; animation: late 1s infinite ease-in-out; }
+.pensando i:nth-child(2) { animation-delay: .15s; } .pensando i:nth-child(3) { animation-delay: .3s; }
+@keyframes late { 50% { opacity: 1; transform: translateY(-2px); } }
+.nota a { color: var(--acento); font-weight: 600; margin-left: 4px; }
+.caja .fila { justify-content: space-between; }
+.caja .fila .boton { margin-left: auto; }
+.mini-ajustes { display: none; position: relative; margin-left: auto; }
+.mini-ajustes summary { list-style: none; cursor: pointer; }
+.mini-ajustes .flotante { position: absolute; right: 0; top: calc(100% + 6px); z-index: 5; width: 230px; background: var(--superficie); border: 1px solid var(--linea); border-radius: var(--radio); padding: 12px; box-shadow: var(--sombra); }
+@media (max-width: 1100px) { .mini-ajustes { display: block; } }
+@media (max-width: 720px) { .ideas { grid-template-columns: 1fr; } .caja .fila .tenue { display: none; } }
+
+/* Cuentas */
+.pagina-cuenta { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 32px max(16px, env(safe-area-inset-left)); text-align: center; }
+.pagina-cuenta h1 { font-size: clamp(1.4rem, 4vw, 2rem); max-width: 22ch; }
+.pagina-cuenta a { color: var(--acento); }
+.pagina-cuenta .marca { color: var(--tinta); text-decoration: none; }
+.tarjeta-cuenta { width: min(380px, 100%); display: flex; flex-direction: column; gap: 14px; text-align: left; background: var(--superficie); border: 1px solid var(--linea); border-radius: 16px; padding: 22px; box-shadow: var(--sombra); }
+.campo { display: flex; flex-direction: column; gap: 5px; font-size: .88rem; font-weight: 600; }
+.campo input { font: inherit; font-weight: 400; color: var(--tinta); background: var(--superficie-2); border: 1px solid var(--linea); border-radius: 10px; padding: 10px 12px; }
+.campo input:focus-visible { outline: 2px solid var(--acento); border-color: var(--acento); }
+.enlace { background: none; border: 0; color: var(--acento); text-align: center; font-size: .9rem; }
+.nota.ok { background: color-mix(in srgb, var(--ok) 16%, transparent); }
+.persona { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.persona span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
