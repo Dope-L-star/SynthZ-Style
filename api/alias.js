@@ -3,7 +3,7 @@
 /* POST /api/alias · A.L.I.A.S. (agente por pasos)
    { action:'plan', lang, goal }                  → { ok, plan:{ id, goal, steps:[{ id, title, tool, input }] } }
    { action:'step', lang, plan, stepId, prev, synth? } → { ok, step:{ id, status, output, sources, file, error, synth? } }
-   (v3.0: el último paso de razonar se hace con Síntesis de varias IAs; synth:false lo apaga. synth = { voices:[{ name, prov, text }], agree, diffs })
+   (v3.0: el último paso de razonar se hace con Síntesis: 4 IAs y se combinan en una; synth:false lo apaga. synth = { voices:[{ name, prov, text, aporte? }], fused })
    Errores: { ok:false, error } · límite diario: { ok:false, error, limit:true }
    Textos visibles: todos salen de alias-textos.json (raíz, para que viaje con la función) con t(). Los prompts del modelo no se ven y viven aquí. */
 import TX from '../alias-textos.json' with { type:'json' };
@@ -47,24 +47,43 @@ async function ask(req, me, lang, user, maxTokens){
   return r.text;
 }
 
-/* ---------- v3.0 · Síntesis: el paso final no lo escribe una sola IA.
-   1) Varias IAs de proveedores distintos hacen el mismo paso a la vez (voces independientes).
-   2) Una IA jueza las une: conserva lo que coincide, corrige errores, decide en lo que chocan y lo dice,
-      y califica cuánto coinciden (ACUERDO 0-100). La persona ve el acuerdo, en qué no coincidían y cada voz.
-   Si solo responde una IA, se entrega esa respuesta tal cual (sin inventar un acuerdo). Todo cabe en el tiempo de la función. */
-const VOICES = 3, VOICE_MS = 24000;
+/* ---------- v3.0 · Síntesis: el paso final no lo escribe una sola IA, lo escriben cuatro y se COMBINAN en una.
+   1) Hasta 4 IAs de proveedores distintos hacen el mismo paso a la vez, sin verse entre sí.
+   2) Una IA fusiona las 4 en UNA respuesta final con un criterio fijo (abajo): primero revisa en privado
+      cada afirmación (¿la dicen varias?, ¿choca con otra?, ¿se puede comprobar?), resuelve los choques,
+      rehace cálculos y código, se queda con los detalles útiles que solo trajo una, y quita el relleno.
+      Lo que la persona ve es la respuesta combinada; qué aportó cada IA queda plegado.
+   Si la fusión no llega a tiempo, se entrega la respuesta que más coincide con las demás (la de consenso), no la más larga.
+   Si solo responde una IA, se entrega esa tal cual. Todo cabe en los 60 s de la función. */
+const VOICES = 4, VOICE_MS = 20000, FUSE_MS = 33000;
 async function pickVoices(n){
   const cat = await models(false), out = [];
-  for (const p of ORDER){
+  for (const p of ORDER){                                         /* una por proveedor: errores distintos, no el mismo eco */
     if (out.length >= n) break;
     const m = (PROV[p].best || []).map(b => cat.list.find(x => x.prov === p && x.mid === b)).find(Boolean) || cat.list.find(x => x.prov === p);
     if (m) out.push(m);
   }
+  for (const m of cat.list){ if (out.length >= n) break; if (!out.includes(m)) out.push(m); }   /* pocos proveedores: otro modelo */
   return out;
 }
 const within = (pr, ms) => Promise.race([pr, new Promise((_, no) => setTimeout(() => no(Object.assign(new Error('lento'), { code:'slow' })), ms))]);
-const AGREE_RX = /\n?\s*ACUERDO\s*[:=]\s*(\d{1,3})\s*%?\s*$/i;
-const DIFF_RX = /\n?\s*DIFERENCIAS\s*:\s*([^\n]*)\s*$/i;
+/* consenso sin IA: la respuesta que comparte más palabras con las otras */
+const words = s => new Set(String(s).toLowerCase().match(/[\p{L}\p{N}]{4,}/gu) || []);
+function consensus(ok){
+  const W = ok.map(v => words(v.text));
+  const score = i => W.reduce((a, w, j) => { if (i === j || !w.size || !W[i].size) return a; let c = 0; W[i].forEach(x => { if (w.has(x)) c++; }); return a + c / Math.sqrt(W[i].size * w.size); }, 0);
+  return ok.map((v, i) => [v, score(i)]).sort((a, b) => b[1] - a[1])[0][0];
+}
+const FUSE_RULES = [
+  'Cómo decides (en este orden):',
+  '1. Correcto antes que todo: una afirmación que dicen varias respuestas pesa más, pero si es falsa la corriges aunque la digan todas.',
+  '2. Si chocan, comprueba tú: rehaz cálculos, fechas, unidades y código paso a paso, y quédate con lo que resiste. Si de verdad no se puede saber, dilo en una frase.',
+  '3. Completo: un detalle útil que trajo una sola respuesta se queda si es correcto y responde a la tarea.',
+  '4. Concreto: números, pasos y ejemplos ganan a frases generales. Nada de inventar fuentes, datos ni enlaces.',
+  '5. Sin relleno: sin saludos, sin repetir la pregunta, sin «como IA», sin repetir ideas.',
+  '6. Forma: la que mejor sirva a la tarea (lista, pasos, tabla o párrafos), en el idioma de la tarea.'
+].join('\n');
+const TAG = (s, t) => { const m = new RegExp('<' + t + '>([\\s\\S]*?)(?:</' + t + '>|$)', 'i').exec(s); return m ? m[1].trim() : ''; };
 async function synthesize(req, me, lang, task, maxTokens){
   const who = { who:'al:' + me.sub, ipKey:'ip:' + sha('ip:' + ipOf(req)).slice(0, 16), system:sys(lang), stream:false };
   const vs = await pickVoices(VOICES);
@@ -72,19 +91,22 @@ async function synthesize(req, me, lang, task, maxTokens){
   const lim = got.find(g => g.status === 'rejected' && g.reason && (g.reason.code === 'sz_limit' || g.reason.code === 'sz_limit_ip'));
   const ok = got.map((g, i) => g.status === 'fulfilled' && g.value && String(g.value.text || '').trim() ? { name:(g.value.meta && g.value.meta.name) || vs[i].name, prov:(g.value.meta && g.value.meta.provName) || vs[i].prov, text:clip(g.value.text, 6000) } : null).filter(Boolean);
   if (!ok.length){ if (lim) throw lim.reason; return null; }                       /* nadie respondió: el paso normal lo intenta */
-  if (ok.length === 1) return { output:ok[0].text, synth:{ voices:ok, agree:null, diffs:'' } };
-  const merge = 'Tarea original:\n' + task + '\n\nEstas son ' + ok.length + ' respuestas independientes de distintas IA:\n'
+  if (ok.length === 1) return { output:ok[0].text, synth:{ voices:ok, fused:false } };
+  const merge = 'Tarea original:\n' + task + '\n\nEstas son ' + ok.length + ' respuestas independientes de distintas IA a la misma tarea:\n'
     + datos(ok.map((v, i) => '--- Respuesta ' + (i + 1) + ' ---\n' + v.text).join('\n\n'))
-    + '\n\nEscribe UNA sola respuesta final para la tarea, mejor que cada una por separado: clara, correcta y completa. Conserva lo que coincide, corrige los errores, '
-    + 'y si se contradicen quédate con lo más probable. No menciones las respuestas numeradas ni que hubo varias IA. '
-    + 'Al final agrega exactamente dos líneas aparte: «DIFERENCIAS: …» (en una frase, en qué no coincidían; o «ninguna») y «ACUERDO: N» (N de 0 a 100: cuánto coincidían entre sí).';
+    + '\n\nCombínalas en UNA sola respuesta final, mejor que cualquiera de ellas.\n' + FUSE_RULES
+    + '\n\nEscribe exactamente tres bloques:\n<revision>tu revisión privada, máximo 120 palabras: qué coincide, qué choca y cómo lo resolviste</revision>\n'
+    + '<respuesta>la respuesta final para la persona; no menciones respuestas numeradas, ni que hubo varias IA, ni esta revisión</respuesta>\n'
+    + '<aportes>una línea por respuesta, «N: lo que aportó a la final» en pocas palabras (o «N: nada nuevo»)</aportes>';
   let txt;
-  try{ txt = (await within(chat(Object.assign({ messages:[{ role:'user', content:merge }], model:'sz:auto', maxTokens }, who)), 26000)).text; }
-  catch(e){ if (e.code === 'sz_limit' || e.code === 'sz_limit_ip') throw e; const best = ok.slice().sort((a, b) => b.text.length - a.text.length)[0]; return { output:best.text, synth:{ voices:ok, agree:null, diffs:'' } }; }
-  let s = String(txt || '').trim(), agree = null, diffs = '';
-  const a = AGREE_RX.exec(s); if (a){ agree = Math.min(100, +a[1]); s = s.slice(0, a.index).trimEnd(); }
-  const d = DIFF_RX.exec(s); if (d){ diffs = str(d[1], 300); s = s.slice(0, d.index).trimEnd(); if (/^ningun|^none/i.test(diffs)) diffs = ''; }
-  return { output:s || ok[0].text, synth:{ voices:ok, agree, diffs } };
+  try{ txt = (await within(chat(Object.assign({ messages:[{ role:'user', content:merge }], model:'sz:auto', maxTokens:maxTokens + 500 }, who)), FUSE_MS)).text; }
+  catch(e){ if (e.code === 'sz_limit' || e.code === 'sz_limit_ip') throw e; return { output:consensus(ok).text, synth:{ voices:ok, fused:false } }; }
+  const raw = String(txt || '');
+  let out = TAG(raw, 'respuesta');
+  if (!out) out = raw.replace(/<revision>[\s\S]*?<\/revision>/i, '').replace(/<aportes>[\s\S]*$/i, '').replace(/<\/?respuesta>/gi, '').trim();
+  if (!out) return { output:consensus(ok).text, synth:{ voices:ok, fused:false } };
+  TAG(raw, 'aportes').split('\n').forEach(l => { const m = /^\s*(\d)\s*[:.\-–)]\s*(.+)$/.exec(l); if (m && ok[+m[1] - 1]) ok[+m[1] - 1].aporte = str(m[2], 200); });
+  return { output:out, synth:{ voices:ok, fused:true } };
 }
 
 /* ---------- límites: contador por persona y por día + contador global; se devuelve si el paso falla ---------- */
