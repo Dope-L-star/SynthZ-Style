@@ -79,7 +79,8 @@ document.addEventListener('click', e => {
 }, true);
 
 /* «Qué hay de nuevo»: SynthonIA te lo cuenta una vez por versión (y está en el menú cuando quieras) */
-const WHATSNEW = { v:'2.9', items:[
+const WHATSNEW = { v:'2.9.1', items:[
+  ['chat', 'Sintéticos (en inglés, Synthetics): las páginas, juegos y dibujos que crea la IA corren en su propio espacio aparte, como en Claude. Más seguros y con todo funcionando.'],
   ['synthonia', '¡Me renové! Ahora soy mi carita con mis manitas flotando cerca: saludo, señalo, aplaudo y celebro contigo. Tócame y verás.'],
   ['chat', 'El cielo de SynthFlow es en vivo: cuando ya estás conversando, se calma y se oscurece para que leas mejor.'],
   ['ajustes', 'Las ventanas (Ajustes, Tu límite de hoy, Conectar IA) ahora son de vidrio: ves el cielo a través de ellas.'],

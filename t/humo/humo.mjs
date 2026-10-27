@@ -37,12 +37,17 @@ check('imagen para compartir existe', fs.existsSync(path.join(ROOT, 'media/og-sy
 if (process.argv[2]) check('dist/ no publica piezas, pruebas ni notas', !['src', 't', 'api', 'INFORME.md', 'build.mjs', 'package.json'].some(f => fs.existsSync(path.join(ROOT, f))));
 
 /* ---------- páginas en el navegador ---------- */
+/* las mismas reglas de seguridad (CSP) que pone Vercel según vercel.json: la de la página y la de /sintetico.html */
+const VJ = JSON.parse(fs.readFileSync(path.join(REPO, 'vercel.json'), 'utf8'));
+const cspOf = src => ((VJ.headers.find(h => h.source === src) || { headers:[] }).headers.find(h => h.key === 'Content-Security-Policy') || {}).value || '';
+const CSP_PAGE = cspOf('/((?!sintetico\\.html$).*)').replace(/;\s*upgrade-insecure-requests/, ''), CSP_SYN = cspOf('/sintetico.html');
+check('vercel.json trae la CSP de la página y la de los Sintéticos', /script-src/.test(CSP_PAGE) && /frame-ancestors 'self'/.test(CSP_SYN));
 const server = http.createServer((req, res) => {
   const u = decodeURIComponent(req.url.split('?')[0]);
   if (u.startsWith('/api/')){ res.writeHead(200, { 'content-type':'application/json' }); res.end('{}'); return; }
   const f = path.join(ROOT, u === '/' ? 'index.html' : u);
   if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()){ res.writeHead(404); res.end(); return; }
-  res.writeHead(200, { 'content-type':TYPES[path.extname(f)] || 'application/octet-stream' }); fs.createReadStream(f).pipe(res);
+  res.writeHead(200, { 'content-type':TYPES[path.extname(f)] || 'application/octet-stream', 'content-security-policy':u === '/sintetico.html' ? CSP_SYN : CSP_PAGE }); fs.createReadStream(f).pipe(res);
 });
 await new Promise(r => server.listen(0, '127.0.0.1', r));
 const BASE = 'http://127.0.0.1:' + server.address().port;
@@ -57,6 +62,7 @@ async function open(file, W, opts = {}){
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   await page.route(u => !u.href.startsWith(BASE), r => r.abort());   /* nada sale a internet (Puter, fuentes, Google) */
+  await page.addInitScript(() => { window.__csp = []; document.addEventListener('securitypolicyviolation', e => window.__csp.push(e.violatedDirective + ' ' + (e.blockedURI || ''))); });
   await page.addInitScript(() => { try{ localStorage.setItem('synthz:visited', '1'); localStorage.setItem('synthz:tour', '1'); sessionStorage.setItem('synthz:intro', '1'); }catch(e){} });
   await page.goto(BASE + '/' + file); await page.waitForTimeout(3500);
   return { page, errors };
@@ -68,6 +74,8 @@ for (const W of [390, 1280]){
     try{
       const { page, errors } = await open(file, W);
       check(tag + ' abre sin errores de JavaScript', !errors.length, errors.join(' | '));
+      const csp = await page.evaluate(() => window.__csp);
+      check(tag + ' la CSP no bloquea nada de la página', !csp.length, csp.join(' | '));
       const m = await page.evaluate(() => {
         const q = s => { const e = document.querySelector(s); return e ? (e.getAttribute('content') || e.getAttribute('href') || '') : ''; };
         return { title:document.title, desc:q('meta[name=description]'), canon:q('link[rel=canonical]'), img:q('meta[property="og:image"]'), card:q('meta[name="twitter:card"]'), robots:q('meta[name=robots]'),
@@ -85,6 +93,26 @@ for (const W of [390, 1280]){
     }catch(e){ ko(tag, e.message); }
   }
 }
+
+/* Sintéticos: lo que crea la IA corre en /sintetico.html, con sus propias reglas, aunque la página tenga CSP */
+try{
+  const { page, errors } = await open('chat.html', 1280);
+  const r = await page.evaluate(() => new Promise(res => {
+    const html = '<!doctype html><style>b{color:red}</style><b id=x>hola</b><script>parent.postMessage({ szt:eval("1+1"), red:getComputedStyle(document.getElementById("x")).color }, "*")<\/script>';
+    const f = document.createElement('iframe'); f.setAttribute('sandbox', 'allow-scripts'); document.body.appendChild(f);
+    const t = setTimeout(() => res({ timeout:true }), 5000);
+    addEventListener('message', e => {
+      if (e.source !== f.contentWindow || !e.data) return;
+      if (e.data.szs === 'ready') f.contentWindow.postMessage({ szs:'doc', html }, '*');
+      if ('szt' in e.data){ clearTimeout(t); res(e.data); }
+    });
+    f.src = '/sintetico.html?k=humo';
+  }));
+  check('un Sintético corre su propio código (scripts, eval y estilos) con la CSP puesta', r.szt === 2 && /255, 0, 0/.test(r.red || ''), JSON.stringify(r) + ' ' + errors.join(' | '));
+  const top = await page.evaluate(async () => { const r = await fetch('/sintetico.html'); return r.headers.get('content-security-policy') || ''; });
+  check('/sintetico.html va aislado aunque lo abran solo (sandbox en su CSP)', /sandbox allow-scripts/.test(top) && !/allow-same-origin/.test(top), top);
+  await page.close();
+}catch(e){ ko('Sintéticos', e.message); }
 
 /* accesibilidad: las preferencias del sistema y el teclado */
 try{

@@ -57,7 +57,7 @@ const isBlocked = e => !!(e && (e.error === 'popup_blocked' || e.code === 'popup
 let gsiP = null, gsiDone = null;
 function loadGsi(){ return gsiP || (gsiP = new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true; s.onload = () => ok(window.google); s.onerror = () => { gsiP = null; no(new Error('gsi')); }; document.head.appendChild(s); })); }
 async function signedIn(d){
-  setSess(d.token); ACC.user = d.user; ACC.profile = d.profile || null; ACC.ready = false;
+  setSess(d.token, d.cookie); ACC.user = d.user; ACC.profile = d.profile || null; ACC.ready = false;
   await accStart();
   try{ dispatchEvent(new Event('synthz-acc')); }catch(e){}
   toast(d.isNew ? '¡Bienvenido a ' + BRAND() + ', ' + accName() + '!' : '¡Hola de nuevo, ' + accName() + '!');
@@ -163,7 +163,7 @@ function authBox(box, done, onBlocked, start){
       try{
         const d = await api('auth', { method:'POST', body:bodyOut, keep:true });
         const finish = async () => { await signedIn(d); if (done) done(d.isNew ? 'new' : 'in'); };
-        if (d.recovery){ setSess(d.token); recoveryPanel(box, d.recovery, user, () => finish(), R); }
+        if (d.recovery){ setSess(d.token, d.cookie); recoveryPanel(box, d.recovery, user, () => finish(), R); }
         else await finish();
       }catch(x){
         go.disabled = false; go.textContent = label;

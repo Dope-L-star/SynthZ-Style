@@ -206,8 +206,16 @@ export async function newSession(sub){
   return token;
 }
 export function bearer(req){ const a = req.headers.get('authorization') || ''; return a.startsWith('Bearer ') ? a.slice(7).trim() : ''; }
+/* v2.9.1 · la sesión también viaja en una cookie HttpOnly (el JavaScript de la página no la puede leer, así un XSS no se roba la cuenta).
+   SameSite=Strict: otra página no puede hacer pedidos con tu sesión. El «Bearer» sigue sirviendo mientras se pasan los dispositivos viejos */
+const COOKIE = '__Host-szs';
+export const sessCookie = token => COOKIE + '=' + (token || '') + '; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=' + (token ? SESS_TTL : 0);
+export const withCookie = (res, token) => { res.headers.append('set-cookie', sessCookie(token)); return res; };
+const cookieTok = req => { const m = /(?:^|;\s*)__Host-szs=([A-Za-z0-9_-]{21,})/.exec(req.headers.get('cookie') || ''); return m ? m[1] : ''; };
+/* un Bearer corto (la marca «c…» que guarda la página) no es una sesión: se usa la cookie */
+export const sessTok = req => { const b = bearer(req); return b.length > 20 ? b : cookieTok(req); };
 export async function auth(req, optional){
-  const t = bearer(req);
+  const t = sessTok(req);
   const sub = t && t.length > 20 ? await redis('GET', 's:' + sha(t)) : null;
   if (!sub){ if (optional) return null; throw Object.assign(new Error('Tu sesión cerró. Vuelve a entrar.'), { status:401 }); }
   const user = await getJ('u:' + sub);
@@ -215,7 +223,7 @@ export async function auth(req, optional){
   if (user.blocked){ if (optional) return null; throw Object.assign(new Error('Esta cuenta está suspendida. Escríbele al equipo de SynthZ.'), { status:403 }); }
   return user;
 }
-export async function endSession(req){ const t = bearer(req); if (!t) return; const h = sha(t), sub = await redis('GET', 's:' + h); await pipe([['DEL', 's:' + h]].concat(sub ? [['SREM', 'ss:' + sub, h]] : [])); }
+export async function endSession(req){ const t = sessTok(req); if (!t) return; const h = sha(t), sub = await redis('GET', 's:' + h); await pipe([['DEL', 's:' + h]].concat(sub ? [['SREM', 'ss:' + sub, h]] : [])); }
 
 /* ---------- SynXCoin's en la nube: una fila por dispositivo (hash lg:<sub>) ----------
    Cada dispositivo sube SOLO su fila (y la fila «legacy» de versiones viejas). El servidor junta cada fila con la que

@@ -2342,3 +2342,6 @@ body.pjon .tabbar{position:relative;z-index:31}
 }
 html.noanim .pjv,html.noanim .pjc,html.noanim .pj-menu{animation:none}
 @media (prefers-reduced-motion:reduce){.pjv,.pjc,.pj-menu{animation:none}}
+
+/* v2.9.1 · «Sintéticos»: la etiquetita en el lienzo de lo que la IA crea y se puede ver en vivo */
+.cvp-syn{display:inline-block;padding:1px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:linear-gradient(120deg,rgba(141,76,255,.28),rgba(255,61,154,.22));color:#fff;font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;vertical-align:1px}

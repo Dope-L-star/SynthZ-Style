@@ -600,13 +600,26 @@ function previewDoc(M, sibs){
   });
   return h;
 }
+/* v2.9.1 · «Sintéticos» (Synthetics): la vista previa ya no es un srcdoc (heredaba las reglas de seguridad de SynthFlow y se rompía con la CSP).
+   Ahora carga /sintetico.html, una página aparte con reglas abiertas, y le pasa el código por postMessage. Igual que los artefactos de Claude. */
+const SYN_URL = '/sintetico.html';
+function synLoad(f, html){
+  const k = 's' + Math.random().toString(36).slice(2, 10); f._synK = k;
+  const on = e => {
+    if (f._synK !== k || !f.isConnected){ removeEventListener('message', on); return; }
+    if (e.source !== f.contentWindow || !e.data || e.data.szs !== 'ready') return;
+    removeEventListener('message', on); f.contentWindow.postMessage({ szs:'doc', html }, '*');
+  };
+  addEventListener('message', on);
+  f.src = SYN_URL + '?k=' + k;
+}
 /* el lienzo: a la derecha en el computador, pantalla completa en el celular */
 let cvEl = null;
 function openCanvas(M, sibs, tab){
   closeCanvas(true);
   const pv = canPreview(M);
   const o = document.createElement('div'); o.className = 'cvp'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', M.name);
-  o.innerHTML = '<div class="cvp-in"><div class="cvp-h">' + fcIc(M.ext) + '<span class="cnv-t"><b>' + esc(M.name) + '</b><small>' + esc(M.label) + ' · ' + M.lines + ' líneas</small></span>'
+  o.innerHTML = '<div class="cvp-in"><div class="cvp-h">' + fcIc(M.ext) + '<span class="cnv-t"><b>' + esc(M.name) + '</b><small>' + (pv ? '<span class="cvp-syn" title="Sintético (en inglés, Synthetic): corre aparte y aislado, como en Claude">Sintético</span> · ' : '') + esc(M.label) + ' · ' + M.lines + ' líneas</small></span>'
     + '<button type="button" class="cnv-b" data-cv="copy">' + CNV_ICO.copy + '<span>Copiar</span></button><button type="button" class="cnv-b" data-cv="down">' + CNV_ICO.down + '<span>Descargar</span></button><button type="button" class="cnv-b ic" data-cx aria-label="Cerrar">✕</button></div>'
     + (pv ? '<div class="cvp-tabs" role="tablist"><button type="button" role="tab" data-tab="code">Código</button><button type="button" role="tab" data-tab="prev">Vista previa</button></div>' : '')
     + '<div class="cvp-b"><pre class="cvp-code"><code></code></pre>' + (pv ? '<div class="cvp-prev" hidden></div>' : '') + '</div></div>';
@@ -621,9 +634,9 @@ function openCanvas(M, sibs, tab){
       if (M.ext === 'md'){ const d = document.createElement('div'); d.className = 'cvp-md'; d.innerHTML = md(M.text); box.appendChild(d); }
       else {
         /* la vista previa corre aislada: sin acceso a tu cuenta, tus chats ni esta página */
-        const f = document.createElement('iframe'); f.title = 'Vista previa de ' + M.name; f.setAttribute('sandbox', 'allow-scripts allow-modals allow-forms allow-pointer-lock'); f.setAttribute('referrerpolicy', 'no-referrer');
+        const f = document.createElement('iframe'); f.title = 'Sintético: vista previa de ' + M.name; f.setAttribute('sandbox', 'allow-scripts allow-modals allow-forms allow-pointer-lock'); f.setAttribute('referrerpolicy', 'no-referrer');
         box.appendChild(f);
-        if (M.ext === 'svg') f.srcdoc = previewDoc(M, sibs); else cvTools(o, box, M, sibs).load();   /* v2.4 · consola, tamaños de pantalla y volver a cargar */
+        if (M.ext === 'svg') synLoad(f, previewDoc(M, sibs)); else cvTools(o, box, M, sibs).load();   /* v2.4 · consola, tamaños de pantalla y volver a cargar */
       }
     }
   };
@@ -788,8 +801,8 @@ function runProbe(doc, w, h, act){
     };
     addEventListener('message', on);
     t = setTimeout(end, act ? 9000 : 6500);
-    f.srcdoc = probeDoc(doc, id, act);
     document.body.appendChild(f);
+    synLoad(f, probeDoc(doc, id, act));
   });
 }
 /* ---------- revisión de cada archivo ---------- */
@@ -977,7 +990,7 @@ function cvTools(o, box, M, sibs){
     const f = $('iframe', box); if (!f) return;
     id = 'v' + Math.random().toString(36).slice(2, 10); errs = 0; lines = 0;
     con.innerHTML = '<p class="cvt-empty">Aquí sale lo que la página escribe en la consola y sus errores.</p>'; $('.cvt-n', bar).textContent = '0'; bar.classList.remove('has-err');
-    f.srcdoc = probeDoc(previewDoc(M, sibs), id, false);
+    synLoad(f, probeDoc(previewDoc(M, sibs), id, false));
   };
   bar.addEventListener('click', e => {
     const s = e.target.closest('.cvt-sz [data-sz]');

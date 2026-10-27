@@ -10,7 +10,7 @@
      { mode:'unlink', email }              → quita un Google vinculado (con sesión)
      { mode:'addpass', user, pass }        → ponle usuario y contraseña a una cuenta de Google (con sesión)
    DELETE /api/auth                         → cierra esta sesión · DELETE /api/auth?all=1 → en todos tus dispositivos */
-import { route, body, json, fail, verifyGoogle, getJ, setJ, redis, rid, newSession, endSession, endAllSessions, auth, limit, cleanEmail, str,
+import { route, body, json, fail, verifyGoogle, getJ, setJ, redis, rid, newSession, endSession, endAllSessions, auth, limit, cleanEmail, str, withCookie, sessTok,
          hasGoogle, hashPass, checkPass, passNeedsUpgrade, cleanUser, okUser, recoveryCode, codeHash, sameHash, SEED_ROLES, setupOk,
          sbAccount, sbUser, sbGoogleOn, sbFindByUid, ipOf } from './_lib.js';
 
@@ -39,7 +39,7 @@ async function signedIn(sub, isNew, extra){
   const token = await newSession(sub);
   const [user, profile] = await Promise.all([getJ('u:' + sub), getJ('p:' + sub)]);
   await sbAccount(user);
-  return json(Object.assign({ token, user, profile, isNew }, extra || {}));
+  return withCookie(json(Object.assign({ token, user, profile, isNew, cookie:true }, extra || {})), token);
 }
 
 export default route({
@@ -111,6 +111,9 @@ export default route({
       const code = recoveryCode(); pw.rc = codeHash(code); await setJ('pw:' + me.sub, pw);
       return json({ ok:true, recovery:code });
     }
+
+    /* v2.9.1 · un dispositivo que entró antes de la cookie la pide una vez, con su sesión de siempre */
+    if (mode === 'cookie'){ await auth(req); return withCookie(json({ ok:true }), sessTok(req)); }
 
     if (mode === 'claim'){
       const me = await auth(req);
@@ -240,7 +243,7 @@ export default route({
     return fail(400, 'Acción desconocida.');
   },
   async DELETE(req){
-    if (new URL(req.url).searchParams.get('all') === '1'){ const me = await auth(req); await endAllSessions(me.sub); return json({ ok:true, all:true }); }
-    await endSession(req); return json({ ok:true });
+    if (new URL(req.url).searchParams.get('all') === '1'){ const me = await auth(req); await endAllSessions(me.sub); return withCookie(json({ ok:true, all:true }), ''); }
+    await endSession(req); return withCookie(json({ ok:true }), '');
   }
 });

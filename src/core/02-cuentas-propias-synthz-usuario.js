@@ -5,7 +5,14 @@ const hashS = s => { let h = 5381; for (let i = 0; i < s.length; i++) h = (h * 3
 var accSent = {}, accT = 0, accDelSent = new Set();
 let SESS = ''; try{ SESS = localStorage.getItem('synthz:sess') || ''; }catch(e){}
 if (SESS) document.documentElement.classList.add('signed');   /* con sesión: nada de «entra a tu cuenta» */
-function setSess(t){ SESS = t || ''; try{ if (SESS) localStorage.setItem('synthz:sess', SESS); else localStorage.removeItem('synthz:sess'); }catch(e){} }
+/* v2.9.1 · la sesión de verdad vive en una cookie HttpOnly que esta página no puede leer (así un XSS no se roba la cuenta).
+   En el navegador solo queda una marca corta «c…» (distinta en cada entrada, para que las otras pestañas noten el cambio).
+   cookie = el servidor dijo que la dejó; si no (servidor viejo), se guarda el token como antes */
+const sessMark = () => 'c' + Math.random().toString(36).slice(2, 10);
+function setSess(t, cookie){ SESS = t ? (cookie ? sessMark() : t) : ''; try{ if (SESS) localStorage.setItem('synthz:sess', SESS); else localStorage.removeItem('synthz:sess'); }catch(e){} }
+/* dispositivos que entraron antes: piden su cookie una vez con el token de siempre y luego lo borran del navegador */
+const sessMove = SESS.length > 20 ? fetch('/api/auth', { method:'POST', headers:{ 'content-type':'application/json', authorization:'Bearer ' + SESS }, body:'{"mode":"cookie"}' })
+  .then(r => { if (r.ok) setSess(SESS, true); }).catch(() => {}) : Promise.resolve();
 const accFire = k => accHooks.forEach(f => { try{ f(k); }catch(_){} });
 async function api(path, o = {}){
   const h = { 'content-type':'application/json' }; if (SESS) h.authorization = 'Bearer ' + SESS;
@@ -215,6 +222,7 @@ function wipeAccountData(){
 async function accStart(){
   if (ACC.ready || ACC.busy || !SESS) return;
   try{ await chatsReady; }catch(e){}
+  await sessMove;
   ACC.busy = true; accFire('start');
   try{
     const d = await api('me'); ACC.user = d.user; ACC.profile = d.profile || null; ACC.space = d.space || null;

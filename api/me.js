@@ -1,7 +1,7 @@
 /* GET    /api/me                     → tu usuario, perfil, preferencias y la lista de chats guardados
    PUT    /api/me  { profile?, prefs?, key? } → guarda perfil / preferencias / tu llave (cifrada)
    DELETE /api/me                     → borra tu cuenta y todo lo guardado */
-import { route, body, json, fail, auth, getJ, setJ, redis, pipe, enc, dec, needsReenc, str, limit, getLedger, putLedger, saveChats, cloudUsed, QUOTA, checkPass, roleOf, SEED_ROLES, sbProfile, sbPrefs, sbAch, sbDelete, sbAccount } from './_lib.js';
+import { route, body, json, fail, auth, getJ, setJ, redis, pipe, enc, dec, needsReenc, str, limit, getLedger, putLedger, saveChats, cloudUsed, QUOTA, checkPass, roleOf, SEED_ROLES, sbProfile, sbPrefs, sbAch, sbDelete, sbAccount, withCookie } from './_lib.js';
 
 const COLORS = ['aurora', 'azul', 'violeta', 'coral', 'menta', 'oro', 'rosa', 'noche'];
 function cleanProfile(p, prev){
@@ -57,6 +57,6 @@ export default route({
     }
     await sbDelete(u.sub);
     await pipe([].concat((sess || []).map(h => ['DEL', 's:' + h]), [['DEL', 'ach:' + u.sub]], [['DEL', 'ss:' + u.sub], ['DEL', 'u:' + u.sub], ['DEL', 'p:' + u.sub], ['DEL', 'pr:' + u.sub], ['DEL', 'c:' + u.sub], ['DEL', 'k:' + u.sub], ['DEL', 'ut:' + u.sub], ['DEL', 'lg:' + u.sub], ['DEL', 'cz:' + u.sub]], [['DEL', 'pw:' + u.sub]], u.email ? [['DEL', 'e:' + u.email]] : [], (Array.isArray(u.links) ? u.links : []).filter(x => x && x.email).map(x => ['DEL', 'e:' + x.email]), u.username ? [['DEL', 'n:' + u.username]] : []));
-    return json({ ok:true });
+    return withCookie(json({ ok:true }), '');
   }
 });

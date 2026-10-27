@@ -102,8 +102,8 @@ function runProbe(doc, w, h, act){
     };
     addEventListener('message', on);
     t = setTimeout(end, act ? 9000 : 6500);
-    f.srcdoc = probeDoc(doc, id, act);
     document.body.appendChild(f);
+    synLoad(f, probeDoc(doc, id, act));
   });
 }
 /* ---------- revisión de cada archivo ---------- */
@@ -291,7 +291,7 @@ function cvTools(o, box, M, sibs){
     const f = $('iframe', box); if (!f) return;
     id = 'v' + Math.random().toString(36).slice(2, 10); errs = 0; lines = 0;
     con.innerHTML = '<p class="cvt-empty">Aquí sale lo que la página escribe en la consola y sus errores.</p>'; $('.cvt-n', bar).textContent = '0'; bar.classList.remove('has-err');
-    f.srcdoc = probeDoc(previewDoc(M, sibs), id, false);
+    synLoad(f, probeDoc(previewDoc(M, sibs), id, false));
   };
   bar.addEventListener('click', e => {
     const s = e.target.closest('.cvt-sz [data-sz]');

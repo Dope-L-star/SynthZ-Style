@@ -235,7 +235,14 @@ const hashS = s => { let h = 5381; for (let i = 0; i < s.length; i++) h = (h * 3
 var accSent = {}, accT = 0, accDelSent = new Set();
 let SESS = ''; try{ SESS = localStorage.getItem('synthz:sess') || ''; }catch(e){}
 if (SESS) document.documentElement.classList.add('signed');   /* con sesión: nada de «entra a tu cuenta» */
-function setSess(t){ SESS = t || ''; try{ if (SESS) localStorage.setItem('synthz:sess', SESS); else localStorage.removeItem('synthz:sess'); }catch(e){} }
+/* v2.9.1 · la sesión de verdad vive en una cookie HttpOnly que esta página no puede leer (así un XSS no se roba la cuenta).
+   En el navegador solo queda una marca corta «c…» (distinta en cada entrada, para que las otras pestañas noten el cambio).
+   cookie = el servidor dijo que la dejó; si no (servidor viejo), se guarda el token como antes */
+const sessMark = () => 'c' + Math.random().toString(36).slice(2, 10);
+function setSess(t, cookie){ SESS = t ? (cookie ? sessMark() : t) : ''; try{ if (SESS) localStorage.setItem('synthz:sess', SESS); else localStorage.removeItem('synthz:sess'); }catch(e){} }
+/* dispositivos que entraron antes: piden su cookie una vez con el token de siempre y luego lo borran del navegador */
+const sessMove = SESS.length > 20 ? fetch('/api/auth', { method:'POST', headers:{ 'content-type':'application/json', authorization:'Bearer ' + SESS }, body:'{"mode":"cookie"}' })
+  .then(r => { if (r.ok) setSess(SESS, true); }).catch(() => {}) : Promise.resolve();
 const accFire = k => accHooks.forEach(f => { try{ f(k); }catch(_){} });
 async function api(path, o = {}){
   const h = { 'content-type':'application/json' }; if (SESS) h.authorization = 'Bearer ' + SESS;
@@ -445,6 +452,7 @@ function wipeAccountData(){
 async function accStart(){
   if (ACC.ready || ACC.busy || !SESS) return;
   try{ await chatsReady; }catch(e){}
+  await sessMove;
   ACC.busy = true; accFire('start');
   try{
     const d = await api('me'); ACC.user = d.user; ACC.profile = d.profile || null; ACC.space = d.space || null;
@@ -1859,7 +1867,7 @@ const isBlocked = e => !!(e && (e.error === 'popup_blocked' || e.code === 'popup
 let gsiP = null, gsiDone = null;
 function loadGsi(){ return gsiP || (gsiP = new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true; s.onload = () => ok(window.google); s.onerror = () => { gsiP = null; no(new Error('gsi')); }; document.head.appendChild(s); })); }
 async function signedIn(d){
-  setSess(d.token); ACC.user = d.user; ACC.profile = d.profile || null; ACC.ready = false;
+  setSess(d.token, d.cookie); ACC.user = d.user; ACC.profile = d.profile || null; ACC.ready = false;
   await accStart();
   try{ dispatchEvent(new Event('synthz-acc')); }catch(e){}
   toast(d.isNew ? '¡Bienvenido a ' + BRAND() + ', ' + accName() + '!' : '¡Hola de nuevo, ' + accName() + '!');
@@ -1965,7 +1973,7 @@ function authBox(box, done, onBlocked, start){
       try{
         const d = await api('auth', { method:'POST', body:bodyOut, keep:true });
         const finish = async () => { await signedIn(d); if (done) done(d.isNew ? 'new' : 'in'); };
-        if (d.recovery){ setSess(d.token); recoveryPanel(box, d.recovery, user, () => finish(), R); }
+        if (d.recovery){ setSess(d.token, d.cookie); recoveryPanel(box, d.recovery, user, () => finish(), R); }
         else await finish();
       }catch(x){
         go.disabled = false; go.textContent = label;
@@ -2075,7 +2083,7 @@ function securityModal(){
       if (k === 'change' && pass.length < 8){ err.textContent = 'La contraseña nueva debe tener al menos 8 caracteres.'; f.elements.pass.focus(); return; }
       try{
         const d = await api('auth', { method:'POST', keep:true, body: k === 'change' ? { mode:'change', old, pass } : { mode:'code', pass:old } });
-        if (k === 'change'){ setSess(d.token); toast('Contraseña cambiada. Cerramos tu sesión en los demás dispositivos.'); close(); }
+        if (k === 'change'){ setSess(d.token, d.cookie); toast('Contraseña cambiada. Cerramos tu sesión en los demás dispositivos.'); close(); }
         else recoveryPanel(box, d.recovery, (ACC.user && ACC.user.username) || '', () => { toast('Listo: el código anterior ya no sirve.'); close(); }, true);
       }catch(x){ err.textContent = x.message || 'Algo falló.'; }
     };
@@ -4026,7 +4034,8 @@ document.addEventListener('click', e => {
 }, true);
 
 /* «Qué hay de nuevo»: SynthonIA te lo cuenta una vez por versión (y está en el menú cuando quieras) */
-const WHATSNEW = { v:'2.9', items:[
+const WHATSNEW = { v:'2.9.1', items:[
+  ['chat', 'Sintéticos (en inglés, Synthetics): las páginas, juegos y dibujos que crea la IA corren en su propio espacio aparte, como en Claude. Más seguros y con todo funcionando.'],
   ['synthonia', '¡Me renové! Ahora soy mi carita con mis manitas flotando cerca: saludo, señalo, aplaudo y celebro contigo. Tócame y verás.'],
   ['chat', 'El cielo de SynthFlow es en vivo: cuando ya estás conversando, se calma y se oscurece para que leas mejor.'],
   ['ajustes', 'Las ventanas (Ajustes, Tu límite de hoy, Conectar IA) ahora son de vidrio: ves el cielo a través de ellas.'],

@@ -77,7 +77,7 @@ function securityModal(){
       if (k === 'change' && pass.length < 8){ err.textContent = 'La contraseña nueva debe tener al menos 8 caracteres.'; f.elements.pass.focus(); return; }
       try{
         const d = await api('auth', { method:'POST', keep:true, body: k === 'change' ? { mode:'change', old, pass } : { mode:'code', pass:old } });
-        if (k === 'change'){ setSess(d.token); toast('Contraseña cambiada. Cerramos tu sesión en los demás dispositivos.'); close(); }
+        if (k === 'change'){ setSess(d.token, d.cookie); toast('Contraseña cambiada. Cerramos tu sesión en los demás dispositivos.'); close(); }
         else recoveryPanel(box, d.recovery, (ACC.user && ACC.user.username) || '', () => { toast('Listo: el código anterior ya no sirve.'); close(); }, true);
       }catch(x){ err.textContent = x.message || 'Algo falló.'; }
     };
