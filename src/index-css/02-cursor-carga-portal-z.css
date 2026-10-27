@@ -104,8 +104,9 @@ main,footer{transition:opacity 1.3s ease}
 .card .pu-mark{height:26px;width:38px}
 @media (max-width:640px){.navr .accb span:not(.av-me){display:none}.navr .accb{padding-right:5px}}
 
-/* v9: las tarjetas de "Tres pasos" ya no desbordan a los lados en el celular */
-#como{overflow-x:clip}
+/* v9: las tarjetas de "Tres pasos" ya no desbordan a los lados en el celular.
+   v2.9: solo hasta 1180 px (ahí la sección ocupa todo el ancho); en pantallas más anchas el recorte cortaba el fondo a los lados */
+@media (max-width:1180px){#como{overflow-x:clip}}
 @media (max-width:760px){html.js .how-card{--dx:-36px}html.js .how-card:nth-child(2){--dx:36px}}
 
 /* ===== v10 ===== */

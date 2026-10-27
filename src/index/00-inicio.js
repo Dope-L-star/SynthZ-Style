@@ -6,7 +6,6 @@ root.classList.add('js', 'lock');
 
 /* ---------- piezas fijas ---------- */
 $('#navWord').innerHTML = zWord('Synth');
-$('#zClipPath').setAttribute('d', Z_PATH); $('#zOutline').setAttribute('d', Z_PATH);
 $('#corner').innerHTML = '<svg viewBox="0 0 24 24">' + SZ.ICONS.claude('#d9805f', '#d9805f') + '</svg>';
 $('#chips').innerHTML = ALL.filter(p => p.id === 'synthz' || p.id === 'puter').map((p, i) => '<span class="chip" style="--i:' + i + '">' + ico(p) + p.name + '</span>').join('');
 $('#track').innerHTML = Array(4).fill('<div class="set">' + [['ChatGPT', 'openai'], ['Gemini', 'google'], ['Claude', 'anthropic'], ['Llama', 'meta-llama'], ['Mistral', 'mistralai'], ['DeepSeek', 'deepseek'], ['Qwen', 'qwen'], ['Grok', 'x-ai'], ['Kimi', 'moonshotai'], ['Gemma', 'gemma'], ['Puter', 'puter']].map(([n, v]) => '<span class="bi">' + SZ.glassIcon({ id:v, vendor:v === 'gemma' ? 'google' : v, name:n }, 'xs') + n + '</span>').join('') + '</div>').join('');

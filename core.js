@@ -1472,9 +1472,10 @@ function portalReveal(p){
 }
 /* v2.8 · el portal nuevo, con los logos de ahora (pedido de Sammuel: «sorpréndeme»):
    ida:    «SynthZ» sale de su esquina y llega al centro → la Z de vidrio gira y se vuelve el orbe de SynthFlow,
-           la «Z» se borra y aparece «Flow» letra por letra → SynthonIA sale, saluda y salta adentro del orbe
-           → el orbe late y la cámara se zambulle en él (y en el chat se abre en círculo)
-   vuelta: sales del orbe, SynthonIA salta afuera y se despide, el orbe vuelve a ser la Z y «SynthZ» vuelve a su esquina.
+           la «Z» se borra y aparece «Flow» letra por letra → el orbe late y la cámara se zambulle en él
+           (y en el chat se abre en círculo)
+   vuelta: sales del orbe, el orbe vuelve a ser la Z y «SynthZ» vuelve a su esquina.
+   v2.9: sin SynthonIA (Sammuel: el portal queda mejor solo con los logos).
    Todo es transform y opacidad (va fluido en celulares); mientras dura, la página no se puede tocar. */
 let lockOff = null;
 function portalLock(on){
@@ -1493,11 +1494,10 @@ function portalStage(){
   const o = document.createElement('div'); o.id = 'portal'; o.className = 'szportal p8';
   o.innerHTML = '<i class="p8-bg"></i><i class="p8-ring"></i><i class="p8-flash"></i>'
     + '<div class="p8-w"><span class="p8-mk"><img class="p8-z" src="media/v24/logo-z.webp" alt="" draggable="false">' + flowOrb('p8-orb') + '</span>'
-    + '<span class="p8-t zw"><span class="p8-sy">Synth</span><span class="p8-zl zt">Z</span><span class="p8-fl">' + [...'Flow'].map((c, i) => '<i style="--i:' + i + '">' + c + '</i>').join('') + '</span></span></div>'
-    + '<div class="p8-bot">' + (typeof synBody === 'function' ? synBody('celebrando', 'saluda', 150) : '') + '</div>';
+    + '<span class="p8-t zw"><span class="p8-sy">Synth</span><span class="p8-zl zt">Z</span><span class="p8-fl">' + [...'Flow'].map((c, i) => '<i style="--i:' + i + '">' + c + '</i>').join('') + '</span></span></div>';
   document.body.appendChild(o);
   const q = c => o.querySelector(c);
-  return { o, BG:q('.p8-bg'), RING:q('.p8-ring'), FL:q('.p8-flash'), W:q('.p8-w'), MK:q('.p8-mk'), Z:q('.p8-z'), ORB:q('.p8-orb'), T:q('.p8-t'), ZL:q('.p8-zl'), FW:q('.p8-fl'), BOT:q('.p8-bot') };
+  return { o, BG:q('.p8-bg'), RING:q('.p8-ring'), FL:q('.p8-flash'), W:q('.p8-w'), MK:q('.p8-mk'), Z:q('.p8-z'), ORB:q('.p8-orb'), T:q('.p8-t'), ZL:q('.p8-zl'), FW:q('.p8-fl') };
 }
 /* dónde está el logo de la esquina (para salir de ahí y volver ahí) */
 /* el rectángulo donde de verdad se ve una imagen con object-fit:contain (sin el aire de los lados) */
@@ -1553,17 +1553,6 @@ function morph(P, toFlow, D){
   ]);
 }
 const pSleep = ms => new Promise(r => setTimeout(r, ms));
-/* SynthonIA salta adentro del orbe (o sale de él) */
-function botJump(P, into, D){
-  const b = P.BOT.getBoundingClientRect(), c = P.ORB.getBoundingClientRect();
-  const dx = c.left + c.width / 2 - (b.left + b.width / 2), dy = c.top + c.height / 2 - (b.top + b.height * .32);
-  const K = [
-    { transform:'none', opacity:1, offset:0 },
-    { transform:'translate(' + (dx * .45).toFixed(1) + 'px,' + (dy * .45 - 90).toFixed(1) + 'px) rotate(-20deg) scale(.8)', opacity:1, offset:.5 },
-    { transform:'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px) rotate(-340deg) scale(.04)', opacity:0, offset:1 }
-  ];
-  return pAnim(P.BOT, into ? K : pRev(K), { duration:D, easing:into ? 'cubic-bezier(.45,0,.55,1)' : 'cubic-bezier(.3,0,.3,1)' });
-}
 /* el orbe late y suelta un anillo de luz */
 function orbPulse(P){
   P.ORB.animate([{ transform:'scale(1)' }, { transform:'scale(1.28)' }, { transform:'scale(1)' }], { duration:520, easing:PSPR });
@@ -1612,11 +1601,9 @@ async function portalOut(href){
     /* 2 · la Z gira y se vuelve el orbe de SynthFlow; «Flow» se escribe */
     try{ SND.shimmer(); }catch(e){}
     await morph(P, true, 900);
-    /* 3 · SynthonIA sale, saluda… y salta adentro del orbe */
-    P.o.classList.add('bot');
-    await pSleep(950);
-    await botJump(P, true, 760); orbPulse(P);
-    await pSleep(380);
+    /* 3 · el orbe late una vez y suelta su anillo de luz */
+    await pSleep(260); orbPulse(P);
+    await pSleep(440);
     /* 4 · la cámara se zambulle en el orbe */
     try{ SND.warp(); }catch(e){}
     await dive(P, true, 1000);
@@ -1636,7 +1623,7 @@ async function portalBack(href){
   try{ sessionStorage.setItem('synthz:back', 'o'); }catch(e){}
   try{
     const P = portalStage();
-    P.o.classList.add('flow', 'start'); P.Z.style.opacity = '0'; P.ORB.style.opacity = '1'; P.BOT.style.opacity = '0';
+    P.o.classList.add('flow', 'start'); P.Z.style.opacity = '0'; P.ORB.style.opacity = '1';
     await pReady(P); fitPortal(P, logoRect()); await new Promise(r => requestAnimationFrame(r));
     P.BG.style.opacity = '1';
     /* 1 · sales del orbe */
@@ -1644,11 +1631,8 @@ async function portalBack(href){
     pAnim(P.o, [{ opacity:0 }, { opacity:1 }], { duration:280, easing:'ease-out' });
     await dive(P, false, 950);
     P.o.classList.remove('diving');
-    /* 2 · SynthonIA salta afuera y se despide */
-    P.BOT.style.opacity = ''; P.o.classList.add('bot'); orbPulse(P);
-    await botJump(P, false, 700);
-    await pSleep(700);
-    pAnim(P.BOT, [{ transform:'none', opacity:1 }, { transform:'translateY(40px) scale(.6)', opacity:0 }], { duration:420, easing:'ease-in' });
+    /* 2 · el orbe late al salir */
+    orbPulse(P); await pSleep(420);
     /* 3 · el orbe vuelve a ser la Z; se borra «Flow» y vuelve la «Z» */
     try{ SND.shimmer(); }catch(e){}
     await morph(P, false, 900);
@@ -2872,14 +2856,14 @@ function face(mood, size, cls){
    y se pausa solo cuando no se ve. Escenario 300 × 400 (3:4). */
 const SPOSE = {
   idle:     { l:0,   r:0 },
-  saluda:   { l:0,   r:-122, wave:'r' },
-  senala:   { l:0,   r:-82 },
-  senalaL:  { l:82,  r:0 },
-  celebra:  { l:122, r:-122 },
+  saluda:   { l:0,   r:-122, wave:'r', h:['open', 'wave'] },
+  senala:   { l:0,   r:-82, h:['open', 'point'] },
+  senalaL:  { l:82,  r:0, h:['point', 'open'] },
+  celebra:  { l:122, r:-122, h:['wave', 'wave'] },
   piensa:   { l:6,   r:-36 },
   escucha:  { l:0,   r:-116 },
-  presenta: { l:0,   r:-56 },
-  sorpresa: { l:42,  r:-42 },
+  presenta: { l:0,   r:-56, h:['open', 'wave'] },
+  sorpresa: { l:42,  r:-42, h:['wave', 'wave'] },
   escribe:  { l:22,  r:-22, type:1 },
   lee:      { l:30,  r:-30 }
 };
@@ -2887,13 +2871,32 @@ const SPOSE = {
 const sgPiece = (d, rim) => '<path d="' + d + '" fill="url(#sgGlass)"/><path d="' + d + '" fill="url(#sgCaus)"/>'
   + '<path d="' + d + '" fill="none" stroke="url(#sgIri)" stroke-width="' + (rim || 1.6) + '" stroke-opacity=".85"/><path d="' + d + '" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width=".7"/>';
 const sgOval = (cx, cy, rx, ry) => 'M' + (cx - rx) + ' ' + cy + 'a' + rx + ' ' + ry + ' 0 1 0 ' + 2 * rx + ' 0a' + rx + ' ' + ry + ' 0 1 0 ' + -2 * rx + ' 0z';
-/* el brazo izquierdo, colgando desde el hombro (0,0): brazo, codo, antebrazo y mano con pulgar. El derecho es su espejo */
-const SG_ARM = '<g transform="rotate(10)"><rect x="-12" y="-6" width="24" height="44" rx="12" fill="url(#sgArm)"/><rect x="-12" y="-6" width="24" height="44" rx="12" fill="none" stroke="url(#sgIri)" stroke-width="1.3" stroke-opacity=".85"/>'
-  + '<circle cx="0" cy="-2" r="11" fill="#c9566c" stroke="#e6b65f" stroke-opacity=".7" stroke-width="1.3"/><circle cx="-3.5" cy="-5.5" r="3" fill="#fff" opacity=".35"/>'
-  + '<circle cx="0" cy="38" r="9.5" fill="#c9566c" stroke="#e6b65f" stroke-opacity=".7" stroke-width="1.2"/><circle cx="-3" cy="35" r="2.6" fill="#fff" opacity=".35"/>'
-  + '<g transform="translate(0 38) rotate(-14)"><rect x="-11" y="0" width="22" height="32" rx="11" fill="url(#sgArm)"/><rect x="-11" y="0" width="22" height="32" rx="11" fill="none" stroke="url(#sgIri)" stroke-width="1.2" stroke-opacity=".85"/>'
-  +   '<g class="syb-hand" transform="translate(0 41) scale(1.18)">' + sgPiece('M-12 -6q0-8 12-8t12 8v8q0 12-12 12t-12-12z', 1.2)
-  +     '<path d="M9 -2q9-3 10 4t-7 7" fill="url(#sgArm)" stroke="url(#sgIri)" stroke-width="1"/><path d="M-6 -9q4-3 9-1" stroke="#fff" stroke-opacity=".8" stroke-width="1.6" stroke-linecap="round" fill="none"/></g>'
+/* v2.9 · manos de verdad: palma de vidrio, tres dedos con nudillos y pulgar (antes era una manopla).
+   Cada dedo: [x de la base, giro, doblez de la punta, largo 1, largo 2]; el pulgar además dice dónde nace.
+   open = relajada, wave = abierta para saludar o celebrar, point = puño con el índice estirado */
+const SG_HANDS = {
+  open:  { f:[[-7, 9, 6, 8, 6.5], [0, 0, 4, 8.8, 7], [7, -7, 4, 8.4, 6.8]], t:[10, 7, -60, 20, 7, 5.5] },
+  wave:  { f:[[-7, 24, -4, 8, 6.5], [0, 4, 0, 9, 7], [7, -16, 2, 8.6, 6.8]], t:[10, 7, -84, 8, 7.4, 5.8] },
+  point: { f:[[-7, 5, 0, 5.2, 0], [0, 2, 0, 5.6, 0], [7, -3, 0, 9.6, 8]], t:[9, 11, 76, 8, 7, 5] }
+};
+const sgSeg = (L, w) => '<rect x="' + (-w / 2) + '" y="0" width="' + w + '" height="' + L + '" rx="' + (w / 2) + '" fill="url(#sgArm)" stroke="url(#sgIri)" stroke-width=".9"/>';
+const sgKnuckle = (y, r) => '<circle cy="' + y + '" r="' + r + '" fill="#c9566c" stroke="#e6b65f" stroke-opacity=".8" stroke-width=".6"/>';
+const sgFinger = ([x, a, c, L1, L2], y0, w) => '<g transform="translate(' + x + ' ' + y0 + ') rotate(' + a + ')">' + sgSeg(L1 + w / 2, w)
+  + (L2 ? '<g transform="translate(0 ' + L1 + ') rotate(' + c + ')">' + sgSeg(L2, w - .5) + '<circle cx="-.8" cy="' + (L2 - 2.2) + '" r=".9" fill="#fff" opacity=".7"/></g>' + sgKnuckle(L1, 1.7) : '') + '</g>';
+function sgHand(kind){
+  const H = SG_HANDS[kind] || SG_HANDS.open, [tx, ty, ta, tc, t1, t2] = H.t;
+  return sgFinger([tx, ta, tc, t1, t2], ty, 6.4)
+    + H.f.map(f => sgFinger(f, 17.5, 6.2)).join('')
+    + sgPiece('M-8 1h16q3 0 3 3v9q0 6-6 6.5h-10q-6-.5-6-6.5v-9q0-3 3-3z', 1.1)
+    + '<path d="M-6.5 4.5q4-2 9-1" stroke="#fff" stroke-opacity=".75" stroke-width="1.4" stroke-linecap="round" fill="none"/>'
+    + '<ellipse cx="0" cy="1" rx="8.5" ry="2.6" fill="#c9566c" stroke="#e6b65f" stroke-opacity=".8" stroke-width=".8"/>';
+}
+/* el brazo izquierdo, colgando desde el hombro (0,0): brazo, codo, antebrazo y mano. El derecho es su espejo */
+const sgArm = hand => '<g transform="rotate(10)"><rect x="-12" y="-6" width="24" height="44" rx="12" fill="url(#sgArm)"/><rect x="-12" y="-6" width="24" height="44" rx="12" fill="none" stroke="url(#sgIri)" stroke-width="1.3" stroke-opacity=".85"/>'
+  + '<circle cx="0" cy="-2" r="10" fill="#c9566c" stroke="#e6b65f" stroke-opacity=".7" stroke-width="1.3"/><circle cx="-3.5" cy="-5.5" r="2.8" fill="#fff" opacity=".35"/>'
+  + '<circle cx="0" cy="38" r="8.5" fill="#c9566c" stroke="#e6b65f" stroke-opacity=".7" stroke-width="1.2"/><circle cx="-3" cy="35" r="2.4" fill="#fff" opacity=".35"/>'
+  + '<g transform="translate(0 38) rotate(-14)"><rect x="-10.5" y="0" width="21" height="32" rx="10.5" fill="url(#sgArm)"/><rect x="-10.5" y="0" width="21" height="32" rx="10.5" fill="none" stroke="url(#sgIri)" stroke-width="1.2" stroke-opacity=".85"/>'
+  +   '<g class="syb-hand" transform="translate(0 30) scale(1.3)">' + sgHand(hand) + '</g>'
   + '</g><path d="M-6 0q-2 16 0 30" stroke="#fff" stroke-opacity=".6" stroke-width="2.4" stroke-linecap="round" fill="none"/></g>';
 const SG_TORSO = 'M150 206C198 206 216 228 214 258C212 290 190 312 150 312C110 312 88 290 86 258C84 228 102 206 150 206Z';
 function synHead(mood){
@@ -2902,7 +2905,7 @@ function synHead(mood){
     + wavesSvg() + headSvg(f) + '</svg>';
 }
 function synBody(mood, pose, size){
-  const m = FACE[mood] ? mood : 'feliz', p = SPOSE[pose] ? pose : 'idle', P = SPOSE[p];
+  const m = FACE[mood] ? mood : 'feliz', p = SPOSE[pose] ? pose : 'idle', P = SPOSE[p], hands = P.h || ['open', 'open'];
   const torso = SG_TORSO;
   return '<div class="szbody" data-mood="' + m + '" data-pose="' + p + '" style="--al:' + P.l + 'deg;--ar:' + P.r + 'deg' + (size ? ';--sz:' + size + 'px' : '') + '" aria-hidden="true">'
     + '<i class="syb-glow"></i>'
@@ -2917,8 +2920,8 @@ function synBody(mood, pose, size){
     +   '<path d="M104 350q46 10 92 0" stroke="#fff" stroke-opacity=".35" stroke-width="1.2" fill="none"/></g>'
     /* todo lo de arriba flota sobre el pedestal */
     + '<g class="syb-up">'
-    +   '<g class="syb-arm al"><g class="syb-sway"><g transform="translate(100 222)">' + SG_ARM + '</g></g></g>'
-    +   '<g class="syb-arm ar' + (P.wave === 'r' ? ' wave' : '') + '"><g class="syb-sway"><g transform="translate(200 222) scale(-1 1)">' + SG_ARM + '</g></g></g>'
+    +   '<g class="syb-arm al"><g class="syb-sway"><g transform="translate(100 222)">' + sgArm(hands[0]) + '</g></g></g>'
+    +   '<g class="syb-arm ar' + (P.wave === 'r' ? ' wave' : '') + '"><g class="syb-sway"><g transform="translate(200 222) scale(-1 1)">' + sgArm(hands[1]) + '</g></g></g>'
     +   '<g class="syb-torso">' + sgPiece(torso, 1.8)
     +     '<g clip-path="url(#sgTorsoClip)" opacity=".75"><circle class="syb-liq a" cx="120" cy="240" r="46" fill="url(#sgBlobA)"/><circle class="syb-liq b" cx="182" cy="284" r="42" fill="url(#sgBlobB)"/></g>'
     +     '<path d="M108 236q10-20 38-24" stroke="url(#sgSpec)" stroke-width="5" stroke-linecap="round" fill="none" opacity=".7"/>'
@@ -2944,7 +2947,12 @@ function synSet(host, mood, pose, size){
   if (!b){ host.innerHTML = synBody(mood, pose, size); return; }
   const m = FACE[mood] ? mood : 'feliz', p = SPOSE[pose] ? pose : 'idle', P = SPOSE[p];
   if (b.dataset.mood !== m){ const hd = b.querySelector('.syb-hd'); hd.innerHTML = synHead(m); b.dataset.mood = m; }
-  if (b.dataset.pose !== p){ b.dataset.pose = p; b.style.setProperty('--al', P.l + 'deg'); b.style.setProperty('--ar', P.r + 'deg'); b.querySelector('.syb-arm.ar').classList.toggle('wave', P.wave === 'r'); }
+  if (b.dataset.pose !== p){
+    const was = SPOSE[b.dataset.pose] || SPOSE.idle, h0 = was.h || ['open', 'open'], h1 = P.h || ['open', 'open'];
+    b.dataset.pose = p; b.style.setProperty('--al', P.l + 'deg'); b.style.setProperty('--ar', P.r + 'deg'); b.querySelector('.syb-arm.ar').classList.toggle('wave', P.wave === 'r');
+    /* las manos cambian de gesto solo si hace falta */
+    b.querySelectorAll('.syb-hand').forEach((hd, i) => { if (h0[i] !== h1[i]) hd.innerHTML = sgHand(h1[i]); });
+  }
   if (size) b.style.setProperty('--sz', size + 'px');
 }
 /* v1.9 · SynthonIA mueve la boca con cada letra que dice: a (abierta), e/i (ancha), o/u (redonda), m/b/p (cerrada) */
@@ -4343,6 +4351,8 @@ const SPACE = (() => {
   let last = -1e9;
   const draw = t => {
     raf = 0;
+    /* v2.9: con el cielo en vivo (core 25h) sus estrellas ya están; este lienzo no se dibuja (era un segundo cielo a 30 cuadros) */
+    if (document.documentElement.classList.contains('au8on')){ ctx.clearRect(0, 0, w, h); return; }
     if (!still && t - last < 33){ if (!document.hidden && CFG.bg && !document.documentElement.classList.contains('sb-off')) raf = requestAnimationFrame(draw); return; }
     last = t; ctx.clearRect(0, 0, w, h);
     for (const s of S){
@@ -4541,15 +4551,22 @@ const AURORA = (() => {
       ice: mix(L, WH, .3), lav: mix(P, WH, .42), rose: mix(S, WH, .28), mint: mix(L, [70, 230, 170], .6) };
   };
 
-  /* tamaño: el lienzo de las nubes mide ~36 000 píxeles sin importar la pantalla */
-  let w = 0, h = 0, cw = 0, ch = 0, D = 1;
+  /* tamaño: el lienzo de las nubes mide ~36 000 píxeles cuando se mueve (la pantalla lo estira y ese estirado es el desenfoque).
+     Quieto se pinta una sola vez, así que puede ser más grande: en un celular (3 píxeles por punto) el estirado de 9 veces
+     dejaba una rejilla de rombos en los degradados; con ~150 000 queda liso. Las estrellas van a la nitidez de la pantalla (hasta 2x). */
+  let w = 0, h = 0, cw = 0, ch = 0, D = 1, px = 0, budget = 0;
+  const dpr = Math.min(2, devicePixelRatio || 1);
+  const anim = () => CFG.bg && !reduce && !PERF && !H.classList.contains('noanim') && !H.classList.contains('simple');
+  const want = () => anim() ? (dpr > 1.4 ? 56000 : 36000) : 150000;
   const U = u => u * cw, V = v => v * ch;
   const size = () => {
-    w = innerWidth; h = innerHeight;
-    cw = Math.max(80, Math.round(Math.sqrt(36000 * w / h))); ch = Math.max(80, Math.round(cw * h / w));
+    w = innerWidth; h = innerHeight; budget = want();
+    cw = Math.max(80, Math.round(Math.sqrt(budget * w / h))); ch = Math.max(80, Math.round(cw * h / w));
     cv.width = cw; cv.height = ch; D = Math.sqrt(cw * ch) * 1.2;
-    stars();
+    if (px !== w * h){ px = w * h; stars(); }
   };
+  /* si «Fondo animado» se prende o se apaga, el lienzo cambia de tamaño */
+  const resize = () => { if (budget !== want()) size(); };
   /* azar con semilla: el mismo cielo cada vez */
   const seeded = s => () => (s = (s * 16807) % 2147483647) / 2147483647;
   const hr = (i, s) => { const x = Math.sin(i * 12.9898 + s * 78.233) * 43758.5453; return x - Math.floor(x); };
@@ -4562,14 +4579,14 @@ const AURORA = (() => {
   const stars = () => {
     const tones = ['255,255,255', '200,240,255', '255,214,240', '214,206,255'];
     [[dc, w * h / 2400, .5, .9, 11], [tc, w * h / 16000, 1, 1.5, 23]].forEach(([c, n, a, r, s]) => {
-      const rnd = seeded(s); c.width = w; c.height = h; const x = c.getContext('2d');
+      const rnd = seeded(s); c.width = w * dpr; c.height = h * dpr; const x = c.getContext('2d'); x.scale(dpr, dpr);
       for (let i = 0; i < n; i++){
         x.fillStyle = 'rgba(' + tones[i % 4] + ',' + (a * (.18 + rnd() * .7)).toFixed(2) + ')';
         x.beginPath(); x.arc(rnd() * w, rnd() * h, .35 + rnd() * r * (rnd() < .08 ? 1.8 : 1), 0, 6.283); x.fill();
       }
     });
     if (!cc) return;
-    const rnd = seeded(37); cc.width = w; cc.height = h; const x = cc.getContext('2d');
+    const rnd = seeded(37); cc.width = w * dpr; cc.height = h * dpr; const x = cc.getContext('2d'); x.scale(dpr, dpr);
     /* un río de estrellas en diagonal, más denso al medio */
     for (let i = 0; i < w * h / 900; i++){
       const s = rnd(), off = (rnd() + rnd() + rnd() - 1.5) * .12;
@@ -4763,7 +4780,7 @@ const AURORA = (() => {
 
   /* el ciclo: ~24 cuadros por segundo (12 en el celular y mientras se conversa); a 30 solo durante la ola */
   const coarse = matchMedia('(pointer:coarse)').matches;
-  const live = () => CFG.bg && !reduce && !PERF && !document.hidden && !H.classList.contains('noanim') && !H.classList.contains('simple');
+  const live = () => anim() && !document.hidden;
   let raf = 0, last = -1e9, dirty = true;
   const frame = now => {
     raf = 0;
@@ -4784,7 +4801,7 @@ const AURORA = (() => {
   }
   /* si cambian los ajustes o el tema, se vuelve a pintar (el tema tarda ~1 s en pasar de color) */
   let rc = 0;
-  new MutationObserver(() => { clearTimeout(rc); recolor(); go(); rc = setTimeout(() => { recolor(); go(); }, 950); }).observe(H, { attributes:true, attributeFilter:['class', 'data-theme'] });
+  new MutationObserver(() => { clearTimeout(rc); recolor(); resize(); go(); rc = setTimeout(() => { recolor(); go(); }, 950); }).observe(H, { attributes:true, attributeFilter:['class', 'data-theme'] });
 
   /* conversación: true = la seda se apaga en calma y sube la ola; false = la ola baja y vuelve la seda */
   const setCalm = (on, now) => {

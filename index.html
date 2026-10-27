@@ -33,21 +33,35 @@
 <div id="intro" aria-hidden="true">
   <div class="bg"></div>
   <div class="int-wrap">
-    <div class="int-row" id="intRow"><span id="intText"></span><span class="int-caret" id="intCaret"></span>
-      <svg class="bolt" id="bolt" viewBox="0 0 48 48">
-        <defs>
-          <clipPath id="zClip"><path id="zClipPath" d=""/></clipPath>
-          <linearGradient id="pw" gradientUnits="userSpaceOnUse" x1="48" y1="0" x2="0" y2="48"><stop id="pw1" offset="0" stop-color="#fff"/><stop id="pw2" offset="0" stop-color="#000"/></linearGradient>
-          <linearGradient id="pw3" gradientUnits="userSpaceOnUse" x1="48" y1="0" x2="0" y2="48"><stop id="pw3a" offset="0" stop-color="#000"/><stop id="pw3b" offset="0" stop-color="#fff"/><stop id="pw3c" offset="0" stop-color="#000"/></linearGradient>
-          <mask id="pm" maskUnits="userSpaceOnUse" x="-10" y="-10" width="68" height="68"><rect x="-10" y="-10" width="68" height="68" fill="url(#pw)"/></mask>
-          <mask id="pm3" maskUnits="userSpaceOnUse" x="-10" y="-10" width="68" height="68"><rect x="-10" y="-10" width="68" height="68" fill="url(#pw3)"/></mask>
-        </defs>
-        <path id="zOutline" d="" pathLength="1" fill="none" stroke="url(#zgrad)" stroke-width="1.3" stroke-linejoin="round" stroke-dasharray="1" stroke-dashoffset="1"/>
-        <g clip-path="url(#zClip)">
-          <g mask="url(#pm)"><rect x="-4" y="0" width="56" height="48" fill="url(#zgrad)"/></g>
-          <g id="zGloss" mask="url(#pm3)"><rect x="-4" y="0" width="56" height="48" fill="#fff" opacity=".4"/></g>
-        </g>
-      </svg>
+    <div class="int-row" id="intRow">
+      <span class="iz-mk" id="izMk">
+        <svg viewBox="0 0 128 122">
+          <defs>
+            <linearGradient id="izA" x1="0" y1="0" x2="1" y2=".2"><stop offset="0" stop-color="#5a2fe0"/><stop offset=".55" stop-color="#8d4cff"/><stop offset="1" stop-color="#d79bff"/></linearGradient>
+            <linearGradient id="izB" x1="1" y1="0" x2=".1" y2="1"><stop offset="0" stop-color="#c58bff"/><stop offset=".45" stop-color="#ff3d9a"/><stop offset="1" stop-color="#b42fd0"/></linearGradient>
+            <linearGradient id="izC" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c02d8f"/><stop offset=".5" stop-color="#ff4f86"/><stop offset="1" stop-color="#ff9a62"/></linearGradient>
+            <linearGradient id="izS" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".75"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+            <filter id="izG" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.6"/></filter>
+            <clipPath id="izK"><path d="M10 34C14 22 34 17 58 16C76 15 92 14 106 15C92 19 74 25 56 31C40 36 22 40 10 34Z"/><path d="M107 15C99 34 72 50 52 64C35 76 24 88 25 101L45 105C47 95 57 84 71 72C88 58 106 40 107 17Z"/><path d="M24 103C40 92 66 86 90 86C104 86 114 89 116 94C112 104 96 110 80 110C60 110 40 108 24 103Z"/></clipPath>
+            <mask id="izM" maskUnits="userSpaceOnUse" x="-20" y="-20" width="168" height="162"><path class="iz-rv" d="M4 33C38 22 70 16 108 16C98 46 52 62 30 99C60 88 94 86 124 93" stroke="#fff" stroke-width="42" fill="none" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1.02 1.02" stroke-dashoffset="1.02"/></mask>
+          </defs>
+          <g mask="url(#izM)">
+            <path d="M10 34C14 22 34 17 58 16C76 15 92 14 106 15C92 19 74 25 56 31C40 36 22 40 10 34Z" fill="url(#izA)"/>
+            <path d="M107 15C99 34 72 50 52 64C35 76 24 88 25 101L45 105C47 95 57 84 71 72C88 58 106 40 107 17Z" fill="url(#izB)" opacity=".34"/>
+            <path d="M106 16C98 34 70 50 50 64C34 76 24 88 26 100" fill="none" stroke="url(#izB)" stroke-width="8" stroke-linecap="round"/>
+            <path d="M107 19C104 40 86 58 70 72C56 84 46 94 44 104" fill="none" stroke="url(#izB)" stroke-width="11" stroke-linecap="round"/>
+            <path d="M24 103C40 92 66 86 90 86C104 86 114 89 116 94C112 104 96 110 80 110C60 110 40 108 24 103Z" fill="url(#izC)"/>
+            <g fill="none" stroke="#fff" stroke-linecap="round" stroke-opacity=".55" stroke-width="1.4"><path d="M15 29C25 21 44 18 70 17"/><path d="M101 25C92 39 72 53 56 63"/><path d="M62 92C78 88 98 87 110 91"/></g>
+            <g clip-path="url(#izK)"><rect class="iz-sh" x="-70" y="-10" width="44" height="150" fill="url(#izS)"/></g>
+          </g>
+          <path class="iz-cm iz-cmg" d="M4 33C38 22 70 16 108 16C98 46 52 62 30 99C60 88 94 86 124 93" fill="none" stroke="#ffd6f0" stroke-width="9" stroke-linecap="round" pathLength="1" filter="url(#izG)"/>
+          <path class="iz-cm" d="M4 33C38 22 70 16 108 16C98 46 52 62 30 99C60 88 94 86 124 93" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" pathLength="1"/>
+        </svg>
+        <img src="media/v24/logo-z.webp" alt="" draggable="false">
+        <i class="iz-ring"></i><i class="iz-ring r2"></i>
+        <span class="iz-burst" id="izBurst"></span>
+      </span>
+      <span class="zw iz-w" id="izW"></span>
     </div>
   </div>
   <div class="int-skip" id="intSkip"><span>Mantén <kbd>espacio</kbd> 1,5 s para saltar</span><i class="int-hold"><b id="intHold"></b></i></div>

@@ -52,6 +52,8 @@ const SPACE = (() => {
   let last = -1e9;
   const draw = t => {
     raf = 0;
+    /* v2.9: con el cielo en vivo (core 25h) sus estrellas ya están; este lienzo no se dibuja (era un segundo cielo a 30 cuadros) */
+    if (document.documentElement.classList.contains('au8on')){ ctx.clearRect(0, 0, w, h); return; }
     if (!still && t - last < 33){ if (!document.hidden && CFG.bg && !document.documentElement.classList.contains('sb-off')) raf = requestAnimationFrame(draw); return; }
     last = t; ctx.clearRect(0, 0, w, h);
     for (const s of S){

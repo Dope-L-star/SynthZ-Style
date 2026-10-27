@@ -19,11 +19,7 @@
 .p8.flow .p8-fl i{opacity:1;transform:none;filter:none}
 .p8.start .p8-fl,.p8.start .p8-fl i,.p8.start .p8-zl{transition:none}
 /* SynthonIA aparece debajo del logo, saluda y salta al orbe */
-.p8-bot{position:absolute;left:50%;top:calc(50% + clamp(34px,5vw,66px));width:150px;margin-left:-75px;opacity:0;transform:translateY(50px) scale(.5);pointer-events:none;
   transition:opacity .35s ease,transform .6s cubic-bezier(.34,1.56,.64,1)}
-.p8.bot .p8-bot{opacity:1;transform:none}
-.p8-bot .szbody{width:150px}
-@media (max-width:600px){.p8-bot{width:120px;margin-left:-60px}.p8-bot .szbody{width:120px}}
 /* mientras se zambulle: sin sombras ni filtros, así va fluido */
 .p8.diving .p8-z,.p8.diving .sforb{filter:none !important;box-shadow:none !important}
 .p8.diving .p8-w{will-change:transform}

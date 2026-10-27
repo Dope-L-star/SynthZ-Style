@@ -7,7 +7,12 @@
 /* la aurora reemplaza los brillos y el fondo liso de antes; las estrellas, la cinta y las burbujas siguen encima */
 html.au8on .aurora{background:transparent}
 html.au8on .aurora::after{background:none !important}
-html.au8on .sb-base,html.au8on .sb-glow{display:none}
+html.au8on .sb-base,html.au8on .sb-glow,html.au8on .sb-canvas{display:none}
+/* v2.9: los fondos de cada sección (rejilla, cintas, auroras, radar…) eran de antes del cielo en vivo: se apilaban encima
+   y en el celular se estiraban en franjas. Ahora el cielo es uno solo para toda la página */
+html.au8on .secbg{display:none}
+/* v2.9: en SynthFlow el espacio de antes (cinta de neón y burbuja) se veía como rayas y una mancha detrás de los mensajes */
+html.au8on .sb-root[data-kind="chat"]{display:none}
 html.simple .au8{display:none}
 html.nobg .au8-tw,html.noanim .au8-tw,html.pmode .au8-tw{animation:none;opacity:.55}
 @media (prefers-reduced-motion:reduce){.au8-tw{animation:none}}
@@ -26,7 +31,6 @@ html.szconv .au8-wash,html.szconv .au8-edge{--au8r:175%}
 /* lo que vive dentro del espacio de antes (cinta de neón, estrellas, burbujas) también se apaga al conversar */
 html.au8on .sb-root{transition:opacity 1.6s ease}
 html.au8on.szconv .sb-root{opacity:.3}
-html.au8on.szconv .sb-rib{opacity:.35}
 html.au8-now .au8 *,html.au8-now .sb-root,html.au8-now .sb-rib{transition:none !important}
 html.noanim .au8-wash,html.noanim .au8-edge{transition:none}
 

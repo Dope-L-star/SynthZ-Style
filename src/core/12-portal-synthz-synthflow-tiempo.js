@@ -1,8 +1,9 @@
 /* v2.8 · el portal nuevo, con los logos de ahora (pedido de Sammuel: «sorpréndeme»):
    ida:    «SynthZ» sale de su esquina y llega al centro → la Z de vidrio gira y se vuelve el orbe de SynthFlow,
-           la «Z» se borra y aparece «Flow» letra por letra → SynthonIA sale, saluda y salta adentro del orbe
-           → el orbe late y la cámara se zambulle en él (y en el chat se abre en círculo)
-   vuelta: sales del orbe, SynthonIA salta afuera y se despide, el orbe vuelve a ser la Z y «SynthZ» vuelve a su esquina.
+           la «Z» se borra y aparece «Flow» letra por letra → el orbe late y la cámara se zambulle en él
+           (y en el chat se abre en círculo)
+   vuelta: sales del orbe, el orbe vuelve a ser la Z y «SynthZ» vuelve a su esquina.
+   v2.9: sin SynthonIA (Sammuel: el portal queda mejor solo con los logos).
    Todo es transform y opacidad (va fluido en celulares); mientras dura, la página no se puede tocar. */
 let lockOff = null;
 function portalLock(on){
@@ -21,11 +22,10 @@ function portalStage(){
   const o = document.createElement('div'); o.id = 'portal'; o.className = 'szportal p8';
   o.innerHTML = '<i class="p8-bg"></i><i class="p8-ring"></i><i class="p8-flash"></i>'
     + '<div class="p8-w"><span class="p8-mk"><img class="p8-z" src="media/v24/logo-z.webp" alt="" draggable="false">' + flowOrb('p8-orb') + '</span>'
-    + '<span class="p8-t zw"><span class="p8-sy">Synth</span><span class="p8-zl zt">Z</span><span class="p8-fl">' + [...'Flow'].map((c, i) => '<i style="--i:' + i + '">' + c + '</i>').join('') + '</span></span></div>'
-    + '<div class="p8-bot">' + (typeof synBody === 'function' ? synBody('celebrando', 'saluda', 150) : '') + '</div>';
+    + '<span class="p8-t zw"><span class="p8-sy">Synth</span><span class="p8-zl zt">Z</span><span class="p8-fl">' + [...'Flow'].map((c, i) => '<i style="--i:' + i + '">' + c + '</i>').join('') + '</span></span></div>';
   document.body.appendChild(o);
   const q = c => o.querySelector(c);
-  return { o, BG:q('.p8-bg'), RING:q('.p8-ring'), FL:q('.p8-flash'), W:q('.p8-w'), MK:q('.p8-mk'), Z:q('.p8-z'), ORB:q('.p8-orb'), T:q('.p8-t'), ZL:q('.p8-zl'), FW:q('.p8-fl'), BOT:q('.p8-bot') };
+  return { o, BG:q('.p8-bg'), RING:q('.p8-ring'), FL:q('.p8-flash'), W:q('.p8-w'), MK:q('.p8-mk'), Z:q('.p8-z'), ORB:q('.p8-orb'), T:q('.p8-t'), ZL:q('.p8-zl'), FW:q('.p8-fl') };
 }
 /* dónde está el logo de la esquina (para salir de ahí y volver ahí) */
 /* el rectángulo donde de verdad se ve una imagen con object-fit:contain (sin el aire de los lados) */
@@ -81,17 +81,6 @@ function morph(P, toFlow, D){
   ]);
 }
 const pSleep = ms => new Promise(r => setTimeout(r, ms));
-/* SynthonIA salta adentro del orbe (o sale de él) */
-function botJump(P, into, D){
-  const b = P.BOT.getBoundingClientRect(), c = P.ORB.getBoundingClientRect();
-  const dx = c.left + c.width / 2 - (b.left + b.width / 2), dy = c.top + c.height / 2 - (b.top + b.height * .32);
-  const K = [
-    { transform:'none', opacity:1, offset:0 },
-    { transform:'translate(' + (dx * .45).toFixed(1) + 'px,' + (dy * .45 - 90).toFixed(1) + 'px) rotate(-20deg) scale(.8)', opacity:1, offset:.5 },
-    { transform:'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px) rotate(-340deg) scale(.04)', opacity:0, offset:1 }
-  ];
-  return pAnim(P.BOT, into ? K : pRev(K), { duration:D, easing:into ? 'cubic-bezier(.45,0,.55,1)' : 'cubic-bezier(.3,0,.3,1)' });
-}
 /* el orbe late y suelta un anillo de luz */
 function orbPulse(P){
   P.ORB.animate([{ transform:'scale(1)' }, { transform:'scale(1.28)' }, { transform:'scale(1)' }], { duration:520, easing:PSPR });
@@ -140,11 +129,9 @@ async function portalOut(href){
     /* 2 · la Z gira y se vuelve el orbe de SynthFlow; «Flow» se escribe */
     try{ SND.shimmer(); }catch(e){}
     await morph(P, true, 900);
-    /* 3 · SynthonIA sale, saluda… y salta adentro del orbe */
-    P.o.classList.add('bot');
-    await pSleep(950);
-    await botJump(P, true, 760); orbPulse(P);
-    await pSleep(380);
+    /* 3 · el orbe late una vez y suelta su anillo de luz */
+    await pSleep(260); orbPulse(P);
+    await pSleep(440);
     /* 4 · la cámara se zambulle en el orbe */
     try{ SND.warp(); }catch(e){}
     await dive(P, true, 1000);
@@ -164,7 +151,7 @@ async function portalBack(href){
   try{ sessionStorage.setItem('synthz:back', 'o'); }catch(e){}
   try{
     const P = portalStage();
-    P.o.classList.add('flow', 'start'); P.Z.style.opacity = '0'; P.ORB.style.opacity = '1'; P.BOT.style.opacity = '0';
+    P.o.classList.add('flow', 'start'); P.Z.style.opacity = '0'; P.ORB.style.opacity = '1';
     await pReady(P); fitPortal(P, logoRect()); await new Promise(r => requestAnimationFrame(r));
     P.BG.style.opacity = '1';
     /* 1 · sales del orbe */
@@ -172,11 +159,8 @@ async function portalBack(href){
     pAnim(P.o, [{ opacity:0 }, { opacity:1 }], { duration:280, easing:'ease-out' });
     await dive(P, false, 950);
     P.o.classList.remove('diving');
-    /* 2 · SynthonIA salta afuera y se despide */
-    P.BOT.style.opacity = ''; P.o.classList.add('bot'); orbPulse(P);
-    await botJump(P, false, 700);
-    await pSleep(700);
-    pAnim(P.BOT, [{ transform:'none', opacity:1 }, { transform:'translateY(40px) scale(.6)', opacity:0 }], { duration:420, easing:'ease-in' });
+    /* 2 · el orbe late al salir */
+    orbPulse(P); await pSleep(420);
     /* 3 · el orbe vuelve a ser la Z; se borra «Flow» y vuelve la «Z» */
     try{ SND.shimmer(); }catch(e){}
     await morph(P, false, 900);

@@ -50,15 +50,22 @@ const AURORA = (() => {
       ice: mix(L, WH, .3), lav: mix(P, WH, .42), rose: mix(S, WH, .28), mint: mix(L, [70, 230, 170], .6) };
   };
 
-  /* tamaño: el lienzo de las nubes mide ~36 000 píxeles sin importar la pantalla */
-  let w = 0, h = 0, cw = 0, ch = 0, D = 1;
+  /* tamaño: el lienzo de las nubes mide ~36 000 píxeles cuando se mueve (la pantalla lo estira y ese estirado es el desenfoque).
+     Quieto se pinta una sola vez, así que puede ser más grande: en un celular (3 píxeles por punto) el estirado de 9 veces
+     dejaba una rejilla de rombos en los degradados; con ~150 000 queda liso. Las estrellas van a la nitidez de la pantalla (hasta 2x). */
+  let w = 0, h = 0, cw = 0, ch = 0, D = 1, px = 0, budget = 0;
+  const dpr = Math.min(2, devicePixelRatio || 1);
+  const anim = () => CFG.bg && !reduce && !PERF && !H.classList.contains('noanim') && !H.classList.contains('simple');
+  const want = () => anim() ? (dpr > 1.4 ? 56000 : 36000) : 150000;
   const U = u => u * cw, V = v => v * ch;
   const size = () => {
-    w = innerWidth; h = innerHeight;
-    cw = Math.max(80, Math.round(Math.sqrt(36000 * w / h))); ch = Math.max(80, Math.round(cw * h / w));
+    w = innerWidth; h = innerHeight; budget = want();
+    cw = Math.max(80, Math.round(Math.sqrt(budget * w / h))); ch = Math.max(80, Math.round(cw * h / w));
     cv.width = cw; cv.height = ch; D = Math.sqrt(cw * ch) * 1.2;
-    stars();
+    if (px !== w * h){ px = w * h; stars(); }
   };
+  /* si «Fondo animado» se prende o se apaga, el lienzo cambia de tamaño */
+  const resize = () => { if (budget !== want()) size(); };
   /* azar con semilla: el mismo cielo cada vez */
   const seeded = s => () => (s = (s * 16807) % 2147483647) / 2147483647;
   const hr = (i, s) => { const x = Math.sin(i * 12.9898 + s * 78.233) * 43758.5453; return x - Math.floor(x); };
@@ -71,14 +78,14 @@ const AURORA = (() => {
   const stars = () => {
     const tones = ['255,255,255', '200,240,255', '255,214,240', '214,206,255'];
     [[dc, w * h / 2400, .5, .9, 11], [tc, w * h / 16000, 1, 1.5, 23]].forEach(([c, n, a, r, s]) => {
-      const rnd = seeded(s); c.width = w; c.height = h; const x = c.getContext('2d');
+      const rnd = seeded(s); c.width = w * dpr; c.height = h * dpr; const x = c.getContext('2d'); x.scale(dpr, dpr);
       for (let i = 0; i < n; i++){
         x.fillStyle = 'rgba(' + tones[i % 4] + ',' + (a * (.18 + rnd() * .7)).toFixed(2) + ')';
         x.beginPath(); x.arc(rnd() * w, rnd() * h, .35 + rnd() * r * (rnd() < .08 ? 1.8 : 1), 0, 6.283); x.fill();
       }
     });
     if (!cc) return;
-    const rnd = seeded(37); cc.width = w; cc.height = h; const x = cc.getContext('2d');
+    const rnd = seeded(37); cc.width = w * dpr; cc.height = h * dpr; const x = cc.getContext('2d'); x.scale(dpr, dpr);
     /* un río de estrellas en diagonal, más denso al medio */
     for (let i = 0; i < w * h / 900; i++){
       const s = rnd(), off = (rnd() + rnd() + rnd() - 1.5) * .12;
@@ -272,7 +279,7 @@ const AURORA = (() => {
 
   /* el ciclo: ~24 cuadros por segundo (12 en el celular y mientras se conversa); a 30 solo durante la ola */
   const coarse = matchMedia('(pointer:coarse)').matches;
-  const live = () => CFG.bg && !reduce && !PERF && !document.hidden && !H.classList.contains('noanim') && !H.classList.contains('simple');
+  const live = () => anim() && !document.hidden;
   let raf = 0, last = -1e9, dirty = true;
   const frame = now => {
     raf = 0;
@@ -293,7 +300,7 @@ const AURORA = (() => {
   }
   /* si cambian los ajustes o el tema, se vuelve a pintar (el tema tarda ~1 s en pasar de color) */
   let rc = 0;
-  new MutationObserver(() => { clearTimeout(rc); recolor(); go(); rc = setTimeout(() => { recolor(); go(); }, 950); }).observe(H, { attributes:true, attributeFilter:['class', 'data-theme'] });
+  new MutationObserver(() => { clearTimeout(rc); recolor(); resize(); go(); rc = setTimeout(() => { recolor(); go(); }, 950); }).observe(H, { attributes:true, attributeFilter:['class', 'data-theme'] });
 
   /* conversación: true = la seda se apaga en calma y sube la ola; false = la ola baja y vuelve la seda */
   const setCalm = (on, now) => {

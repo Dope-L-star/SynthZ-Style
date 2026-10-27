@@ -31,7 +31,7 @@ SZ.smoothWheel(); SZ.orbitBg();
 SZ.accHooks.push(kind => { renderAccIdx(); if (kind === 'pull'){ updateTotals(); try{ renderUsage(); }catch(e){} } });
 renderAccIdx();
 
-  armTypes(); charify($('#h1')); charify($('#heroSub'));
+  armTypes(); charify($('#h1')); if ($('.hsub2')) charify($('.hsub2')); charify($('#heroSub'));
   observeAll(); update();
   requestAnimationFrame(loop);
   addEventListener('resize', () => { placePill($('#launchSeg')); measure(); });
@@ -55,8 +55,8 @@ try{ backIn = sessionStorage.getItem('synthz:back') || ''; sessionStorage.remove
 if (backIn){ seen = !FIRST; requestAnimationFrame(() => requestAnimationFrame(() => { root.classList.add('backout'); setTimeout(() => root.classList.remove('backin', 'backout'), 950); })); }
 if (seen) finishIntro();
 else {
-  const failsafe = setTimeout(finishIntro, 26000);
-  videoIntro().then(played => intro({ afterVideo:played })).catch(finishIntro).finally(() => clearTimeout(failsafe));
+  const failsafe = setTimeout(finishIntro, 9000);
+  intro().catch(finishIntro).finally(() => clearTimeout(failsafe));
 }
 
 /* v2.5 · ya no hay barrita lateral en la portada: todo está en el menú de arriba */
