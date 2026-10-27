@@ -90,6 +90,39 @@ const GROQ_P = { id:'groq', name:'Groq', kind:'openai', url:'https://api.groq.co
 const ALL = [...API, ...MANUAL, ...USAGE_EXTRA];
 const byId = id => ALL.find(p => p.id === id);
 
+/* ===== v3.0 · idioma: toda la página en español o en inglés =====
+   Textos en I18N.es / I18N.en con claves planas («nav.chat», «syn.title»…). Cada hilo/área pone sus textos en su propia pieza
+   (00c-idioma-landing.js, 00d-idioma-flow.js…) con Object.assign(I18N.es, {…}); Object.assign(I18N.en, {…}).
+   t('clave', { n:3 }) cambia {n}; {brand} es BRAND(). Si falta en inglés, sale el español; si falta del todo, sale la clave.
+   HTML: data-i18n="clave" (texto), data-i18n-html="clave" (solo textos nuestros con <b>/<br>), data-i18n-attr="placeholder=clave;aria-label=clave2". */
+const I18N = { es:{}, en:{} };
+const LANGS = [['es', 'Español'], ['en', 'English']];
+let LANG = (() => {
+  try{ const s = localStorage.getItem('synthz:lang'); if (s === 'es' || s === 'en') return s; }catch(e){}
+  return /^en\b/i.test((navigator.languages && navigator.languages[0]) || navigator.language || '') ? 'en' : 'es';
+})();
+document.documentElement.lang = LANG;
+const lang = () => LANG;
+function t(k, v){
+  let s = (I18N[LANG] && I18N[LANG][k]) ?? I18N.es[k] ?? k;
+  if (typeof s === 'function') return s(v || {});
+  return String(s).replace(/\{(\w+)\}/g, (m, n) => n === 'brand' ? BRAND() : (v && v[n] != null ? v[n] : m));
+}
+function i18nApply(r = document){
+  r.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  r.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
+  r.querySelectorAll('[data-i18n-attr]').forEach(el => el.dataset.i18nAttr.split(';').forEach(p => { const [a, k] = p.split('=').map(x => x && x.trim()); if (a && k) el.setAttribute(a, t(k)); }));
+}
+const langHooks = [];
+function setLang(l){
+  if (!I18N[l] || l === LANG) return;
+  LANG = l; document.documentElement.lang = l;
+  try{ localStorage.setItem('synthz:lang', l); }catch(e){}
+  i18nApply(); langHooks.forEach(f => { try{ f(l); }catch(e){} });
+}
+const onLang = f => langHooks.push(f);
+addEventListener('storage', e => { if (e.key === 'synthz:lang' && e.newValue && e.newValue !== LANG) setLang(e.newValue); });
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => i18nApply()); else setTimeout(() => i18nApply(), 0);
 /* ---------- estado guardado (con limpieza por si el archivo viene dañado) ---------- */
 const KEY = 'synthz:v1', OLD = 'coro:v1';
 let memState = null;
@@ -4949,7 +4982,7 @@ const EV = (() => {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onLoad); else setTimeout(onLoad, 50);
   return { pending, play, badge, get visits(){ return visits; } };
 })();
-window.SZ = { root, $, $$, clamp, fmt, reduce, today, sleepRaw, esc, est, Z_PATH, ICONS, ico, zWord, API, MANUAL, ALL, byId,
+window.SZ = { I18N, LANGS, t, lang, setLang, onLang, i18nApply, root, $, $$, clamp, fmt, reduce, today, sleepRaw, esc, est, Z_PATH, ICONS, ico, zWord, API, MANUAL, ALL, byId,
   get state(){ return state; }, set state(v){ state = v; normalize(); },
   normalize, cleanUsage, cleanChats, cleanStrMap, save, total, addUsage, resetUsage, estAll, todayEst, todayReq, providerBalance, balanceHtml, splitHtml, syncNote, helpGuide, smoothDetails, szPrompt, swapDir, swapDir, face, FACE_GOOD, randomGoodFace, welcomeBack, wasAway, accSignOutAll, accClaim, ROLE_NAME, trialGet, trialSet, trialStart, legacyRow, cleanLedger, mergeLedger, DEV, hooks, toast, hydrateIcons, md, countTo,
   BRAND, SPACE, AURORA, isFlow, flowWord, flowOrb, LOGO_Z, fileIco, gIcon, giFill, giFile, zMark, synBody, synSet, SPOSE, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, BRANDS, brandOf, glassIcon, PIXART, pixelRun, pixelGrid, workView, workSaved, mdLoad, MDLIB, SZ_P, SZQ, SZ_AUTO, szqSet, msgsLeft, msgsTotal, coinsOf, coinsLeft, coinsTotal, coinsFmt, coinsShort, coinNote, limTxt, limShort, limLvl, limPct, limRing, battPct, limBar, szCatalog, szHeaders, guestGate, guestFull, isGuestQ, setTurn, puterOut, puterOutNote, TEL, telEv, telBeat, DEVH, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, feedbackModal, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI, EV, lipSync, ballFace, guideAsk, GTOPICS, whatsNew, signedish, cfgLinks, memAddCore, memPanel, menuOpen, menuClose, MICO, appInstall, appPromo, appStandalone, appPhone };
