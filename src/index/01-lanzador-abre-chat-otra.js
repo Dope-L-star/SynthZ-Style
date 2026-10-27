@@ -8,7 +8,7 @@ function placePill(seg){
 function renderLaunch(){
   const seg = $('#launchSeg');
   $$('button', seg).forEach(b => b.remove());
-  const items = [{ id:'synthz', label:'Gratis', p:byId('synthz') }];
+  const items = [{ id:'synthz', label:SZ.t('ix.046'), p:byId('synthz') }];
   items.forEach(it => {
     const b = document.createElement('button');
     b.setAttribute('role', 'tab'); b.dataset.id = it.id;
@@ -22,8 +22,8 @@ function renderLaunch(){
   const p = byId(launchAI), hint = $('#launchHint');
   if (launchAI === 'cmp'){
     const n = API.filter(x => st().keys[x.id]).length;
-    hint.textContent = n ? 'Tu pregunta le llega a ' + n + (n === 1 ? ' IA conectada.' : ' IAs conectadas.') : 'Aún no hay IAs conectadas.';
-  } else hint.textContent = SZ.SZQ.on !== false ? 'Lista para chatear, gratis.' : (window.puter && puter.auth && puter.auth.isSignedIn()) ? 'Lista: puedes chatear con tu cuenta de Puter.' : 'Las IAs gratis están descansando un rato. Conecta Puter para seguir ya.';
+    hint.textContent = n ? SZ.t(n === 1 ? 'ix.hint1' : 'ix.hintN', { n }) : SZ.t('ix.hint0');
+  } else hint.textContent = SZ.t(SZ.SZQ.on !== false ? 'ix.hintOn' : (window.puter && puter.auth && puter.auth.isSignedIn()) ? 'ix.hintPu' : 'ix.hintOff');
   $('#launch').style.setProperty('--lc', p ? p.c + '2e' : 'rgba(184,196,255,.2)');
 }
 function expandTo(card, href, color){ return SZ.portalOut(href); }
@@ -40,16 +40,26 @@ function expandToOld(card, href, color){
   a.onfinish = () => setTimeout(go, 60);
   setTimeout(go, 1500);
 }
-function openChat(){
+function openChat(from){
   if (leaving) return; leaving = true;
-  const q = $('#launchInp').value.trim(), params = new URLSearchParams({ from:'home' });
+  const box = from && from.nodeType ? from : $('#launch'), inp = box.id === 'heroAsk' ? $('#heroInp') : $('#launchInp');
+  const q = inp.value.trim(), params = new URLSearchParams({ from:'home' });
   if (launchAI === 'cmp') params.set('mode', 'cmp'); else params.set('ai', launchAI);
   if (q) params.set('q', q);
   try{ if (q) sessionStorage.setItem('synthz:q', JSON.stringify({ q, t:Date.now() })); }catch(e){}
   const p = byId(launchAI);
-  expandTo($('#launch'), 'chat.html?' + params.toString(), p ? p.c : '#b8c4ff');
+  expandTo(box, 'chat.html?' + params.toString(), p ? p.c : '#b8c4ff');
 }
-$('#launchGo').addEventListener('click', openChat);
+$('#launchGo').addEventListener('click', () => openChat());
+/* v2.6: en la portada misma se puede preguntar: el cuadro se agranda y SynthFlow abre con la pregunta ya enviada */
+const hask = $('#heroAsk');
+if (hask){
+  hask.addEventListener('submit', e => { e.preventDefault(); if (!$('#heroInp').value.trim()){ $('#heroInp').focus(); hask.classList.remove('nudge'); void hask.offsetWidth; hask.classList.add('nudge'); return; } openChat(hask); });
+  /* ideas que se van turnando en el cuadro vacío, para que se vea qué se puede pedir */
+  const ideas = () => [SZ.t('ix.hold'), SZ.t('ix.idea1'), SZ.t('ix.idea2'), SZ.t('ix.idea3'), SZ.t('ix.idea4')];
+  let ii = 0;
+  if (!reduce) setInterval(() => { const i = $('#heroInp'); if (document.hidden || i.value || document.activeElement === i) return; const L = ideas(); ii = (ii + 1) % L.length; i.placeholder = L[ii]; }, 3200);
+}
 
 /* pasos que se animan con el scroll */
 const hows = $$('.how-card');
@@ -69,11 +79,11 @@ const sprog = document.createElement('i'); sprog.id = 'sprog'; document.body.app
 let spQ = 0; addEventListener('scroll', () => { if (spQ) return; spQ = requestAnimationFrame(() => { spQ = 0; const h = document.documentElement.scrollHeight - innerHeight; sprog.style.transform = 'scaleX(' + (h > 0 ? scrollY / h : 0).toFixed(4) + ')'; }); }, { passive:true });
 const go = id => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior:'smooth' }); };
 SZ.ctxMenu(() => [
-  { label:'Abrir SynthFlow', ico:'open', fn:() => openChat() },
-  { label:'Ver mi consumo', ico:'chart', fn:() => go('consumo') },
-  { label:'Volver arriba', ico:'up', fn:() => scrollTo({ top:0, behavior:'smooth' }) }, '—',
-  { label:'Ajustes', ico:'cog', fn:() => SZ.cfgModal() },
-  { label:'Guía rápida', ico:'help', fn:() => openHelp() }]);
+  { get label(){ return SZ.t('ix.qOpen'); }, ico:'open', fn:() => openChat() },
+  { get label(){ return SZ.t('ix.qUse'); }, ico:'chart', fn:() => go('consumo') },
+  { get label(){ return SZ.t('ix.qUp'); }, ico:'up', fn:() => scrollTo({ top:0, behavior:'smooth' }) }, '—',
+  { get label(){ return SZ.t('ix.qCfg'); }, ico:'cog', fn:() => SZ.cfgModal() },
+  { get label(){ return SZ.t('ix.qHelp'); }, ico:'help', fn:() => openHelp() }]);
 document.addEventListener('click', e => { const u = e.target.closest && e.target.closest('a[data-draft]'); if (!u || e.defaultPrevented || e.button || e.ctrlKey || e.metaKey || e.shiftKey) return; e.preventDefault(); SZ.portalOut(u.getAttribute('href')); });
 document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('a[href="chat.html"]'); if (!a || e.defaultPrevented || e.button || e.ctrlKey || e.metaKey || e.shiftKey) return; e.preventDefault(); openChat(); });
 $('#launchInp').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); openChat(); } });

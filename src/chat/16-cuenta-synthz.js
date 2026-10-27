@@ -1,4 +1,4 @@
-/* ---------- tu cuenta de SynthZ ---------- */
+/* ---------- tu cuenta de SymphorIA ---------- */
 let accEl = null;
 function renderAccBtn(){
   const b = $('#accBtn'); if (!b) return;
@@ -15,7 +15,7 @@ function spaceHtml(){
   return '<div class="aspace' + (k > .9 ? ' warn' : '') + '"><div><b>Tu nube</b><span>' + mb(s.used) + ' de ' + mb(s.max) + ' MB</span></div><span class="tmbar"><i style="transform:scaleX(' + k.toFixed(3) + ')"></i></span>'
     + (SZ.ACC.full ? '<small>Está llena: tus chats nuevos se guardan solo en este dispositivo hasta que borres conversaciones viejas.</small>' : '') + '</div>';
 }
-/* IA de SynthZ: resumen para el equipo; las llaves, el estado y la ayuda viven en Pulsem (pulsem.html) */
+/* IA de SymphorIA: resumen para el equipo; las llaves, el estado y la ayuda viven en Pulsem (pulsem.html) */
 function trialAdminHtml(d){
   const ks = d.keys || [], ok = ks.filter(k => !k.down).length, mine = ks.filter(k => k.mine).length;
   return '<div class="sxlbl">IAS CONECTADAS · PARA TODOS</div><div class="tmc"><div class="trow2"><i class="pdot2 ' + (ok ? 'ok' : ks.length ? 'warn' : 'off') + '" aria-hidden="true"></i><b>' + ok + ' de ' + ks.length + ' llaves activas</b><span>' + ((d.models && d.models.n) || 0) + ' IA gratis · ' + Math.round((d.dayLimit || 25000) / 800) + ' mensajes por persona al día' + (mine ? ' · ' + mine + ' son tuyas' : '') + '</span></div>'
@@ -31,15 +31,14 @@ function accModal(){
   accEl.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="Tu cuenta">'
     + (signed
       ? '<div class="acard"><div class="pfban" style="background:' + SZ.grad(pf.banner || pf.color) + '"></div><div class="pfme">' + SZ.myAvatar('xl') + '<div><b>' + esc(SZ.accName()) + '</b>' + (pf.pronouns ? '<i>' + esc(pf.pronouns) + '</i>' : '') + '<span>' + '<em class="rolep r-' + esc(u.role || 'user') + '">' + esc(SZ.ROLE_NAME[u.role || 'user'] || u.role) + '</em> ' + esc(SZ.accHandle(u)) + ' · ' + (A.full ? 'tu cuenta está llena' : A.err ? 'sin guardar en tu cuenta' : A.t ? 'guardado ' + ago(A.t) : 'guardando…') + '</span></div></div>' + (pf.status ? '<p class="pfs">' + esc(pf.status) + '</p>' : '') + (pf.bio ? '<p class="pfb">' + esc(pf.bio) + '</p>' : '') + '</div>'
-        + '<div class="aact"><button class="btn sm" type="button" id="aEdit">Editar perfil</button><button class="btn sm ghost" type="button" id="aSurvey">Mis IA ideales</button>' + (u.kind === 'pass' || u.username ? '<button class="btn sm ghost" type="button" id="aSec">Seguridad</button>' : '') + '</div>'
+        + '<div class="aact"><button class="btn sm" type="button" id="aEdit">Editar perfil</button><button class="btn sm ghost" type="button" id="aSurvey">Mis IA ideales</button>' + '<button class="btn sm ghost" type="button" id="aSec">Seguridad y acceso</button>' + '</div>'
         + '<div class="sxstats"><div><b>' + fmt(n) + '</b><span>chats en la nube</span></div><div><b>' + fmt(Object.values(st().usage || {}).reduce((a, u) => a + (u.requests || 0), 0)) + '</b><span>respuestas en total</span></div><div><b>' + fmt(Object.values(st().chats).reduce((a, c) => a + (Array.isArray(c) ? c.filter(m => m && m.star).length : 0), 0)) + '</b><span>mensajes favoritos</span></div></div>'
         + (false ? '<div class="sxsave"><p>Guardar mi llave de OpenRouter (de antes) en mi cuenta, cifrada, para no volver a pegarla en otro dispositivo.</p><button class="sxsw" id="aKey" type="button" aria-pressed="' + !!st().syncKey + '" aria-label="Guardar mi llave en mi cuenta"></button></div>' : '')
         + spaceHtml()
-        + '<div class="glinks" id="aLinks" hidden><p><b>Cuentas de Google vinculadas</b><span>Une tus cuentas de Google a esta para entrar con cualquiera de ellas sin crear cuentas repetidas.</span></p><div id="aLinkList"></div><div class="gbtn" id="aLinkBtn"></div></div>'
-        + (u.claimable ? '<div class="sxsave"><p>Esta cuenta está reservada para el equipo de SynthZ. Actívala con tu código de configuración.</p><button class="btn sm" id="aClaim" type="button">Activar mi rango</button></div>' : '')
+        + (u.claimable ? '<div class="sxsave"><p>Esta cuenta está reservada para el equipo de SymphorIA. Actívala con tu código de configuración.</p><button class="btn sm" id="aClaim" type="button">Activar mi rango</button></div>' : '')
         + (['owner', 'admin', 'staff'].includes(u.role) ? '<div id="aTrial"><div class="tmload">Cargando las IAs conectadas…</div></div>' : '')
 
-      : '<div class="word" id="aWord"></div><div class="tn">TU CUENTA</div><div class="tb"><h3>Entra a SynthFlow</h3><p>Con tu cuenta tus chats y favoritos te siguen a cualquier dispositivo, personalizas tu perfil y puedes hablar con el equipo de SynthZ. Solo necesitas un usuario y una contraseña (o tu cuenta de Google). Puter sigue siendo solo para sus IA.</p><div id="aAuth"></div></div>')
+      : '<div class="word" id="aWord"></div><div class="tn">TU CUENTA</div><div class="tb"><h3>Entra a SynthFlow</h3><p>Con tu cuenta tus chats y favoritos te siguen a cualquier dispositivo, personalizas tu perfil y puedes hablar con el equipo de SymphorIA. Solo necesitas un usuario y una contraseña (o tu cuenta de Google). Puter sigue siendo solo para sus IA.</p><div id="aAuth"></div></div>')
     + '<div class="tbtn" style="margin-top:18px"><button class="lnk" id="aClose" type="button">Cerrar</button>'
     + (signed ? '<button class="lnk" id="aSync" type="button">Guardar ahora</button><button class="lnk" id="aDel" type="button">Borrar cuenta</button><button class="btn sm ghost" id="aOut" type="button">Cerrar sesión</button>' : '') + '</div>'
     + (signed ? '<div class="aout2"><button class="lnk" id="aOutAll" type="button">Cerrar sesión en todos mis dispositivos</button></div>' : '') + '</div>';
@@ -54,13 +53,6 @@ function accModal(){
   if (ab) SZ.authBox(ab, () => { reopen(); renderAccBtn(); }, k => { close(); showBlockHelp(k); });
   if (!signed) return;
   $('#aEdit').addEventListener('click', () => SZ.profileModal(() => { renderAccBtn(); reopen(); }));
-  SZ.accConfig().then(() => {
-    const box = $('#aLinks'); if (!box || !SZ.ACC.google) return; box.hidden = false;
-    const list = $('#aLinkList'), L = (SZ.ACC.user && SZ.ACC.user.links) || [];
-    list.innerHTML = L.length ? L.map(x => '<div class="gl-row"><span>' + esc(x.email) + '</span><button class="lnk" type="button" data-un="' + esc(x.email) + '">Quitar</button></div>').join('') : '<div class="gl-row gl-none">Todavía no has vinculado ninguna.</div>';
-    list.addEventListener('click', async e => { const b = e.target.closest('[data-un]'); if (!b) return; b.disabled = true; try{ await SZ.accUnlink(b.dataset.un); toast('Listo: lo quité de tu cuenta.'); reopen(); }catch(er){ b.disabled = false; toast(er.message); } });
-    SZ.googleBtn($('#aLinkBtn'), () => reopen(), k => { close(); showBlockHelp(k); });
-  }).catch(() => {});
   const sec = $('#aSec'); if (sec) sec.addEventListener('click', () => SZ.securityModal());
   $('#aSurvey').addEventListener('click', () => SZ.surveyModal(ok => { if (ok){ forMeK = ''; applySurvey(true); renderList({ keep:true }); } }));
   const aKey = $('#aKey'); if (aKey) aKey.addEventListener('click', e => { st().syncKey = !st().syncKey; save(); e.currentTarget.setAttribute('aria-pressed', String(!!st().syncKey)); if (!st().syncKey) SZ.api('me', { method:'PUT', body:{ key:'' } }).catch(() => {}); toast(st().syncKey ? 'Tu llave se guardará cifrada en tu cuenta.' : 'Tu llave se borró de tu cuenta.'); });
@@ -92,7 +84,7 @@ function accModal(){
   });
   const cl = $('#aClaim');
   if (cl) cl.addEventListener('click', async () => {
-    const v = await SZ.szPrompt('Activar tu rango', 'Escribe el código de configuración del equipo de SynthZ.', 'Activar', { sec:true });
+    const v = await SZ.szPrompt('Activar tu rango', 'Escribe el código de configuración del equipo de SymphorIA.', 'Activar', { sec:true });
     if (!v) return;
     try{ const r = await SZ.accClaim(v); toast('¡Listo! Tu rango: ' + (SZ.ROLE_NAME[r] || r) + '.'); reopen(); }catch(er){ toast(er.message); }
   });

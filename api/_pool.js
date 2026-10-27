@@ -1,4 +1,4 @@
-/* IA de SynthZ (beta 2): las llaves de Prime, ZFlow y Symmetrix se juntan y se reparten entre todos.
+/* IA de SymphorIA (beta 2): las llaves de Prime, ZFlow y Symmetrix se juntan y se reparten entre todos.
    · Solo modelos GRATIS: Groq, Mistral y Cloudflare (planes gratis) y los «:free» de OpenRouter. Los de pago se rechazan.
    · Cada persona tiene un tope de SynXCoin's al día (20.000 por defecto). Lo que se usa con Puter no cuenta.
    · Las llaves viven cifradas en el servidor; nunca salen hacia el navegador ni a los registros.
@@ -40,7 +40,7 @@ export const DAY_LIMIT_DEFAULT = 25000;   /* ≈ 30 mensajes al día por persona
 const wait = ms => new Promise(r => setTimeout(r, ms));
 const err = (s, m, code) => Object.assign(new Error(m), { status:s, code });
 export const mask = k => k ? '••••' + String(k).slice(-4) : '';
-export const classify = s => s === 401 || s === 403 ? 'llave inválida o sin permiso' : s === 402 ? 'requiere pago (bloqueado: SynthZ no paga)' : s === 404 ? 'modelo no disponible' : s === 429 ? 'límite gratis alcanzado por ahora' : s >= 500 ? 'el proveedor está fallando' : 'error ' + s;
+export const classify = s => s === 401 || s === 403 ? 'llave inválida o sin permiso' : s === 402 ? 'requiere pago (bloqueado: SymphorIA no paga)' : s === 404 ? 'modelo no disponible' : s === 429 ? 'límite gratis alcanzado por ahora' : s >= 500 ? 'el proveedor está fallando' : 'error ' + s;
 export const provSaid = t => { let m = String(t || ''); try{ const j = JSON.parse(m); m = (j.error && (j.error.message || j.error)) || j.message || j.detail || m; }catch(e){} return String(typeof m === 'string' ? m : JSON.stringify(m)).replace(/(gsk_|sk-|cfat_|Bearer\s+)[\w-]{6,}/gi, '••').replace(/\s+/g, ' ').trim().slice(0, 160); };
 
 /* si responde 429 por ir muy rápido (no por cuota agotada), espera y reintenta UNA vez */
@@ -66,6 +66,21 @@ export async function saveOwnerKeys(me, rank, patch){
   all[me.sub] = o; await setJ('cfg:pool', all);
   await redis('DEL', 'pool:models');                       /* la lista de modelos se rehace con las llaves nuevas */
   return o;
+}
+/* quitar una llave de la lista (Pulsem): se borra donde está guardada y también lo que quedó de ella (pruebas, pausas, avisos de pago, contadores de hoy) */
+export async function removeKey(id, me, canAll){
+  const k = (await loadKeys()).find(x => x.id === id);
+  if (!k) return { ok:false, status:404, error:'Esa llave ya no está.' };
+  if (k.src === 'vercel') return { ok:false, status:400, error:'Esta llave vive en Vercel (variables de entorno). Se quita desde Vercel.' };
+  const own = k.owner && k.owner.sub === me.sub;
+  if (!own && !canAll) return { ok:false, status:403, error:'Solo Prime y ZFlow pueden quitar llaves de otras personas.' };
+  if (k.src === 'panel'){ const L = (await getJ('cfg:trial')) || {}; if (L.keys) delete L.keys[k.prov]; await setJ('cfg:trial', L); }
+  else { const all = await ownersRaw(), o = all[k.owner.sub]; if (o && o.keys){ delete o.keys[k.prov]; if (k.prov === 'cloudflare') delete o.cfAccount; o.t = Date.now(); await setJ('cfg:pool', all); } }
+  const d = today();
+  await pipe([['DEL', 'pk:chk:' + id], ['DEL', 'pk:down:' + id], ['DEL', 'pk:plan:' + id], ['DEL', 'pool:cfacct:' + id], ['DEL', 'pk:n:' + id + ':' + d], ['DEL', 'pk:t:' + id + ':' + d], ['DEL', 'pool:models']]);
+  const rest = (await loadKeys()).some(x => x.prov === k.prov);
+  if (!rest) await pipe([['DEL', 'alert:' + k.prov], ['SREM', 'alerts', k.prov]]);
+  return { ok:true, prov:k.prov };
 }
 /* todas las llaves: las de Vercel, las del panel viejo de la prueba y las de cada cuenta del equipo */
 export async function loadKeys(){
@@ -151,7 +166,7 @@ async function plan(model){
   const cat = await models(false), want = cat.list.find(m => m.id === model);
   const alts = [];
   for (const p of ORDER){ const m = PROV[p].best.map(b => cat.list.find(x => x.prov === p && x.mid === b)).find(Boolean) || cat.list.find(x => x.prov === p); if (m) alts.push(m); }
-  if (model && model !== 'sz:auto' && !want) throw err(400, 'Ese modelo no es de los gratis de SynthZ.', 'sz_model');
+  if (model && model !== 'sz:auto' && !want) throw err(400, 'Ese modelo no es de los gratis de SymphorIA.', 'sz_model');
   return want ? [want, ...alts.filter(a => a.prov !== want.prov)].slice(0, 3) : alts.slice(0, 3);
 }
 
@@ -190,7 +205,7 @@ export async function chat({ who, ipKey, messages, model, maxTokens, system, str
         const ac = new AbortController(); let tm = setTimeout(() => ac.abort(), 30000);   /* solo espera a que el proveedor conteste */
         try{
           up = await calm(() => fetch(base + '/chat/completions', { method:'POST', signal:ac.signal,
-            headers:Object.assign({ Authorization:'Bearer ' + k.key, 'content-type':'application/json' }, m.prov === 'openrouter' ? { 'HTTP-Referer':'https://synthz.app', 'X-Title':'SynthZ' } : {}), body:JSON.stringify(body) }));
+            headers:Object.assign({ Authorization:'Bearer ' + k.key, 'content-type':'application/json' }, m.prov === 'openrouter' ? { 'HTTP-Referer':'https://synthz.app', 'X-Title':'SymphorIA' } : {}), body:JSON.stringify(body) }));
         } finally { clearTimeout(tm); }
         if (up && up.ok && !stream){ tm = setTimeout(() => ac.abort(), 60000); up._tm = tm; }   /* sin streaming sí hay que esperar el cuerpo completo */
       }catch(e){ up = null; }
@@ -298,7 +313,7 @@ export async function searchWith(k, q, n = 6){
 /* Wikipedia en español: siempre gratis y sin llave (respaldo) */
 export async function searchWiki(q, n = 4){
   const base = process.env.POOL_WIKI_URL || 'https://es.wikipedia.org';
-  const r = await fetch(base + '/w/api.php?action=query&list=search&format=json&utf8=1&srlimit=' + n + '&srsearch=' + encodeURIComponent(q), { headers:{ 'user-agent':'SynthZ/2.1 (https://synthz-style.vercel.app)' }, signal:AbortSignal.timeout(10000) });
+  const r = await fetch(base + '/w/api.php?action=query&list=search&format=json&utf8=1&srlimit=' + n + '&srsearch=' + encodeURIComponent(q), { headers:{ 'user-agent':'SymphorIA/2.1 (https://synthz-style.vercel.app)' }, signal:AbortSignal.timeout(10000) });
   if (!r.ok) return [];
   const d = await r.json().catch(() => ({}));
   return ((d.query && d.query.search) || []).map(x => ({ t:String(x.title), u:base + '/wiki/' + encodeURIComponent(String(x.title).replace(/ /g, '_')), s:String(x.snippet || '').replace(/<[^>]+>/g, '').replace(/&quot;/g, '"').replace(/&amp;/g, '&').slice(0, 500) }));
@@ -306,7 +321,7 @@ export async function searchWiki(q, n = 4){
 export async function checkKey(k){
   if (SEARCH[k.prov]){
     try{
-      await searchWith(k, 'SynthZ prueba', 1);
+      await searchWith(k, 'SymphorIA prueba', 1);
       const out = { ok:true, kind:'ok', state:'funciona · búsquedas gratis (sin tarjeta)' };
       await redis('SET', 'pk:chk:' + k.id, JSON.stringify(Object.assign({ t:Date.now() }, out)), 'EX', '604800'); await redis('DEL', 'pk:down:' + k.id); await clearPay(k);
       return out;
@@ -342,7 +357,7 @@ export async function checkKey(k){
       catch(e){ out = { ok:false, kind:'down', state:'no respondió a tiempo (el proveedor está lento)', model:mid }; continue; }
       if (c.ok){ const j = await c.json().catch(() => ({})); out = j && j.choices ? { ok:true, kind:'ok', state:'funciona · respondió en ' + ((Date.now() - t0) / 1000).toFixed(1).replace('.', ',') + ' s', model:mid } : { ok:false, kind:'err', state:'respondió en un formato raro', model:mid }; break; }
       tx = await c.text().catch(() => ''); const s = c.status;
-      out = s === 402 || (s === 403 && PLAN_RX.test(tx)) ? { ok:false, kind:'plan', state:'pide un plan o un pago (SynthZ no lo activa)' } : s === 401 || s === 403 ? { ok:false, kind:'auth', state:'llave no autorizada' } : s === 429 ? (listed && !PLAN_RX.test(tx) ? { ok:true, kind:'busy', state:'llave válida ✓ · ahora mismo está ocupada (su plan gratis permite pocas por minuto); se usa sola cuando se libera' } : { ok:false, kind:'limit', state:'límite gratis alcanzado por ahora' }) : { ok:false, kind:'down', state:classify(s) };
+      out = s === 402 || (s === 403 && PLAN_RX.test(tx)) ? { ok:false, kind:'plan', state:'pide un plan o un pago (SymphorIA no lo activa)' } : s === 401 || s === 403 ? { ok:false, kind:'auth', state:'llave no autorizada' } : s === 429 ? (listed && !PLAN_RX.test(tx) ? { ok:true, kind:'busy', state:'llave válida ✓ · ahora mismo está ocupada (su plan gratis permite pocas por minuto); se usa sola cuando se libera' } : { ok:false, kind:'limit', state:'límite gratis alcanzado por ahora' }) : { ok:false, kind:'down', state:classify(s) };
       out.detail = provSaid(tx); out.model = mid;
       if (s === 404 || (s === 400 && /model/i.test(tx))) continue;   /* modelo retirado: prueba el siguiente */
       break;

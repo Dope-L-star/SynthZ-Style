@@ -1,0 +1,52 @@
+/* ===== v2.9 · ventanas flotantes de vidrio líquido (como el de Apple): se ve 60-75 % de lo que hay detrás =====
+   Ajustes, Conectar IA, Tu límite de hoy, menús, el panel del celular… Antes eran casi opacas (y en «Más rápido» del todo).
+   Ahora todas: un tinte de noche de ~30 %, un desenfoque que deja leer, borde de luz y un brillo en la esquina.
+   El modo Simple se queda como está (sin efectos, a propósito). */
+html:not(.simple) :is(.tcard,.amenu,.ctxm,.navdrop,.navfly){
+  background:radial-gradient(120% 70% at 0% 0%,rgba(255,255,255,.13),transparent 48%),linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.015) 55%,rgba(255,255,255,.05)),rgba(14,9,36,.3) !important;
+  border:1px solid rgba(255,255,255,.2) !important;
+  -webkit-backdrop-filter:blur(20px) saturate(185%) brightness(.9) !important;backdrop-filter:blur(20px) saturate(185%) brightness(.9) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.34),inset 1px 0 0 rgba(255,255,255,.07),inset 0 -1px 0 rgba(255,255,255,.05),0 30px 80px -24px rgba(3,1,14,.72) !important}
+/* el fondo de atrás apenas se oscurece: si se tapa, el vidrio no tiene nada que mostrar */
+html:not(.simple) :is(.szm,#sx,#acc,#conn,#tour,#blk,#szGate,#drv){background:rgba(6,4,20,.26) !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+/* el panel que sale de un lado en el celular (chats, IAs) también es vidrio */
+@media (max-width:860px){
+  html:not(.simple) #side.side{background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.015) 60%),rgba(12,8,30,.36) !important;
+    -webkit-backdrop-filter:blur(22px) saturate(180%) brightness(.88) !important;backdrop-filter:blur(22px) saturate(180%) brightness(.88) !important;
+    border-right:1px solid rgba(255,255,255,.16) !important}
+  /* los filtros se deslizan encima de la lista: van casi opacos, si no se mezclan las letras de los dos */
+  html:not(.simple) #side.side .pf-l{background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.01) 60%),rgba(13,8,32,.94) !important;
+    -webkit-backdrop-filter:blur(26px) saturate(160%) !important;backdrop-filter:blur(26px) saturate(160%) !important}
+}
+/* dentro del vidrio, las cajitas son vidrio también (nada de bloques negros) */
+html:not(.simple) .tcard :is(.lbar,.sxsave,.bl,.cfgsw,.cfg-row,.acc-box):not(.mp){background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.12)}
+
+/* «Tu límite de hoy»: más compacto y con la letra de la página (antes un número gigante en otra letra) */
+#sx .tcard{padding:24px 24px 18px}
+#sx .tcard .word{display:none}
+#sx .tn{margin-top:0}
+#sx .tcard h3{font-size:clamp(26px,4vw,34px)}
+.limbig{gap:14px;margin:12px 0 6px}
+.limbig svg{width:64px;height:64px;flex:none}
+.limbig b{font:700 clamp(26px,3.6vw,34px)/1.05 var(--sans,"Figtree",system-ui,sans-serif);letter-spacing:-.03em;background:var(--grad-text);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.limbig span{margin-top:3px}
+@media (max-width:520px){
+  #sx{padding:10px !important;align-items:end}
+  #sx .tcard{width:100%;max-height:min(78dvh,640px);padding:18px 16px 12px;border-radius:24px}
+  #sx .tcard h3{font-size:24px}
+  #sx .tcard .tb p{font-size:14px;line-height:1.45}
+  .limbig svg{width:52px;height:52px}
+  .limbig b{font-size:26px}
+  #sx .sxsave p{font-size:13.5px}
+  #sx .sxlbl{margin-top:12px}
+}
+
+/* revisión antes de main: la ventanita de SynthonIA y «¡Descubriste algo nuevo!» también son vidrio (antes gris oscuro opaco) */
+html:not(.simple) :is(#szBotP,.szdisc){
+  background:radial-gradient(120% 70% at 0% 0%,rgba(255,255,255,.12),transparent 48%),linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.015) 55%,rgba(255,255,255,.04)),rgba(14,9,36,.42) !important;
+  border:1px solid rgba(255,255,255,.2) !important;
+  -webkit-backdrop-filter:blur(22px) saturate(180%) brightness(.85) !important;backdrop-filter:blur(22px) saturate(180%) brightness(.85) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 30px 80px -24px rgba(3,1,14,.72) !important}
+html:not(.simple) #szBotP .bh{border-bottom-color:rgba(255,255,255,.12)}
+/* «¡Descubriste algo nuevo!» sale arriba: abajo tapaba el menú que acabas de abrir (adjuntar, modos…) */
+.szdisc{bottom:auto !important;top:calc(env(safe-area-inset-top) + 74px)}

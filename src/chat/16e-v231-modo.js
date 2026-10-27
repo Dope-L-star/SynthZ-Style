@@ -1,5 +1,5 @@
 /* ---------- v2.3.1 · modo de uso: Automática · Chat · SuperiorSynth ----------
-   Automática: SynthZ elige sola la IA y no se muestra el selector.  Chat: eliges tú la IA (empieza en Gemini).
+   Automática: SymphorIA elige sola la IA y no se muestra el selector.  Chat: eliges tú la IA (empieza en Gemini).
    SuperiorSynth: el agente elige la IA; cuando la persona dice «me quedo con esta» pasa a Chat con esa IA al lado.
    El modo se deduce del estado (agente encendido, IA elegida), así que sigue funcionando con todo lo que ya cambia de IA. */
 const MODES = {
@@ -28,7 +28,7 @@ function applyMode(k){
   if (k === 'auto'){ const cur = selId(); if (cur !== 'sz:auto') sx.lastChat = cur; sx.cmode = 'auto'; st().pinned = ''; st().model.openrouter = 'sz:auto'; }
   else { sx.cmode = 'chat'; const want = (sx.lastChat && connected(sx.lastChat) ? sx.lastChat : '') || geminiDefault(); if (want && want !== selId()) setModel(want); }
   save(); paintMode(); try{ paintSel(); renderTop(true); renderMsgs(); updateHint(); }catch(e){}
-  toast(k === 'auto' ? 'Modo Automática: SynthZ elige la IA por ti.' : 'Modo Chat: tú eliges la IA (' + info(selId()).name + ').');
+  toast(k === 'auto' ? 'Modo Automática: SymphorIA elige la IA por ti.' : 'Modo Chat: tú eliges la IA (' + info(selId()).name + ').');
 }
 function paintMode(){
   const k = modeKey(), b = $('#cMode'); if (!b) return;

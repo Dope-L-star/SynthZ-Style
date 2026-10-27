@@ -1,7 +1,7 @@
 /* ---------- barrita lateral y tus chats ---------- */
 const RAIL_KEY = 'synthz:rail';
 const RS = { open:false, chats:null, view:'chats' };
-try{ const r = JSON.parse(localStorage.getItem(RAIL_KEY)) || {}; if (typeof r.open === 'boolean') RS.open = r.open; if (typeof r.chats === 'boolean') RS.chats = r.chats; if (r.view === 'favs' || r.view === 'agents') RS.view = r.view; }catch(e){}
+try{ const r = JSON.parse(localStorage.getItem(RAIL_KEY)) || {}; if (typeof r.open === 'boolean') RS.open = r.open; if (typeof r.chats === 'boolean') RS.chats = r.chats; if (r.view === 'favs') RS.view = r.view; }catch(e){}
 if (RS.chats === null) RS.chats = !isTablet();
 let cView = RS.view;
 const saveRS = () => { try{ localStorage.setItem(RAIL_KEY, JSON.stringify(RS)); }catch(e){} };
@@ -9,10 +9,9 @@ function applyRail(){
   const sh = $('#shell'), tg = $('#railTog');
   $('#rail').classList.toggle('open', !!RS.open); sh.classList.toggle('ropen', !!RS.open); sh.classList.toggle('nochats', !RS.chats);
   tg.setAttribute('aria-expanded', String(!!RS.open)); tg.setAttribute('aria-label', RS.open ? 'Cerrar la barra' : 'Abrir la barra'); tg.dataset.tip = RS.open ? 'Cerrar la barra' : 'Abrir la barra';
-  $$('#rail [data-r]').forEach(b => { const r = b.dataset.r; b.setAttribute('aria-pressed', String((r === 'agents' && cView === 'agents') || (r === 'chats' && RS.chats && cView === 'chats') || (r === 'favs' && RS.chats && cView === 'favs'))); });
+  $$('#rail [data-r]').forEach(b => { const r = b.dataset.r; b.setAttribute('aria-pressed', String((r === 'chats' && RS.chats && cView === 'chats') || (r === 'favs' && RS.chats && cView === 'favs'))); });
   $$('#cSeg button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.v === cView))); placePill($('#cSeg'));
   $('#railWord').tabIndex = RS.open ? 0 : -1;
-  setAgent(cView === 'agents');
 }
 function showChats(view, focus){
   if (isMobile()){ cView = view || cView; openChatsSheet(focus); return; }
@@ -25,7 +24,6 @@ $('#rail').addEventListener('click', e => {
   const r = b.dataset.r;
   if (r === 'new'){ newChat(); return; }
   if (r === 'search'){ showChats('chats', true); return; }
-  if (r === 'agents' && cView === 'agents'){ cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(true); toast('Saliste del modo agente.'); return; }
   if ((r === 'chats' || r === 'favs') && RS.chats && cView === r && !RS.open){ RS.chats = false; saveRS(); applyRail(); return; }
   showChats(r);
 });
@@ -55,19 +53,20 @@ function newChat(){
 }
 
 /* volver con un fundido */
-/* volver a SynthZ: la película del portal al revés */
+/* volver a SymphorIA: la película del portal al revés */
 /* v1.4: con la barra lateral abierta, el logo «SynthFlow» NO lleva a la portada (solo hace un brillito) */
 document.addEventListener('click', e => { const w = e.target.closest && e.target.closest('#railWord'); if (w){ e.preventDefault(); e.stopPropagation(); w.classList.remove('tw'); void w.offsetWidth; w.classList.add('tw'); } }, true);
 document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('a[href="index.html"]'); if (!a || a.id === 'railWord' || (e.defaultPrevented && !/^(backLink|mLogo)$/.test(a.id)) || e.button || e.ctrlKey || e.metaKey || e.shiftKey) return; e.preventDefault(); SZ.portalBack('index.html'); });
 addEventListener('pageshow', e => { if (e.persisted){ root.classList.remove('bye'); const pp = document.getElementById('portal'); if (pp) pp.remove(); SZ.S.busy(false); } });
 SZ.hooks.usage = () => { renderFoot(); coinWatch(); };
 SZ.hooks.md = () => { if (!Object.keys(busy).length && mode === 'solo' && chatArr().length) renderMsgs(); };
+SZ.onLang(() => { if (!Object.keys(busy).length && mode === 'solo') renderMsgs(); });   /* v3.0 · el saludo cambia de idioma al momento */
 
 /* ---------- tutorial, mejor IA gratis y menú contextual ---------- */
 const APODEX_NAME = 'Automática';
 const TOUR = [
   { t:'Bienvenido a SynthFlow', p:'Aquí chateas gratis con muchas IA. No tienes que configurar nada: escribe y listo.' },
-  { t:'Tu Puter (opcional)', p:'Cada día tienes un límite gratis para usar las IAs conectadas. A medianoche se vuelve a llenar. Si se te acaban, puedes seguir con Puter. Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.', x:'conn' },
+  { t:'Tu Puter', p:'Cada día tienes un límite gratis para usar las IAs conectadas. A medianoche se vuelve a llenar. Si se te acaban, puedes seguir con Puter, que te da la versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.', x:'conn' },
   { t:'¿Dónde quieres empezar?', p:'Elige y te dejo en su pestaña con su mejor IA. Si no eliges, empiezas con ' + APODEX_NAME + '.', x:'pick' },
   { t:'Tu límite de hoy', p:'Cada día tienes un límite gratis. El anillo de la barrita se va vaciando mientras chateas y se llena otra vez a medianoche. «Respuestas cortas» te ayuda a que te alcancen más.' },
   { t:'Más trucos', p:'Adjunta imágenes, PDF o código con el «+». En "Comparar" le preguntas lo mismo a hasta 4 IAs. El botón «?» de arriba abre la guía rápida cuando quieras.' },
@@ -80,7 +79,7 @@ function tourBox(box, kind){
   if (kind === 'conn'){
     const hasP = puterOn(), on = szOn();
     box.innerHTML = '<div class="tconn"><div class="trow"><b><i class="pdot' + (on ? ' on' : '') + '"></i> <span class="sz-logo" aria-hidden="true"></span> IAs conectadas</b><span>' + (on ? 'Listas · gratis' : 'Descansando un momento') + '</span>' + (on ? '<i class="ok">✓ Lista</i>' : '') + '</div>'
-      + '<div class="trow"><b><i class="pdot' + (hasP ? ' on' : '') + '"></i> ' + SZ.puterLogo() + ' Puter</b><span>Opcional · un clic</span>' + (hasP ? '<i class="ok">✓ Conectada</i>' : '<button class="btn sm" data-tpu type="button">Conectar</button><button class="lnk" data-tpt type="button">Sin cuenta de Puter</button>') + '</div></div>';
+      + '<div class="trow"><b><i class="pdot' + (hasP ? ' on' : '') + '"></i> ' + SZ.puterLogo() + ' Puter</b><span>Tus IAs pro · un clic</span>' + (hasP ? '<i class="ok">✓ Conectada</i>' : '<button class="btn sm" data-tpu type="button">Conectar</button><button class="lnk" data-tpt type="button">Sin cuenta de Puter</button>') + '</div></div>';
     const pu = $('[data-tpu]', box);
     if (pu) pu.addEventListener('click', () => { pu.textContent = 'Conectando…'; puterSignIn().then(() => { afterConnect('¡Puter conectado!'); tourBox(box, 'conn'); }).catch(e => { pu.textContent = 'Conectar'; if (!(e && e.shown)) toast('No terminaste de entrar a Puter. Inténtalo otra vez.'); }); });
     const pt = $('[data-tpt]', box);
@@ -88,10 +87,10 @@ function tourBox(box, kind){
   } else if (kind === 'pick'){
     const bp = bestOf('pu'), bo = bestOf('sz');
     const card = (k, title, sub, model) => '<button type="button" class="tpick' + (tourPick === k ? ' on' : '') + '" data-k="' + k + '"><b>' + title + '</b><span>' + sub + '</span><em>' + esc(model) + '</em></button>';
-    box.innerHTML = '<div class="tpicks">' + card('sz', 'IAs conectadas', 'Gratis · listas', bo ? bo.name : 'Automática') + card('pu', 'Puter', 'Opcional · un clic', bp ? bp.name : 'ChatGPT') + card('none', 'Ninguno', 'Por defecto', 'Automática') + '</div>';
+    box.innerHTML = '<div class="tpicks">' + card('sz', 'IAs conectadas', 'Gratis · listas', bo ? bo.name : 'Automática') + card('pu', 'Puter', 'Tus IAs pro · un clic', bp ? bp.name : 'ChatGPT') + card('none', 'Ninguno', 'Por defecto', 'Automática') + '</div>';
     $$('.tpick', box).forEach(b => b.addEventListener('click', () => { tourPick = b.dataset.k; tourBox(box, 'pick'); }));
   } else if (kind === 'done'){
-    const id = pickTarget(), where = tourPick === 'pu' ? 'Puter' : tourPick === 'sz' ? 'SynthZ' : 'Todos';
+    const id = pickTarget(), where = tourPick === 'pu' ? 'Puter' : tourPick === 'sz' ? 'SymphorIA' : 'Todos';
     box.innerHTML = '<div class="tsum">Empiezas con <b>' + esc(info(id).name) + '</b> en la pestaña <b>' + where + '</b>.' + (connected(id) ? '' : /^pu:/.test(id) ? ' Te pediré entrar a Puter cuando escribas tu primer mensaje.' : '') + '</div>';
   } else box.innerHTML = '';
 }
@@ -108,7 +107,7 @@ function tourStep(anim, dir){
   if (!anim){ set(); return; }
   SZ.swapDir(b, dir || 1, set);
 }
-function openHelp(){ SZ.helpGuide({ extra:[['Ver la Guía Asistida', () => runGuide()], ['Conectar mi Puter (opcional)', openTour], ['Ver mi límite de hoy', () => coinModal('panel')]] }); }
+function openHelp(){ SZ.helpGuide({ extra:[['Ver la Guía Asistida', () => runGuide()], ['Conectar mi Puter', () => openConnect()], ['Ver mi límite de hoy', () => coinModal('panel')]] }); }
 $('#helpBtn').addEventListener('click', () => openGuide());
 $('#guideTop').addEventListener('click', () => openGuide());
 function openTour(){

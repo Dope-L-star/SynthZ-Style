@@ -6,7 +6,7 @@ function mmOpen(){
   const L = [{ label:'Nuevo chat', ico:'new', fn:() => newChat() }];
   if (mode === 'solo') L.push({ label:'Copiar la conversación', ico:'copy', fn:() => { copyText(chatMd()); toast('Conversación copiada.'); } }, { label:'Descargar como texto', ico:'down', fn:exportMd });
   else L.push({ label:'Empezar otra comparación', ico:'cmp', fn:() => clearChat() }, { label:'Volver a una sola IA', ico:'exit', fn:() => removeCmp(st().cmp[st().cmp.length - 1]) });
-  L.push('—', { label:'Lo que recuerdo de ti', ico:'brain', fn:() => SZ.cfgModal('mem') }, { label:'Ajustes', ico:'cog', fn:() => SZ.cfgModal() }, { label:'Ayuda: algo no carga', ico:'help', fn:() => showBlockHelp(window.__puterBlocked ? 'script' : 'popup') });
+  L.push('—', { label:'Lo que recuerdo de ti', ico:'brain', fn:() => SZ.cfgModal('mem') }, { label:'Ajustes', ico:'cog', fn:() => SZ.cfgModal() }, { label:SZ.lang() === 'en' ? 'Español' : 'English', ico:'globe', fn:() => SZ.setLang(SZ.lang() === 'en' ? 'es' : 'en') }, { label:'Ayuda: algo no carga', ico:'help', fn:() => showBlockHelp(window.__puterBlocked ? 'script' : 'popup') });
   if (trialOn) L.push({ label:'Salir de la prueba guiada', ico:'exit', fn:() => exitTrial() });
   if (mode === 'solo') L.push('—', { label:'Borrar este chat', ico:'trash', danger:true, fn:() => clearChat(true) });
   const r = mb.getBoundingClientRect(), m = SZ.menuOpen(L, 0, r.bottom + 8, 'mm');
@@ -75,7 +75,7 @@ function driveModal(){
   const paint = async () => {
     const cid = await SZ.DRIVE.cid(), m = SZ.DRIVE.meta();
     const body = !cid
-      ? '<p class="cnote">Google Drive todavía no está activado en SynthZ. Cuando Prime o ZFlow lo activen, aquí podrás vincular tu Drive con un clic. Mientras tanto, tus chats siguen guardados en este dispositivo' + (SZ.ACC.ready ? ' y en tu cuenta.' : '.') + '</p>'
+      ? '<p class="cnote">Google Drive todavía no está activado en SymphorIA. Cuando Prime o ZFlow lo activen, aquí podrás vincular tu Drive con un clic. Mientras tanto, tus chats siguen guardados en este dispositivo' + (SZ.ACC.ready ? ' y en tu cuenta.' : '.') + '</p>'
       : m && m.linked
         ? '<div class="drst"><i class="pdot2 ' + (SZ.DRIVE.live() ? 'ok' : 'wait') + '" aria-hidden="true"></i><div><b>Tu Drive está vinculado</b><span>' + (m.last ? 'Última copia ' + agoTxt(m.last) + ' · ' + fmt(m.n || 0) + (m.n === 1 ? ' chat · ' : ' chats · ') + ((m.size || 0) / 1048576).toFixed(2).replace('.', ',') + ' MB' : 'Aún sin copia') + '</span><small>' + (SZ.DRIVE.live() ? 'Mientras esta pestaña esté abierta, cada cambio se guarda solo.' : 'Toca «Guardar ahora» para guardar y traer tus chats.') + '</small></div></div>'
         : '<ul class="drl"><li><b>Más espacio:</b> tus chats viven también en tu Google Drive, no solo en este dispositivo.</li><li><b>Privado:</b> uso solo una carpeta oculta de SynthFlow. No puedo ver ni tocar tus otros archivos.</li><li><b>Seguro:</b> nunca borro chats al traerlos (se mezclan) y tus llaves no van en la copia.</li></ul>';

@@ -1,0 +1,13 @@
+/* ===== v2.6 · SynthCode con los colores «Noche Synth» y el vidrio de la v2.6 ===== */
+.ckbar{background:rgba(255,255,255,.035);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.ckbar.run,.ckbar.warn{border-color:rgba(255,200,87,.32)}
+.ckbar.run .ck-ic,.ckbar.warn .ck-ic{color:#ffc857;background:rgba(255,200,87,.12)}
+.ckbar.warn{background:rgba(255,200,87,.05)}
+.ckbar .ck-l li::before{background:#ffc857}
+.ckbar .ck-l li.bad::before{background:#ff8a7e}
+.ckbar .ck-go:hover{background:rgba(61,224,255,.08);border-color:rgba(61,224,255,.4)}
+.ckbar button:focus-visible,.cvt button:focus-visible{outline-color:#3de0ff}
+.cvp-prev.tools,.cvt{background:#120c26}
+.cvt-log{background:#0b0820}
+.cvt-sz button[aria-pressed="true"]{background:linear-gradient(90deg,rgba(123,63,242,.45),rgba(255,61,154,.3));color:#fff}
+.ckbar.idle{padding:0;border:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none}

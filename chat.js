@@ -31,22 +31,22 @@ const idx = new Map(), newIds = new Set();
 function setCatalog(list, t, status){ list = (list || []).filter(m => !SZ.isBad(m.id)); cat = { t, list, status }; idx.clear(); list.forEach(m => idx.set(m.id, m)); }
 function stub(id){
   if (id === 'imagen') return { id, name:'Creador de imágenes', vendor:'synthz', vlabel:'Imágenes', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'', stub:true };
-  if (id === 'agente') return { id, name:'Modo agente', vendor:'synthz', vlabel:'Elige la IA por ti', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'', stub:true };
+  if (id === 'agente') return { id, name:'SuperiorSynth', vendor:'synthz', vlabel:'Elige la IA por ti', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'', stub:true };
   if (id === 'sz:auto') return Object.assign({}, SZ.SZ_AUTO, { stub:true });
   if (/^sz:/.test(id)){ const mid = id.split(':').slice(2).join(':'); return { id, name:mid.replace(/^[^/]+\//, ''), vendor:'synthz', vlabel:'Gratis', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'', stub:true }; }
   const v = id.split('/')[0] || 'otro', nm = (id.split('/').slice(1).join('/') || id).replace(/:free$/, '');
   return { id, name:nm, vendor:v, vlabel:vendorLabel(v), ctx:0, free:/:free$/.test(id), created:0, vision:false, reasoning:false, tools:false, desc:'', stub:true };
 }
-/* prueba guiada (modalidad C): un «modelo» propio que pasa por el servidor de SynthZ */
+/* prueba guiada (modalidad C): un «modelo» propio que pasa por el servidor de SymphorIA */
 const TRIAL_ID = 'tr:prueba';
-const TRIAL_INFO = { id:TRIAL_ID, name:'Prueba de SynthZ', vendor:'synthz', vlabel:'Prueba guiada', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'' };
+const TRIAL_INFO = { id:TRIAL_ID, name:'Prueba de SymphorIA', vendor:'synthz', vlabel:'Prueba guiada', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'' };
 let trialOn = false;
 const info = id => id === TRIAL_ID ? TRIAL_INFO : idx.get(id) || stub(id);
 function fallbackList(){ return [...new Set(['sz:auto', ...(st().models.openrouter || []).filter(x => !orOn() ? /^(sz|pu):/.test(x) : true)])].map(stub); }
 const cached = SZ.loadCatalog();
 if (cached) setCatalog(cached.list, cached.t, 'cached'); else setCatalog([], 0, 'loading');
 
-const APODEX = 'sz:auto';   /* «SynthZ Auto»: las IAs conectadas elige sola el mejor modelo gratis que esté libre (beta 2) */
+const APODEX = 'sz:auto';   /* «SymphorIA Auto»: las IAs conectadas elige sola el mejor modelo gratis que esté libre (beta 2) */
 const selId = () => trialOn ? TRIAL_ID : (st().model.openrouter || APODEX);
 const kfmt = n => !n ? '' : n >= 1e6 ? (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : n >= 1000 ? Math.round(n / 1000) + 'k' : String(n);
 const isNew = m => newIds.has(m.id) || (m.created && Date.now() / 1000 - m.created < 14 * 86400);
@@ -395,13 +395,20 @@ function retype(el, text, o){ el.textContent = text; el._chars = null; el.remove
 const PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
 const CARET = '<svg class="cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
 const XS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+/* v2.3 · con SuperiorSynth encendido, arriba a la izquierda va su sello (en el celular, solo su logo) */
+const ssTopHtml = () => '<button type="button" class="sstop" id="ssTop" aria-haspopup="menu" data-menu-owner aria-label="SuperiorSynth elige la IA por ti. Toca para opciones">' + ssIco('lg') + '<span class="sst-t"><b>SuperiorSynth</b><small>elige la IA por ti</small></span>' + CARET + '</button>';
 function renderTop(animate){
   const row = $('#pickRow');
   try{ renderCPick(); }catch(e){}
+  if (mode === 'solo' && agentOn()){
+    row.classList.remove('n3', 'n4');
+    row.innerHTML = ssTopHtml() + (document.body.classList.contains('fresh') ? '' : '<span class="paym" id="payM"></span>');
+    paintPay(); return;
+  }
   if (mode === 'solo' && document.body.classList.contains('fresh')){
     row.classList.remove('n3', 'n4');
     const ok0 = connected(selId()), [k1, long1] = payOf(selId()), k = ok0 ? k1 : 'off', long = ok0 ? long1 : /^pu:/.test(selId()) ? 'Puter · sin conectar (toca para conectarlo)' : long1, left = trialOn ? trialLeft() : 0;
-    row.innerHTML = '<button type="button" class="paypill ' + k + '" id="payPill" title="Quién paga lo que escribes">' + '<i aria-hidden="true"></i>' + (trialOn ? 'Prueba guiada · te quedan <b>' + left + ' de ' + ((SZ.trialGet() || {}).max || 5) + '</b> · la paga SynthZ' : esc(long)) + CARET + '</button>';
+    row.innerHTML = '<button type="button" class="paypill ' + k + '" id="payPill" title="Quién paga lo que escribes">' + '<i aria-hidden="true"></i>' + (trialOn ? 'Prueba guiada · te quedan <b>' + left + ' de ' + ((SZ.trialGet() || {}).max || 5) + '</b> · la paga SymphorIA' : esc(long)) + CARET + '</button>';
     return;
   }
   if (mode === 'solo'){
@@ -426,6 +433,7 @@ $('#cPick').addEventListener('click', e => { if (side.classList.contains('open')
 $('#cCmp').addEventListener('click', e => openSide('add', e.currentTarget));
 $('#pickRow').addEventListener('click', e => {
   if (e.target.closest('#payPill')){ if (needsConn()) openConnect(); else coinModal('panel'); return; }
+  const ss = e.target.closest('#ssTop'); if (ss){ const r = ss.getBoundingClientRect(); SZ.menuOpen([{ head:'SuperiorSynth' }, { label:'Elegir yo la IA', ico:'chats', fn:() => applyMode('chat') }, { label:'¿Qué hace SuperiorSynth?', ico:'help', fn:() => toast('Tú escribes; SuperiorSynth entiende tu pedido, lo mejora y elige la IA que más sabe de eso. Al final decides si te quedas con esa IA.') }], r.left, r.bottom + 6, 'sstm'); return; }
   const rm = e.target.closest('[data-rm]'); if (rm){ removeCmp(rm.dataset.rm, rm.closest('.mchip')); return; }
   const ad = e.target.closest('[data-add]'); if (ad){ if ($('#side').classList.contains('open') && pickMode === 'add') closeSide(); else openSide('add', ad); return; }
   const bt = e.target.closest('#btTog'); if (bt){ st().battle = !st().battle; save(); bt.setAttribute('aria-pressed', String(!!st().battle)); toast(st().battle ? 'A ciegas: no verás qué IA es hasta que votes (desde la próxima pregunta).' : 'Modo sorpresa apagado: ya ves el nombre de cada IA.'); return; }
@@ -433,19 +441,25 @@ $('#pickRow').addEventListener('click', e => {
 });
 /* quién paga lo que escribes: siempre a la vista (regla 5) */
 function payOf(id){
-  if (id === TRIAL_ID) return ['tr', 'Prueba guiada · la paga SynthZ', 'Prueba · paga SynthZ'];
-  if (/^sz:/.test(id)) return ['sz', 'Gratis · ' + SZ.limTxt().toLowerCase(), 'Gratis · ' + SZ.limShort().toLowerCase()];
+  if (id === TRIAL_ID) return ['tr', 'Prueba guiada · la paga SymphorIA', 'Prueba · paga SymphorIA'];
+  if (/^sz:/.test(id)) return ['sz', 'Gratis · ' + SZ.limTxt().replace(/^./, c => c.toLowerCase()), 'Gratis · ' + SZ.limShort().replace(/^[A-ZÁÉÍÓÚ]/, c => c.toLowerCase())];
   if (/^pu:/.test(id)) return ['pu', 'Con tu Puter · tu cuenta gratis', 'Con tu Puter'];
   return ['or off', 'Esta IA ya no está disponible: elige otra', 'Elige otra IA'];
 }
 function paintPay(){
   let c, l, s, ex = false;
   if (mode === 'cmp'){ c = ''; l = 'Comparando · cada IA cuenta como un mensaje'; s = 'Cada IA cuenta como un mensaje'; }
-  else if (trialOn){ const left = trialLeft(), mx = (SZ.trialGet() || {}).max || 5; c = 'tr'; ex = true; l = left > 0 ? 'Prueba guiada · te quedan ' + left + ' de ' + mx + ' · la paga SynthZ' : 'Prueba guiada terminada'; s = left > 0 ? 'Prueba · ' + left + ' de ' + mx + ' · paga SynthZ' : 'Prueba terminada'; }
+  else if (trialOn){ const left = trialLeft(), mx = (SZ.trialGet() || {}).max || 5; c = 'tr'; ex = true; l = left > 0 ? 'Prueba guiada · te quedan ' + left + ' de ' + mx + ' · la paga SymphorIA' : 'Prueba guiada terminada'; s = left > 0 ? 'Prueba · ' + left + ' de ' + mx + ' · paga SymphorIA' : 'Prueba terminada'; }
   else { const id = selId(), p = payOf(id); c = p[0]; l = p[1]; s = p[2]; if (!connected(id)){ c = 'off'; l = /^pu:/.test(id) ? 'Puter · sin conectar' : l; s = /^pu:/.test(id) ? 'Puter sin conectar' : s; } }
   const P = $('#payL'), M = $('#payM');
   if (P){ P.className = 'payl ' + c; P.innerHTML = '<i aria-hidden="true"></i>' + esc(l) + (ex ? '<button type="button" class="lnk" data-tx="exit">Salir</button>' : ''); }
-  if (M){ M.className = 'paym ' + c; M.innerHTML = '<i aria-hidden="true"></i>' + esc(s); }
+  if (M){
+    const bar = !document.body.classList.contains('fresh') && mode !== 'cmp' && !trialOn && (c === 'sz' || agentOn());
+    if (bar){ const k = Math.max(0, 1 - SZ.limPct()), pc = Math.round(k * 100), lv = SZ.limLvl();
+      M.className = 'paym tlim ' + lv; M.setAttribute('role', 'img'); M.setAttribute('aria-label', SZ.isGuestQ() ? SZ.limTxt() : 'Tu EnerX de hoy: ' + SZ.battPct() + ' %');
+      M.innerHTML = '<span class="tl-l">Hoy</span>' + SZ.limRing(16) + '<em>' + pc + ' %</em>'; }
+    else { M.className = 'paym ' + c; M.removeAttribute('role'); M.removeAttribute('aria-label'); M.innerHTML = '<i aria-hidden="true"></i>' + esc(s); }
+  }
 }
 $('#payL').addEventListener('click', e => { if (e.target.closest('[data-tx="exit"]')) exitTrial(); });
 function paintAccent(){
@@ -470,7 +484,7 @@ addEventListener('online', refreshIdle); addEventListener('offline', refreshIdle
 setInterval(refreshIdle, 2500);
 $('#now').addEventListener('click', e => { const b = e.target.closest('[data-now]'); if (!b) return; if (b.dataset.now === 'conn') openConnect(); else openSide(); });
 function renderNow(){
-  const ids = Object.keys(busy), box = $('#now'); SZ.S.busy(ids.some(id => busy[id] === 'think')); document.title = ids.some(id => busy[id] === 'think') ? 'Pensando… · SynthFlow' : 'SynthFlow · SynthZ';
+  const ids = Object.keys(busy), box = $('#now'); SZ.S.busy(ids.some(id => busy[id] === 'think')); document.title = ids.some(id => busy[id] === 'think') ? 'Pensando… · SynthFlow' : 'SynthFlow · SymphorIA';
   box.innerHTML = ''; box.classList.toggle('many', ids.length > 2);
   /* el letrero «conectado / sin conectar» ya no existe: si falta una IA, la caja de texto se bloquea y lo explica */
   if (!ids.length){ { const [k0, t0] = readyState(); idleK = k0 + t0; } box.classList.add('idle'); }
@@ -486,11 +500,17 @@ function renderNow(){
 }
 function renderFoot(){
   const left = SZ.msgsLeft(), lv = SZ.limLvl();
-  $('#sideFoot').innerHTML = '<button class="sxfoot lim ' + lv + '" id="sxBtn" type="button" title="Tu límite de hoy">' + SZ.limRing(20) + '<span>' + esc(SZ.limTxt()) + '</span></button>';
+  /* v3.0 · «Medidor del día» como batería: la pila se descarga mientras chateas y se carga a medianoche */
+  const k = Math.max(0, 1 - SZ.limPct()), g = SZ.isGuestQ(), big = g ? Math.max(0, (SZ.SZQ.guest.max || 5) - (SZ.SZQ.guest.used || 0)) + '' : Math.round(k * 100) + ' %', of = g ? 'de ' + (SZ.SZQ.guest.max || 5) + ' mensajes de prueba' : k > 0 ? 'de EnerX · se carga a medianoche' : 'sin EnerX · se carga a medianoche';
+  $('#sideFoot').innerHTML = '<button class="sxfoot lim gauge gbatt ' + lv + '" id="sxBtn" type="button" title="Tu EnerX de hoy (tu batería): toca para ver el detalle">'
+    + '<span class="gz-t">EnerX de hoy</span>' + SZ.limRing(40)
+    + '<span class="gz-n"><b>' + esc(big) + '</b><small>' + esc(of) + '</small></span><span class="sr">' + esc(SZ.limTxt()) + '</span></button>';
   const rc = $('#railCoin'); if (rc) rc.innerHTML = SZ.limRing(22) + '<span class="rl">' + esc(SZ.limTxt()) + '</span>';
   const tc = $('#tabCoin .tci'); if (tc) tc.innerHTML = SZ.limRing(22);
 }
 
+/* v2.5 · el ícono del archivo es el del boceto; si no hay, la extensión en letras */
+const fcIc = ext => SZ.fileIco(ext) ? '<span class="fc-ic img" aria-hidden="true">' + SZ.fileIco(ext) + '</span>' : '<span class="fc-ic" aria-hidden="true">' + esc(String(ext).slice(0, 4).toUpperCase()) + '</span>';
 /* ---------- mensajes ---------- */
 const msgsEl = $('#msgs'), lane = $('#lane'), inp = $('#inp'), sendBtn = $('#sendBtn');
 /* v1.8: en modo agente la conversación es una sola aunque cada mensaje lo responda una IA distinta */
@@ -548,7 +568,7 @@ function codeButtons(body){
     if (/^(json|txt)$/.test(M.ext) || /"diapositivas"/.test(M.text)){ const D = deckFrom(M.text); if (D){ deckCard(pre, D); return; } }
     if (isFile(M, pre)){
       const c = document.createElement('div'); c.className = 'fcard'; c.dataset.ext = M.ext;
-      c.innerHTML = '<button type="button" class="fc-main" data-fv="open" title="Abrir ' + esc(M.name) + '"><span class="fc-ic" aria-hidden="true">' + esc(M.ext.slice(0, 4).toUpperCase()) + '</span><span class="fc-t"><b>' + esc(M.name) + '</b><small>' + esc(M.label) + ' · ' + M.lines + (M.lines === 1 ? ' línea' : ' líneas') + (canPreview(M) ? ' · con vista previa' : '') + '</small></span></button>'
+      c.innerHTML = '<button type="button" class="fc-main" data-fv="open" title="Abrir ' + esc(M.name) + '">' + fcIc(M.ext) + '<span class="fc-t"><b>' + esc(M.name) + '</b><small>' + esc(M.label) + ' · ' + M.lines + (M.lines === 1 ? ' línea' : ' líneas') + (canPreview(M) ? ' · con vista previa' : '') + '</small></span></button>'
         + (canPreview(M) ? '<button type="button" class="cnv-b" data-fv="prev">' + CNV_ICO.eye + '<span>Vista previa</span></button>' : '')
         + '<button type="button" class="cnv-b" data-fv="open">' + CNV_ICO.code + '<span>Ver</span></button>'
         + '<button type="button" class="cnv-b" data-fv="down" title="Descargar ' + esc(M.name) + '">' + CNV_ICO.down + '<span>Descargar</span></button>';
@@ -570,7 +590,7 @@ function cnvDownload(M){
 function siblingsOf(card){ const b = card.closest('.body') || card.parentElement; return $$('.fcard pre', b).map(cnvMeta); }
 const escRx = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 function previewDoc(M, sibs){
-  if (M.ext === 'svg') return '<!doctype html><meta charset="utf-8"><style>html,body{margin:0;height:100%;display:grid;place-items:center;background:#fff}svg{max-width:96vw;max-height:96vh}</style>' + M.text;
+  if (M.ext === 'svg') return '<!doctype html><meta charset="utf-8"><style>html,body{margin:0;height:100%;display:grid;place-items:center;background:#fff}svg{max-width:96vw;max-height:96vh}svg:not([width]){width:96vw;height:96vh}</style>' + M.text;
   let h = M.text;
   if (!/<html[\s>]|<body[\s>]|<!doctype/i.test(h)) h = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' + h + '</body></html>';
   (sibs || []).forEach(S => {
@@ -579,17 +599,30 @@ function previewDoc(M, sibs){
   });
   return h;
 }
+/* v2.9.1 · «Sintéticos» (Synthetics): la vista previa ya no es un srcdoc (heredaba las reglas de seguridad de SynthFlow y se rompía con la CSP).
+   Ahora carga /sintetico.html, una página aparte con reglas abiertas, y le pasa el código por postMessage. Igual que los artefactos de Claude. */
+const SYN_URL = '/sintetico.html';
+function synLoad(f, html){
+  const k = 's' + Math.random().toString(36).slice(2, 10); f._synK = k;
+  const on = e => {
+    if (f._synK !== k || !f.isConnected){ removeEventListener('message', on); return; }
+    if (e.source !== f.contentWindow || !e.data || e.data.szs !== 'ready') return;
+    removeEventListener('message', on); f.contentWindow.postMessage({ szs:'doc', html }, '*');
+  };
+  addEventListener('message', on);
+  f.src = SYN_URL + '?k=' + k;
+}
 /* el lienzo: a la derecha en el computador, pantalla completa en el celular */
 let cvEl = null;
 function openCanvas(M, sibs, tab){
   closeCanvas(true);
   const pv = canPreview(M);
   const o = document.createElement('div'); o.className = 'cvp'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', M.name);
-  o.innerHTML = '<div class="cvp-in"><div class="cvp-h"><span class="fc-ic" aria-hidden="true">' + esc(M.ext.slice(0, 4).toUpperCase()) + '</span><span class="cnv-t"><b>' + esc(M.name) + '</b><small>' + esc(M.label) + ' · ' + M.lines + ' líneas</small></span>'
+  o.innerHTML = '<div class="cvp-in"><div class="cvp-h">' + fcIc(M.ext) + '<span class="cnv-t"><b>' + esc(M.name) + '</b><small>' + (pv ? '<span class="cvp-syn" title="Sintético (en inglés, Synthetic): corre aparte y aislado, como en Claude">Sintético</span> · ' : '') + esc(M.label) + ' · ' + M.lines + ' líneas</small></span>'
     + '<button type="button" class="cnv-b" data-cv="copy">' + CNV_ICO.copy + '<span>Copiar</span></button><button type="button" class="cnv-b" data-cv="down">' + CNV_ICO.down + '<span>Descargar</span></button><button type="button" class="cnv-b ic" data-cx aria-label="Cerrar">✕</button></div>'
     + (pv ? '<div class="cvp-tabs" role="tablist"><button type="button" role="tab" data-tab="code">Código</button><button type="button" role="tab" data-tab="prev">Vista previa</button></div>' : '')
     + '<div class="cvp-b"><pre class="cvp-code"><code></code></pre>' + (pv ? '<div class="cvp-prev" hidden></div>' : '') + '</div></div>';
-  const code = $('code', o); code.textContent = M.text;
+  const code = $('code', o); code.innerHTML = hlCode(M.text, M.ext);   /* v2.4 · colores en el código */
   document.body.appendChild(o); cvEl = o; document.body.classList.add('canvasing');
   requestAnimationFrame(() => o.classList.add('on'));
   const box = $('.cvp-prev', o);
@@ -600,8 +633,9 @@ function openCanvas(M, sibs, tab){
       if (M.ext === 'md'){ const d = document.createElement('div'); d.className = 'cvp-md'; d.innerHTML = md(M.text); box.appendChild(d); }
       else {
         /* la vista previa corre aislada: sin acceso a tu cuenta, tus chats ni esta página */
-        const f = document.createElement('iframe'); f.title = 'Vista previa de ' + M.name; f.setAttribute('sandbox', 'allow-scripts allow-modals allow-forms allow-pointer-lock'); f.setAttribute('referrerpolicy', 'no-referrer');
-        f.srcdoc = previewDoc(M, sibs); box.appendChild(f);
+        const f = document.createElement('iframe'); f.title = 'Sintético: vista previa de ' + M.name; f.setAttribute('sandbox', 'allow-scripts allow-modals allow-forms allow-pointer-lock'); f.setAttribute('referrerpolicy', 'no-referrer');
+        box.appendChild(f);
+        if (M.ext === 'svg') synLoad(f, previewDoc(M, sibs)); else cvTools(o, box, M, sibs).load();   /* v2.4 · consola, tamaños de pantalla y volver a cargar */
       }
     }
   };
@@ -612,6 +646,14 @@ function openCanvas(M, sibs, tab){
     const b = e.target.closest('[data-cv]'); if (!b) return;
     if (b.dataset.cv === 'copy'){ await copyText(M.text); flash(b, '¡Copiado!'); } else cnvDownload(M);
   });
+}
+/* v3.0 · al terminar una respuesta con un archivo, su Sintético se abre solo al lado (como en Claude): el que se ve en vivo, si hay; si no, el último.
+   En el celular no se abre solo (taparía todo): queda la tarjeta para tocarla */
+function synAuto(el){
+  if (!el || !matchMedia('(min-width:900px)').matches) return;
+  const cards = $$('.fcard:not(.deck)', el); if (!cards.length) return;
+  const pv = cards.filter(c => canPreview(cnvMeta($('pre', c)))), c = (pv.length ? pv : cards).pop(), M = cnvMeta($('pre', c));
+  openCanvas(M, siblingsOf(c), canPreview(M) ? 'prev' : 'code');
 }
 function closeCanvas(now){ if (!cvEl) return; const o = cvEl; cvEl = null; document.body.classList.remove('canvasing'); if (now){ o.remove(); return; } o.classList.remove('on'); setTimeout(() => o.remove(), 380); }
 addEventListener('keydown', e => { if (e.key === 'Escape' && cvEl){ e.stopPropagation(); closeCanvas(); } }, true);
@@ -649,6 +691,20 @@ const GREET = [
   ['¿En qué te ', 'ayudo', ' hoy?'],
   ['Cuéntame, ¿qué tienes ', 'en mente', '?']
 ];
+/* v3.0 · los mismos saludos en inglés (mismo orden) */
+const GREET_EN = {
+  '¿Qué quieres FlowIA’r hoy?':['What do you want to ', 'FlowIA', ' today?'],
+  '¿Qué quieres FlowIA’r?':['What do you want to ', 'FlowIA', '?'],
+  'Suelta la idea, la FlowIAmos.':['Drop the idea, we\'ll ', 'FlowIA it', '.'],
+  '¿A qué problema le ponemos Flow hoy?':['Which problem gets some ', 'Flow', ' today?'],
+  'Una idea, mucho Flow, cero límites.':['One idea, lots of ', 'Flow', ', zero limits.'],
+  'Tú pones la idea, yo el Flow.':['You bring the idea, ', 'I bring the Flow', '.'],
+  '¿Qué creamos juntos hoy?':['What shall we ', 'create', ' together today?'],
+  '¿Escribimos, programamos o soñamos?':['Shall we write, code ', 'or dream', '?'],
+  'Modo Flow: activado. ¿Qué sigue?':['Flow mode: ', 'on', '. What\'s next?'],
+  '¿En qué te ayudo hoy?':['How can I ', 'help', ' today?'],
+  'Cuéntame, ¿qué tienes en mente?':['Tell me, what do you have ', 'in mind', '?']
+};
 const GKEY = 'synthz:greet';
 let greetI = 0;
 try{ const g = JSON.parse(localStorage.getItem(GKEY) || 'null'); greetI = g && Date.now() - (g.seen || 0) < 12 * 3600e3 && GREET[g.i] ? g.i : 0; }catch(e){}
@@ -656,11 +712,333 @@ function saveGreet(){ try{ localStorage.setItem(GKEY, JSON.stringify({ i:greetI,
 saveGreet();
 function nextGreet(){ let n = greetI; while (n === greetI) n = 1 + Math.floor(Math.random() * (GREET.length - 1)); greetI = n; saveGreet(); }
 function greetHtml(g){
+  if (SZ.lang() === 'en') g = GREET_EN[g.join('')] || g;
   let i = 0;
   const w = s => s.split(/(\s+)/).filter(Boolean).map(x => /^\s+$/.test(x) ? ' ' : '<span class="w" style="--i:' + (i++) + '">' + esc(x) + '</span>').join('');
   const tail = g[2].match(/^[.,!?;:]+/), rest = tail ? g[2].slice(tail[0].length) : g[2];
   /* la palabra resaltada y su punto van juntos: nunca queda un «.» solo al empezar la línea */
   return w(g[0]) + '<span class="wnb">' + '<em class="w" style="--i:' + (i++) + '">' + esc(g[1]) + '</em>' + (tail ? '<span class="w wp" style="--i:' + (i++) + '">' + esc(tail[0]) + '</span>' : '') + '</span>' + w(rest);
+}
+/* ---------- v2.4 · SynthCode: las IAs programan como profesionales ----------
+   1) Cuando pides código, la IA recibe un manual de ingeniería (planear → escribir completo → revisarse).
+   2) Cada página que da la IA se prueba sola en un navegador aislado (computador y celular):
+      errores, botones que fallan, cosas que se salen de la pantalla, imágenes rotas, contraste, código incompleto…
+   3) Si encuentra errores de verdad, la IA los arregla sola una vez; lo demás queda con «Arreglar con la IA».
+   4) El lienzo trae consola, tamaños de pantalla y colores en el código. */
+const CODE_RX = /```|c[oó]digo|program|\bscript|html|\bcss\b|javascript|\bjs\b|typescript|python|\bjava\b|c\+\+|c#|\bphp\b|\bsql\b|react|\bvue\b|svelte|next\.?js|node|\bapi\b|\bbug|depura|debug|compil|funci[oó]n|algoritmo|regex|base de datos|backend|frontend|\bapp\b|aplicaci[oó]n|p[aá]gina web|sitio web|landing|\bweb\b|juego|calculadora|formulario|\bbot\b|terminal|\bbash\b|\bjson\b|tailwind|flutter|kotlin|swift|\brust\b|golang|arduino|excel con macros|macro/i;
+const CODE_FILE_RX = /\.(html?|css|scss|jsx?|tsx?|py|java|c|cpp|cs|go|rs|php|rb|swift|kt|dart|lua|sql|sh|json|vue|svelte|ino)$/i;
+const CODE_SYS = [
+  'MODO SYNTHCODE. Eres un ingeniero de software senior y diseñador de producto de primer nivel. Tu código funciona a la primera, es completo, limpio y hermoso. Eres perfeccionista: prefieres revisar dos veces antes que entregar algo roto.',
+  'CÓMO TRABAJAS',
+  '1. Entiende el pedido. Si algo importante es ambiguo, elige la opción más razonable y dilo en una línea (no frenes con preguntas).',
+  '2. Plan: si el pedido no es trivial, empieza con «**Plan**» y 2 a 5 viñetas cortas (estructura, archivos, decisiones clave).',
+  '3. Escribe el código COMPLETO. Nunca pongas «...», «// resto igual», «// tu código aquí», TODO ni partes omitidas: cada archivo que entregas se puede copiar y correr tal cual. Si cambias un archivo, devuélvelo entero.',
+  '4. Revísate antes de terminar, línea por línea: sintaxis, llaves y etiquetas cerradas, variables definidas antes de usarse, nombres que coinciden entre HTML, CSS y JS, casos borde (vacío, cero, texto largo, error de red), y que todo lo que prometiste esté hecho.',
+  '5. Cierra con «**Revisión**»: 2 a 4 viñetas con lo que comprobaste y cómo usarlo (cómo abrirlo o correrlo). Sin relleno.',
+  'FORMATO',
+  '- Antes de cada bloque de código escribe el nombre del archivo en su propia línea (por ejemplo: index.html). Un bloque por archivo, con el lenguaje correcto en la cerca (```html, ```css, ```js, ```python…).',
+  '- Para una página o app web, si no piden otra cosa, entrega UN solo archivo index.html con el CSS en <style> y el JS en <script>: así se ve al instante en la vista previa. Sin librerías externas salvo que de verdad hagan falta (y entonces desde un CDN conocido con versión fija).',
+  '- Explicaciones breves y claras, en el idioma de la persona. Nada de disculpas ni frases vacías.',
+  'CALIDAD DE CÓDIGO',
+  '- Nombres claros y descriptivos; funciones pequeñas con una sola tarea; nada de código muerto ni duplicado; comentarios solo donde explican el porqué.',
+  '- JavaScript moderno: const/let, ===, funciones flecha, async/await con try/catch, addEventListener (nunca onclick en el HTML), módulos limpios, sin variables globales sueltas. Nunca metas texto del usuario con innerHTML: usa textContent o escápalo.',
+  '- Valida entradas, maneja errores con mensajes amables para la persona y estados de carga, vacío y error. Guarda datos con localStorage cuando tenga sentido (siempre dentro de try/catch).',
+  '- Python: PEP 8, type hints, funciones con docstring corto, pathlib, f-strings, if __name__ == "__main__":, manejo de excepciones concreto, sin dependencias innecesarias (si usas una, di cómo instalarla).',
+  '- Otros lenguajes: sigue las convenciones oficiales del lenguaje y su herramienta de formato estándar.',
+  '- Seguridad: nunca pongas claves ni contraseñas en el código; consultas SQL con parámetros; valida en el servidor.',
+  'DISEÑO (cuando hay interfaz)',
+  '- Se tiene que ver espectacular y profesional, como un producto real de 2026: jerarquía clara, tipografía del sistema o una buena de Google Fonts, escala de tamaños consistente, espacios en múltiplos de 8px, bordes suaves, sombras sutiles y una paleta de 1 color de acento + neutros definida con variables CSS en :root.',
+  '- Responsive de verdad: mobile-first, sin scroll horizontal en un celular de 360px, imágenes con max-width:100%, grid/flex, botones de al menos 44px para el dedo.',
+  '- Accesible: HTML semántico (header, main, nav, section, button), lang en <html>, <meta name="viewport">, <title>, alt en imágenes, labels en los campos, contraste mínimo 4.5:1, foco visible con :focus-visible, todo usable con teclado.',
+  '- Detalles que enamoran: estados hover, active y focus, transiciones de 150 a 300ms, microanimaciones con prefers-reduced-motion respetado, modo oscuro con prefers-color-scheme si encaja, textos reales (nunca lorem ipsum) e íconos en SVG en línea en vez de imágenes que se pueden romper.',
+  'Tu página se probará sola en un navegador (computador y celular): errores de consola, botones, desbordes, imágenes y contraste. Entrégala sin un solo error.'
+].join('\n');
+const CODE_SYS_SHORT = 'MODO SYNTHCODE (ahorro). Eres un ingeniero senior perfeccionista. Entrega código COMPLETO y funcional (nunca «...», TODO ni partes omitidas), con el nombre del archivo antes de cada bloque y el lenguaje en la cerca. Para webs: un solo index.html con <style> y <script>, responsive, accesible y bonito. Revisa sintaxis, nombres y casos borde antes de terminar. Explica en 1 a 3 líneas cómo usarlo.';
+/* ¿esta conversación es de programar? (el último pedido, un archivo de código adjunto o seguir hablando de un código anterior) */
+const FIX_TAG = '[Revisión automática de SynthFlow]';
+const isFix = m => !!m && m.role === 'user' && (!!m.fix || String(m.content || '').startsWith(FIX_TAG));
+function codeMode(chat){
+  const u = [...chat].reverse().find(m => m.role === 'user'); if (!u) return false;
+  if (isFix(u)) return true;
+  const t = String(u.ask || u.content || '');
+  if (CODE_RX.test(t)) return true;
+  if ((u.files || []).some(f => CODE_FILE_RX.test(f.name || ''))) return true;
+  const i = chat.lastIndexOf(u), prev = chat.slice(Math.max(0, i - 3), i).filter(m => m.role === 'assistant');
+  return t.length < 400 && prev.some(m => /```/.test(m.content || ''));
+}
+function codeSystem(chat, saver){ return codeMode(chat) ? (saver ? CODE_SYS_SHORT : CODE_SYS) : ''; }
+
+/* ---------- el probador: corre la página aislada y avisa lo que ve ---------- */
+/* va pegado al principio de la página, sin saltos de línea, para que los números de línea de los errores sigan siendo los del archivo */
+const PROBE = (id, act) => '<script>(function(){var I=' + JSON.stringify(id) + ',A=' + (act ? 1 : 0) + ',cur="";'
+  + 'function S(t,d){try{parent.postMessage({szp:I,t:t,d:d},"*")}catch(e){}}'
+  + 'function str(v){try{return typeof v==="string"?v:v instanceof Error?v.name+": "+v.message:JSON.stringify(v)}catch(e){return String(v)}}'
+  + '["error","warn","log","info"].forEach(function(k){var o=console[k];console[k]=function(){S("con",{k:k,m:[].slice.call(arguments).map(str).join(" ").slice(0,500)});return o&&o.apply(console,arguments)}});'
+  + 'addEventListener("error",function(e){var t=e.target;if(t&&t!==window&&t.tagName){S("net",{tag:t.tagName,u:String(t.currentSrc||t.src||t.href||"").slice(0,200)});return}S("exc",{m:e.message||"Error",l:e.lineno||0,c:e.colno||0,a:cur})},true);'
+  + 'addEventListener("unhandledrejection",function(e){S("exc",{m:"Promesa sin manejar: "+str(e.reason).slice(0,300),l:0,a:cur})});'
+  + 'function rgb(s){var m=String(s).match(/[\\d.]+/g);return m&&m.length>=3?m.map(Number):null}'
+  + 'function lum(c){var a=[c[0],c[1],c[2]].map(function(v){v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*a[0]+.7152*a[1]+.0722*a[2]}'
+  + 'function bg(el){while(el&&el.nodeType===1){var cs=getComputedStyle(el);if(cs.backgroundImage&&cs.backgroundImage!=="none")return null;var c=rgb(cs.backgroundColor);if(c&&(c.length<4||c[3]>.85))return c;el=el.parentElement}return[255,255,255]}'
+  + 'function who(el){var s=el.tagName.toLowerCase();if(el.id)s+="#"+el.id;var c=(typeof el.className==="string"?el.className:"").trim().split(/\\s+/).filter(Boolean).slice(0,2);if(c.length)s+="."+c.join(".");return s}'
+  + 'function vis(el){var r=el.getBoundingClientRect();if(r.width<1||r.height<1)return false;var cs=getComputedStyle(el);return cs.visibility!=="hidden"&&cs.display!=="none"&&+cs.opacity>.05}'
+  + 'function label(el){return(el.getAttribute("aria-label")||el.textContent||el.value||el.title||"").replace(/\\s+/g," ").trim().slice(0,40)}'
+  + 'function audit(){var d=document,b=d.body,o={w:innerWidth};if(!b){S("audit",{empty:1});return}'
+  + 'o.sw=d.documentElement.scrollWidth;o.over=[];if(o.sw>innerWidth+1){var all=b.querySelectorAll("*");for(var i=0;i<all.length&&o.over.length<4;i++){var r=all[i].getBoundingClientRect();if(r.right>innerWidth+1&&r.width>0&&getComputedStyle(all[i]).position!=="fixed"){var p=all[i].parentElement,pr=p&&p.getBoundingClientRect();if(!pr||pr.right<=innerWidth+1)o.over.push(who(all[i])+" ("+Math.round(r.right)+"px)")}}}'
+  + 'o.text=(b.innerText||"").trim().length;o.media=b.querySelectorAll("canvas,svg,img,video,iframe").length;o.els=b.querySelectorAll("*").length;'
+  + 'o.broken=[].slice.call(d.images).filter(function(im){return im.complete&&!im.naturalWidth&&im.getAttribute("src")}).map(function(im){return String(im.getAttribute("src")).slice(0,90)}).slice(0,4);'
+  + 'o.noalt=[].slice.call(d.images).filter(function(im){return!im.hasAttribute("alt")}).length;'
+  + 'o.unnamed=[].slice.call(b.querySelectorAll("button,a[href],[role=button]")).filter(function(el){return vis(el)&&!label(el)&&!el.querySelector("img[alt]:not([alt=\'\']),svg title")}).length;'
+  + 'o.nolabel=[].slice.call(b.querySelectorAll("input:not([type=hidden]):not([type=submit]):not([type=button]),select,textarea")).filter(function(el){return!(el.labels&&el.labels.length)&&!el.getAttribute("aria-label")&&!el.getAttribute("aria-labelledby")&&!el.getAttribute("title")}).length;'
+  + 'o.title=!!(d.title||"").trim();o.vp=!!d.querySelector("meta[name=viewport]");o.lang=!!d.documentElement.getAttribute("lang");'
+  + 'var low=[],tiny=0,seen=0,els=b.querySelectorAll("*");for(var j=0;j<els.length&&seen<500;j++){var el=els[j],own="";for(var n=el.firstChild;n;n=n.nextSibling)if(n.nodeType===3)own+=n.nodeValue;own=own.trim();if(!own||!vis(el))continue;seen++;var cs=getComputedStyle(el),fs=parseFloat(cs.fontSize)||16;if(fs<11.5)tiny++;var fg=rgb(cs.color),bk=bg(el);if(!fg||!bk||(fg.length>3&&fg[3]<.5))continue;var L1=lum(fg),L2=lum(bk),cr=(Math.max(L1,L2)+.05)/(Math.min(L1,L2)+.05),big=fs>=24||(fs>=18.6&&+cs.fontWeight>=700);if(cr<(big?3:4.5)&&low.length<3)low.push("«"+own.slice(0,30)+"» ("+cr.toFixed(1)+":1)")}'
+  + 'o.low=low;o.tiny=tiny;o.btns=[].slice.call(b.querySelectorAll("button,[role=button],input[type=button]")).filter(vis).length;S("audit",o)}'
+  + 'function poke(){var bs=[].slice.call(document.querySelectorAll("button:not([disabled]),[role=button],input[type=button]")).filter(vis).slice(0,14),k=0;'
+  + '(function next(){if(k>=bs.length){cur="";S("done",{n:bs.length});return}var el=bs[k++];cur=label(el)||who(el);try{if(el.isConnected)el.click()}catch(e){S("exc",{m:str(e),l:0,a:cur})}setTimeout(next,140)})()}'
+  + 'addEventListener("load",function(){setTimeout(function(){audit();if(A)setTimeout(poke,200);else S("done",{n:0})},600)});'
+  + '})();<\/script>';
+function probeDoc(html, id, act){
+  /* el probador va primero que todo; si la página no tiene <head>, igual queda arriba */
+  const p = PROBE(id, act);
+  if (/<head[^>]*>/i.test(html)) return html.replace(/<head[^>]*>/i, m => m + p);
+  if (/<html[^>]*>/i.test(html)) return html.replace(/<html[^>]*>/i, m => m + p);
+  return p + html;
+}
+/* corre una página escondida con un ancho dado y junta lo que pasó */
+function runProbe(doc, w, h, act){
+  return new Promise(res => {
+    const id = 'p' + Math.random().toString(36).slice(2, 10), out = { exc:[], con:[], net:[], audit:null, done:false, alive:false, w };
+    const f = document.createElement('iframe');
+    f.setAttribute('sandbox', 'allow-scripts'); f.setAttribute('aria-hidden', 'true'); f.tabIndex = -1;
+    f.style.cssText = 'position:fixed;left:-30000px;top:0;width:' + w + 'px;height:' + h + 'px;border:0;opacity:0;pointer-events:none';
+    let t = 0;
+    const end = () => { clearTimeout(t); removeEventListener('message', on); f.remove(); res(out); };
+    const on = e => {
+      const d = e.data; if (!d || d.szp !== id || e.source !== f.contentWindow) return;
+      out.alive = true;
+      if (d.t === 'exc' && out.exc.length < 12) out.exc.push(d.d);
+      else if (d.t === 'con' && out.con.length < 40) out.con.push(d.d);
+      else if (d.t === 'net' && out.net.length < 8) out.net.push(d.d);
+      else if (d.t === 'audit') out.audit = d.d;
+      else if (d.t === 'done'){ out.done = true; setTimeout(end, 120); }
+    };
+    addEventListener('message', on);
+    t = setTimeout(end, act ? 9000 : 6500);
+    document.body.appendChild(f);
+    synLoad(f, probeDoc(doc, id, act));
+  });
+}
+/* ---------- revisión de cada archivo ---------- */
+const PLACEHOLDER_RX = /(?:\/\/|#|<!--|\/\*)\s*(?:\.\.\.|…)|(?:\/\/|#|<!--|\/\*)[^\n]*\b(?:resto (?:del|igual|de)|el resto|rest of (?:the )?code|same as (?:before|above)|igual que (?:antes|arriba)|(?:tu|your) c[oó]digo aqu[ií]|(?:your )?code (?:goes )?here|agrega(?:r)? (?:aqu[ií]|el resto)|completa(?:r)? aqu[ií]|implementa(?:r)? aqu[ií])|(?:\/\/|#)\s*TODO\b|lorem ipsum/i;
+const lineAt = (txt, n) => { const L = String(txt).split('\n')[n - 1]; return L ? L.trim().slice(0, 140) : ''; };
+function staticIssues(M){
+  const hard = [], soft = [], t = M.text;
+  { const m = t.match(PLACEHOLDER_RX); if (m) (/lorem ipsum/i.test(m[0]) ? soft : hard).push(/lorem ipsum/i.test(m[0]) ? M.name + ': usa texto de relleno (lorem ipsum) en vez de texto real.' : M.name + ': está incompleto, tiene partes omitidas («' + lineAt(t, t.slice(0, m.index).split('\n').length).slice(0, 80) + '»). Hay que escribirlo entero.'); }
+  if (/^(html|htm)$/.test(M.ext) && /<html[\s>]/i.test(t) && !/<\/html>\s*$/i.test(t.trim())) hard.push(M.name + ': el archivo se cortó antes de terminar (no llega hasta </html>).');
+  if (M.ext === 'json'){ try{ JSON.parse(t); }catch(e){ hard.push(M.name + ': el JSON no es válido (' + String(e.message).slice(0, 120) + ').'); } }
+  if (/^(css|scss)$/.test(M.ext)){ const o = (t.replace(/\/\*[\s\S]*?\*\//g, '').match(/\{/g) || []).length, c = (t.replace(/\/\*[\s\S]*?\*\//g, '').match(/\}/g) || []).length; if (o !== c) hard.push(M.name + ': las llaves { } no cuadran (' + o + ' abren y ' + c + ' cierran).'); }
+  if (M.ext === 'svg'){ try{ const d = new DOMParser().parseFromString(t, 'image/svg+xml'); const pe = d.querySelector('parsererror'); if (pe) hard.push(M.name + ': el SVG está mal formado (' + pe.textContent.replace(/\s+/g, ' ').trim().slice(0, 120) + ').'); }catch(e){} }
+  return { hard, soft };
+}
+/* JavaScript suelto: solo se revisa que esté bien escrito (se envuelve en una función que nunca se llama, así no corre nada) */
+async function jsSyntax(M){
+  if (!/^(js|mjs|cjs)$/.test(M.ext) || /^\s*(import|export)\s/m.test(M.text) || /<\/script/i.test(M.text)) return [];
+  const code = M.text.replace(/^#!.*/, '');   /* el #! de node se deja como línea vacía: los números de línea no cambian */
+  const r = await runProbe('<!doctype html><html><head></head><body><script>async function __sz(){\n' + code + '\n}<\/script></body></html>', 400, 300, false);
+  return r.exc.filter(x => /SyntaxError|Unexpected|missing|Invalid|unterminated/i.test(x.m)).slice(0, 2).map(x => M.name + (x.l > 1 ? ' (línea ' + (x.l - 1) + ': ' + lineAt(M.text, x.l - 1) + ')' : '') + ': ' + x.m);
+}
+/* página HTML: computador con clics en los botones + celular */
+async function pageIssues(M, sibs){
+  const hard = [], soft = [], meta = { btns:0 };
+  const doc = previewDoc(M, sibs);
+  const [pc, cel] = await Promise.all([runProbe(doc, 1280, 800, true), runProbe(doc, 390, 844, false)]);
+  if (!pc.alive && !cel.alive){ hard.push(M.name + ': la página no respondió (puede tener un ciclo infinito o un error que la congela).'); return { hard, soft, meta }; }
+  const docLines = doc.split('\n'), seen = new Set();
+  [...pc.exc, ...cel.exc].forEach(x => {
+    const key = x.m + '|' + x.l + '|' + (x.a || ''); if (seen.has(key)) return; seen.add(key);
+    const src = x.l ? (docLines[x.l - 1] || '').trim().slice(0, 140) : '';
+    hard.push(M.name + ': ' + (x.a ? 'al tocar «' + x.a + '» sale el error ' : 'error al cargar: ') + x.m + (src ? ' — en la línea «' + src + '»' : ''));
+  });
+  [...new Set([...pc.con, ...cel.con].filter(c => c.k === 'error').map(c => c.m))].slice(0, 3).forEach(m => soft.push(M.name + ': la consola muestra un error: ' + m));
+  [...new Map([...pc.net, ...cel.net].map(n => [n.u, n])).values()].slice(0, 3).forEach(n => soft.push(M.name + ': no cargó ' + n.tag.toLowerCase() + ' ' + (n.u || '(sin dirección)') + '.'));
+  const a = pc.audit, c = cel.audit;
+  if (a){
+    meta.btns = a.btns || 0;
+    if (!a.text && !a.media && (a.els || 0) < 4) hard.push(M.name + ': la página sale en blanco (no muestra nada).');
+    if (a.over && a.over.length) soft.push(M.name + ': en computador algo se sale de la pantalla: ' + a.over.join(', ') + '.');
+    if (a.broken && a.broken.length) soft.push(M.name + ': imágenes rotas: ' + a.broken.join(', ') + '. Mejor usa SVG o CSS.');
+    if (a.low && a.low.length) soft.push(M.name + ': texto con poco contraste (difícil de leer): ' + a.low.join(', ') + '. Debe ser al menos 4.5:1.');
+    if (a.noalt) soft.push(M.name + ': ' + a.noalt + ' imagen(es) sin texto alternativo (alt).');
+    if (a.unnamed) soft.push(M.name + ': ' + a.unnamed + ' botón(es) o enlace(s) sin nombre (solo ícono, sin aria-label).');
+    if (a.nolabel) soft.push(M.name + ': ' + a.nolabel + ' campo(s) sin etiqueta (label).');
+    if (!a.vp) soft.push(M.name + ': falta <meta name="viewport"> (en el celular se verá diminuta).');
+    if (!a.title) soft.push(M.name + ': falta el <title> de la página.');
+    if (!a.lang) soft.push(M.name + ': falta lang en <html>.');
+  }
+  if (c){
+    if (c.sw > c.w + 1) soft.push(M.name + ': en celular (390px) la página se sale de lado y hay que moverla con el dedo' + (c.over && c.over.length ? ' por: ' + c.over.join(', ') : '') + '.');
+    if (c.tiny > 3) soft.push(M.name + ': en celular hay ' + c.tiny + ' textos demasiado pequeños (menos de 12px).');
+  }
+  return { hard, soft, meta };
+}
+/* revisa todos los archivos de una respuesta */
+async function checkFiles(body){
+  /* solo los archivos: los trocitos cortos de una explicación pueden estar incompletos a propósito */
+  const cards = $$('.fcard:not(.deck) pre', body).map(cnvMeta);
+  const hard = [], soft = [], pages = [];
+  let btns = 0;
+  for (const M of cards){
+    const s = staticIssues(M); hard.push(...s.hard); soft.push(...s.soft);
+    hard.push(...await jsSyntax(M));
+  }
+  const htmls = cards.filter(M => /^(html|htm)$/.test(M.ext)).slice(0, 2);
+  for (const M of htmls){ const r = await pageIssues(M, cards); hard.push(...r.hard); soft.push(...r.soft); btns += r.meta.btns; pages.push(M.name); }
+  return { hard:[...new Set(hard)], soft:[...new Set(soft)], pages, btns, files:cards.length };
+}
+const hasCode = body => !!$('.fcard:not(.deck)', body);
+const isPage = body => $$('.fcard:not(.deck) pre', body).some(pre => /^(html|htm)$/.test(cnvMeta(pre).ext));
+
+/* ---------- la barrita de revisión debajo de la respuesta ---------- */
+const CK_ICO = {
+  run:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9"/></svg>',
+  ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>',
+  warn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17.5v.01"/></svg>',
+  fix:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg>'
+};
+function ckBar(el){
+  let b = $('.ckbar', el);
+  if (!b){ b = document.createElement('div'); b.className = 'ckbar'; b.setAttribute('role', 'status'); b.setAttribute('aria-live', 'polite'); const meta = $('.meta', el) || $('.acts', el); if (meta) meta.before(b); else el.appendChild(b); }
+  return b;
+}
+function ckIdle(el){
+  if (!isPage($('.body', el)) || $('.ckbar', el)) return;
+  const b = ckBar(el); b.className = 'ckbar idle';
+  b.innerHTML = '<button type="button" class="ck-go">' + CK_ICO.ok + '<span>' + (isPage($('.body', el)) ? 'Comprobar la página en computador y celular' : 'Revisar el código') + '</span></button>';
+  $('.ck-go', b).addEventListener('click', () => codeCheck(el, { auto:false }));
+}
+function ckPaint(el, r, o){
+  const b = ckBar(el), n = r.hard.length + r.soft.length;
+  const where = r.pages.length ? 'en computador y celular' : '';
+  if (!n){
+    b.className = 'ckbar ok';
+    b.innerHTML = '<span class="ck-ic">' + CK_ICO.ok + '</span><span class="ck-t"><b>' + (r.pages.length ? 'Página comprobada' : 'Código revisado') + '</b><small>' + (r.pages.length ? 'Carga sin errores ' + where + (r.btns ? ' · probé ' + r.btns + (r.btns === 1 ? ' botón' : ' botones') : '') : 'Sin errores de sintaxis ni partes incompletas') + '</small></span>';
+    return;
+  }
+  b.className = 'ckbar ' + (r.hard.length ? 'bad' : 'warn');
+  b.innerHTML = '<button type="button" class="ck-row" aria-expanded="false"><span class="ck-ic">' + CK_ICO.warn + '</span><span class="ck-t"><b>' + (r.hard.length ? (r.hard.length === 1 ? '1 error' : r.hard.length + ' errores') + (r.soft.length ? ' y ' + r.soft.length + ' detalle' + (r.soft.length === 1 ? '' : 's') : '') : n + (n === 1 ? ' detalle por pulir' : ' detalles por pulir')) + '</b><small>' + (o.note || 'Toca para ver qué encontré') + '</small></span></button>'
+    + '<button type="button" class="btn sm ck-fix">' + CK_ICO.fix + '<span>Arreglar con la IA</span></button>'
+    + '<ul class="ck-l" hidden></ul>';
+  const ul = $('.ck-l', b);
+  [...r.hard.map(t => ['bad', t]), ...r.soft.map(t => ['warn', t])].forEach(([k, t]) => { const li = document.createElement('li'); li.className = k; li.textContent = t; ul.appendChild(li); });
+  const row = $('.ck-row', b);
+  row.addEventListener('click', () => { const on = ul.hidden; ul.hidden = !on; row.setAttribute('aria-expanded', String(on)); b.classList.toggle('open', on); });
+  $('.ck-fix', b).addEventListener('click', () => fixWithAI(el, r, false));
+}
+let ckRun = 0;
+async function codeCheck(el, o = {}){
+  const body = $('.body', el); if (!body || !hasCode(body)) return null;
+  const my = ++ckRun, b = ckBar(el), page = isPage(body);
+  b.className = 'ckbar run'; b.innerHTML = '<span class="ck-ic spin">' + CK_ICO.run + '</span><span class="ck-t"><b>' + (page ? 'Probando la página…' : 'Revisando el código…') + '</b><small>' + (page ? 'La abro en un computador y en un celular, toco los botones y busco errores' : 'Busco errores de sintaxis y partes incompletas') + '</small></span>';
+  let r; try{ r = await checkFiles(body); }catch(e){ b.remove(); return null; }
+  if (!el.isConnected) return r;
+  const can = o.auto && r.hard.length && !o.noAuto && my === ckRun;
+  ckPaint(el, r, { note:can ? 'La IA los está arreglando sola…' : '' });
+  if (can) fixWithAI(el, r, true);
+  return r;
+}
+/* le pasa a la IA lo que encontró el probador, para que devuelva todo arreglado */
+function fixPrompt(r){
+  const L = [...r.hard.map(t => '- [ERROR] ' + t), ...r.soft.map(t => '- [MEJORA] ' + t)].join('\n');
+  return FIX_TAG + ' ' + (r.pages.length ? 'Probé tu página en un navegador real (computador de 1280px y celular de 390px, tocando los botones)' : 'Revisé tu código') + ' y encontré esto:\n' + L
+    + '\n\nArregla TODO lo de la lista, primero los errores. Devuelve cada archivo que cambie COMPLETO (sin «...» ni partes omitidas) y con el mismo nombre. No cambies lo que ya funciona ni el diseño que no tiene problemas. Al final, en «**Revisión**», di en una línea por punto qué arreglaste.';
+}
+function fixWithAI(el, r, auto){
+  if (Object.keys(busy).length){ toast('Espera a que la IA termine de responder.'); return; }
+  if (mode !== 'solo'){ toast('Arreglar funciona con una sola IA.'); return; }
+  if (isLocked && isLocked()){ lockNudge(); return; }
+  const chat = chatArr(), ci = +el.dataset.ci;
+  if (!(ci === chat.length - 1)){ toast('Eso era de una respuesta anterior. Pídele a la IA el arreglo en un mensaje nuevo.'); return; }
+  if (!budgetOk()) return;
+  const msg = { role:'user', content:fixPrompt(r), fix:{ n:r.hard.length + r.soft.length, auto:!!auto } };
+  chat.push(msg); touchThread(); save(); renderMsgs();
+  runSolo(err => {
+    const i = chat.lastIndexOf(msg); if (i > -1) chat.splice(i, 1); save(); renderMsgs();
+    if (!(err && err.aborted)) toast(auto ? 'No pude pedirle el arreglo a la IA ahora. Toca «Arreglar con la IA» para intentarlo otra vez.' : (err && err.message) || 'No pude pedir el arreglo. Intenta otra vez.');
+  });
+}
+/* tu mensaje de arreglo se ve como una notita, no como un muro de texto */
+function fixNoteEl(m){
+  const el = document.createElement('div'); el.className = 'fixnote';
+  const n = (m.fix && m.fix.n) || (String(m.content || '').match(/^- \[/gm) || []).length;
+  el.innerHTML = '<button type="button" class="fx-row" aria-expanded="false"><span class="fx-ic">' + CK_ICO.fix + '</span><span class="fx-t"></span></button><pre class="fx-d" hidden></pre>';
+  $('.fx-t', el).textContent = (m.fix && m.fix.auto ? 'Revisión automática: ' : 'Le pediste a la IA que arregle ') + n + (n === 1 ? ' problema' : ' problemas') + (m.fix && m.fix.auto ? ' encontrados, la IA los arregla' : '');
+  $('.fx-d', el).textContent = String(m.content || '').slice(String(m.content || '').startsWith(FIX_TAG) ? FIX_TAG.length : 0).trim();
+  const row = $('.fx-row', el), d = $('.fx-d', el);
+  row.addEventListener('click', () => { const on = d.hidden; d.hidden = !on; row.setAttribute('aria-expanded', String(on)); el.classList.toggle('open', on); });
+  return el;
+}
+/* después de cada respuesta nueva con código: se prueba sola. Si la respuesta ya era un arreglo automático, no vuelve a arreglar sola (así no da vueltas) */
+function codeAfter(el, chat){
+  if (!el || !hasCode($('.body', el))) return;
+  const ci = +el.dataset.ci, prevU = chat.slice(0, ci).reverse().find(m => m.role === 'user');
+  const noAuto = isFix(prevU) || !!st().sx.saver;
+  setTimeout(() => { if (el.isConnected) codeCheck(el, { auto:true, noAuto }); }, 350);
+}
+
+/* ---------- el lienzo con herramientas: consola, tamaños de pantalla y volver a cargar ---------- */
+const CV_SIZES = [['pc', 'Computador', '100%'], ['tab', 'Tablet', '820px'], ['cel', 'Celular', '390px']];
+function cvTools(o, box, M, sibs){
+  const bar = document.createElement('div'); bar.className = 'cvt';
+  bar.innerHTML = '<div class="cvt-sz" role="group" aria-label="Tamaño de pantalla">' + CV_SIZES.map(([k, l]) => '<button type="button" data-sz="' + k + '" aria-pressed="' + (k === 'pc') + '">' + l + '</button>').join('') + '</div>'
+    + '<button type="button" class="cvt-b" data-cvt="reload" title="Volver a cargar" aria-label="Volver a cargar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg></button>'
+    + '<button type="button" class="cvt-b cvt-con" data-cvt="con" aria-expanded="false"><span>Consola</span><b class="cvt-n">0</b></button>';
+  const con = document.createElement('div'); con.className = 'cvt-log'; con.hidden = true; con.innerHTML = '<p class="cvt-empty">Aquí sale lo que la página escribe en la consola y sus errores.</p>';
+  box.classList.add('tools'); box.prepend(bar); box.append(con);
+  let id = '', errs = 0, lines = 0;
+  const add = (k, t) => {
+    const e = $('.cvt-empty', con); if (e) e.remove();
+    const p = document.createElement('div'); p.className = 'cvt-ln ' + k; p.textContent = t; con.appendChild(p); con.scrollTop = con.scrollHeight;
+    lines++; if (k === 'error') errs++;
+    const n = $('.cvt-n', bar); n.textContent = errs ? errs + (errs === 1 ? ' error' : ' errores') : String(lines); bar.classList.toggle('has-err', errs > 0);
+  };
+  const on = e => {
+    const d = e.data, f = $('iframe', box); if (!d || d.szp !== id || !f || e.source !== f.contentWindow) return;
+    if (d.t === 'con') add(d.d.k, d.d.m);
+    else if (d.t === 'exc') add('error', d.d.m + (d.d.l ? ' (línea ' + d.d.l + ')' : ''));
+    else if (d.t === 'net') add('warn', 'No cargó: ' + d.d.u);
+  };
+  addEventListener('message', on);
+  const obs = new MutationObserver(() => { if (!o.isConnected){ removeEventListener('message', on); obs.disconnect(); } }); obs.observe(document.body, { childList:true });
+  const load = () => {
+    const f = $('iframe', box); if (!f) return;
+    id = 'v' + Math.random().toString(36).slice(2, 10); errs = 0; lines = 0;
+    con.innerHTML = '<p class="cvt-empty">Aquí sale lo que la página escribe en la consola y sus errores.</p>'; $('.cvt-n', bar).textContent = '0'; bar.classList.remove('has-err');
+    synLoad(f, probeDoc(previewDoc(M, sibs), id, false));
+  };
+  bar.addEventListener('click', e => {
+    const s = e.target.closest('.cvt-sz [data-sz]');
+    if (s){ $$('[data-sz]', bar).forEach(x => x.setAttribute('aria-pressed', String(x === s))); box.dataset.size = s.dataset.sz; const f = $('iframe', box); if (f) f.style.maxWidth = CV_SIZES.find(x => x[0] === s.dataset.sz)[2]; return; }
+    const t = e.target.closest('[data-cvt]'); if (!t) return;
+    if (t.dataset.cvt === 'reload') load();
+    else { con.hidden = !con.hidden; t.setAttribute('aria-expanded', String(!con.hidden)); }
+  });
+  return { load };
+}
+
+/* ---------- colores en el código del lienzo (ligero, sin librerías) ---------- */
+const HL_KW = 'abstract|and|as|async|await|break|case|catch|class|const|continue|def|default|del|do|elif|else|enum|except|export|extends|false|False|finally|fn|for|from|func|function|go|if|impl|import|in|interface|is|lambda|let|match|mut|new|nil|None|not|null|or|pass|private|protected|pub|public|raise|return|self|static|struct|super|switch|this|throw|true|True|try|type|typeof|undefined|use|var|void|while|with|yield';
+const HL_RX = {
+  c:new RegExp('(\\/\\*[\\s\\S]*?\\*\\/|\\/\\/[^\\n]*)|(`(?:\\\\[\\s\\S]|[^`\\\\])*`|"(?:\\\\.|[^"\\\\\\n])*"|\'(?:\\\\.|[^\'\\\\\\n])*\')|\\b(' + HL_KW + ')\\b|\\b(\\d+(?:\\.\\d+)?)\\b|([A-Za-z_$][\\w$]*)(?=\\s*\\()', 'g'),
+  py:new RegExp('(#[^\\n]*)|("""[\\s\\S]*?"""|\'\'\'[\\s\\S]*?\'\'\'|[rfb]?"(?:\\\\.|[^"\\\\\\n])*"|[rfb]?\'(?:\\\\.|[^\'\\\\\\n])*\')|\\b(' + HL_KW + ')\\b|\\b(\\d+(?:\\.\\d+)?)\\b|([A-Za-z_][\\w]*)(?=\\s*\\()', 'g'),
+  css:/(\/\*[\s\S]*?\*\/)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')|(@[\w-]+|!important)|(#[\da-fA-F]{3,8}\b|-?\d*\.?\d+(?:px|rem|em|%|vh|vw|s|ms|deg|fr)?\b)|([\w-]+)(?=\s*:[^;{]*[;}])/g,
+  html:/(<!--[\s\S]*?-->)|("[^"]*"|'[^']*')|(<\/?[\w-]+|\/?>)|(&\w+;)|(\s[\w:-]+)(?==)/g
+};
+function hlCode(text, ext){
+  const k = /^(py)$/.test(ext) ? 'py' : /^(css|scss)$/.test(ext) ? 'css' : /^(html|htm|xml|svg|vue)$/.test(ext) ? 'html' : /^(js|mjs|jsx|ts|tsx|java|c|cpp|cs|go|rs|php|swift|kt|dart|json|lua|sh)$/.test(ext) ? 'c' : '';
+  if (!k || text.length > 200000) return esc(text);
+  const cls = ['', 'hc', 'hs', 'hk', 'hn', 'hf'];
+  let out = '', last = 0;
+  text.replace(HL_RX[k], (m, ...g) => { const at = g[g.length - 2]; const i = g.findIndex((x, j) => j < 5 && x !== undefined); out += esc(text.slice(last, at)) + (i > -1 ? '<span class="' + cls[i + 1] + '">' + esc(m) + '</span>' : esc(m)); last = at + m.length; return m; });
+  return out + esc(text.slice(last));
 }
 /* ---------- temas: «¿qué quieres hacer?» con IA recomendadas para cada uno ---------- */
 const TOPICS = [
@@ -732,6 +1110,7 @@ setInterval(() => {
   r.animate([{ opacity:1, transform:'none', filter:'blur(0)' }, { opacity:0, transform:'translateY(-6px)', filter:'blur(4px)' }], { duration:320, easing:'ease-in' }).onfinish = () => { r.innerHTML = exRowHtml(); r.animate([{ opacity:0, transform:'translateY(6px)', filter:'blur(4px)' }, { opacity:1, transform:'none', filter:'blur(0)' }], { duration:420, easing:'cubic-bezier(.22,1,.36,1)' }); };
 }, 7000);
 function topicsHtml(){
+  return '';   /* v2.3: se quitó la zona de temas (ya estaba en los filtros) */
   const L = topicsAll ? TOPICS : TOPICS.slice(0, TOPICS_SHOWN);
   return '<div class="topics" role="group" aria-label="¿Qué quieres hacer?">' + L.map(([k, e, l], i) => '<button type="button" class="tchip" data-topic="' + k + '" aria-pressed="' + (curTopic === k) + '" style="--i:' + i + '">' + esc(l) + '</button>').join('')
     + (topicsAll ? '<button type="button" class="tchip more" data-topics-less>Menos temas</button>' : '<button type="button" class="tchip more" data-topics-more>Más temas →</button>') + '</div>';
@@ -775,9 +1154,9 @@ function emptyEl(){
   const ex = showEx();
   if (agentOn()){
     e.classList.add('aghello');
-    e.innerHTML = '<p class="agbadge">' + AG_ICO + 'Modo agente activado</p><h1 class="greet">' + greetHtml(['¿Qué quieres ', 'FlowIA’r', '?']) + '</h1>'
+    e.innerHTML = '<p class="agbadge">' + AG_ICO + 'Modo SuperiorSynth activado</p><h1 class="greet">' + greetHtml(['¿Qué quieres ', 'FlowIA’r', '?']) + '</h1>'
       + (ex ? '<div class="hexs hexr" id="hexR" aria-label="Ideas para empezar">' + exRowHtml() + '</div>' : '')
-      + '<p class="hsub2">Cuéntame qué necesitas. El agente entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso.</p><div class="hcomp"></div>';
+      + '<p class="hsub2">Cuéntame qué necesitas. SuperiorSynth entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso.</p><div class="hcomp"></div>';
     return e;
   }
   let h = '<h1 class="greet">' + greetHtml(GREET[greetI] || GREET[0]) + '</h1>'
@@ -815,8 +1194,9 @@ function renderMsgs(){
   const ck0 = ckey();
   let srcs = null;
   chat.forEach((m, i) => {
-    if (m.role === 'user'){ const u = userEl(m.content, m.files); u.style.animation = 'none'; lane.appendChild(u); if (m.agent) lane.appendChild(agentSumEl(m.agent)); srcs = m.sources && m.sources.length ? m.sources : null; if (srcs) lane.appendChild(sourcesEl(m)); }
-    else { const b = botEl(m.model || selId()); b.style.animation = 'none'; b._raw = m.content; b._ck = ck0; b._ci = i; b.dataset.ci = i; if (m.work) b.insertBefore(SZ.workSaved(m.work), $('.body', b)); $('.body', b).innerHTML = md(m.content); if (m.imgId) imgFill($('.body', b), m); b._sources = srcs; finishBot(b, m.meta, i === chat.length - 1, m.cont, m.star); lane.appendChild(b); }
+    if (isFix(m)){ lane.appendChild(fixNoteEl(m)); srcs = null; }
+    else if (m.role === 'user'){ const u = userEl(m.content, m.files); u.style.animation = 'none'; lane.appendChild(u); if (m.agent) lane.appendChild(agentSumEl(m.agent)); srcs = m.sources && m.sources.length ? m.sources : null; if (srcs) lane.appendChild(sourcesEl(m)); }
+    else { const b = botEl(m.model || selId()); b.style.animation = 'none'; b._raw = m.content; b._ck = ck0; b._ci = i; b.dataset.ci = i; if (m.work) b.insertBefore(SZ.workSaved(m.work), $('.body', b)); $('.body', b).innerHTML = md(m.content); if (m.imgId) imgFill($('.body', b), m); b._sources = srcs; finishBot(b, m.meta, i === chat.length - 1, m.cont, m.star); if (!isFix(chat[i + 1])) ckIdle(b); lane.appendChild(b); }
   });
   if (thinking) lane.appendChild(thinkEl(thinking));
   if (fresh){ msgsEl.scrollTop = 0; requestAnimationFrame(() => { msgsEl.scrollTop = 0; }); } else jump();
@@ -954,7 +1334,7 @@ function recommend(k){
 }
 function limitsOf(m){
   const L = [];
-  if (/^sz:/.test(m.id)) L.push('Gratis: usa tus mensajes de hoy');
+  if (/^sz:/.test(m.id)) L.push('Gratis: usa tu EnerX de hoy');
   else if (/^pu:/.test(m.id)) L.push('Con tu cuenta gratis de Puter');
 
   L.push(m.vision ? 'Acepta imágenes y PDF' : /^pu:/.test(m.id) ? 'No sabemos si esta IA ve fotos; los PDF y textos sí los lee' : 'No ve imágenes; los PDF y textos se leen como texto');
@@ -999,6 +1379,7 @@ function updateHint(){
 inp.addEventListener('input', () => { autoGrow(); updateHint(); });
 /* en el celular (pantalla táctil) «Enter» da un salto de línea y se envía con el botón de enviar; en el computador Enter envía y Shift+Enter baja de línea */
 const touchKb = () => { try{ return matchMedia('(hover: none) and (pointer: coarse)').matches; }catch(e){ return false; } };
+{ const kh = document.querySelector('.kbdh'); if (kh && touchKb()) kh.textContent = 'Enter salta de línea · envía con la flecha'; }
 inp.addEventListener('keydown', e => {
   if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
   if (touchKb() && !(e.ctrlKey || e.metaKey)) return;     /* deja el salto de línea normal */
@@ -1105,7 +1486,7 @@ async function readPdf(file){
   return clip(t.trim());
 }
 function renderTray(){
-  $('#tray').innerHTML = files.map(f => '<span class="fc ' + f.state + '" data-id="' + f.id + '">' + (f.thumb ? '<img src="' + esc(f.thumb) + '" alt="">' : '<i class="ic">' + esc((f.name.split('.').pop() || 'file').slice(0, 4)) + '</i>') + '<b>' + esc(f.name) + '</b><button class="x" type="button" aria-label="Quitar archivo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>').join('');
+  $('#tray').innerHTML = files.map(f => '<span class="fc ' + f.state + '" data-id="' + f.id + '">' + (f.thumb ? '<img src="' + esc(f.thumb) + '" alt="">' : (SZ.fileIco(f.name.split('.').pop()) ? '<i class="ic img">' + SZ.fileIco(f.name.split('.').pop()) + '</i>' : '<i class="ic">' + esc((f.name.split('.').pop() || 'file').slice(0, 4)) + '</i>')) + '<b>' + esc(f.name) + '</b><button class="x" type="button" aria-label="Quitar archivo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>').join('');
 }
 async function addFiles(list){
   if (mode === 'cmp'){ toast('Los archivos funcionan en el modo Individual.'); return; }
@@ -1166,8 +1547,10 @@ function apiMsgs(chat, vision, o = {}){
   while (h.length && h[0].role !== 'user') h.shift();
   const sys = [];
   if (saver) sys.push('Responde en el idioma del usuario, de forma clara y breve, sin relleno.');
+  { const cs = o.naive ? '' : codeSystem(chat, saver); if (cs) sys.push(cs); }   /* v2.4 · SynthCode: manual de programación cuando pides código */
   { const ef = effortHint(); if (ef && !o.naive) sys.push(ef); }   /* v2.3.1 · esfuerzo */
   { const mm = memSystem(); if (mm && !o.naive) sys.push(mm); }
+  { const ps = o.naive ? '' : projSystem(chat, saver); if (ps) sys.push(ps); }   /* v2.6 · proyectos: instrucciones y archivos del proyecto */
   if (SZ.CFG.beginner) sys.push('Modo principiante: la persona no sabe nada del tema. Usa palabras sencillas y frases cortas, explica paso a paso, evita los tecnicismos (si usas uno, explícalo) y pon un ejemplo de la vida diaria.');
   if (sys.length) h.unshift({ role:'system', content:sys.join(' ') });
   return h;
@@ -1202,7 +1585,7 @@ imgBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 function setImgMode(on){
   if (on && !SZ.ACC.ready){ toast('Para crear imágenes entra a tu cuenta (es gratis).'); SZ.guestGate({ mode:'signup' }); return; }
   imgMode = !!on; imgBtn.setAttribute('aria-pressed', String(imgMode)); document.body.classList.toggle('imaging', imgMode);
-  inp.placeholder = imgMode ? 'Describe la imagen que quieres crear…' : (agentOn() ? 'Modo agente: cuéntame qué necesitas…' : 'Escribe tu mensaje…');
+  inp.placeholder = imgMode ? 'Describe la imagen que quieres crear…' : (agentOn() ? 'SuperiorSynth: cuéntame qué necesitas…' : 'Escribe tu mensaje…');
   if (imgMode){ const q = SZ.SZQ.img; toast('Crear imagen: describe lo que quieres ver.' + (q && q.max ? ' Hoy te quedan ' + Math.max(0, q.max - q.used) + '.' : '')); inp.focus(); }
 }
 imgBtn.addEventListener('click', () => setImgMode(!imgMode));
@@ -1350,7 +1733,7 @@ function citeLinks(body, sources){
   });
 }
 /* ---------- v2.1 · presentaciones: pides «hazme una presentación de…», la IA arma las diapositivas,
-   las ves en vista previa y las descargas como PowerPoint (.pptx) con el estilo de SynthZ ---------- */
+   las ves en vista previa y las descargas como PowerPoint (.pptx) con el estilo de SymphorIA ---------- */
 const PPT_RX = /\b(?:hazme|haz|cr[eé]a(?:me)?|arma(?:me)?|genera(?:me)?|prepara(?:me)?|dise[ñn]a(?:me)?|elabora(?:me)?|redacta(?:me)?|necesito|quiero|dame|p[oó]n(?:me)?|make|create|build|generate|prepare|need|want)\b[^.\n?!]{0,40}\b(?:presentaci[oó]n(?:es)?|presentations?|diapositivas?|power ?point|pptx|slides?|slide ?deck)\b|\b(?:en|como|formato|archivo)\s+(?:un\s+)?(?:power ?point|pptx)\b|\.pptx\b/i;
 const PPT_NO = /\b(consejos|tips|c[oó]mo (?:hacer|dar|hablar|mejorar|preparar|presentar)|nervios|exposici[oó]n oral|practicar|mejorar mi presentaci|presentaci[oó]n personal|presentarme)\b/i;
 /* solo arma diapositivas si de verdad las pides (no porque la palabra aparezca en otra frase) */
@@ -1366,7 +1749,7 @@ function deckFrom(text){
 const fileSafe = t => (String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-').slice(0, 60) || 'presentacion') + '.pptx';
 function deckCard(pre, D){
   const c = document.createElement('div'); c.className = 'fcard deck'; c.dataset.ext = 'pptx';
-  c.innerHTML = '<button type="button" class="fc-main" data-dk="prev"><span class="fc-ic" aria-hidden="true">PPTX</span><span class="fc-t"><b></b><small>Presentación · ' + D.slides.length + ' diapositivas · con vista previa</small></span></button>'
+  c.innerHTML = '<button type="button" class="fc-main" data-dk="prev"><span class="fc-ic img" aria-hidden="true">' + SZ.fileIco('pptx') + '</span><span class="fc-t"><b></b><small>Presentación · ' + D.slides.length + ' diapositivas · con vista previa</small></span></button>'
     + '<button type="button" class="cnv-b" data-dk="prev">' + CNV_ICO.eye + '<span>Vista previa</span></button><button type="button" class="cnv-b" data-dk="down">' + CNV_ICO.down + '<span>Descargar .pptx</span></button>';
   $('.fc-t b', c).textContent = fileSafe(D.titulo);
   pre.before(c); pre.hidden = true; c.appendChild(pre); c._deck = D;
@@ -1374,13 +1757,13 @@ function deckCard(pre, D){
 }
 /* vista previa: las diapositivas en el lienzo, tal como quedan en PowerPoint */
 function slideHtml(D, i){
-  if (i < 0) return '<div class="sl sl-t"><h2></h2><i class="sl-bar"></i><p></p><small>Hecho con SynthZ</small></div>';
+  if (i < 0) return '<div class="sl sl-t"><h2></h2><i class="sl-bar"></i><p></p><small>Hecho con SymphorIA</small></div>';
   return '<div class="sl"><h3></h3><i class="sl-bar"></i><ul></ul><span class="sl-n">' + (i + 2) + '</span></div>';
 }
 function openDeck(D){
   closeCanvas(true);
   const o = document.createElement('div'); o.className = 'cvp'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', D.titulo);
-  o.innerHTML = '<div class="cvp-in"><div class="cvp-h"><span class="fc-ic" aria-hidden="true">PPTX</span><span class="cnv-t"><b></b><small>' + D.slides.length + ' diapositivas</small></span><button type="button" class="cnv-b" data-dk="down">' + CNV_ICO.down + '<span>Descargar .pptx</span></button><button type="button" class="cnv-b ic" data-cx aria-label="Cerrar">✕</button></div><div class="cvp-b deckv"></div></div>';
+  o.innerHTML = '<div class="cvp-in"><div class="cvp-h"><span class="fc-ic img" aria-hidden="true">' + SZ.fileIco('pptx') + '</span><span class="cnv-t"><b></b><small>' + D.slides.length + ' diapositivas</small></span><button type="button" class="cnv-b" data-dk="down">' + CNV_ICO.down + '<span>Descargar .pptx</span></button><button type="button" class="cnv-b ic" data-cx aria-label="Cerrar">✕</button></div><div class="cvp-b deckv"></div></div>';
   $('.cnv-t b', o).textContent = fileSafe(D.titulo);
   const box = $('.deckv', o);
   [-1, ...D.slides.map((_, i) => i)].forEach(i => {
@@ -1396,14 +1779,14 @@ let pptxLib = null;
 const loadPptx = () => pptxLib || (pptxLib = new Promise((ok, no) => { if (window.PptxGenJS) return ok(window.PptxGenJS); const s = document.createElement('script'); s.src = 'lib/pptxgen.bundle.js'; s.onload = () => window.PptxGenJS ? ok(window.PptxGenJS) : no(new Error('sin librería')); s.onerror = () => { pptxLib = null; no(new Error('no cargó')); }; document.head.appendChild(s); }));
 async function deckBuild(D){
   const P = await loadPptx(), pres = new P();
-  pres.layout = 'LAYOUT_WIDE'; pres.author = 'SynthZ'; pres.company = 'SynthZ'; pres.title = D.titulo;
+  pres.layout = 'LAYOUT_WIDE'; pres.author = 'SymphorIA'; pres.company = 'SymphorIA'; pres.title = D.titulo;
   const BG = '0B0C10', TX = 'ECEBE7', SOFT = 'C9C8C3', GOLD = 'E6B65F', ROSE = 'C9566C', MUTE = '8D8C88';
   const t = pres.addSlide(); t.background = { color:BG };
   t.addShape(pres.ShapeType.rect, { x:0, y:0, w:13.33, h:.12, fill:{ color:ROSE } });
   t.addShape(pres.ShapeType.rect, { x:.9, y:3.05, w:1.6, h:.08, fill:{ color:GOLD } });
   t.addText(D.titulo, { x:.9, y:1.4, w:11.5, h:1.6, fontFace:'Georgia', fontSize:44, color:TX, bold:false, valign:'bottom', fit:'shrink' });
   if (D.subtitulo) t.addText(D.subtitulo, { x:.9, y:3.3, w:11.5, h:1.2, fontFace:'Calibri', fontSize:22, color:SOFT, valign:'top', fit:'shrink' });
-  t.addText('Hecho con SynthZ', { x:.9, y:6.7, w:6, h:.4, fontFace:'Calibri', fontSize:12, color:MUTE });
+  t.addText('Hecho con SymphorIA', { x:.9, y:6.7, w:6, h:.4, fontFace:'Calibri', fontSize:12, color:MUTE });
   D.slides.forEach((S, i) => {
     const s = pres.addSlide(); s.background = { color:BG };
     s.addShape(pres.ShapeType.rect, { x:0, y:0, w:.12, h:7.5, fill:{ color:GOLD } });
@@ -1451,21 +1834,35 @@ function memModal(){ SZ.cfgModal('mem'); }
    y te muestra cada paso. Al final decides: quedarte con esa IA o seguir en modo agente ---------- */
 let agentBusy = false;
 const agentOn = () => !!st().agent && !trialOn;
-$('#agPill').addEventListener('click', () => { if (isMobile()) closeChatsSheet && closeChatsSheet(); cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(false); });
-function paintAgent(){ try{ paintMode(); }catch(e){} $$('.agentb, #railAgent').forEach(b => { b.setAttribute('aria-pressed', String(agentOn())); b.classList.toggle('on', agentOn()); }); document.body.classList.toggle('agenting', agentOn()); inp.placeholder = agentOn() ? 'Modo agente: cuéntame qué necesitas…' : (isLocked() ? inp.placeholder : 'Escribe tu mensaje...'); }
+$('#agPill').addEventListener('click', () => { if (isMobile()) closeChatsSheet && closeChatsSheet(); setAgent(false); });
+function paintAgent(){ try{ paintMode(); }catch(e){} $$('.agentb, #railAgent').forEach(b => { b.setAttribute('aria-pressed', String(agentOn())); b.classList.toggle('on', agentOn()); }); document.body.classList.toggle('agenting', agentOn()); inp.placeholder = agentOn() ? 'SuperiorSynth: cuéntame qué necesitas…' : (isLocked() ? inp.placeholder : 'Escribe tu mensaje...'); }
 function setAgent(on){
   if (!!st().agent === !!on){ paintAgent(); return; }
   if (mode !== 'solo'){ stopNow(); cmpRun++; cmpLast = null; mode = 'solo'; }
   st().agent = !!on; save(); paintAgent(); gen++;
   try{ renderMsgs(); updateHint(); renderTop(true); renderNow(); renderChats(false); }catch(e){}
-  toast(on ? 'Modo agente activado: tú escribes y el agente elige la IA que más sabe de eso.' : 'Modo agente apagado: ahora eliges tú la IA.');
+  toast(on ? 'Modo SuperiorSynth activado: tú escribes y SuperiorSynth elige la IA que más sabe de eso.' : 'Modo SuperiorSynth apagado: ahora eliges tú la IA.');
 }
 const AG_STEPS = ['Entendiendo tu pedido', 'Mejorando tu pedido para que la IA lo entienda mejor', 'Eligiendo la IA que más sabe de esto', 'Pasándole tu pedido a la IA'];
-const AG_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>';
+/* v2.3 · SuperiorSynth: su ícono propio, animado (una estrella que late con un satélite que la orbita) */
+function ssIco(cls){
+  const run = !SZ.reduce && !root.classList.contains('noanim');
+  /* la órbita pasa por detrás de la estrella (arco de arriba) y por delante (arco de abajo): se siente en 3D */
+  return '<svg class="ssi' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(-24 12 12)">'
+    + '<path class="ssi-o" d="M1.3 12a10.7 3.7 0 0 1 21.4 0" fill="none" stroke="url(#ssG)" stroke-width="1.35" stroke-linecap="round" opacity=".55"/></g>'
+    + '<path class="ssi-s" d="M12 2.6l2.05 7.35L21.4 12l-7.35 2.05L12 21.4l-2.05-7.35L2.6 12l7.35-2.05z" fill="url(#ssG)"/>'
+    + '<g transform="rotate(-24 12 12)"><path class="ssi-o" d="M22.7 12a10.7 3.7 0 0 1-21.4 0" fill="none" stroke="url(#ssG)" stroke-width="1.35" stroke-linecap="round"/>'
+    + '<circle class="ssi-d" r="1.6" fill="#fff4dc"' + (run ? '><animateMotion dur="3.6s" repeatCount="indefinite" path="M1.3 12a10.7 3.7 0 1 0 21.4 0a10.7 3.7 0 1 0-21.4 0"/></circle>' : ' cx="22.7" cy="12"/>') + '</g>'
+    + '<path class="ssi-k" d="M19.6 2.2l.5 1.4 1.4.5-1.4.5-.5 1.4-.5-1.4-1.4-.5 1.4-.5z" fill="#ffe7b8"/></svg>';
+}
+if (!document.getElementById('ssDefs')) document.body.insertAdjacentHTML('afterbegin', '<svg id="ssDefs" width="0" height="0" style="position:absolute;width:0;height:0" aria-hidden="true" focusable="false"><defs><linearGradient id="ssG" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff1d2"/><stop offset=".45" stop-color="#e6b65f"/><stop offset="1" stop-color="#c9566c"/></linearGradient></defs></svg>');
+const ssMount = () => $$('.ssmount').forEach(m => { if (!m.firstChild) m.innerHTML = ssIco(); });
+ssMount();
+const AG_ICO = ssIco();
 /* lo que hace el agente, en vivo: su loguito de píxeles y los pasos que se van marcando */
 function agentCard(){
   const el = document.createElement('div'); el.className = 'agrun';
-  el.innerHTML = '<div class="ag-h"><span class="pxw">' + SZ.pixelGrid() + '</span><span class="ag-t"><b>Modo agente</b><small>Trabajando en tu pedido…</small></span></div><ol class="ag-s">' + AG_STEPS.map((t, i) => '<li data-i="' + i + '"><i aria-hidden="true"></i><span>' + t + '</span></li>').join('') + '</ol>';
+  el.innerHTML = '<div class="ag-h"><span class="pxw">' + SZ.pixelGrid() + '</span><span class="ag-t"><b>SuperiorSynth</b><small>Trabajando en tu pedido…</small></span></div><ol class="ag-s">' + AG_STEPS.map((t, i) => '<li data-i="' + i + '"><i aria-hidden="true"></i><span>' + t + '</span></li>').join('') + '</ol>';
   const px = SZ.pixelRun($('.pxw', el));
   return {
     el,
@@ -1476,7 +1873,7 @@ function agentCard(){
 /* lo que queda guardado debajo de tu mensaje: «El agente eligió …» con el pedido mejorado para ver */
 function agentSumEl(a){
   const el = document.createElement('div'); el.className = 'agsum';
-  el.innerHTML = '<button type="button" class="ag-row" aria-expanded="false"><span class="ag-ic">' + AG_ICO + '</span><span class="ag-tx">El agente eligió <b></b><em></em></span>' + (a.ask ? '<svg class="ag-c" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>' : '') + '</button>' + (a.ask ? '<div class="ag-d" hidden><small>Tu pedido mejorado (esto le llegó a la IA)</small><p></p></div>' : '');
+  el.innerHTML = '<button type="button" class="ag-row" aria-expanded="false"><span class="ag-ic">' + AG_ICO + '</span><span class="ag-tx">SuperiorSynth eligió <b></b><em></em></span>' + (a.ask ? '<svg class="ag-c" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>' : '') + '</button>' + (a.ask ? '<div class="ag-d" hidden><small>Tu pedido mejorado (esto le llegó a la IA)</small><p></p></div>' : '');
   $('.ag-tx b', el).textContent = a.name || 'una IA'; $('.ag-tx em', el).textContent = a.tl ? ', que sabe de ' + a.tl : '';
   if (a.ask){ $('.ag-d p', el).textContent = a.ask; const row = $('.ag-row', el), d = $('.ag-d', el); row.addEventListener('click', () => { const on = d.hidden; d.hidden = !on; row.setAttribute('aria-expanded', String(on)); el.classList.toggle('open', on); }); }
   return el;
@@ -1501,20 +1898,19 @@ function agentPick(tema){
 function agentChoice(pick){
   $$('.agkeep', lane).forEach(x => x.remove());
   const nm = info(pick).name, d = document.createElement('div'); d.className = 'agkeep';
-  d.innerHTML = '<span>¿Te quedas con <b></b> o sigues en modo agente?</span><div class="agk-b"><button type="button" class="btn sm" data-ak="keep"></button><button type="button" class="btn sm ghost" data-ak="go">Seguir en modo agente</button></div><small>Si sigues en modo agente, en tu próximo mensaje vuelvo a elegir la IA que más sepa de eso.</small>';
+  d.innerHTML = '<span>¿Te quedas con <b></b> o sigues con SuperiorSynth?</span><div class="agk-b"><button type="button" class="btn sm" data-ak="keep"></button><button type="button" class="btn sm ghost" data-ak="go">Seguir con SuperiorSynth</button></div><small>Si sigues con SuperiorSynth, en tu próximo mensaje vuelvo a elegir la IA que más sepa de eso.</small>';
   $('span b', d).textContent = nm; $('[data-ak="keep"]', d).textContent = 'Quedarme con ' + nm;
   lane.appendChild(d); follow();
   d.addEventListener('click', e => {
     const b = e.target.closest('[data-ak]'); if (!b) return; d.remove();
-    if (b.dataset.ak === 'go'){ toast('Sigues en modo agente: en tu próximo mensaje vuelvo a elegir la IA.'); return; }
+    if (b.dataset.ak === 'go'){ toast('Sigues con SuperiorSynth: en tu próximo mensaje vuelvo a elegir la IA.'); return; }
     /* la conversación sigue igual, ahora con esa IA y sin el agente */
     const k0 = ckey(), msgs = (st().chats[k0] || []).slice(), tid = 't' + Date.now().toString(36), k1 = 'openrouter::' + pick + '::' + tid;
     st().chats[k1] = msgs; delete st().chats[k0]; st().del = [...(st().del || []), k0].slice(-300);
     const L = (st().threads || {})[AGK]; if (L){ const id0 = curT(), e0 = L.find(x => x.id === id0); st().threads[AGK] = L.filter(x => x.id !== id0); if (e0){ const e1 = thMeta(pick, tid, true); e1.title = e0.title; e1.t = Date.now(); } }
     (st().thread || (st().thread = {}))[pick] = tid; st().model.openrouter = pick; st().pinned = pick; st().agent = false;
-    if (cView === 'agents'){ cView = 'chats'; RS.view = 'chats'; saveRS(); }
     save(); paintAgent(); gen++; applyRail(); paintSel(); renderTop(true); paintAccent(); renderMsgs(); updateHint(); renderChats(false);
-    toast('Listo: sigues con ' + nm + '. El modo agente quedó apagado; lo vuelves a activar en la barra.');
+    toast('Listo: sigues con ' + nm + '. SuperiorSynth quedó apagado; lo vuelves a activar en el botón de modo, junto a la caja de escribir.');
   });
 }
 async function agentPlan(text){
@@ -1541,7 +1937,7 @@ async function send(){
   if (agentOn() && mode === 'solo' && text && !files.length){
     if (agentBusy) return;
     /* el agente ve que pides una imagen: la crea el creador de imágenes */
-    if (IMG_RX.test(text) && SZ.ACC.ready){ toast('El agente vio que quieres una imagen: la crea el creador de imágenes.'); return createImage(text); }
+    if (IMG_RX.test(text) && SZ.ACC.ready){ toast('SuperiorSynth vio que quieres una imagen: la crea el creador de imágenes.'); return createImage(text); }
     agentBusy = true; inp.readOnly = true; sendBtn.disabled = true;
     try{ localStorage.setItem('synthz:sent', String(sentN() + 1)); }catch(e){}
     try{ frustration(text, false); }catch(e){}
@@ -1659,6 +2055,10 @@ async function runSolo(onFail, o = {}){
       const ctl = new AbortController(); ctls.add(ctl);
       try{ r = await SZ.askStream(OR, sent, Object.assign({ model:mid, maxTokens: saver ? 700 : 0, signal:ctl.signal, onReason:t => W.reason(t) }, effortOpts(saver)), txt => { mount(); W.write(txt); if (rv) rv.push(txt); }); }finally{ ctls.delete(ctl); }
       addUsage(r.prov || SZ.provOf(mid), r.prompt, r.completion, true, { est:r.est, free:/:free$/.test(mid) || r.prov === 'synthz', rid:r.rid });
+      if (!r.aborted && !r.swapped) SZ.markGood(mid);
+      SZ.TEL.msgs++; SZ.TEL.ai = (r.prov || SZ.provOf(mid)).slice(0, 12);
+      st().sx.saved += Math.max(0, msgCost(naive) - msgCost(sent)); save();
+      if (canCache && !r.aborted) cachePut(ck, r);
       /* si la IA se quedó sin espacio (o se cortó la conexión), sigue sola donde quedó: la persona recibe la respuesta completa sin tocar «Continuar» */
       for (let n = 0; n < 3 && !r.aborted && !r.swapped && g === gen && (r.finish === 'length' || r.cut); n++){
         const base = r.text, ctl2 = new AbortController(); ctls.add(ctl2);
@@ -1674,17 +2074,13 @@ async function runSolo(onFail, o = {}){
         if (/^\(La IA devolvió una respuesta vacía\.\)$/.test(r2.text)) break;
         r = Object.assign({}, r, { text:base + glue(r2.text) + r2.text, prompt:r.prompt + r2.prompt, completion:r.completion + r2.completion, ms:r.ms + r2.ms, finish:r2.finish, cut:r2.cut, aborted:r2.aborted, est:r.est || r2.est });
       }
-      if (!r.aborted && !r.swapped) SZ.markGood(mid);
-      SZ.TEL.msgs++; SZ.TEL.ai = (r.prov || SZ.provOf(mid)).slice(0, 12);
-      st().sx.saved += Math.max(0, msgCost(naive) - msgCost(sent)); save();
-      if (canCache && !r.aborted) cachePut(ck, r);
     }
     if (g !== gen){ if (rv) rv.skip(); return; }
     const tail = r.aborted ? ' · detenido' : r.cut ? ' · se cortó la conexión' : r.finish === 'length' ? ' · se cortó porque era muy larga (toca «Continuar»)' : '';
     const who = r.swapped ? ' · se acabó tu saldo de Puter este mes; respondió ' + (r.real || 'otra IA') : '';
     W.write(r.text); W.finish({ ms:r.ms, real:r.real || '' });
     const work = { ms:Math.round(r.ms || 0), words:W.state.words, real:r.real || '', steps:W.state.steps.map(([a, b]) => [Math.round(a), b]), reason:(r.reasoning || '').slice(0, 4000) || undefined };
-    const msg = { role:'assistant', content:r.text, work, meta:metaOf(r) + tail + who + (r.via ? ' · vía ' + r.via + ' (prueba de SynthZ)' : ''), model:mid, cont: !!(r.cut || r.finish === 'length') || undefined };
+    const msg = { role:'assistant', content:r.text, work, meta:metaOf(r) + SZ.coinNote(mid, r) + tail + who + (r.via ? ' · vía ' + r.via + ' (prueba de SymphorIA)' : ''), model:mid, cont: !!(r.cut || r.finish === 'length') || undefined };
     chat.push(msg); touchThread(); save();
     if (here()){
       mount(); rv.push(r.text);
@@ -1693,6 +2089,8 @@ async function runSolo(onFail, o = {}){
       $('.body', el).innerHTML = md(r.text);
       { const u = [...chat].reverse().find(x => x.role === 'user'); el._sources = u && u.sources && u.sources.length ? u.sources : null; }
       finishBot(el, msg.meta, true, msg.cont); follow();
+      if (!r.aborted) synAuto(el);
+      if (!r.aborted) codeAfter(el, chat);   /* v2.4 · la página se prueba sola y, si tiene errores, la IA la arregla */
       if (SZ.BOT.react && !r.aborted && !G) SZ.BOT.react('done', { cool:180000 });
     }
   }catch(err){
@@ -1797,7 +2195,7 @@ function cmpJob(mid, C){
     if (!live()) return;
     mount(); if (!card) return;
     rv.push(r.text); await rv.end();
-    finishCard(C, card, r.text, metaOf(r) + (r.cached ? ' · respuesta guardada, no gastó nada' : '') + (r.aborted ? ' · detenido' : '') + (r.swapped ? ' · se acabó tu saldo de Puter este mes; respondió ' + (r.real || 'otra IA') : ''));
+    finishCard(C, card, r.text, metaOf(r) + SZ.coinNote(mid, r) + (r.cached ? ' · respuesta guardada, no gastó nada' : '') + (r.aborted ? ' · detenido' : '') + (r.swapped ? ' · se acabó tu saldo de Puter este mes; respondió ' + (r.real || 'otra IA') : ''));
     C.done.push({ card, mid, ms:r.ms, ttft:r.ttft || r.ms });
   }).catch(err => {
     if (err && err.gone){ SZ.markBad(mid); setCatalog(cat.list.filter(m => m.id !== mid), cat.t, cat.status); err.message = info(mid).name + ' no está funcionando ahora mismo: la escondí de la lista. Quítala y suma otra.'; }
@@ -1962,7 +2360,7 @@ function sideFlip(open){
 function placeSide(){}
 function openSide(kind, anchor){
   if (isLocked()){ lockNudge(); toast('Primero conecta Puter: es gratis y con un clic.'); return; }
-  if (agentOn() && mode === 'solo' && kind !== 'add'){ toast('En modo agente la IA la elige el agente. Si quieres elegirla tú, apaga el modo agente.'); return; }
+  if (agentOn() && mode === 'solo' && kind !== 'add'){ toast('Con SuperiorSynth la IA la elige él. Si quieres elegirla tú, vuelve a «Chats».'); return; }
   pickMode = kind === 'add' || mode === 'cmp' ? 'add' : 'set';
   $('#pTitle').textContent = pickMode === 'add' ? 'Suma otra IA a la mesa' : '¿Con quién fluyes hoy?';
   const a = anchor && anchor.isConnected ? anchor : $('#curChip') || $('#cPick') || $('#pickRow');
@@ -2018,7 +2416,7 @@ addEventListener('keydown', e => {
 /* ---------- barrita lateral y tus chats ---------- */
 const RAIL_KEY = 'synthz:rail';
 const RS = { open:false, chats:null, view:'chats' };
-try{ const r = JSON.parse(localStorage.getItem(RAIL_KEY)) || {}; if (typeof r.open === 'boolean') RS.open = r.open; if (typeof r.chats === 'boolean') RS.chats = r.chats; if (r.view === 'favs' || r.view === 'agents') RS.view = r.view; }catch(e){}
+try{ const r = JSON.parse(localStorage.getItem(RAIL_KEY)) || {}; if (typeof r.open === 'boolean') RS.open = r.open; if (typeof r.chats === 'boolean') RS.chats = r.chats; if (r.view === 'favs') RS.view = r.view; }catch(e){}
 if (RS.chats === null) RS.chats = !isTablet();
 let cView = RS.view;
 const saveRS = () => { try{ localStorage.setItem(RAIL_KEY, JSON.stringify(RS)); }catch(e){} };
@@ -2026,10 +2424,9 @@ function applyRail(){
   const sh = $('#shell'), tg = $('#railTog');
   $('#rail').classList.toggle('open', !!RS.open); sh.classList.toggle('ropen', !!RS.open); sh.classList.toggle('nochats', !RS.chats);
   tg.setAttribute('aria-expanded', String(!!RS.open)); tg.setAttribute('aria-label', RS.open ? 'Cerrar la barra' : 'Abrir la barra'); tg.dataset.tip = RS.open ? 'Cerrar la barra' : 'Abrir la barra';
-  $$('#rail [data-r]').forEach(b => { const r = b.dataset.r; b.setAttribute('aria-pressed', String((r === 'agents' && cView === 'agents') || (r === 'chats' && RS.chats && cView === 'chats') || (r === 'favs' && RS.chats && cView === 'favs'))); });
+  $$('#rail [data-r]').forEach(b => { const r = b.dataset.r; b.setAttribute('aria-pressed', String((r === 'chats' && RS.chats && cView === 'chats') || (r === 'favs' && RS.chats && cView === 'favs'))); });
   $$('#cSeg button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.v === cView))); placePill($('#cSeg'));
   $('#railWord').tabIndex = RS.open ? 0 : -1;
-  setAgent(cView === 'agents');
 }
 function showChats(view, focus){
   if (isMobile()){ cView = view || cView; openChatsSheet(focus); return; }
@@ -2042,7 +2439,6 @@ $('#rail').addEventListener('click', e => {
   const r = b.dataset.r;
   if (r === 'new'){ newChat(); return; }
   if (r === 'search'){ showChats('chats', true); return; }
-  if (r === 'agents' && cView === 'agents'){ cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(true); toast('Saliste del modo agente.'); return; }
   if ((r === 'chats' || r === 'favs') && RS.chats && cView === r && !RS.open){ RS.chats = false; saveRS(); applyRail(); return; }
   showChats(r);
 });
@@ -2072,19 +2468,20 @@ function newChat(){
 }
 
 /* volver con un fundido */
-/* volver a SynthZ: la película del portal al revés */
+/* volver a SymphorIA: la película del portal al revés */
 /* v1.4: con la barra lateral abierta, el logo «SynthFlow» NO lleva a la portada (solo hace un brillito) */
 document.addEventListener('click', e => { const w = e.target.closest && e.target.closest('#railWord'); if (w){ e.preventDefault(); e.stopPropagation(); w.classList.remove('tw'); void w.offsetWidth; w.classList.add('tw'); } }, true);
 document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('a[href="index.html"]'); if (!a || a.id === 'railWord' || (e.defaultPrevented && !/^(backLink|mLogo)$/.test(a.id)) || e.button || e.ctrlKey || e.metaKey || e.shiftKey) return; e.preventDefault(); SZ.portalBack('index.html'); });
 addEventListener('pageshow', e => { if (e.persisted){ root.classList.remove('bye'); const pp = document.getElementById('portal'); if (pp) pp.remove(); SZ.S.busy(false); } });
 SZ.hooks.usage = () => { renderFoot(); coinWatch(); };
 SZ.hooks.md = () => { if (!Object.keys(busy).length && mode === 'solo' && chatArr().length) renderMsgs(); };
+SZ.onLang(() => { if (!Object.keys(busy).length && mode === 'solo') renderMsgs(); });   /* v3.0 · el saludo cambia de idioma al momento */
 
 /* ---------- tutorial, mejor IA gratis y menú contextual ---------- */
 const APODEX_NAME = 'Automática';
 const TOUR = [
   { t:'Bienvenido a SynthFlow', p:'Aquí chateas gratis con muchas IA. No tienes que configurar nada: escribe y listo.' },
-  { t:'Tu Puter (opcional)', p:'Cada día tienes un límite gratis para usar las IAs conectadas. A medianoche se vuelve a llenar. Si se te acaban, puedes seguir con Puter. Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.', x:'conn' },
+  { t:'Tu Puter', p:'Cada día tienes un límite gratis para usar las IAs conectadas. A medianoche se vuelve a llenar. Si se te acaban, puedes seguir con Puter, que te da la versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.', x:'conn' },
   { t:'¿Dónde quieres empezar?', p:'Elige y te dejo en su pestaña con su mejor IA. Si no eliges, empiezas con ' + APODEX_NAME + '.', x:'pick' },
   { t:'Tu límite de hoy', p:'Cada día tienes un límite gratis. El anillo de la barrita se va vaciando mientras chateas y se llena otra vez a medianoche. «Respuestas cortas» te ayuda a que te alcancen más.' },
   { t:'Más trucos', p:'Adjunta imágenes, PDF o código con el «+». En "Comparar" le preguntas lo mismo a hasta 4 IAs. El botón «?» de arriba abre la guía rápida cuando quieras.' },
@@ -2097,7 +2494,7 @@ function tourBox(box, kind){
   if (kind === 'conn'){
     const hasP = puterOn(), on = szOn();
     box.innerHTML = '<div class="tconn"><div class="trow"><b><i class="pdot' + (on ? ' on' : '') + '"></i> <span class="sz-logo" aria-hidden="true"></span> IAs conectadas</b><span>' + (on ? 'Listas · gratis' : 'Descansando un momento') + '</span>' + (on ? '<i class="ok">✓ Lista</i>' : '') + '</div>'
-      + '<div class="trow"><b><i class="pdot' + (hasP ? ' on' : '') + '"></i> ' + SZ.puterLogo() + ' Puter</b><span>Opcional · un clic</span>' + (hasP ? '<i class="ok">✓ Conectada</i>' : '<button class="btn sm" data-tpu type="button">Conectar</button><button class="lnk" data-tpt type="button">Sin cuenta de Puter</button>') + '</div></div>';
+      + '<div class="trow"><b><i class="pdot' + (hasP ? ' on' : '') + '"></i> ' + SZ.puterLogo() + ' Puter</b><span>Tus IAs pro · un clic</span>' + (hasP ? '<i class="ok">✓ Conectada</i>' : '<button class="btn sm" data-tpu type="button">Conectar</button><button class="lnk" data-tpt type="button">Sin cuenta de Puter</button>') + '</div></div>';
     const pu = $('[data-tpu]', box);
     if (pu) pu.addEventListener('click', () => { pu.textContent = 'Conectando…'; puterSignIn().then(() => { afterConnect('¡Puter conectado!'); tourBox(box, 'conn'); }).catch(e => { pu.textContent = 'Conectar'; if (!(e && e.shown)) toast('No terminaste de entrar a Puter. Inténtalo otra vez.'); }); });
     const pt = $('[data-tpt]', box);
@@ -2105,10 +2502,10 @@ function tourBox(box, kind){
   } else if (kind === 'pick'){
     const bp = bestOf('pu'), bo = bestOf('sz');
     const card = (k, title, sub, model) => '<button type="button" class="tpick' + (tourPick === k ? ' on' : '') + '" data-k="' + k + '"><b>' + title + '</b><span>' + sub + '</span><em>' + esc(model) + '</em></button>';
-    box.innerHTML = '<div class="tpicks">' + card('sz', 'IAs conectadas', 'Gratis · listas', bo ? bo.name : 'Automática') + card('pu', 'Puter', 'Opcional · un clic', bp ? bp.name : 'ChatGPT') + card('none', 'Ninguno', 'Por defecto', 'Automática') + '</div>';
+    box.innerHTML = '<div class="tpicks">' + card('sz', 'IAs conectadas', 'Gratis · listas', bo ? bo.name : 'Automática') + card('pu', 'Puter', 'Tus IAs pro · un clic', bp ? bp.name : 'ChatGPT') + card('none', 'Ninguno', 'Por defecto', 'Automática') + '</div>';
     $$('.tpick', box).forEach(b => b.addEventListener('click', () => { tourPick = b.dataset.k; tourBox(box, 'pick'); }));
   } else if (kind === 'done'){
-    const id = pickTarget(), where = tourPick === 'pu' ? 'Puter' : tourPick === 'sz' ? 'SynthZ' : 'Todos';
+    const id = pickTarget(), where = tourPick === 'pu' ? 'Puter' : tourPick === 'sz' ? 'SymphorIA' : 'Todos';
     box.innerHTML = '<div class="tsum">Empiezas con <b>' + esc(info(id).name) + '</b> en la pestaña <b>' + where + '</b>.' + (connected(id) ? '' : /^pu:/.test(id) ? ' Te pediré entrar a Puter cuando escribas tu primer mensaje.' : '') + '</div>';
   } else box.innerHTML = '';
 }
@@ -2125,7 +2522,7 @@ function tourStep(anim, dir){
   if (!anim){ set(); return; }
   SZ.swapDir(b, dir || 1, set);
 }
-function openHelp(){ SZ.helpGuide({ extra:[['Ver la Guía Asistida', () => runGuide()], ['Conectar mi Puter (opcional)', openTour], ['Ver mi límite de hoy', () => coinModal('panel')]] }); }
+function openHelp(){ SZ.helpGuide({ extra:[['Ver la Guía Asistida', () => runGuide()], ['Conectar mi Puter', () => openConnect()], ['Ver mi límite de hoy', () => coinModal('panel')]] }); }
 $('#helpBtn').addEventListener('click', () => openGuide());
 $('#guideTop').addEventListener('click', () => openGuide());
 function openTour(){
@@ -2391,16 +2788,16 @@ async function runGuide(){
         } else {
         if (last) await H.moveTo(last, { shape:'arrow', fx:.15, fy:.2 });
         SZ.SND.done();
-        await H.talk(useSz ? '¡Lo lograste! Puedes seguir chateando gratis. Abajo ves cómo va tu límite de hoy.' : '¡Lo lograste! Te quedan ' + trialLeft() + ' mensajes de prueba para seguir practicando. Abajo dice quién la paga: SynthZ.', { near:last || inp, mood:'celebrando', buttons:[{ label:'Siguiente' }], auto:9000 });
+        await H.talk(useSz ? '¡Lo lograste! Puedes seguir chateando gratis. Abajo ves cómo va tu límite de hoy.' : '¡Lo lograste! Te quedan ' + trialLeft() + ' mensajes de prueba para seguir practicando. Abajo dice quién la paga: SymphorIA.', { near:last || inp, mood:'celebrando', buttons:[{ label:'Siguiente' }], auto:9000 });
         }
       } else await H.talk('Puedes enviarlo después: el mensaje te espera en la caja.', { mood:'guino', buttons:[{ label:'Siguiente' }] });
     }
     gNeed();
 
-    /* 6 · ¿qué es Puter? (opcional): más IA con tus créditos personales */
+    /* 6 · ¿qué es Puter?: más IA con tus créditos personales */
     gHud(6, 'Tu Puter');
     H.quiet();
-    const P6 = gPanel('<h3>¿Qué es Puter?</h3><div class="gp-pu"><div class="gp-pc" style="--i:0"><span class="gp-pi">' + SZ.puterLogo() + '</span><b>Tu versión pro de las IAs más usadas</b><small>ChatGPT, Claude, Gemini y más, en su versión más potente. Gratis.</small></div><div class="gp-pc" style="--i:1"><span class="gp-pi">✨</span><b>Con un límite cada mes</b><small>Tienes un saldo gratis que se llena de nuevo cada mes. Se crea con un clic, sin tarjeta.</small></div><div class="gp-pc" style="--i:2"><span class="gp-pi"><span class="sz-logo" aria-hidden="true"></span></span><b>Es opcional</b><small>Si no lo conectas, sigues con las IAs conectadas y su límite gratis de cada día.</small></div></div><div class="gp-act"><button type="button" class="lnk" data-glater>Después</button><span style="flex:1"></span>' + (puterOn() ? '<span class="gp-ok">✓ Ya tienes tu Puter conectado</span><button type="button" class="btn sm flow" data-gnext>Siguiente →</button>' : '<button type="button" class="btn sm flow" data-gnext>Conectar mi Puter</button>') + '</div>', 'puter', puterOn() ? 'Ya tienes tu Puter conectado: si se acaba tu límite de hoy, sigues con él.' : 'Ya puedes chatear gratis. Y si quieres más: Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.', puterOn() ? 'encantada' : 'guino', 1);
+    const P6 = gPanel('<h3>¿Qué es Puter?</h3><div class="gp-pu"><div class="gp-pc" style="--i:0"><span class="gp-pi">' + SZ.puterLogo() + '</span><b>Tu versión pro de las IAs más usadas</b><small>ChatGPT, Claude, Gemini y más, en su versión más potente. Gratis.</small></div><div class="gp-pc" style="--i:1"><span class="gp-pi">✨</span><b>Con un límite cada mes</b><small>Tienes un saldo gratis que se llena de nuevo cada mes. Se crea con un clic, sin tarjeta.</small></div><div class="gp-pc" style="--i:2"><span class="gp-pi"><span class="sz-logo" aria-hidden="true"></span></span><b>Es opcional</b><small>Si no lo conectas, sigues con las IAs conectadas y su límite gratis de cada día.</small></div></div><div class="gp-act"><button type="button" class="lnk" data-glater>Después</button><span style="flex:1"></span>' + (puterOn() ? '<span class="gp-ok">✓ Ya tienes tu Puter conectado</span><button type="button" class="btn sm flow" data-gnext>Siguiente →</button>' : '<button type="button" class="btn sm flow" data-gnext>Conectar mi Puter</button>') + '</div>', 'puter', puterOn() ? 'Ya tienes tu Puter conectado: si se acaba tu límite de hoy, sigues con él.' : 'Ya puedes chatear gratis. Y si quieres más, con Puter usas la versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.', puterOn() ? 'encantada' : 'guino', 1);
     await gWait(420);
     H.wander && H.wander(P6);
     const r6 = await new Promise(res => { $('[data-gnext]', P6).addEventListener('click', () => res('go'), { once:true }); $('[data-glater]', P6).addEventListener('click', () => res('later'), { once:true }); const iv = setInterval(() => { if (!G || G.skip){ clearInterval(iv); res('later'); } }, 300); });
@@ -2443,17 +2840,17 @@ const TOPIC_STEPS = {
     const ex = gT('#hexR', '#hexR'); if (ex) await gPoint(ex, 'Si no sabes qué pedir, toca una de estas ideas: se escribe sola y tú decides cuándo enviarla.');
   },
   ia:async () => {
-    if (agentOn()){ await gPoint(gT('#agPill', '#agPill'), 'Ahora estás en modo agente: él elige la IA por ti. Si quieres elegirla tú, toca «Apagar».'); return; }
+    if (agentOn()){ await gPoint(gT('#ssTop', '#ssTop'), 'Ahora estás con SuperiorSynth: él elige la IA por ti. Si quieres elegirla tú, toca aquí y «Elegir yo la IA».'); return; }
     await gPoint(gAny('#cPick', '#curChip'), 'Aquí eliges con qué IA hablas. Tócalo y se abre su ventana con temas, buscador y filtros.');
     const tc = gT('.tchip[data-topic]', '.tchip[data-topic]'); if (tc) await gPoint(tc, 'Cada tema te recomienda las IA que mejor lo hacen. Por ejemplo, «Código» te muestra las expertas en programar.');
   },
   comparar:async () => {
-    if (agentOn()){ await gPoint(null, 'Comparar se usa sin el modo agente: apágalo y verás el botón «Comparar con otra IA» abajo.'); return; }
+    if (agentOn()){ await gPoint(null, 'Comparar se usa sin SuperiorSynth: vuelve a «Chats» y verás el botón «Comparar con otra IA» abajo.'); return; }
     await gPoint(gAny('#cCmp', '#pickRow [data-add]'), 'Aquí sumas otra IA, hasta 4. Todas responden la misma pregunta y aparecen lado a lado, en el orden en que llegan. Ojo: cada una gasta lo suyo.');
   },
   agente:async () => {
-    await gPoint(gT('#railAgent', '#tabbar [data-tab="chats"]'), isMobile() ? 'El modo agente está en «Chats», en la pestaña «Agente».' : 'Este es el modo agente, debajo de «Mis chats».');
-    await gPoint(null, 'En modo agente no eliges IA: tú escribes, el agente entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso. Al final decides si te quedas con esa IA o sigues en modo agente.', { mood:'guino' });
+    await gPoint(gT('#cMode', '#cMode'), 'SuperiorSynth se elige aquí, en el botón de modo junto a la caja de escribir.');
+    await gPoint(null, 'Con SuperiorSynth no eliges IA: tú escribes, él entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso. Al final decides si te quedas con esa IA o sigues con SuperiorSynth.', { mood:'guino' });
   },
   archivos:async () => {
     await gPoint(gT('#attachBtn', '#attachBtn'), 'Con el «+» le das a la IA fotos, PDF o archivos de texto. Ahí mismo creas imágenes, buscas en internet o pides respuestas cortas.');
@@ -2475,7 +2872,7 @@ const TOPIC_STEPS = {
   },
   cuenta:async () => {
     await gPoint(gT('#accBtn', '#tabbar [data-tab="me"]'), 'Aquí entras o creas tu cuenta gratis: sin correo ni tarjeta. Tus chats y favoritos te siguen a todas partes.', { side:true });
-    await gPoint(null, 'Y si quieres más, conecta Puter: tu versión pro de las IAs más usadas (ChatGPT, Claude, Gemini…), gratis y con un clic.', { mood:'guino' });
+    await gPoint(null, 'Y si quieres más, conecta Puter y usa la versión pro de las IAs más usadas (ChatGPT, Claude, Gemini…), gratis y con un clic.', { mood:'guino' });
   },
   ajustes:async () => {
     await gPoint(gT('#cfgBtn', '#tabbar [data-tab="cfg"]'), 'Ajustes tiene 2 pestañas: «Página» (más bonito o más rápido, sonidos, animaciones) e «IAs y memoria» (modo principiante, respuestas cortas, lo que recuerdo de ti y tus IAs).', { side:true });
@@ -2693,13 +3090,13 @@ function paintLock(){
     const gm = (SZ.SZQ.guest && SZ.SZQ.guest.max) || 5;
     $('#lockT').textContent = gst ? 'Para seguir FlowIAndo, entra a tu cuenta' : done ? 'Se acabaron tus mensajes de prueba' : SZ.SZQ.on === false ? 'Las IAs gratis están descansando' : 'Usaste tu límite gratis de hoy';
     $('#lockS').textContent = gst ? 'Ya usaste tus ' + gm + ' mensajes de prueba de hoy sin cuenta. Crear tu cuenta es gratis, sin correo ni tarjeta, y te da mucho más límite cada día.' : done ? 'Para seguir chateando conecta tu cuenta de Puter (gratis, con un clic).' : 'Vuelve en un momento, o sigue ya con Puter. Conecta tu versión pro de las IAs más usadas.';
-    SZ.telEv('noai', 'sin IA: la de SynthZ está apagada y no hay Puter');
+    SZ.telEv('noai', 'sin IA: la de SymphorIA está apagada y no hay Puter');
     if (side.classList.contains('open')) closeSide();
   } else { wHide(); }
   try{ renderTop(); }catch(e){}
 }
 setInterval(paintLock, 1500);
-{ paintAgent(); $$('.agentb-x').forEach(ab => { ab.addEventListener('click', () => { st().agent = !agentOn(); save(); paintAgent(); toast(agentOn() ? 'Modo agente encendido: antes de enviar, una IA mejora tu pedido y elige la IA que más sabe de eso.' : 'Modo agente apagado: tu mensaje va tal cual.'); }); }); }
+{ paintAgent(); $$('.agentb-x').forEach(ab => { ab.addEventListener('click', () => { st().agent = !agentOn(); save(); paintAgent(); toast(agentOn() ? 'SuperiorSynth encendido: antes de enviar, mejora tu pedido y elige la IA que más sabe de eso.' : 'SuperiorSynth apagado: tu mensaje va tal cual.'); }); }); }
 function lockNudge(){
   try{ SZ.BOT.problem && SZ.BOT.problem('lock'); }catch(e){}
   const c = $('#lockCard'); if (!c || c.hidden) return;
@@ -2746,8 +3143,8 @@ document.addEventListener('pointermove', e => {
 }, { passive:true });
 const W_FAQ = [
   ['¿Por qué no puedo escribir?', 'Porque ahora no hay ninguna IA libre para ti: usaste tu límite gratis de hoy o las IAs están descansando. Conecta Puter y la caja se abre al instante.'],
-  ['¿Qué es Puter?', 'Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.'],
-  ['¿Me cobran algo?', 'No. SynthZ es gratis y nunca te cobra. Tienes un límite gratis cada día.'],
+  ['¿Qué es Puter?', 'Con Puter usas la versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.'],
+  ['¿Me cobran algo?', 'No. SymphorIA es gratis y nunca te cobra. Tienes un límite gratis cada día.'],
   ['¿Qué hay en la Guía?', 'Te muestro todo paso a paso con mi manita: temas, IA recomendadas para ti, cómo comparar dos y tu primer chat de verdad.']
 ];
 let wTok = 0;
@@ -2878,9 +3275,9 @@ function openConnect(){
   const hasP = puterOn(), on = szOn(), q = SZ.SZQ, left = Math.max(0, (q.limit || 20000) - (q.used || 0)), legacy = !!(st().keys.openrouter || st().keys.groq);
   connEl = document.createElement('div'); connEl.id = 'conn';
   connEl.innerHTML = '<div class="tcard"><div class="word" id="cWord"></div><div class="tn">TU IA</div><div class="tb"><h3>' + (on ? 'Ya puedes chatear gratis' : 'Las IAs están descansando') + '</h3><p>' + (on ? 'No tienes que conectar nada. Solo escribe.' : 'Vuelve en un momento, o sigue ya con Puter.') + '</p></div>'
-    + SZ.limBar({ title:'Tu límite de hoy' })
-    + '<div class="cbox"><span>' + SZ.puterLogo() + 'Puter <small class="opt">opcional</small></span>' + (hasP ? '<i class="ok">✓ Conectado</i>' : '<button class="btn sm" id="cPU" type="button">Conectar Puter</button>') + '</div>'
-    + '<p class="cnote"><b>¿Qué es Puter?</b> Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.</p>'
+    + SZ.limBar({ title:'Tu EnerX de hoy' })
+    + '<div class="cbox"><span>' + SZ.puterLogo() + 'Puter <small class="opt">tus IAs pro</small></span>' + (hasP ? '<i class="ok">✓ Conectado</i>' : '<button class="btn sm" id="cPU" type="button">Conectar Puter</button>') + '</div>'
+    + '<p class="cnote"><b>¿Qué es Puter?</b> Con Puter usas la versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.</p>'
     + '<div class="tbtn" style="margin-top:18px"><button class="lnk" id="cClose" type="button">Cerrar</button></div></div>';
   document.body.appendChild(connEl); $('#cWord').innerHTML = zWord('Synth');
   requestAnimationFrame(() => connEl.classList.add('on'));
@@ -2956,7 +3353,7 @@ function warnBlocked(){
 /* ---------- SynXCoin's: medidor, límite diario, avisos y modo ahorro ---------- */
 function todayUsed(){ return SZ.todayAll(); }
 let sxEl = null;
-function budgetOk(){ return true; }        /* ya no hay límite personal: el límite de hoy lo pone SynthZ */
+function budgetOk(){ return true; }        /* ya no hay límite personal: el límite de hoy lo pone SymphorIA */
 let limWarned = '';
 function coinWatch(){
   const q = SZ.SZQ; if (!q.limit || q.on === false) return;
@@ -2974,7 +3371,7 @@ function coinModal(kind){
   }[kind] || ['Tu límite de hoy', ''];
   sxEl = document.createElement('div'); sxEl.id = 'sx';
   sxEl.innerHTML = '<div class="tcard" role="dialog" aria-modal="true"><div class="word" id="sxWord"></div><div class="tn">TU LÍMITE</div><div class="tb"><h3>' + T[0] + '</h3><p>' + T[1] + '</p></div>'
-    + '<div class="limbig">' + SZ.limRing(84) + '<div><b>' + esc(SZ.limShort()) + '</b><span>tu límite de hoy</span></div></div>'
+    + '<div class="limbig">' + SZ.limRing(84) + '<div><b>' + esc(SZ.limShort()) + '</b><span>tu EnerX de hoy · se carga a medianoche</span></div></div>'
     + SZ.limBar({ title:'IAs conectadas', puter:!puterOn() })
     + '<div id="sxBal"><div class="bl-load">Revisando tu cuenta de Puter…</div></div>'
     + '<div class="sxlbl">RESPUESTAS CORTAS</div><div class="sxsave"><p>La IA responde más corto y usa menos de tu historial. Así te alcanza para más.</p><button class="sxsw" id="sxSw" type="button" aria-pressed="' + st().sx.saver + '" aria-label="Respuestas cortas"></button></div>'
@@ -3024,7 +3421,7 @@ function teamsHtml(){
         + '<div class="tbtn" style="margin-top:8px"><span></span><button class="lnk" type="button" data-ta="delete" data-id="' + esc(x.id) + '" data-nm="' + esc(x.name) + '">Borrar equipo</button></div>';
     } else {
       h += '<div class="tmrow">' + SZ.avatarHtml(x.ownerInfo, x.ownerInfo) + '<div class="tx"><b>' + esc(x.ownerInfo.name) + '</b><small>dueño · ' + x.members.length + ' miembros</small></div></div>';
-      h += x.hasKey ? '<div class="cfgrow"><p>Usar el OpenRouter de este equipo<small>Hoy llevas ' + fmt(x.myUse) + (x.daily ? ' de ' + fmt(x.daily) + ' SynXCoin\'s' : ' SynXCoin\'s') + (x.freeOnly ? ' · solo modelos gratis' : '') + '. El dueño ve cuánto usas, no lo que escribes.</small></p><button class="cfgsw" type="button" data-ta="use" data-id="' + esc(x.id) + '" aria-pressed="' + (st().useTeam === x.id) + '" aria-label="Usar su OpenRouter"></button></div>' + (x.daily ? '<span class="tmbar" style="width:100%;margin-top:6px"><i style="transform:scaleX(' + lim.toFixed(3) + ')"></i></span>' : '')
+      h += x.hasKey ? '<div class="cfgrow"><p>Usar el OpenRouter de este equipo<small>Hoy llevas ' + fmt(x.myUse) + (x.daily ? ' de ' + fmt(x.daily) + ' de ' + SZ.t('enerx.name') : ' de ' + SZ.t('enerx.name')) + (x.freeOnly ? ' · solo modelos gratis' : '') + '. El dueño ve cuánto usas, no lo que escribes.</small></p><button class="cfgsw" type="button" data-ta="use" data-id="' + esc(x.id) + '" aria-pressed="' + (st().useTeam === x.id) + '" aria-label="Usar su OpenRouter"></button></div>' + (x.daily ? '<span class="tmbar" style="width:100%;margin-top:6px"><i style="transform:scaleX(' + lim.toFixed(3) + ')"></i></span>' : '')
         : '<p class="cnote">El dueño todavía no comparte su OpenRouter.</p>';
       h += '<div class="tbtn" style="margin-top:8px"><span></span><button class="lnk" type="button" data-ta="leave" data-id="' + esc(x.id) + '" data-nm="' + esc(x.name) + '">Salir del equipo</button></div>';
     }
@@ -3039,7 +3436,7 @@ function teamsBind(box, reopen){
     const a = b.dataset.ta, id = b.dataset.id, run = async (body, ok) => { const l = b.textContent; b.disabled = true; if (b.tagName === 'BUTTON' && !b.classList.contains('cfgsw') && !b.classList.contains('x')) b.textContent = '…'; try{ await SZ.api('teams', { method:'POST', body }); if (ok) toast(ok); await loadTeams(); reopen(); }catch(er){ b.disabled = false; b.textContent = l; toast(er.message); } };
     if (a === 'use'){ const on = st().useTeam === id; if (on) delete st().useTeam; else st().useTeam = id; save(); b.setAttribute('aria-pressed', String(!on)); paintProv(); fixModel(true); renderList({ keep:true }); updateHint(); toast(on ? 'Ya no usas el OpenRouter del equipo.' : 'Listo: usas el OpenRouter del equipo.'); return; }
     if (a === 'create'){ const n = $('#tNewName', box).value.trim(); if (!n){ toast('Ponle un nombre a tu equipo.'); return; } return run({ action:'create', name:n }, 'Equipo creado. Ahora invita a tus amigos.'); }
-    if (a === 'invite'){ const v = $('[data-te="' + id + '"]', box).value.trim(); if (!v){ toast('Escribe el @usuario de tu amigo.'); return; } return run({ action:'invite', id, to:v }, 'Invitación enviada. Le aparecerá cuando entre a su cuenta de SynthZ.'); }
+    if (a === 'invite'){ const v = $('[data-te="' + id + '"]', box).value.trim(); if (!v){ toast('Escribe el @usuario de tu amigo.'); return; } return run({ action:'invite', id, to:v }, 'Invitación enviada. Le aparecerá cuando entre a su cuenta de SymphorIA.'); }
     if (a === 'key'){ const v = $('[data-tk="' + id + '"]', box).value.trim(); if (!v){ toast('Pega la llave de OpenRouter.'); return; } return run({ action:'key', id, key:v }, 'Tu equipo ya puede usar tu OpenRouter (sin ver la llave).'); }
     if (a === 'nokey') return run({ action:'key', id, key:'' }, 'Dejaste de compartir tu OpenRouter.');
     if (a === 'free') return run({ action:'settings', id, freeOnly:b.getAttribute('aria-pressed') !== 'true' }, 'Guardado.');
@@ -3090,7 +3487,6 @@ function renderChats(anim){
   box.classList.toggle('still', !anim);
   $('#thQ').placeholder = cView === 'favs' ? 'Buscar en tus favoritos…' : 'Buscar en tus chats';
   $('#cFavH').hidden = cView !== 'favs'; $('#cNew').hidden = cView === 'favs';
-  $('#cAgH').hidden = cView !== 'agents';
   if (cView === 'favs'){
     const L = allFavs().filter(x => !q || (x.text + ' ' + info(x.model).name).toLowerCase().includes(q));
     box.innerHTML = L.length ? L.map((x, i) => '<div class="fvi" data-k="' + esc(x.k) + '" data-i="' + x.i + '" style="--i:' + Math.min(i, 20) + '"><b>' + esc(info(x.model).name) + '</b><p>' + esc(q ? snipOf(x.text, q) || x.text.slice(0, 220) : x.text.slice(0, 220)) + '</p></div>').join('')
@@ -3101,8 +3497,8 @@ function renderChats(anim){
   const grp = t => !t ? 'Antes' : t >= d0 ? 'Hoy' : t >= d0 - 864e5 ? 'Ayer' : t >= d0 - 6 * 864e5 ? 'Esta semana' : 'Antes';
   const AG = st().agentT || {};
   const isAg = x => !!AG[x.k] || x.model === AGK;
-  const L = allThreads().filter(x => cView === 'agents' ? isAg(x) : !isAg(x)).map(x => { if (!q) return x; const hitT = (x.title + ' ' + info(x.model).name).toLowerCase().includes(q); let sn = ''; if (!hitT){ const m = (st().chats[x.k] || []).find(mm => (mm.content || '').toLowerCase().includes(q)); if (!m) return null; sn = snipOf(m.content, q); } return Object.assign({}, x, { sn }); }).filter(Boolean);
-  if (!L.length){ box.innerHTML = '<div class="thnone">' + (q ? 'Nada coincide en tus chats.' : cView === 'agents' ? 'Aún no tienes chats con el agente.' : 'Aún no tienes chats.') + '<em>' + (q ? 'Busco en los títulos y dentro de cada mensaje.' : cView === 'agents' ? 'Escribe lo que necesitas: una IA mejora tu pedido y se lo pasa a la IA que más sabe de eso.' : 'Escribe tu primer mensaje y aparecerá aquí.') + '</em></div>'; return; }
+  const L = allThreads().map(x => { if (!q) return x; const hitT = (x.title + ' ' + info(x.model).name).toLowerCase().includes(q); let sn = ''; if (!hitT){ const m = (st().chats[x.k] || []).find(mm => (mm.content || '').toLowerCase().includes(q)); if (!m) return null; sn = snipOf(m.content, q); } return Object.assign({}, x, { sn }); }).filter(Boolean);
+  if (!L.length){ box.innerHTML = '<div class="thnone">' + (q ? 'Nada coincide en tus chats.' : 'Aún no tienes chats.') + '<em>' + (q ? 'Busco en los títulos y dentro de cada mensaje.' : 'Escribe tu primer mensaje y aparecerá aquí.') + '</em></div>'; return; }
   let h = '', g0 = '', n = 0;
   const hlq = t => q ? hl(t, q) : esc(t);
   L.forEach(x => {
@@ -3116,7 +3512,6 @@ function renderChats(anim){
 $('#thQ').addEventListener('input', () => renderChats(false));
 $('#cNew').addEventListener('click', () => newChat());
 $('#cFavBack').addEventListener('click', () => { cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(true); });
-$('#cAgBack').addEventListener('click', () => { cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(true); });
 function openThread(model, id, ci){
   if (mode !== 'solo'){ stopNow(); cmpRun++; cmpLast = null; mode = 'solo'; }
   (st().thread || (st().thread = {}))[model] = id;
@@ -3156,6 +3551,366 @@ $('#thList').addEventListener('click', async e => {
 /* compatibilidad: lo que antes abría la ventanita de conversaciones */
 function thOpen(){ showChats('chats', true); }
 
+/* ---------- v2.6 · Proyectos: chats, instrucciones y archivos juntos en un solo lugar ----------
+   · Cada proyecto tiene nombre, descripción, instrucciones y archivos (su «conocimiento»).
+   · Los chats que empiezas dentro de un proyecto quedan guardados en él, y la IA recibe sus
+     instrucciones y lo que más se relaciona de sus archivos en cada mensaje.
+   · Se guardan en este equipo y, si entraste a tu cuenta, viajan con ella (core 02). */
+const PJ_MAX = 200000, PJ_SEND = 8000, PJ_SEND_SAVER = 4000, PJ_COLORS = ['var(--sb-primary)', 'var(--sb-secondary)', 'var(--sb-warm)', 'var(--sb-spark)', 'var(--sb-light)', 'color-mix(in srgb,var(--sb-light) 55%,var(--sb-primary))'];   /* v2.9: los colores del tema, no fijos */
+const PJ_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><path d="M3.5 10.5h17"/></svg>';
+const PJ_STAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9 6.8 19.7l1-5.9L3.5 9.7l5.9-.8z"/></svg>';
+const PJ_DOTS = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>';
+const PJ_SEND_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+const PJ_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+const PJ_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+const PJ_EX = [
+  ['Tesis de grado', 'Investigo, escribo y reviso mi tesis. Quiero respuestas con fuentes y un tono académico.'],
+  ['Mi emprendimiento', 'Ideas, precios, publicaciones y mensajes para clientes de mi negocio.'],
+  ['Aprender inglés', 'Practico conversación y gramática. Corrígeme con paciencia y explica cada error.'],
+  ['Recetas de la semana', 'Menús fáciles y baratos para mi familia, con la lista de compras.']
+];
+const pjs = () => st().projects || (st().projects = []);
+const pjOf = () => st().projOf || (st().projOf = {});
+const pjGet = id => id ? pjs().find(p => p.id === id) : null;
+const pjSize = p => (p.files || []).reduce((n, f) => n + (f.text || '').length, 0);
+const pjColor = p => PJ_COLORS[(p.c != null ? p.c : [...p.id].reduce((n, ch) => n + ch.charCodeAt(0), 0)) % PJ_COLORS.length];
+const pjKey = (model, id) => 'openrouter::' + model + (id ? '::' + id : '');
+const pjChats = id => allThreads().filter(x => pjOf()[x.k] === id);
+const pjNum = n => n >= 1000 ? Math.round(n / 1000) + ' mil' : String(n);
+const pjAgo = t => { if (!t) return ''; const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'hace un momento' : m < 60 ? 'hace ' + m + ' min' : m < 1440 ? 'hace ' + Math.round(m / 60) + ' h' : m < 2880 ? 'ayer' : 'hace ' + Math.round(m / 1440) + ' días'; };
+function pjEdit(p){ p.u = Date.now(); save(); }
+/* el proyecto del chat que estás viendo (o el del chat nuevo que empezaste desde un proyecto) */
+function pjCur(){ const k = ckey(); return pjGet(pjOf()[k]) || (!chatArr().length ? pjGet(st().curProj) : null); }
+
+/* ---------- lo que la IA recibe: instrucciones + lo más relacionado de los archivos ---------- */
+const pjNorm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+function pjPick(files, query, budget){
+  const all = files.filter(f => f.text);
+  if (all.reduce((n, f) => n + f.text.length + f.name.length + 20, 0) <= budget) return all.map(f => '[Archivo: ' + f.name + ']\n' + f.text).join('\n\n');
+  /* mucho texto: se parte en trozos y viajan los que más se parecen a lo que preguntas (y el comienzo de cada archivo) */
+  const words = [...new Set(pjNorm(query).split(/[^a-z0-9ñ]+/).filter(w => w.length > 3))];
+  const parts = [];
+  all.forEach(f => { for (let i = 0, n = 0; i < f.text.length; i += 1400, n++){ const t = f.text.slice(i, i + 1400), low = pjNorm(t); parts.push({ f, n, t, s:(n === 0 ? .5 : 0) + words.reduce((s, w) => s + (low.split(w).length - 1), 0) }); } });
+  const pick = [], used = new Set(); let size = 0;
+  parts.slice().sort((a, b) => b.s - a.s).forEach(p => { if (size + p.t.length + 60 > budget) return; pick.push(p); size += p.t.length + 60; used.add(p.f); });
+  pick.sort((a, b) => all.indexOf(a.f) - all.indexOf(b.f) || a.n - b.n);
+  return pick.map(p => '[Archivo: ' + p.f.name + ' · parte ' + (p.n + 1) + ']\n' + p.t).join('\n\n') + '\n\n(Solo van las partes de los archivos que más se relacionan con la pregunta.)';
+}
+function projSystem(chat, saver){
+  const k = Object.keys(st().chats).find(x => st().chats[x] === chat);
+  const p = pjGet(k && pjOf()[k]); if (!p) return '';
+  let s = 'Esta conversación es parte del proyecto «' + p.name + '»' + (p.desc ? ' (' + p.desc + ')' : '') + '.';
+  if (p.instr) s += '\nInstrucciones del proyecto (síguelas siempre):\n' + p.instr;
+  if ((p.files || []).some(f => f.text)){
+    const last = [...chat].reverse().find(m => m.role === 'user');
+    s += '\nConocimiento del proyecto: archivos que la persona subió. Úsalos como fuente principal y di de qué archivo sacas cada dato.\n' + pjPick(p.files, last ? (last.ask || last.content) : '', saver ? PJ_SEND_SAVER : PJ_SEND);
+  }
+  return s;
+}
+
+/* ---------- los chats nuevos quedan dentro del proyecto desde el que los empezaste ---------- */
+const pjTouch0 = touchThread;
+touchThread = function(){
+  pjTouch0();
+  const k = ckey(), id = st().curProj;
+  if (id && pjGet(id) && !pjOf()[k] && chatArr().length <= 2) pjOf()[k] = id;
+  const p = pjGet(pjOf()[k]); if (p) p.t = Date.now();
+};
+const pjNew0 = newChat;
+newChat = function(){ st().curProj = ''; pjClose(); pjNew0(); pjCrumb(); };
+const pjOpenT0 = openThread;
+openThread = function(model, id, ci){ pjClose(); pjOpenT0(model, id, ci); st().curProj = pjOf()[pjKey(model, id)] || ''; pjCrumb(); };
+const pjRender0 = renderMsgs;
+renderMsgs = function(){ pjRender0.apply(this, arguments); pjCrumb(); };
+
+/* ---------- en la cabecera: «📁 Proyecto» cuando el chat es de un proyecto ---------- */
+const PC = document.createElement('button'); PC.type = 'button'; PC.className = 'pjcrumb'; PC.id = 'pjCrumb'; PC.hidden = true;
+$('#msgs').prepend(PC);   /* arriba de la conversación */
+PC.addEventListener('click', () => { const p = pjCur(); if (p) pjOpen('page', p.id); });
+function pjCrumb(){
+  const p = mode === 'solo' ? pjCur() : null; PC.hidden = !p; if (!p) return;
+  PC.style.setProperty('--pc', pjColor(p)); PC.innerHTML = PJ_ICO + '<span></span>'; $('span', PC).textContent = p.name;
+  PC.setAttribute('aria-label', 'Proyecto ' + p.name + ': abrir el proyecto'); PC.title = 'Abrir el proyecto';
+}
+
+/* ---------- entradas: barra de íconos, panel de chats (y la hoja del celular) ---------- */
+{
+  const rb = document.createElement('button'); rb.type = 'button'; rb.className = 'rbtn'; rb.id = 'railProj'; rb.dataset.tip = 'Proyectos'; rb.style.setProperty('--i', '2');
+  rb.innerHTML = PJ_ICO + '<span class="rl">Proyectos</span>'; rb.setAttribute('aria-label', 'Proyectos');
+  $('#rail [data-r="new"]').after(rb);
+  rb.addEventListener('click', () => PV.hidden || pjView.v !== 'list' ? pjOpen('list') : pjClose());
+  const cb = document.createElement('button'); cb.type = 'button'; cb.className = 'cnew cproj'; cb.id = 'cProj';
+  cb.innerHTML = PJ_ICO + 'Proyectos';
+  $('#cNew').after(cb);
+  cb.addEventListener('click', () => pjOpen('list'));
+}
+
+/* ---------- la página de proyectos (cubre la conversación; «Volver al chat» la cierra) ---------- */
+const PV = document.createElement('section'); PV.className = 'pjv'; PV.id = 'pjv'; PV.hidden = true; PV.setAttribute('aria-label', 'Proyectos'); PV.tabIndex = -1;
+$('#shell .main').appendChild(PV);
+let pjView = { v:'list', id:'' }, pjQ = '', pjSort = 't', pjArch = false, pjFormBack = null;
+function pjOpen(v, id){
+  pjView = { v, id:id || '' }; PV.hidden = false; document.body.classList.add('pjon');
+  try{ closeChatsSheet(); }catch(e){}
+  if (isTablet() && RS.chats){ RS.chats = false; saveRS(); applyRail(); }
+  $('#railProj').setAttribute('aria-pressed', 'true');
+  pjRender(); PV.scrollTop = 0;
+  requestAnimationFrame(() => { const f = $('[data-autofocus]', PV); (f && matchMedia('(pointer: fine)').matches ? f : PV).focus({ preventScroll:true }); });
+}
+function pjClose(){ if (PV.hidden) return; PV.hidden = true; document.body.classList.remove('pjon'); $('#railProj').setAttribute('aria-pressed', 'false'); pjMenuClose(); }
+addEventListener('keydown', e => { if (e.key === 'Escape' && !PV.hidden && !document.querySelector('.szm.on,[role="dialog"]:not(.pjv)')){ if (pjMenu) pjMenuClose(); else if (pjView.v === 'list') pjClose(); else pjOpen('list'); } });
+
+function pjRender(){
+  const v = pjView.v, p = pjGet(pjView.id);
+  if ((v === 'page' || v === 'edit') && !p){ pjView = { v:'list', id:'' }; return pjRender(); }
+  PV.innerHTML = '<div class="pj-in">' + (v === 'list' ? pjListHtml() : v === 'new' || v === 'edit' ? pjFormHtml(v === 'edit' ? p : null) : pjPageHtml(p)) + '</div>';
+  if (v === 'list') pjPaintList();
+  const it = $('.pj-it', PV); if (it && p) it.textContent = p.instr;   /* las instrucciones van como texto, nunca como HTML */
+}
+const pjBar = (back) => '<div class="pj-bar">' + (back ? '<button type="button" class="pj-back" data-pa="list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Todos los proyectos</button>' : '<span></span>')
+  + '<button type="button" class="pj-close" data-pa="close">Volver al chat' + PJ_X + '</button></div>';
+
+function pjListHtml(){
+  return pjBar(false) + '<header class="pj-lh"><div><h1>Proyectos</h1><p>Junta chats, instrucciones y archivos de un mismo tema. La IA los tiene en cuenta en cada chat del proyecto.</p></div>'
+    + '<button type="button" class="btn pj-newb" data-pa="new">' + PJ_PLUS + 'Nuevo proyecto</button></header>'
+    + '<div class="pj-tools"><label class="pj-q"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="search" id="pjQ" placeholder="Buscar proyectos" autocomplete="off" aria-label="Buscar proyectos"></label>'
+    + '<label class="pj-sort"><span>Ordenar</span><select id="pjSort" aria-label="Ordenar proyectos"><option value="t">Actividad reciente</option><option value="n">Nombre</option><option value="c">Más nuevos</option></select></label>'
+    + '<button type="button" class="pj-arch" id="pjArchB" aria-pressed="false">Archivados</button></div>'
+    + '<div class="pj-list" id="pjList"></div>';
+}
+function pjPaintList(){
+  const q = $('#pjQ', PV), so = $('#pjSort', PV), ab = $('#pjArchB', PV);
+  q.value = pjQ; so.value = pjSort; ab.setAttribute('aria-pressed', String(pjArch));
+  const nArch = pjs().filter(p => p.arch).length; ab.hidden = !nArch && !pjArch; ab.textContent = 'Archivados' + (nArch ? ' (' + nArch + ')' : '');
+  const qq = pjNorm(pjQ.trim());
+  const L = pjs().filter(p => !!p.arch === pjArch && (!qq || pjNorm(p.name + ' ' + (p.desc || '')).includes(qq)))
+    .sort((a, b) => (!!b.star - !!a.star) || (pjSort === 'n' ? a.name.localeCompare(b.name, 'es') : pjSort === 'c' ? (b.c0 || 0) - (a.c0 || 0) : (b.t || 0) - (a.t || 0)));
+  const box = $('#pjList', PV);
+  if (!L.length){
+    box.innerHTML = qq || pjArch ? '<div class="pj-none"><b>' + (qq ? 'Ningún proyecto coincide.' : 'No tienes proyectos archivados.') + '</b></div>'
+      : '<div class="pj-empty"><span class="pj-big">' + PJ_ICO + '</span><b>Tu primer proyecto</b><p>Por ejemplo, tu tesis o tu negocio: le das instrucciones y archivos una sola vez y cada chat del proyecto ya los conoce.</p>'
+        + '<div class="pj-exs">' + PJ_EX.map((x, i) => '<button type="button" class="pj-ex" data-ex="' + i + '">' + esc(x[0]) + '</button>').join('') + '</div></div>';
+    return;
+  }
+  box.innerHTML = L.map((p, i) => {
+    const n = pjChats(p.id).length, kf = (p.files || []).length;
+    return '<article class="pjc" style="--pc:' + pjColor(p) + ';--i:' + Math.min(i, 12) + '"><button type="button" class="pjc-go" data-open="' + esc(p.id) + '"><span class="pjc-ic">' + PJ_ICO + '</span><b class="pjc-n"></b><span class="pjc-d"></span>'
+      + '<small>' + (n === 1 ? '1 chat' : n + ' chats') + (kf ? ' · ' + (kf === 1 ? '1 archivo' : kf + ' archivos') : '') + (p.t ? ' · ' + pjAgo(p.t) : '') + '</small></button>'
+      + '<button type="button" class="pjc-star" data-star="' + esc(p.id) + '" aria-pressed="' + !!p.star + '" aria-label="' + (p.star ? 'Quitar de destacados' : 'Destacar') + '">' + PJ_STAR + '</button></article>';
+  }).join('');
+  [...box.querySelectorAll('.pjc')].forEach((el, i) => { $('.pjc-n', el).textContent = L[i].name; $('.pjc-d', el).textContent = L[i].desc || 'Sin descripción'; });
+}
+
+function pjFormHtml(p){
+  return pjBar(true) + '<form class="pj-form" id="pjForm" novalidate><h1>' + (p ? 'Editar el proyecto' : 'Nuevo proyecto') + '</h1>'
+    + '<label class="pj-f"><span>¿En qué estás trabajando?</span><input id="pjName" maxlength="60" required placeholder="Ponle un nombre al proyecto" autocomplete="off" data-autofocus value="' + esc(p ? p.name : '') + '"></label>'
+    + '<label class="pj-f"><span>¿Qué quieres lograr? <small>(opcional)</small></span><textarea id="pjDesc" maxlength="300" rows="3" placeholder="Cuéntale a la IA de qué se trata: tu objetivo, para quién es, el tono que prefieres…">' + esc(p ? p.desc || '' : '') + '</textarea></label>'
+    + (p ? '' : '<div class="pj-exs sm"><span>Ideas:</span>' + PJ_EX.map((x, i) => '<button type="button" class="pj-ex" data-ex="' + i + '">' + esc(x[0]) + '</button>').join('') + '</div>')
+    + '<div class="pj-acts"><button type="button" class="lnk" data-pa="' + (p ? 'page' : 'list') + '">Cancelar</button><button type="submit" class="btn">' + (p ? 'Guardar' : 'Crear proyecto') + '</button></div></form>';
+}
+
+function pjPageHtml(p){
+  const L = pjChats(p.id), size = pjSize(p), pct = Math.min(100, Math.round(size / PJ_MAX * 100));
+  return pjBar(true) + '<header class="pj-h" style="--pc:' + pjColor(p) + '"><span class="pj-ic">' + PJ_ICO + '</span><div class="pj-ht"><h1>' + esc(p.name) + '</h1>' + (p.desc ? '<p>' + esc(p.desc) + '</p>' : '') + (p.arch ? '<em class="pj-tag">Archivado</em>' : '') + '</div>'
+    + '<button type="button" class="pjc-star" data-star="' + esc(p.id) + '" aria-pressed="' + !!p.star + '" aria-label="' + (p.star ? 'Quitar de destacados' : 'Destacar') + '">' + PJ_STAR + '</button>'
+    + '<button type="button" class="pj-more" data-pa="menu" aria-haspopup="menu" aria-expanded="false" aria-label="Más opciones del proyecto">' + PJ_DOTS + '</button></header>'
+    + '<div class="pj-grid"><div class="pj-main">'
+    + '<form class="pj-ask" id="pjAsk"><label class="sr" for="pjAskIn">Empieza un chat en este proyecto</label><textarea id="pjAskIn" rows="2" maxlength="20000" placeholder="¿Qué quieres hacer en este proyecto?" data-autofocus></textarea><button type="submit" class="send" aria-label="Empezar el chat">' + PJ_SEND_ICO + '</button></form>'
+    + '<h2 class="pj-sh">Chats del proyecto</h2>'
+    + (L.length ? '<div class="pj-chats">' + L.map(x => '<button type="button" class="pj-chat" data-k="' + esc(x.k) + '"><b>' + esc(x.title) + '</b><small>' + esc(info(x.model).name || 'Automático') + ' · ' + pjAgo(x.t) + '</small></button>').join('') + '</div>'
+      : '<p class="pj-none sm">Los chats que empieces aquí se guardan en este proyecto. También puedes mover un chat desde tu lista con el ícono de carpeta.</p>')
+    + '</div><aside class="pj-side" aria-label="Conocimiento del proyecto"><div class="pj-kh"><h2>Conocimiento del proyecto</h2><small>Lo que la IA sabe en cada chat de «' + esc(p.name) + '»</small></div>'
+    + '<section class="pj-card" id="pjInstr"><div class="pj-ch"><h3>Instrucciones</h3><button type="button" class="lnk" data-pa="instr">' + (p.instr ? 'Editar' : 'Agregar') + '</button></div>'
+    + (p.instr ? '<p class="pj-it"></p>' : '<p class="pj-muted">Dile a la IA cómo responder en este proyecto: el tono, el formato, lo que debe saber de ti.</p>') + '</section>'
+    + '<section class="pj-card" id="pjFiles"><div class="pj-ch"><h3>Archivos</h3><span class="pj-fb"><button type="button" class="lnk" data-pa="paste">Pegar texto</button><button type="button" class="btn sm ghost" data-pa="upload">' + PJ_PLUS + 'Subir</button></span></div>'
+    + '<div class="pj-cap" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '" aria-label="Capacidad usada"><i style="width:' + Math.max(pct, size ? 2 : 0) + '%"></i></div><small class="pj-muted">' + (size ? 'Usas ' + (pct < 1 ? 'menos del 1 %' : 'el ' + pct + ' %') + ' del espacio · ' + pjNum(size) + ' de ' + pjNum(PJ_MAX) + ' caracteres. En cada mensaje la IA lee lo que más se relaciona con tu pregunta (hasta unas 1.300 palabras, que cuentan en tu límite).' : 'PDF, Word en texto, código, notas… La IA los usa como fuente en cada chat del proyecto.') + '</small>'
+    + ((p.files || []).length ? '<ul class="pj-fl">' + p.files.map(f => '<li><span class="pj-fi">' + esc((f.name.split('.').pop() || 'txt').slice(0, 4).toUpperCase()) + '</span><span class="pj-fn"><b>' + esc(f.name) + '</b><small>' + (f.text ? pjNum(f.text.length) + ' caracteres' : 'Guardado en otro equipo') + '</small></span><button type="button" class="pj-fx" data-fdel="' + esc(f.id) + '" aria-label="Quitar ' + esc(f.name) + '">' + PJ_X + '</button></li>').join('') + '</ul>' : '')
+    + '<input type="file" id="pjFileIn" multiple hidden accept=".pdf,.txt,.md,.csv,.tsv,.json,.xml,.html,.css,.js,.ts,.jsx,.tsx,.py,.java,.c,.cpp,.cs,.go,.rs,.php,.rb,.sql,.yml,.yaml,.log"></section>'
+    + '</aside></div>';
+}
+
+/* ---------- acciones ---------- */
+PV.addEventListener('input', e => { if (e.target.id === 'pjQ'){ pjQ = e.target.value; pjPaintList(); } });
+PV.addEventListener('change', e => {
+  if (e.target.id === 'pjSort'){ pjSort = e.target.value; pjPaintList(); }
+  if (e.target.id === 'pjFileIn'){ pjAddFiles(pjGet(pjView.id), e.target.files); e.target.value = ''; }
+});
+PV.addEventListener('submit', e => {
+  e.preventDefault();
+  if (e.target.id === 'pjForm'){
+    const n = $('#pjName', PV).value.trim(), d = $('#pjDesc', PV).value.trim();
+    if (!n){ $('#pjName', PV).focus(); toast('Ponle un nombre al proyecto.'); return; }
+    if (pjView.v === 'edit'){ const p = pjGet(pjView.id); p.name = n; p.desc = d; pjEdit(p); toast('Proyecto guardado.'); pjOpen('page', p.id); return; }
+    const p = { id:'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name:n, desc:d, instr:'', files:[], c0:Date.now(), t:Date.now(), u:Date.now(), c:pjs().length };
+    pjs().push(p); save(); toast('Proyecto creado. Agrega instrucciones o archivos, o empieza un chat.'); pjOpen('page', p.id); return;
+  }
+  if (e.target.id === 'pjAsk'){
+    const t = $('#pjAskIn', PV).value.trim(), p = pjGet(pjView.id);
+    if (!t){ $('#pjAskIn', PV).focus(); return; }
+    pjStart(p, t);
+  }
+});
+PV.addEventListener('keydown', e => { if (e.target.id === 'pjAskIn' && e.key === 'Enter' && !e.shiftKey && !e.isComposing && matchMedia('(pointer: fine)').matches){ e.preventDefault(); $('#pjAsk', PV).requestSubmit(); } });
+PV.addEventListener('click', async e => {
+  const t = e.target.closest('button'); if (!t || !PV.contains(t)) return;
+  const p = pjGet(pjView.id), a = t.dataset.pa;
+  if (t.dataset.open){ pjOpen('page', t.dataset.open); return; }
+  if (t.dataset.star){ const q = pjGet(t.dataset.star); q.star = !q.star; pjEdit(q); if (pjView.v === 'list') pjPaintList(); else pjRender(); return; }
+  if (t.dataset.ex){ const x = PJ_EX[+t.dataset.ex]; if (pjView.v !== 'new') pjOpen('new'); $('#pjName', PV).value = x[0]; $('#pjDesc', PV).value = x[1]; $('#pjName', PV).focus(); return; }
+  if (t.dataset.k){ const { model, id } = parseKey(t.dataset.k); openThread(model, id); return; }
+  if (t.dataset.fdel){ const f = p.files.find(x => x.id === t.dataset.fdel); if (!f || !(await SZ.szConfirm('¿Quitar «' + f.name + '»?', 'La IA ya no lo usará en los chats de este proyecto.', 'Quitar', true))) return; p.files = p.files.filter(x => x !== f); pjEdit(p); pjRender(); return; }
+  if (a === 'close'){ pjClose(); return; }
+  if (a === 'list'){ pjOpen('list'); return; }
+  if (a === 'new'){ pjOpen('new'); return; }
+  if (a === 'page'){ pjOpen('page', p.id); return; }
+  if (t.id === 'pjArchB'){ pjArch = !pjArch; pjPaintList(); return; }
+  if (a === 'menu'){ pjMenuOpen(t, p); return; }
+  if (a === 'upload'){ $('#pjFileIn', PV).click(); return; }
+  if (a === 'instr'){ pjInline($('#pjInstr', PV), 'Instrucciones', p.instr || '', 8000, 'Por ejemplo: «Responde siempre en español neutro, con viñetas y ejemplos. Soy docente de primaria.»', v => { p.instr = v; pjEdit(p); toast(v ? 'Instrucciones guardadas.' : 'Instrucciones borradas.'); }); return; }
+  if (a === 'paste'){ pjInline($('#pjFiles', PV), 'Pegar texto', '', PJ_MAX, 'Pega aquí notas, un artículo, datos de tu negocio…', v => { if (!v) return; pjAddText(p, 'Texto ' + ((p.files || []).filter(f => /^Texto \d+/.test(f.name)).length + 1) + '.txt', v); }, true); return; }
+});
+function pjInline(card, title, val, max, ph, done, named){
+  card.innerHTML = '<div class="pj-ch"><h3>' + esc(title) + '</h3></div><textarea class="pj-ta" rows="7" maxlength="' + max + '" placeholder="' + esc(ph) + '"></textarea><div class="pj-acts sm"><button type="button" class="lnk" data-x>Cancelar</button><button type="button" class="btn sm" data-ok>Guardar</button></div>';
+  const ta = $('.pj-ta', card); ta.value = val; ta.focus();
+  $('[data-x]', card).addEventListener('click', e => { e.stopPropagation(); pjRender(); });
+  $('[data-ok]', card).addEventListener('click', e => { e.stopPropagation(); done(ta.value.trim()); pjRender(); });
+}
+function pjRoom(p){ return PJ_MAX - pjSize(p); }
+function pjAddText(p, name, text){
+  const room = pjRoom(p); if (room <= 0){ toast('Este proyecto ya está lleno. Quita un archivo para hacer espacio.'); return false; }
+  const cut = text.length > room;
+  (p.files || (p.files = [])).push({ id:'f' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name:String(name).slice(0, 120), text:cut ? text.slice(0, room) : text });
+  pjEdit(p); if (cut) toast('«' + name + '» era muy largo: guardé lo que cabe en el proyecto.');
+  return true;
+}
+async function pjAddFiles(p, list){
+  if (!p) return;
+  for (const file of [...list]){
+    try{
+      let t;
+      if (/\.pdf$/i.test(file.name) || file.type === 'application/pdf'){ toast('Leyendo «' + file.name + '»…'); const lib = await loadPdf(), pdf = await lib.getDocument({ data:new Uint8Array(await file.arrayBuffer()) }).promise; t = ''; for (let i = 1; i <= Math.min(pdf.numPages, 300) && t.length < PJ_MAX; i++){ const tc = await (await pdf.getPage(i)).getTextContent(); t += '\n--- página ' + i + ' ---\n' + tc.items.map(x => x.str).join(' '); } if (t.replace(/--- página \d+ ---/g, '').trim().length < 20) throw new Error('«' + file.name + '» parece escaneado (sin texto que leer).'); }
+      else if (TEXTX.test(file.name) || /^text\//.test(file.type) || file.type === 'application/json') t = await file.text();
+      else throw new Error('Tipo de archivo no compatible: ' + file.name);
+      if (!pjAddText(p, file.name, t.trim())) break;
+    }catch(err){ toast(err.message || 'No pude leer «' + file.name + '».'); }
+  }
+  if (pjView.id === p.id && !PV.hidden) pjRender();
+}
+function pjStart(p, text){
+  pjClose(); pjNew0(); st().curProj = p.id; p.t = Date.now(); save(); pjCrumb();
+  inp.value = text; inp.dispatchEvent(new Event('input', { bubbles:true }));
+  if (Object.keys(busy).length) return;
+  sendBtn.click();
+}
+
+/* ---------- menú «⋯» del proyecto y «mover a un proyecto» en la lista de chats ---------- */
+let pjMenu = null;
+function pjMenuClose(){ if (!pjMenu) return; const o = pjMenu.o; pjMenu.el.remove(); pjMenu = null; if (o){ o.setAttribute('aria-expanded', 'false'); } }
+function pjMenuAt(anchor, items){
+  pjMenuClose();
+  const m = document.createElement('div'); m.className = 'pj-menu'; m.setAttribute('role', 'menu');
+  m.innerHTML = items.map((x, i) => x ? '<button type="button" role="menuitem" data-i="' + i + '"' + (x.danger ? ' class="dg"' : '') + (x.on ? ' aria-checked="true"' : '') + '>' + (x.ic || '') + '<span></span></button>' : '<hr>').join('');
+  items.forEach((x, i) => { if (x) $('[data-i="' + i + '"] span', m).textContent = x.label; });
+  document.body.appendChild(m);
+  const r = anchor.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
+  m.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.right - w)) + 'px';
+  m.style.top = (r.bottom + h + 8 > innerHeight ? Math.max(8, r.top - h - 6) : r.bottom + 6) + 'px';
+  anchor.setAttribute('aria-expanded', 'true'); pjMenu = { el:m, o:anchor };
+  m.addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (!b) return; const x = items[+b.dataset.i]; pjMenuClose(); x.go(); });
+  requestAnimationFrame(() => { const f = $('button', m); if (f) f.focus(); });
+}
+document.addEventListener('pointerdown', e => { if (pjMenu && !pjMenu.el.contains(e.target) && !pjMenu.o.contains(e.target)) pjMenuClose(); }, true);
+function pjMenuOpen(anchor, p){
+  pjMenuAt(anchor, [
+    { label:'Editar nombre y descripción', go:() => pjOpen('edit', p.id) },
+    { label:p.arch ? 'Sacar de archivados' : 'Archivar', go:() => { p.arch = !p.arch; pjEdit(p); toast(p.arch ? 'Proyecto archivado. Lo encuentras en «Archivados».' : 'El proyecto volvió a tu lista.'); pjRender(); } },
+    null,
+    { label:'Borrar el proyecto', danger:true, go:async () => {
+      if (!(await SZ.szConfirm('¿Borrar «' + p.name + '»?', 'Se borran sus instrucciones y archivos. Sus chats no se borran: quedan en tu lista de chats.', 'Borrar proyecto', true))) return;
+      st().projects = pjs().filter(x => x !== p); st().pjDel = [...(st().pjDel || []), p.id].slice(-200);
+      Object.keys(pjOf()).forEach(k => { if (pjOf()[k] === p.id) delete pjOf()[k]; });
+      if (st().curProj === p.id) st().curProj = '';
+      save(); toast('Proyecto borrado.'); pjOpen('list'); renderChats(false); pjCrumb();
+    } }
+  ]);
+}
+/* en tu lista de chats: la etiqueta del proyecto y el botón para moverlo */
+const pjChats0 = renderChats;
+renderChats = function(){
+  pjChats0.apply(this, arguments);
+  $$('#thList .thi').forEach(it => {
+    if ($('.thpj-m', it)) return;
+    const p = pjGet(pjOf()[it.dataset.k]);
+    if (p){ const tg = document.createElement('span'); tg.className = 'thpj'; tg.style.setProperty('--pc', pjColor(p)); tg.innerHTML = PJ_ICO + '<span></span>'; $('span', tg).textContent = p.name; const tt = $('.tt', it); if (tt) tt.appendChild(tg); }
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'thpj-m'; b.setAttribute('aria-label', 'Mover a un proyecto'); b.setAttribute('aria-haspopup', 'menu'); b.innerHTML = PJ_ICO;
+    const ren = $('[data-ren]', it); if (ren) ren.before(b); else it.appendChild(b);
+  });
+};
+$('#thList').addEventListener('click', e => {
+  const b = e.target.closest('.thpj-m'); if (!b) return;
+  e.stopPropagation(); e.preventDefault();
+  const k = b.closest('.thi').dataset.k, cur = pjOf()[k];
+  const items = pjs().filter(p => !p.arch).sort((a, c) => (c.t || 0) - (a.t || 0)).slice(0, 8).map(p => ({ label:p.name, on:p.id === cur, ic:'<i class="pjdot" style="--pc:' + pjColor(p) + '"></i>', go:() => { pjOf()[k] = p.id; p.t = Date.now(); save(); renderChats(false); pjCrumb(); toast('Chat movido a «' + p.name + '».'); } }));
+  if (cur) items.push(null, { label:'Sacar del proyecto', go:() => { delete pjOf()[k]; save(); renderChats(false); pjCrumb(); toast('El chat ya no está en un proyecto.'); } });
+  items.push(null, { label:'Nuevo proyecto…', ic:PJ_PLUS, go:() => pjOpen('new') });
+  pjMenuAt(b, items);
+}, true);
+pjCrumb();
+if (params.get('proyectos') != null) pjOpen('list');
+/* ---------- v3.0 · Sintéticos en la barra lateral (como los artefactos de Claude) ----------
+   Junta todo lo que la IA creó en tus chats (páginas, juegos, SVG, código, documentos) en una sola lista.
+   Tocar uno lo abre al lado; «Ir al chat» te lleva a la conversación donde nació. Se arma al abrir la lista, nada se guarda aparte. */
+const SYN_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.1L19.5 9l-4 3.7 1.1 5.4L12 15.5 7.4 18.1l1.1-5.4-4-3.7 5.3-.9z" opacity=".35"/><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M9 9l-2.5 3L9 15M15 9l2.5 3L15 15"/></svg>';
+function synAll(){
+  const out = [], box = document.createElement('div');
+  allThreads().forEach(th => {
+    st().chats[th.k].forEach((m, i) => {
+      if (m.role !== 'assistant' || !/```/.test(m.content || '')) return;
+      box.innerHTML = md(m.content);
+      $$('pre', box).forEach(pre => { const M = cnvMeta(pre); if (isFile(M, pre)) out.push({ M, th, i, sibs:() => { box.innerHTML = md(m.content); return $$('pre', box).map(cnvMeta).filter(x => x.name !== M.name); } }); });
+    });
+  });
+  /* la última versión de cada archivo de cada chat (si la IA lo arregló, sale el arreglado) */
+  const seen = new Set();
+  return out.reverse().filter(x => { const k = x.th.k + '|' + x.M.name; if (seen.has(k)) return false; seen.add(k); return true; });
+}
+const SV = document.createElement('section'); SV.className = 'synv'; SV.id = 'synv'; SV.hidden = true; SV.setAttribute('aria-label', 'Sintéticos'); SV.tabIndex = -1;
+$('#shell .main').appendChild(SV);
+let synList = [];
+function synOpen(){
+  try{ pjClose(); }catch(e){}
+  try{ closeChatsSheet(); }catch(e){}
+  SV.hidden = false; document.body.classList.add('synon'); $('#railSyn').setAttribute('aria-pressed', 'true');
+  synList = synAll();
+  SV.innerHTML = '<div class="pj-in"><div class="pj-bar"><span></span><button type="button" class="pj-close" data-sa="close">Volver al chat' + PJ_X + '</button></div>'
+    + '<header class="pj-lh"><div><h1>Sintéticos</h1><p>Todo lo que la IA creó en tus chats: páginas, juegos, dibujos, código y documentos. Tócalo y se abre al lado.</p></div></header>'
+    + (synList.length ? '<div class="syn-l">' + synList.map((x, n) => '<div class="syn-w"><button type="button" class="syn-c" data-sn="' + n + '">' + fcIc(x.M.ext) + '<b>' + esc(x.M.name) + '</b><small>' + esc(x.M.label) + ' · ' + x.M.lines + (x.M.lines === 1 ? ' línea' : ' líneas') + '</small><small>' + esc(x.th.title) + (x.th.t ? ' · ' + pjAgo(x.th.t) : '') + '</small></button><button type="button" class="syn-go" data-sg="' + n + '" title="Ir al chat donde nació">Ir al chat</button></div>').join('') + '</div>'
+      : '<div class="pj-empty"><span class="pj-big">' + SYN_ICO + '</span><b>Aún no hay Sintéticos</b><p>Pídele a la IA una página, un juego o un dibujo (por ejemplo «hazme una calculadora bonita») y aparecerá aquí.</p></div>')
+    + '</div>';
+  SV.scrollTop = 0; SV.focus({ preventScroll:true });
+}
+function synClose(){ if (SV.hidden) return; SV.hidden = true; document.body.classList.remove('synon'); $('#railSyn').setAttribute('aria-pressed', 'false'); }
+SV.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.sa === 'close'){ synClose(); return; }
+  if (b.dataset.sg != null){ const x = synList[+b.dataset.sg]; if (x) openThread(x.th.model, x.th.id); return; }
+  if (b.dataset.sn != null){ const x = synList[+b.dataset.sn]; if (x) openCanvas(x.M, x.sibs(), canPreview(x.M) ? 'prev' : 'code'); }
+});
+addEventListener('keydown', e => { if (e.key === 'Escape' && !SV.hidden && !cvEl && !document.querySelector('.szm.on')) synClose(); });
+{
+  const rb = document.createElement('button'); rb.type = 'button'; rb.className = 'rbtn'; rb.id = 'railSyn'; rb.dataset.tip = 'Sintéticos'; rb.style.setProperty('--i', '2');
+  rb.innerHTML = SYN_ICO + '<span class="rl">Sintéticos</span>'; rb.setAttribute('aria-label', 'Sintéticos'); rb.setAttribute('aria-pressed', 'false');
+  ($('#railProj') || $('#rail [data-r="new"]')).after(rb);
+  rb.addEventListener('click', () => SV.hidden ? synOpen() : synClose());
+  const cb = document.createElement('button'); cb.type = 'button'; cb.className = 'cnew cproj csyn'; cb.id = 'cSyn';
+  cb.innerHTML = SYN_ICO + 'Sintéticos';
+  ($('#cProj') || $('#cNew')).after(cb);
+  cb.addEventListener('click', synOpen);
+}
+/* abrir un proyecto, un chat o uno nuevo cierra la lista */
+const synPj0 = pjOpen; pjOpen = function(){ synClose(); return synPj0.apply(this, arguments); };
+const synNew0 = newChat; newChat = function(){ synClose(); return synNew0.apply(this, arguments); };
+const synOT0 = openThread; openThread = function(){ synClose(); return synOT0.apply(this, arguments); };
 /* ---------- menú «⋯» de la conversación (v2.2: corto, por grupos y con íconos) ---------- */
 function mmClose(){ SZ.menuClose(); }
 function mmOpen(){
@@ -3164,7 +3919,7 @@ function mmOpen(){
   const L = [{ label:'Nuevo chat', ico:'new', fn:() => newChat() }];
   if (mode === 'solo') L.push({ label:'Copiar la conversación', ico:'copy', fn:() => { copyText(chatMd()); toast('Conversación copiada.'); } }, { label:'Descargar como texto', ico:'down', fn:exportMd });
   else L.push({ label:'Empezar otra comparación', ico:'cmp', fn:() => clearChat() }, { label:'Volver a una sola IA', ico:'exit', fn:() => removeCmp(st().cmp[st().cmp.length - 1]) });
-  L.push('—', { label:'Lo que recuerdo de ti', ico:'brain', fn:() => SZ.cfgModal('mem') }, { label:'Ajustes', ico:'cog', fn:() => SZ.cfgModal() }, { label:'Ayuda: algo no carga', ico:'help', fn:() => showBlockHelp(window.__puterBlocked ? 'script' : 'popup') });
+  L.push('—', { label:'Lo que recuerdo de ti', ico:'brain', fn:() => SZ.cfgModal('mem') }, { label:'Ajustes', ico:'cog', fn:() => SZ.cfgModal() }, { label:SZ.lang() === 'en' ? 'Español' : 'English', ico:'globe', fn:() => SZ.setLang(SZ.lang() === 'en' ? 'es' : 'en') }, { label:'Ayuda: algo no carga', ico:'help', fn:() => showBlockHelp(window.__puterBlocked ? 'script' : 'popup') });
   if (trialOn) L.push({ label:'Salir de la prueba guiada', ico:'exit', fn:() => exitTrial() });
   if (mode === 'solo') L.push('—', { label:'Borrar este chat', ico:'trash', danger:true, fn:() => clearChat(true) });
   const r = mb.getBoundingClientRect(), m = SZ.menuOpen(L, 0, r.bottom + 8, 'mm');
@@ -3233,7 +3988,7 @@ function driveModal(){
   const paint = async () => {
     const cid = await SZ.DRIVE.cid(), m = SZ.DRIVE.meta();
     const body = !cid
-      ? '<p class="cnote">Google Drive todavía no está activado en SynthZ. Cuando Prime o ZFlow lo activen, aquí podrás vincular tu Drive con un clic. Mientras tanto, tus chats siguen guardados en este dispositivo' + (SZ.ACC.ready ? ' y en tu cuenta.' : '.') + '</p>'
+      ? '<p class="cnote">Google Drive todavía no está activado en SymphorIA. Cuando Prime o ZFlow lo activen, aquí podrás vincular tu Drive con un clic. Mientras tanto, tus chats siguen guardados en este dispositivo' + (SZ.ACC.ready ? ' y en tu cuenta.' : '.') + '</p>'
       : m && m.linked
         ? '<div class="drst"><i class="pdot2 ' + (SZ.DRIVE.live() ? 'ok' : 'wait') + '" aria-hidden="true"></i><div><b>Tu Drive está vinculado</b><span>' + (m.last ? 'Última copia ' + agoTxt(m.last) + ' · ' + fmt(m.n || 0) + (m.n === 1 ? ' chat · ' : ' chats · ') + ((m.size || 0) / 1048576).toFixed(2).replace('.', ',') + ' MB' : 'Aún sin copia') + '</span><small>' + (SZ.DRIVE.live() ? 'Mientras esta pestaña esté abierta, cada cambio se guarda solo.' : 'Toca «Guardar ahora» para guardar y traer tus chats.') + '</small></div></div>'
         : '<ul class="drl"><li><b>Más espacio:</b> tus chats viven también en tu Google Drive, no solo en este dispositivo.</li><li><b>Privado:</b> uso solo una carpeta oculta de SynthFlow. No puedo ver ni tocar tus otros archivos.</li><li><b>Seguro:</b> nunca borro chats al traerlos (se mezclan) y tus llaves no van en la copia.</li></ul>';
@@ -3255,7 +4010,7 @@ function driveModal(){
   });
   paint();
 }
-/* ---------- tu cuenta de SynthZ ---------- */
+/* ---------- tu cuenta de SymphorIA ---------- */
 let accEl = null;
 function renderAccBtn(){
   const b = $('#accBtn'); if (!b) return;
@@ -3272,7 +4027,7 @@ function spaceHtml(){
   return '<div class="aspace' + (k > .9 ? ' warn' : '') + '"><div><b>Tu nube</b><span>' + mb(s.used) + ' de ' + mb(s.max) + ' MB</span></div><span class="tmbar"><i style="transform:scaleX(' + k.toFixed(3) + ')"></i></span>'
     + (SZ.ACC.full ? '<small>Está llena: tus chats nuevos se guardan solo en este dispositivo hasta que borres conversaciones viejas.</small>' : '') + '</div>';
 }
-/* IA de SynthZ: resumen para el equipo; las llaves, el estado y la ayuda viven en Pulsem (pulsem.html) */
+/* IA de SymphorIA: resumen para el equipo; las llaves, el estado y la ayuda viven en Pulsem (pulsem.html) */
 function trialAdminHtml(d){
   const ks = d.keys || [], ok = ks.filter(k => !k.down).length, mine = ks.filter(k => k.mine).length;
   return '<div class="sxlbl">IAS CONECTADAS · PARA TODOS</div><div class="tmc"><div class="trow2"><i class="pdot2 ' + (ok ? 'ok' : ks.length ? 'warn' : 'off') + '" aria-hidden="true"></i><b>' + ok + ' de ' + ks.length + ' llaves activas</b><span>' + ((d.models && d.models.n) || 0) + ' IA gratis · ' + Math.round((d.dayLimit || 25000) / 800) + ' mensajes por persona al día' + (mine ? ' · ' + mine + ' son tuyas' : '') + '</span></div>'
@@ -3288,15 +4043,14 @@ function accModal(){
   accEl.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="Tu cuenta">'
     + (signed
       ? '<div class="acard"><div class="pfban" style="background:' + SZ.grad(pf.banner || pf.color) + '"></div><div class="pfme">' + SZ.myAvatar('xl') + '<div><b>' + esc(SZ.accName()) + '</b>' + (pf.pronouns ? '<i>' + esc(pf.pronouns) + '</i>' : '') + '<span>' + '<em class="rolep r-' + esc(u.role || 'user') + '">' + esc(SZ.ROLE_NAME[u.role || 'user'] || u.role) + '</em> ' + esc(SZ.accHandle(u)) + ' · ' + (A.full ? 'tu cuenta está llena' : A.err ? 'sin guardar en tu cuenta' : A.t ? 'guardado ' + ago(A.t) : 'guardando…') + '</span></div></div>' + (pf.status ? '<p class="pfs">' + esc(pf.status) + '</p>' : '') + (pf.bio ? '<p class="pfb">' + esc(pf.bio) + '</p>' : '') + '</div>'
-        + '<div class="aact"><button class="btn sm" type="button" id="aEdit">Editar perfil</button><button class="btn sm ghost" type="button" id="aSurvey">Mis IA ideales</button>' + (u.kind === 'pass' || u.username ? '<button class="btn sm ghost" type="button" id="aSec">Seguridad</button>' : '') + '</div>'
+        + '<div class="aact"><button class="btn sm" type="button" id="aEdit">Editar perfil</button><button class="btn sm ghost" type="button" id="aSurvey">Mis IA ideales</button>' + '<button class="btn sm ghost" type="button" id="aSec">Seguridad y acceso</button>' + '</div>'
         + '<div class="sxstats"><div><b>' + fmt(n) + '</b><span>chats en la nube</span></div><div><b>' + fmt(Object.values(st().usage || {}).reduce((a, u) => a + (u.requests || 0), 0)) + '</b><span>respuestas en total</span></div><div><b>' + fmt(Object.values(st().chats).reduce((a, c) => a + (Array.isArray(c) ? c.filter(m => m && m.star).length : 0), 0)) + '</b><span>mensajes favoritos</span></div></div>'
         + (false ? '<div class="sxsave"><p>Guardar mi llave de OpenRouter (de antes) en mi cuenta, cifrada, para no volver a pegarla en otro dispositivo.</p><button class="sxsw" id="aKey" type="button" aria-pressed="' + !!st().syncKey + '" aria-label="Guardar mi llave en mi cuenta"></button></div>' : '')
         + spaceHtml()
-        + '<div class="glinks" id="aLinks" hidden><p><b>Cuentas de Google vinculadas</b><span>Une tus cuentas de Google a esta para entrar con cualquiera de ellas sin crear cuentas repetidas.</span></p><div id="aLinkList"></div><div class="gbtn" id="aLinkBtn"></div></div>'
-        + (u.claimable ? '<div class="sxsave"><p>Esta cuenta está reservada para el equipo de SynthZ. Actívala con tu código de configuración.</p><button class="btn sm" id="aClaim" type="button">Activar mi rango</button></div>' : '')
+        + (u.claimable ? '<div class="sxsave"><p>Esta cuenta está reservada para el equipo de SymphorIA. Actívala con tu código de configuración.</p><button class="btn sm" id="aClaim" type="button">Activar mi rango</button></div>' : '')
         + (['owner', 'admin', 'staff'].includes(u.role) ? '<div id="aTrial"><div class="tmload">Cargando las IAs conectadas…</div></div>' : '')
 
-      : '<div class="word" id="aWord"></div><div class="tn">TU CUENTA</div><div class="tb"><h3>Entra a SynthFlow</h3><p>Con tu cuenta tus chats y favoritos te siguen a cualquier dispositivo, personalizas tu perfil y puedes hablar con el equipo de SynthZ. Solo necesitas un usuario y una contraseña (o tu cuenta de Google). Puter sigue siendo solo para sus IA.</p><div id="aAuth"></div></div>')
+      : '<div class="word" id="aWord"></div><div class="tn">TU CUENTA</div><div class="tb"><h3>Entra a SynthFlow</h3><p>Con tu cuenta tus chats y favoritos te siguen a cualquier dispositivo, personalizas tu perfil y puedes hablar con el equipo de SymphorIA. Solo necesitas un usuario y una contraseña (o tu cuenta de Google). Puter sigue siendo solo para sus IA.</p><div id="aAuth"></div></div>')
     + '<div class="tbtn" style="margin-top:18px"><button class="lnk" id="aClose" type="button">Cerrar</button>'
     + (signed ? '<button class="lnk" id="aSync" type="button">Guardar ahora</button><button class="lnk" id="aDel" type="button">Borrar cuenta</button><button class="btn sm ghost" id="aOut" type="button">Cerrar sesión</button>' : '') + '</div>'
     + (signed ? '<div class="aout2"><button class="lnk" id="aOutAll" type="button">Cerrar sesión en todos mis dispositivos</button></div>' : '') + '</div>';
@@ -3311,13 +4065,6 @@ function accModal(){
   if (ab) SZ.authBox(ab, () => { reopen(); renderAccBtn(); }, k => { close(); showBlockHelp(k); });
   if (!signed) return;
   $('#aEdit').addEventListener('click', () => SZ.profileModal(() => { renderAccBtn(); reopen(); }));
-  SZ.accConfig().then(() => {
-    const box = $('#aLinks'); if (!box || !SZ.ACC.google) return; box.hidden = false;
-    const list = $('#aLinkList'), L = (SZ.ACC.user && SZ.ACC.user.links) || [];
-    list.innerHTML = L.length ? L.map(x => '<div class="gl-row"><span>' + esc(x.email) + '</span><button class="lnk" type="button" data-un="' + esc(x.email) + '">Quitar</button></div>').join('') : '<div class="gl-row gl-none">Todavía no has vinculado ninguna.</div>';
-    list.addEventListener('click', async e => { const b = e.target.closest('[data-un]'); if (!b) return; b.disabled = true; try{ await SZ.accUnlink(b.dataset.un); toast('Listo: lo quité de tu cuenta.'); reopen(); }catch(er){ b.disabled = false; toast(er.message); } });
-    SZ.googleBtn($('#aLinkBtn'), () => reopen(), k => { close(); showBlockHelp(k); });
-  }).catch(() => {});
   const sec = $('#aSec'); if (sec) sec.addEventListener('click', () => SZ.securityModal());
   $('#aSurvey').addEventListener('click', () => SZ.surveyModal(ok => { if (ok){ forMeK = ''; applySurvey(true); renderList({ keep:true }); } }));
   const aKey = $('#aKey'); if (aKey) aKey.addEventListener('click', e => { st().syncKey = !st().syncKey; save(); e.currentTarget.setAttribute('aria-pressed', String(!!st().syncKey)); if (!st().syncKey) SZ.api('me', { method:'PUT', body:{ key:'' } }).catch(() => {}); toast(st().syncKey ? 'Tu llave se guardará cifrada en tu cuenta.' : 'Tu llave se borró de tu cuenta.'); });
@@ -3349,7 +4096,7 @@ function accModal(){
   });
   const cl = $('#aClaim');
   if (cl) cl.addEventListener('click', async () => {
-    const v = await SZ.szPrompt('Activar tu rango', 'Escribe el código de configuración del equipo de SynthZ.', 'Activar', { sec:true });
+    const v = await SZ.szPrompt('Activar tu rango', 'Escribe el código de configuración del equipo de SymphorIA.', 'Activar', { sec:true });
     if (!v) return;
     try{ const r = await SZ.accClaim(v); toast('¡Listo! Tu rango: ' + (SZ.ROLE_NAME[r] || r) + '.'); reopen(); }catch(er){ toast(er.message); }
   });
@@ -3377,6 +4124,7 @@ SZ.cfgLinks.push(
   ['Conectar Puter u otra IA', () => openConnect(), 'Tu versión pro de las IAs más usadas, gratis'],
   ['Google Drive', () => driveModal(), 'Guarda una copia de tus chats en tu Drive'],
   ['Tu ranking (a ciegas)', () => rankModal(), 'Las IAs que más te gustan según tus votos']);
+if (!SZ.appStandalone()) SZ.cfgLinks.push(['Descargar la app SynthFlow', () => SZ.appPromo(true), 'Se instala desde aquí: pantalla completa y a un toque']);
 /* «Respuestas cortas» desde Ajustes también pinta su botón */
 addEventListener('synthz-saver', () => { $$('#sxSw, #saverBtn').forEach(x => x.setAttribute('aria-pressed', String(!!st().sx.saver))); updateHint(); });
 /* el «+» trae todo: archivos, crear imagen, buscar en internet y respuestas cortas */
@@ -3411,6 +4159,25 @@ addEventListener('synthz-saver', () => { $$('#sxSw, #saverBtn').forEach(x => x.s
   host.addEventListener('click', e => { const b = e.target.closest('[data-off]'); if (!b) return; const k = b.dataset.off; if (k === 'img') setImgMode(false); else if (k === 'web') setWeb(false); else setSaver(false); paint(); });
   new MutationObserver(paint).observe(document.body, { attributes:true, attributeFilter:['class'] });
   addEventListener('synthz-saver', paint); $('#saverBtn') && $('#saverBtn').addEventListener('click', () => setTimeout(paint, 0)); paint();
+}
+/* ===== v2.3 · en el celular, la barra puede ir a la izquierda: se abre con ☰ y se cierra al elegir ===== */
+{
+  const nb = $('#navBtn'), tb = $('#tabbar');
+  let scrim = null;
+  const isOpen = () => root.classList.contains('navopen');
+  const setNav = on => {
+    if (!root.classList.contains('navleft')) on = false;
+    root.classList.toggle('navopen', on); nb.setAttribute('aria-expanded', String(on));
+    if (on){ if (!scrim){ scrim = document.createElement('div'); scrim.className = 'navscrim'; scrim.addEventListener('click', () => setNav(false)); document.body.appendChild(scrim); } requestAnimationFrame(() => scrim.classList.add('on')); const f = $('button', tb); if (f) f.focus({ preventScroll:true }); }
+    else if (scrim){ const s = scrim; scrim = null; s.classList.remove('on'); setTimeout(() => s.remove(), 320); }
+  };
+  nb.addEventListener('click', () => setNav(!isOpen()));
+  tb.addEventListener('click', e => { if (isOpen() && e.target.closest('[data-tab]')) setTimeout(() => setNav(false), 60); });
+  addEventListener('keydown', e => { if (e.key === 'Escape' && isOpen()){ setNav(false); nb.focus(); } });
+  addEventListener('resize', () => { if (!isMobile()) setNav(false); });
+  /* arriba del menú: el nombre de SynthFlow, para que se sienta un cajón de verdad */
+  if (!$('.tb-head', tb)) tb.insertAdjacentHTML('afterbegin', '<div class="tb-head" aria-hidden="true"><span class="tbw"></span></div>');
+  const w = $('.tbw', tb); if (w) w.innerHTML = SZ.zWord('Synth');
 }
 /* ---------- v2.3.1 · esfuerzo: cuánto piensa la IA antes de responder (Auto · Bajo · Medio · Alto) ----------
    Cómo se aplica: (1) una pista en el mensaje de sistema, que sirve con cualquier IA; (2) «Bajo» además limita el largo;
@@ -3448,7 +4215,7 @@ function effortOpts(saver){ const k = effKey(); if (k === 'auto') return {}; con
   paint();
 })();
 /* ---------- v2.3.1 · modo de uso: Automática · Chat · SuperiorSynth ----------
-   Automática: SynthZ elige sola la IA y no se muestra el selector.  Chat: eliges tú la IA (empieza en Gemini).
+   Automática: SymphorIA elige sola la IA y no se muestra el selector.  Chat: eliges tú la IA (empieza en Gemini).
    SuperiorSynth: el agente elige la IA; cuando la persona dice «me quedo con esta» pasa a Chat con esa IA al lado.
    El modo se deduce del estado (agente encendido, IA elegida), así que sigue funcionando con todo lo que ya cambia de IA. */
 const MODES = {
@@ -3477,7 +4244,7 @@ function applyMode(k){
   if (k === 'auto'){ const cur = selId(); if (cur !== 'sz:auto') sx.lastChat = cur; sx.cmode = 'auto'; st().pinned = ''; st().model.openrouter = 'sz:auto'; }
   else { sx.cmode = 'chat'; const want = (sx.lastChat && connected(sx.lastChat) ? sx.lastChat : '') || geminiDefault(); if (want && want !== selId()) setModel(want); }
   save(); paintMode(); try{ paintSel(); renderTop(true); renderMsgs(); updateHint(); }catch(e){}
-  toast(k === 'auto' ? 'Modo Automática: SynthZ elige la IA por ti.' : 'Modo Chat: tú eliges la IA (' + info(selId()).name + ').');
+  toast(k === 'auto' ? 'Modo Automática: SymphorIA elige la IA por ti.' : 'Modo Chat: tú eliges la IA (' + info(selId()).name + ').');
 }
 function paintMode(){
   const k = modeKey(), b = $('#cMode'); if (!b) return;
@@ -3494,6 +4261,22 @@ function paintMode(){
   addEventListener('keydown', e => { if (e.key === 'Escape' && !menu.hidden){ open(false); btn.focus(); } });
   addEventListener('resize', () => { if (!menu.hidden) place(); });
   paintMode();
+})();
+/* ===== v2.8 · el fondo se calma cuando conversas: apenas hay mensajes (escribiste o abriste un chat que ya tenías),
+   la «seda» del cielo se apaga en «calma» y sube una ola de noche desde la caja de escribir, así todo se lee mejor.
+   En un chat nuevo (o al comparar sin respuestas todavía) la ola se retira y vuelve la seda. ===== */
+(() => {
+  const A = SZ.AURORA; if (!A) return;
+  const conv = () => !document.body.classList.contains('fresh') && !$(':scope > .hello', lane);
+  let q = 0;
+  const check = () => { q = 0; A.setCalm(conv()); };
+  const mo = new MutationObserver(() => { if (!q) q = requestAnimationFrame(check); });
+  /* al abrir, el cielo ya aparece como corresponde (sin ola); la ola es para los cambios */
+  requestAnimationFrame(() => {
+    A.setCalm(conv(), true);
+    mo.observe(document.body, { attributes:true, attributeFilter:['class'] });
+    mo.observe(lane, { childList:true });
+  });
 })();
 /* ---------- arranque ---------- */
 const wantModel = params.get('model');
@@ -3542,7 +4325,8 @@ try{
   else if (!q && !draftK && !localStorage.getItem('synthz:tour')) bflowOpen(enter ? 1500 : 200);
   else { setTimeout(warnBlocked, enter ? 2700 : 900); if (!q && SZ.wasAway()) setTimeout(() => SZ.welcomeBack({ learn:runGuide, flow:() => { if (matchMedia('(pointer: fine)').matches) inp.focus(); } }), enter ? 2200 : 700); setTimeout(() => { if (!G && !document.querySelector('.szm, #szWelcome')) SZ.whatsNew(false, list => runTopics(list)); }, enter ? 4200 : 3000); }
 }catch(e){}
-try{ const clean = new URLSearchParams(location.search); ['q', 'from', 'draft', 'prueba', 'guia'].forEach(k => clean.delete(k)); window.history.replaceState(null, '', location.pathname + (clean.toString() ? '?' + clean.toString() : '')); }catch(e){}
+try{ if (new URLSearchParams(location.search).get('conn') === '1') setTimeout(() => openConnect(), 1200); }catch(e){}
+try{ const clean = new URLSearchParams(location.search); ['q', 'from', 'draft', 'prueba', 'guia', 'conn'].forEach(k => clean.delete(k)); window.history.replaceState(null, '', location.pathname + (clean.toString() ? '?' + clean.toString() : '')); }catch(e){}
 if (q){ inp.value = q.slice(0, 4000); autoGrow(); updateHint(); if (fromHome) setTimeout(() => { send(); }, enter ? 1500 : 300); else inp.focus(); }
 else if (enter) setTimeout(() => { if (matchMedia('(pointer: fine)').matches) inp.focus(); }, 1300);
 })();

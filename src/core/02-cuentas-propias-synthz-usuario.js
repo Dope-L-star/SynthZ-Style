@@ -1,11 +1,18 @@
-/* ---------- cuentas propias de SynthZ (usuario y contraseña, o Google) · Puter solo conecta las IA ---------- */
+/* ---------- cuentas propias de SymphorIA (usuario y contraseña, o Google) · Puter solo conecta las IA ---------- */
 var ACC = { ready:false, busy:false, user:null, profile:null, t:0, err:'', avail:null, cid:'', dcid:'', google:false, missing:[] };
 const accHooks = [];
 const hashS = s => { let h = 5381; for (let i = 0; i < s.length; i++) h = (h * 33 + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); };
 var accSent = {}, accT = 0, accDelSent = new Set();
 let SESS = ''; try{ SESS = localStorage.getItem('synthz:sess') || ''; }catch(e){}
 if (SESS) document.documentElement.classList.add('signed');   /* con sesión: nada de «entra a tu cuenta» */
-function setSess(t){ SESS = t || ''; try{ if (SESS) localStorage.setItem('synthz:sess', SESS); else localStorage.removeItem('synthz:sess'); }catch(e){} }
+/* v2.9.1 · la sesión de verdad vive en una cookie HttpOnly que esta página no puede leer (así un XSS no se roba la cuenta).
+   En el navegador solo queda una marca corta «c…» (distinta en cada entrada, para que las otras pestañas noten el cambio).
+   cookie = el servidor dijo que la dejó; si no (servidor viejo), se guarda el token como antes */
+const sessMark = () => 'c' + Math.random().toString(36).slice(2, 10);
+function setSess(t, cookie){ SESS = t ? (cookie ? sessMark() : t) : ''; try{ if (SESS) localStorage.setItem('synthz:sess', SESS); else localStorage.removeItem('synthz:sess'); }catch(e){} }
+/* dispositivos que entraron antes: piden su cookie una vez con el token de siempre y luego lo borran del navegador */
+const sessMove = SESS.length > 20 ? fetch('/api/auth', { method:'POST', headers:{ 'content-type':'application/json', authorization:'Bearer ' + SESS }, body:'{"mode":"cookie"}' })
+  .then(r => { if (r.ok) setSess(SESS, true); }).catch(() => {}) : Promise.resolve();
 const accFire = k => accHooks.forEach(f => { try{ f(k); }catch(_){} });
 async function api(path, o = {}){
   const h = { 'content-type':'application/json' }; if (SESS) h.authorization = 'Bearer ' + SESS;
@@ -30,10 +37,39 @@ function slimChat(arr){
 function prefsOut(){
   return { v:2, t:Date.now(), model:state.model, fav:state.fav, cmp:state.cmp, sx:state.sx, pinned:state.pinned || '', threads:state.threads || {}, del:(state.del || []).slice(-300),
     arena:state.arena || {}, survey:state.survey || null, useTeam:state.useTeam || '', battle:!!state.battle, cfg:CFG, mem:state.mem,
+    projects:projSlim(), projOf:state.projOf || {}, pjDel:(state.pjDel || []).slice(-200),
     chatKeys:Object.keys(state.chats).filter(k => Array.isArray(state.chats[k]) && state.chats[k].length) };
+}
+/* v2.6 · proyectos: si los archivos pesan mucho, viaja solo su nombre y el texto se queda en este equipo */
+function projSlim(){
+  const P = (state.projects || []).map(p => Object.assign({}, p, { files:(p.files || []).map(f => ({ id:f.id, name:f.name, text:f.text })) }));
+  if (JSON.stringify(P).length > 150000) P.forEach(p => p.files.forEach(f => { delete f.text; }));
+  return P;
+}
+const pjStr = (v, n) => typeof v === 'string' ? v.slice(0, n) : '';
+function cleanProj(r){
+  return { id:pjStr(r.id, 40), name:pjStr(r.name, 60) || 'Proyecto', desc:pjStr(r.desc, 300), instr:pjStr(r.instr, 8000), star:!!r.star, arch:!!r.arch, c:+r.c || 0, c0:+r.c0 || 0, t:+r.t || 0, u:+r.u || 0,
+    files:(Array.isArray(r.files) ? r.files : []).filter(f => f && typeof f.id === 'string').slice(0, 60).map(f => Object.assign({ id:pjStr(f.id, 40), name:pjStr(f.name, 120) || 'archivo' }, typeof f.text === 'string' ? { text:f.text.slice(0, 200000) } : {})) };
+}
+function mergeProjects(p){
+  if (Array.isArray(p.pjDel)) state.pjDel = [...new Set([...(state.pjDel || []), ...p.pjDel.filter(x => typeof x === 'string')])].slice(-200);
+  const del = state.pjDel || [];
+  if (Array.isArray(p.projects)){
+    state.projects = state.projects || [];
+    p.projects.forEach(r => {
+      if (!r || typeof r.id !== 'string' || del.includes(r.id)) return;
+      const l = state.projects.find(x => x.id === r.id), c = cleanProj(r);
+      if (!l){ state.projects.push(c); return; }
+      if (c.u > (+l.u || 0)){ c.files = c.files.map(f => f.text != null ? f : ((l.files || []).find(x => x.id === f.id) || f)); c.t = Math.max(c.t, +l.t || 0); Object.assign(l, c); }
+      else l.t = Math.max(+l.t || 0, c.t);
+    });
+  }
+  if (state.projects) state.projects = state.projects.filter(x => !del.includes(x.id));
+  if (p.projOf && typeof p.projOf === 'object'){ const o = {}; Object.keys(p.projOf).forEach(k => { if (typeof p.projOf[k] === 'string' && /^openrouter::./.test(k)) o[k] = p.projOf[k]; }); state.projOf = Object.assign(o, state.projOf || {}); }
 }
 function mergeIn(p, chats){
   if (p && typeof p === 'object'){
+    mergeProjects(p);
     if (Array.isArray(p.fav)) state.fav = [...new Set([...(state.fav || []), ...p.fav.filter(x => typeof x === 'string')])];
     if (p.model && typeof p.model === 'object' && typeof p.model.openrouter === 'string') state.model = Object.assign({}, state.model, { openrouter:p.model.openrouter });
     if (typeof p.pinned === 'string' && p.pinned) state.pinned = p.pinned;
@@ -55,7 +91,7 @@ function mergeIn(p, chats){
 }
 /* ---------- Google Drive (opcional): una copia de tus chats en TU Drive, en la carpeta privada de la app ----------
    · Solo pide permiso para la carpeta oculta de SynthFlow (drive.appdata): no puede ver ni tocar tus otros archivos.
-   · El permiso dura ~1 hora y vive solo en memoria; nunca se guarda ni se envía a SynthZ.
+   · El permiso dura ~1 hora y vive solo en memoria; nunca se guarda ni se envía a SymphorIA.
    · Al traer la copia se MEZCLA con lo que tienes: nunca se borra un chat. Tus llaves no van en la copia. */
 const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata', DRIVE_FILE = 'synthflow-chats.json', DRIVE_API = 'https://www.googleapis.com';
 const DRV = { tok:'', exp:0, fileId:'', busy:false, t:0, tc:null, cid:'' };
@@ -77,7 +113,7 @@ async function dfetch(path, o = {}){
   const r = await fetch(DRIVE_API + path, Object.assign({}, o, { headers:Object.assign({ Authorization:'Bearer ' + DRV.tok }, o.headers || {}) })).catch(() => null);
   if (!r) throw new Error('No pude hablar con Google Drive. Revisa tu conexión.');
   if (r.status === 401){ DRV.tok = ''; throw Object.assign(new Error('El permiso de Drive venció. Toca «Sincronizar» otra vez.'), { expired:true }); }
-  if (r.status === 403){ const t = await r.text().catch(() => ''); throw new Error(/storageQuota|quota/i.test(t) ? 'Tu Google Drive está lleno.' : /accessNotConfigured|has not been used|disabled/i.test(t) ? 'Falta activar la «Google Drive API» en el proyecto de Google de SynthZ (lo hace Prime una sola vez).' : 'Google Drive no dio permiso para guardar.'); }
+  if (r.status === 403){ const t = await r.text().catch(() => ''); throw new Error(/storageQuota|quota/i.test(t) ? 'Tu Google Drive está lleno.' : /accessNotConfigured|has not been used|disabled/i.test(t) ? 'Falta activar la «Google Drive API» en el proyecto de Google de SymphorIA (lo hace Prime una sola vez).' : 'Google Drive no dio permiso para guardar.'); }
   if (!r.ok) throw new Error('Google Drive respondió con un error (' + r.status + '). Intenta más tarde.');
   return r;
 }
@@ -174,6 +210,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
    Al cerrar sesión se guardan en la nube y se borran de aquí; si entra otra cuenta y quedaron datos ajenos, se borran antes. */
 function wipeAccountData(){
   state.chats = {}; state.threads = {}; state.fav = []; state.cmp = []; state.pinned = ''; state.del = []; state.arena = {}; state.survey = null;
+  state.projects = []; state.projOf = {}; state.pjDel = []; state.curProj = '';
   delete state.useTeam; delete state.intent; state.battle = false;
   state.sx = { daily:0, saver:false, saved:0, hits:0, over:'', warned:'' };
   if (state.syncKey){ delete state.keys.openrouter; state.syncKey = false; }   /* esa llave vive en la cuenta: no se queda en un navegador ajeno */
@@ -185,6 +222,7 @@ function wipeAccountData(){
 async function accStart(){
   if (ACC.ready || ACC.busy || !SESS) return;
   try{ await chatsReady; }catch(e){}
+  await sessMove;
   ACC.busy = true; accFire('start');
   try{
     const d = await api('me'); ACC.user = d.user; ACC.profile = d.profile || null; ACC.space = d.space || null;
@@ -210,17 +248,8 @@ async function accSignOutAll(force){
   await api('auth?all=1', { method:'DELETE', keep:true });
   setSess(''); ACC.ready = false; ACC.user = null; ACC.profile = null; wipeAccountData(); accFire('out');
 }
-/* vincular otra cuenta de Google a ESTA cuenta (usuario o Google): así no se crean cuentas repetidas */
-async function accLink(body){
-  const d = await api('auth', { method:'POST', body:Object.assign({ mode:'link' }, body), keep:true });
-  if (ACC.user){ ACC.user.links = d.links || []; if (d.role && d.role !== 'user') ACC.user.role = d.role; if (d.email && !ACC.user.email) ACC.user.email = d.email; }
-  accFire('profile');
-  toast(d.merged ? 'Listo: ese Google ya era otra cuenta tuya y quedó unido a esta.' : 'Listo: ese Google quedó vinculado a tu cuenta.' + (d.role && d.role !== 'user' && ROLE_NAME[d.role] ? ' Tu rango: ' + ROLE_NAME[d.role] + '.' : ''));
-  return d;
-}
-async function accUnlink(email){ const d = await api('auth', { method:'POST', body:{ mode:'unlink', email }, keep:true }); if (ACC.user) ACC.user.links = d.links || []; accFire('profile'); return d; }
 async function accClaim(setup){ const d = await api('auth', { method:'POST', body:{ mode:'claim', setup }, keep:true }); if (ACC.user){ ACC.user.role = d.role; ACC.user.claimable = false; } accFire('profile'); return d.role; }
-/* rangos de SynthZ */
+/* rangos de SymphorIA */
 const ROLE_NAME = { owner:'Prime', admin:'ZFlow', staff:'Symmetrix', user:'Synther' };
 /* si otra pestaña cerró sesión o cambió de cuenta, esta se recarga para no mostrar ni guardar datos ajenos */
 addEventListener('storage', e => { if (e.key === 'synthz:sess' && (e.newValue || '') !== SESS) location.reload(); });

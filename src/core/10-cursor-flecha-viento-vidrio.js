@@ -1,6 +1,6 @@
 /* ===== cursor: flecha con viento, vidrio y etiqueta nítida, ahora con movimiento más suave ===== */
-let busyOn = false, extraY = 0;
-const S = { retarget: () => {}, busy: on => { busyOn = !!on; root.classList.toggle('cursor-busy', busyOn); } };
+let busyOn = false, extraY = 0, curWake = null;
+const S = { retarget: () => {}, busy: on => { busyOn = !!on; root.classList.toggle('cursor-busy', busyOn); if (curWake) curWake(); } };
 if (matchMedia('(pointer: fine)').matches && CFG.cursor){
   document.body.insertAdjacentHTML('beforeend',
     '<div id="cd"><svg id="ca" viewBox="0 0 22 30" fill="none"><path d="M2.5 2.2V23L8 18.1L11.6 26.4L15.2 24.9L11.7 16.9L19 16.6Z" fill="#0d0e12" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg><svg id="chd" viewBox="0 0 24 28" fill="none" aria-hidden="true"><path d="M9 2.6c1.1 0 2 .9 2 2V12h.6V9.9c0-1 .8-1.8 1.8-1.8s1.8.8 1.8 1.8V12h.5v-1.2c0-1 .8-1.8 1.8-1.8s1.8.8 1.8 1.8V13h.2c.9 0 1.7.8 1.7 1.7v4.4c0 4.5-3.3 7.8-7.6 7.8h-1.5c-2.4 0-4.4-1.2-5.6-3.2l-4.4-7.2c-.5-.9-.2-2 .7-2.5.8-.5 1.9-.2 2.4.6L7 17V4.6c0-1.1.9-2 2-2z" fill="#0d0e12" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg><i id="cs"><svg viewBox="0 0 24 24"><path d="M6 5.5h12"/><path d="M12 9.5v9M8.5 15l3.5 3.5 3.5-3.5"/></svg></i><i id="cw"></i><i id="ci"></i><i id="cm"><svg viewBox="0 0 30 30" fill="none"><circle cx="15" cy="15" r="13" fill="rgba(13,14,18,.55)" stroke="#fff" stroke-width="1.4"/><path d="M15 5.5l3.2 3.6h-6.4zM15 24.5l3.2-3.6h-6.4z" fill="#fff"/><circle cx="15" cy="15" r="2" fill="#b8c4ff"/></svg></i></div><div id="cr"></div><div id="cl"></div>');
@@ -8,7 +8,7 @@ if (matchMedia('(pointer: fine)').matches && CFG.cursor){
   const TEXT = 'input:not([type=checkbox]):not([type=file]), textarea, [contenteditable=true]';
   const LINK = 'a[href], button, select, summary, label.ckb, input[type=checkbox], input[type=radio], .chip, [role=tab], [data-hover]';
   /* en toda la web lo que se puede tocar muestra la manita; los switches van sin vidrio encima para que se vea su animación */
-  const NOGLASS = '.cfgsw, .sxsw, [role=switch], .sfb, #szBot, .mi, .mi *, .rcard, .rcard *, input[type=checkbox], label.ckb, .cnv-b, .flowbtn, .flowbtn *';   /* v1.8: «Empezar a FlowIA’r» tiene su propio efecto (la copia de vidrio lo partía en dos y escondía la carita) */   /* v1.4: en la lista de IA el vidrio tapaba «Comparar» y la estrella */
+  const NOGLASS = '#curChip, #curChip *, .mchip, .mchip *, .cfgsw, .sxsw, [role=switch], .sfb, #szBot, .mi, .mi *, .rcard, .rcard *, input[type=checkbox], label.ckb, .cnv-b, .flowbtn, .flowbtn *';   /* v1.8: «Empezar a FlowIA’r» tiene su propio efecto (la copia de vidrio lo partía en dos y escondía la carita) */   /* v1.4: en la lista de IA el vidrio tapaba «Comparar» y la estrella */
   let px = -100, py = -100, ax = -100, ay = -100, rx = -100, ry = -100, rw = 34, rh = 34, rr = 17;
   let cm = 'idle', hov = null, lblEl = null, lx = 0, ly = 0, down = false, active = false, clT = 0;
   let lastX = ax, lastY2 = ay, vx = 0, vy = 0, ang = 0, angV = 0, sc = 1, fl = performance.now();
@@ -30,7 +30,11 @@ if (matchMedia('(pointer: fine)').matches && CFG.cursor){
   function copyStyles(o, c, isRoot){
     const cs = getComputedStyle(o);
     PROPS.forEach(k => { c.style[k] = cs[k]; });
-    c.style.margin = '0'; c.style.position = 'static'; c.style.transform = 'none'; c.style.transition = 'none';
+    /* solo la raíz se pone en su sitio dentro del vidrio; las piezas de adentro guardan su posición y márgenes
+       (antes todo quedaba «static»: en las tarjetas de usos la SynthonIA se caía fuera de la escena y desaparecía) */
+    if (isRoot){ c.style.margin = '0'; c.style.position = 'static'; c.style.transform = 'none'; }
+    else ['position','top','right','bottom','left','zIndex','marginTop','marginRight','marginBottom','marginLeft','transform','transformOrigin'].forEach(k => { c.style[k] = cs[k]; });
+    c.style.transition = 'none';
     /* las piezas escondidas o puestas encima (p. ej. el numerito de comparar, en escala 0) se copian igual: si no, salía una «bolita blanca» debajo del icono */
     if (!isRoot){
       if ((cs.position === 'absolute' || cs.position === 'fixed') && (/^matrix\(0, 0, 0, 0/.test(cs.transform) || +cs.opacity === 0 || cs.display === 'none')) c.style.display = 'none';
@@ -101,7 +105,7 @@ if (matchMedia('(pointer: fine)').matches && CFG.cursor){
     if (down && !e.buttons) down = false;                 /* soltaste el botón donde la página no lo vio */
     if (!active){ active = true; ax = rx = lastX = e.clientX; ay = ry = lastY2 = e.clientY; root.classList.add('cursor-on'); }
     px = e.clientX; py = e.clientY;
-    /* sobre una barra de desplazamiento o un recuadro de otra página se ve el cursor normal, sin el de SynthZ encima */
+    /* sobre una barra de desplazamiento o un recuadro de otra página se ve el cursor normal, sin el de SymphorIA encima */
     const bar = overBar(e) || (e.target instanceof Element && e.target.tagName === 'IFRAME');
     if (bar !== onBar){ onBar = bar; root.classList.toggle('cursor-bar', bar); if (!bar) snap = true; }
     if (snap){ snap = false; ax = rx = lastX = px; ay = ry = lastY2 = py; vx = vy = angV = 0; }
@@ -131,6 +135,8 @@ if (matchMedia('(pointer: fine)').matches && CFG.cursor){
   /* todos los suavizados dependen del tiempo, así que se sienten igual a 60 o a 144 Hz */
   const ease = (k, dt) => 1 - Math.pow(1 - k, dt);
   (function frame(now){
+    /* v2.3: si lo que tenía el vidrio se rehizo en el DOM (p. ej. la IA de la caja al elegir otra), se suelta la copia vieja y se busca lo que hay debajo */
+    if (hov && !hov.isConnected){ cl.style.opacity = '0'; cl.innerHTML = ''; lblEl = null; lblSync = null; hov = null; pick(document.elementFromPoint(px, py)); }
     const dt = Math.min(2.5, (now - fl) / 16.67 || 1); fl = now;
     /* la flecha va un poco detrás del mouse real y llega con suavidad */
     const nx = ax + (px - ax) * ease(.34, dt), ny = ay + (py - ay) * ease(.34, dt);
@@ -175,8 +181,15 @@ if (matchMedia('(pointer: fine)').matches && CFG.cursor){
       cl.style.transform = 'translate3d(' + (b.left + lx).toFixed(2) + 'px,' + (b.top + ly).toFixed(2) + 'px,0)' + (Math.abs(sx - 1) > .002 || Math.abs(sy2 - 1) > .002 ? ' scale(' + sx.toFixed(4) + ',' + sy2.toFixed(4) + ')' : '');
       if (lblSync) for (const [o, k] of lblSync) k.style.transform = getComputedStyle(o).transform;
     }
+    /* v2.9: con el mouse quieto y todo en su lugar, el ciclo se duerme (antes dibujaba 60 veces por segundo sin cambiar nada);
+       se despierta con cualquier movimiento, scroll, clic o tecla */
+    const still = !down && !scr && Math.abs(px - ax) < .05 && Math.abs(py - ay) < .05 && Math.abs(angV) < .005 && Math.abs(ang - target) < .05
+      && Math.abs(sv) < .02 && Math.abs(tgx - rx) < .05 && Math.abs(tgy - ry) < .05 && Math.abs(tw - rw) < .05 && Math.abs(th - rh) < .05
+      && Math.abs(((busyOn ? 0 : visT)) - vis) < .003 && Math.abs((down ? .86 : 1) - sc) < .002 && Math.abs(ox - lx) < .05 && Math.abs(oy - ly) < .05;
+    if (still && !lblSync){ curWake = () => { curWake = null; fl = performance.now(); requestAnimationFrame(frame); }; return; }
     requestAnimationFrame(frame);
   })(performance.now());
+  ['pointermove', 'pointerdown', 'pointerup', 'wheel', 'scroll', 'keydown', 'resize'].forEach(t => addEventListener(t, () => { if (curWake) curWake(); }, { passive:true, capture:true }));
 }
 
 

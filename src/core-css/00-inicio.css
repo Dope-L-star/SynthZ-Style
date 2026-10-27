@@ -1,4 +1,4 @@
-/* SynthZ · estilos compartidos entre la página principal y el chat (v12) */
+/* SymphorIA · estilos compartidos entre la página principal y el chat (v12) */
 
 /* el logo: al señalarlo todo crece parejo y suave (círculos y letras igual); el péndulo se frena desde core.js */
 .logo .mark,a .mark,button .mark{transition:transform .8s cubic-bezier(.22,1,.36,1),opacity .8s var(--ease)}
@@ -39,7 +39,7 @@
 
 /* guía de OpenRouter */
 .og .ogs{display:grid;grid-template-columns:30px 1fr;gap:12px;margin-top:14px}
-.ogn{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:600 13px var(--mono);font-style:normal;color:#0b0c10;background:linear-gradient(135deg,#8fb0ff,#c9566c)}
+.ogn{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:600 13px var(--mono);font-style:normal;color:#0b0c10;background:linear-gradient(135deg,#8fb0ff,var(--wine))}
 .og .ogs b{font-weight:600;color:var(--text)}
 .og .ogs p{margin:3px 0 6px;color:var(--soft);font-size:13.5px;min-height:0}
 .og code{font:12px var(--mono);padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.08)}
@@ -123,7 +123,7 @@
 .rccode{padding:14px 18px;border:1px dashed rgba(242,196,107,.6);border-radius:16px;background:rgba(242,196,107,.07);font:600 clamp(16px,4.6vw,21px) var(--mono);letter-spacing:.08em;color:#f6dca6;user-select:all;cursor:text}
 .rcact{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 .rcchk{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--soft);cursor:pointer}
-.rcchk input{width:17px;height:17px;accent-color:#c9566c}
+.rcchk input{width:17px;height:17px;accent-color:var(--wine)}
 .rcv [data-go]{width:100%;justify-content:center}
 .rcv [data-go]:disabled{opacity:.45}
 
@@ -140,7 +140,7 @@
 .bl-row em{font-style:normal;color:var(--text);font-weight:600}
 .bl-row small{display:block;margin-top:3px;font:10.5px var(--mono);color:var(--mute)}
 .bl-row .pu-logo{width:24px;height:24px;margin-top:2px}
-.bl-ico{display:grid;place-items:center;flex:none;width:24px;height:24px;margin-top:2px;border-radius:6px;font:700 9.5px var(--mono);color:#0b0c10;background:linear-gradient(135deg,#8fb0ff,#c9566c)}
+.bl-ico{display:grid;place-items:center;flex:none;width:24px;height:24px;margin-top:2px;border-radius:6px;font:700 9.5px var(--mono);color:#0b0c10;background:linear-gradient(135deg,#8fb0ff,var(--wine))}
 .bl-load{font:12px var(--mono);color:var(--mute);padding:10px 2px}
 .sxerr{margin:8px 0 0;padding:10px 12px;border:1px solid rgba(255,143,122,.45);border-radius:12px;background:rgba(255,143,122,.08);color:#ffc0b3;font-size:13px}
 @media (max-width:520px){.sxsplit{grid-template-columns:1fr 1fr}.sxsplit div:last-child{grid-column:1 / -1}}
@@ -150,7 +150,7 @@
 #cd.hand #chd{opacity:1;transform:none}
 #cd.hand #ca{visibility:hidden}
 #cd.hand #cw{opacity:0 !important}
-/* sin el cursor de SynthZ: manita normal del sistema en esas mismas opciones */
+/* sin el cursor de SymphorIA: manita normal del sistema en esas mismas opciones */
 html:not(.cursor-on) :is(a[href],button:not(:disabled),select,summary,[role=tab],[data-hover],.chip,.cfgsw,.sxsw){cursor:pointer}
 /* switches del menú: foco visible con teclado, sin cuadro de selección del cursor */
 #cfgm .cfgsw:focus-visible{outline:2px solid #b8c4ff;outline-offset:3px}
@@ -177,15 +177,15 @@ body:has(#inp) #szHelp{bottom:118px}
 
 /* SynthFlow: logotipo con destellos en «Flow» (cada 2 s); en modo rendimiento, quieto */
 .flw-w{display:inline-flex;align-items:baseline;white-space:nowrap}
-.flw{position:relative;margin-left:.04em;background:linear-gradient(100deg,#c9566c 0%,#e6b65f 40%,#fff4dc 50%,#e6b65f 60%,#c9566c 100%);background-size:260% 100%;background-position:100% 0;-webkit-background-clip:text;background-clip:text;color:transparent;animation:flwShine 2s cubic-bezier(.45,0,.2,1) infinite}
+.flw{position:relative;margin-left:.04em;background:linear-gradient(100deg,var(--wine) 0%,var(--gold) 40%,#fff4dc 50%,var(--gold) 60%,var(--wine) 100%);background-size:260% 100%;background-position:100% 0;-webkit-background-clip:text;background-clip:text;color:transparent;animation:flwShine 2s cubic-bezier(.45,0,.2,1) infinite}
 @keyframes flwShine{0%{background-position:100% 0}55%,100%{background-position:-60% 0}}
-.flw .sp{position:absolute;width:9px;height:9px;background:#fff6e0;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);filter:drop-shadow(0 0 3px #e6b65f);opacity:0;pointer-events:none;animation:flwSpark 2s ease-in-out infinite}
+.flw .sp{position:absolute;width:9px;height:9px;background:#fff6e0;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);filter:drop-shadow(0 0 3px var(--gold));opacity:0;pointer-events:none;animation:flwSpark 2s ease-in-out infinite}
 .flw .s1{top:-5px;right:-7px}
 .flw .s2{top:38%;left:-3px;width:6px;height:6px;animation-delay:.65s}
 .flw .s3{bottom:-3px;right:34%;width:7px;height:7px;animation-delay:1.3s}
 @keyframes flwSpark{0%,100%{opacity:0;transform:scale(.2) rotate(0deg)}14%{opacity:1;transform:scale(1) rotate(45deg)}32%{opacity:0;transform:scale(.35) rotate(90deg)}}
 /* los logos siempre se animan, incluso en modo Rendimiento (solo el péndulo se puede quitar) */
-/* al señalarlo: sale la flechita y «SynthFlow» se transforma en el logo de SynthZ con sus 3 círculos */
+/* al señalarlo: sale la flechita y «SynthFlow» se transforma en el logo de SymphorIA con sus 3 círculos */
 .sfb{position:relative}
 .sfb .arr{width:0;opacity:0;margin-right:-12px;transform:translateX(10px);transition:width .55s var(--ease),opacity .35s,margin .55s var(--ease),transform .55s var(--ease)}
 .sfx{display:grid;align-items:center;justify-items:start}

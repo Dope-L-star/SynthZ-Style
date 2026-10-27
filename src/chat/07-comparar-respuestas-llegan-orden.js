@@ -61,7 +61,7 @@ function cmpJob(mid, C){
     if (!live()) return;
     mount(); if (!card) return;
     rv.push(r.text); await rv.end();
-    finishCard(C, card, r.text, metaOf(r) + (r.cached ? ' · respuesta guardada, no gastó nada' : '') + (r.aborted ? ' · detenido' : '') + (r.swapped ? ' · se acabó tu saldo de Puter este mes; respondió ' + (r.real || 'otra IA') : ''));
+    finishCard(C, card, r.text, metaOf(r) + SZ.coinNote(mid, r) + (r.cached ? ' · respuesta guardada, no gastó nada' : '') + (r.aborted ? ' · detenido' : '') + (r.swapped ? ' · se acabó tu saldo de Puter este mes; respondió ' + (r.real || 'otra IA') : ''));
     C.done.push({ card, mid, ms:r.ms, ttft:r.ttft || r.ms });
   }).catch(err => {
     if (err && err.gone){ SZ.markBad(mid); setCatalog(cat.list.filter(m => m.id !== mid), cat.t, cat.status); err.message = info(mid).name + ' no está funcionando ahora mismo: la escondí de la lista. Quítala y suma otra.'; }

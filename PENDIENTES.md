@@ -1,3 +1,8 @@
+# Para después (pedido por Sammuel, 20-oct-2026)
+- **Pulsem con cara de dashboard típico**: tarjetas de números arriba, gráficas de uso por día, tablas de cuentas y llaves, filtros. (No tocar hasta que Sammuel diga.)
+- **Dominio**: synthetismflow.com (US$11,25/año) o synthetismflow.app (US$9,99 y luego US$15). Lo compra Sammuel cuando quiera.
+- **Video de la app**: si Sammuel consigue música con permiso de uso, se le agrega.
+
 # Pendientes
 
 ## PLAN DE PAGOS — APAGADO (no se activa hasta que Sammuel lo diga)
@@ -29,12 +34,14 @@ Reglas: un interruptor del servidor `PAGOS_ACTIVOS` (hoy apagado); las llaves de
 | 1 video de 8 s con Veo 3.1 Fast 720p | ≈ US$0,80 (Veo normal ≈ US$3,20) |
 
 ### Tarifas recomendadas (más baratas y claras que Abacus: US$10 y US$20)
+> Nombres confirmados por Sammuel (20-oct-2026): **Chispa** (gratis), **Syntonia**, **Timeless** y **Orquesta**. Ninguno está activo: no hay pagos. En Ajustes, los colores «Aurora» y «Oro negro» dicen «Pronto»: llegarían con Syntonia.
+
 | Plan | Precio | Qué trae cada mes |
 |---|---|---|
-| **Gratis** | US$0 | Lo de hoy: IAs gratis, imágenes con límite, internet, memoria |
-| **Flow Plus** | US$7,99 (≈ COP 32.000) | 400 mensajes con IAs pro (GPT, Claude, Grok, Gemini Pro) + 30 imágenes pro + todo lo gratis sin límite apretado |
-| **Flow Pro** | US$17,99 (≈ COP 72.000) | 900 mensajes pro + 50 con lo más potente + 80 imágenes + 2 videos cortos + asistente en WhatsApp/Telegram |
-| **Equipos** | US$8,99 por persona (mín. 3) | Lo de Plus para cada persona + chats y panel de equipo |
+| **Chispa** (gratis) | US$0 | Lo de hoy: IAs gratis, imágenes con límite, internet, memoria |
+| **Syntonia** | US$7,99 (≈ COP 32.000) | 400 mensajes con IAs pro (GPT, Claude, Grok, Gemini Pro) + 30 imágenes pro + todo lo gratis sin límite apretado |
+| **Timeless** | US$17,99 (≈ COP 72.000) | 900 mensajes pro + 50 con lo más potente + 80 imágenes + 2 videos cortos + asistente en WhatsApp/Telegram |
+| **Orquesta** (equipos) | US$8,99 por persona (mín. 3) | Lo de Syntonia para cada persona + chats y panel de equipo |
 Contador siempre visible de «te quedan X mensajes pro» (lo que más le critican a Abacus es que no se sabe cuánto gasta cada tarea).
 
 ### Próximos descuentos recomendados

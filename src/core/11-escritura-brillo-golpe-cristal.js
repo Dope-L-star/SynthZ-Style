@@ -6,7 +6,8 @@ function mirrorType(ta){
   fld.classList.add('mw'); fld.insertBefore(m, ta);
   /* v1.3: el dueño prefirió la rayita normal del navegador (la propia se quitó) */
   let prev = '', kind = '';
-  const css = () => { const c = getComputedStyle(ta); ['font', 'padding', 'lineHeight', 'letterSpacing', 'textIndent', 'tabSize'].forEach(k => { m.style[k] = c[k]; }); };
+  let cssOk = false;   /* v2.3: copiar el estilo de la caja solo cuando cambia (antes, en cada letra: frenaba el celular) */
+  const css = () => { if (cssOk) return; cssOk = true; const c = getComputedStyle(ta); ['font', 'padding', 'lineHeight', 'letterSpacing', 'textIndent', 'tabSize'].forEach(k => { m.style[k] = c[k]; }); };
   const spans = s => [...s].map((ch, i) => '<span class="nw" style="animation-delay:' + Math.min(i * 12, 420) + 'ms">' + esc(ch) + '</span>').join('');
   /* dónde queda la letra número «off» dentro del espejo */
   function rectAt(off){
@@ -63,21 +64,22 @@ function mirrorType(ta){
   ['focus', 'click', 'keyup', 'select'].forEach(ev => ta.addEventListener(ev, () => requestAnimationFrame(() => placeCaret(false))));
   /* (sin rayita propia) */
   document.addEventListener('selectionchange', () => { if (document.activeElement === ta) placeCaret(false); });
-  addEventListener('resize', () => placeCaret(false));
+  addEventListener('resize', () => { cssOk = false; placeCaret(false); });
+  ta.addEventListener('focus', () => { cssOk = false; });
   m.appendChild(document.createTextNode('​')); sync();
 }
-/* golpe suave de cristal: como el clic del mouse pero más lento, borroso y con efecto glass */
+/* golpe suave de cristal: como el clic del mouse pero más lento, con un aro de luz que se abre.
+   v2.6: el aro ya no desenfoca lo de atrás ni crece a toda la pantalla (eso trababa la página 3 segundos en cada clic) */
 function thud(x, y){
-  if (reduce) return;
-  const big = Math.hypot(innerWidth, innerHeight) * 2.2 / 46, ring = 'radial-gradient(circle,transparent 58%,#000 60%,#000 72%,transparent 74%)';
-  const base = 'position:fixed;left:' + x + 'px;top:' + y + 'px;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;pointer-events:none;';
+  if (reduce || !CFG.glass) return;   /* v2.3: sin vidrio (celulares) no hay golpe de cristal */
+  const base = 'position:fixed;left:' + x + 'px;top:' + y + 'px;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;pointer-events:none;will-change:transform,opacity;';
   const g = document.createElement('i');
-  g.style.cssText = base + 'z-index:9989;mix-blend-mode:screen;filter:blur(7px);background:radial-gradient(circle,rgba(214,204,255,.85),rgba(143,176,255,.42) 36%,rgba(255,143,122,.16) 56%,transparent 70%)';
+  g.style.cssText = base + 'z-index:9989;background:radial-gradient(circle,rgba(214,204,255,.5),rgba(143,176,255,.22) 36%,rgba(255,143,122,.08) 56%,transparent 70%)';
   const r = document.createElement('i');
-  r.style.cssText = base + 'z-index:9990;background:rgba(255,255,255,.1);backdrop-filter:blur(9px) saturate(1.6) brightness(1.18);-webkit-backdrop-filter:blur(9px) saturate(1.6) brightness(1.18);box-shadow:inset 0 0 0 1px rgba(255,255,255,.3);-webkit-mask:' + ring + ';mask:' + ring + ';filter:blur(1.5px)';
+  r.style.cssText = base + 'z-index:9990;border:1.5px solid rgba(255,255,255,.55);box-shadow:0 0 12px rgba(160,180,255,.45),inset 0 0 10px rgba(255,255,255,.25)';
   document.body.append(g, r);
-  g.animate([{ transform:'scale(.2)', opacity:0 }, { transform:'scale(3.2)', opacity:1, offset:.14 }, { transform:'scale(' + (big * .6).toFixed(1) + ')', opacity:0 }], { duration:2700, easing:'cubic-bezier(.16,.8,.3,1)', fill:'both' }).onfinish = () => g.remove();
-  r.animate([{ transform:'scale(.3)', opacity:0 }, { transform:'scale(1.2)', opacity:1, offset:.1 }, { transform:'scale(' + big.toFixed(1) + ')', opacity:0 }], { duration:3000, easing:'cubic-bezier(.16,.8,.3,1)', fill:'both' }).onfinish = () => r.remove();
+  g.animate([{ transform:'scale(.2)', opacity:0 }, { transform:'scale(2.6)', opacity:1, offset:.2 }, { transform:'scale(5)', opacity:0 }], { duration:1100, easing:'cubic-bezier(.16,.8,.3,1)', fill:'both' }).onfinish = () => g.remove();
+  r.animate([{ transform:'scale(.3)', opacity:0 }, { transform:'scale(1.2)', opacity:1, offset:.15 }, { transform:'scale(4.2)', opacity:0 }], { duration:1300, easing:'cubic-bezier(.16,.8,.3,1)', fill:'both' }).onfinish = () => r.remove();
 }
 /* portal: la Z carga, se hace zoom hacia adentro y se entra al chat */
 const zoomK = () => Math.hypot(innerWidth, innerHeight) / 2 / ((132 / 48) * 4.7) * 1.12;

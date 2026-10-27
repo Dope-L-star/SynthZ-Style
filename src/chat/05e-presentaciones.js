@@ -1,5 +1,5 @@
 /* ---------- v2.1 · presentaciones: pides «hazme una presentación de…», la IA arma las diapositivas,
-   las ves en vista previa y las descargas como PowerPoint (.pptx) con el estilo de SynthZ ---------- */
+   las ves en vista previa y las descargas como PowerPoint (.pptx) con el estilo de SymphorIA ---------- */
 const PPT_RX = /\b(?:hazme|haz|cr[eé]a(?:me)?|arma(?:me)?|genera(?:me)?|prepara(?:me)?|dise[ñn]a(?:me)?|elabora(?:me)?|redacta(?:me)?|necesito|quiero|dame|p[oó]n(?:me)?|make|create|build|generate|prepare|need|want)\b[^.\n?!]{0,40}\b(?:presentaci[oó]n(?:es)?|presentations?|diapositivas?|power ?point|pptx|slides?|slide ?deck)\b|\b(?:en|como|formato|archivo)\s+(?:un\s+)?(?:power ?point|pptx)\b|\.pptx\b/i;
 const PPT_NO = /\b(consejos|tips|c[oó]mo (?:hacer|dar|hablar|mejorar|preparar|presentar)|nervios|exposici[oó]n oral|practicar|mejorar mi presentaci|presentaci[oó]n personal|presentarme)\b/i;
 /* solo arma diapositivas si de verdad las pides (no porque la palabra aparezca en otra frase) */
@@ -15,7 +15,7 @@ function deckFrom(text){
 const fileSafe = t => (String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-').slice(0, 60) || 'presentacion') + '.pptx';
 function deckCard(pre, D){
   const c = document.createElement('div'); c.className = 'fcard deck'; c.dataset.ext = 'pptx';
-  c.innerHTML = '<button type="button" class="fc-main" data-dk="prev"><span class="fc-ic" aria-hidden="true">PPTX</span><span class="fc-t"><b></b><small>Presentación · ' + D.slides.length + ' diapositivas · con vista previa</small></span></button>'
+  c.innerHTML = '<button type="button" class="fc-main" data-dk="prev"><span class="fc-ic img" aria-hidden="true">' + SZ.fileIco('pptx') + '</span><span class="fc-t"><b></b><small>Presentación · ' + D.slides.length + ' diapositivas · con vista previa</small></span></button>'
     + '<button type="button" class="cnv-b" data-dk="prev">' + CNV_ICO.eye + '<span>Vista previa</span></button><button type="button" class="cnv-b" data-dk="down">' + CNV_ICO.down + '<span>Descargar .pptx</span></button>';
   $('.fc-t b', c).textContent = fileSafe(D.titulo);
   pre.before(c); pre.hidden = true; c.appendChild(pre); c._deck = D;
@@ -23,13 +23,13 @@ function deckCard(pre, D){
 }
 /* vista previa: las diapositivas en el lienzo, tal como quedan en PowerPoint */
 function slideHtml(D, i){
-  if (i < 0) return '<div class="sl sl-t"><h2></h2><i class="sl-bar"></i><p></p><small>Hecho con SynthZ</small></div>';
+  if (i < 0) return '<div class="sl sl-t"><h2></h2><i class="sl-bar"></i><p></p><small>Hecho con SymphorIA</small></div>';
   return '<div class="sl"><h3></h3><i class="sl-bar"></i><ul></ul><span class="sl-n">' + (i + 2) + '</span></div>';
 }
 function openDeck(D){
   closeCanvas(true);
   const o = document.createElement('div'); o.className = 'cvp'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', D.titulo);
-  o.innerHTML = '<div class="cvp-in"><div class="cvp-h"><span class="fc-ic" aria-hidden="true">PPTX</span><span class="cnv-t"><b></b><small>' + D.slides.length + ' diapositivas</small></span><button type="button" class="cnv-b" data-dk="down">' + CNV_ICO.down + '<span>Descargar .pptx</span></button><button type="button" class="cnv-b ic" data-cx aria-label="Cerrar">✕</button></div><div class="cvp-b deckv"></div></div>';
+  o.innerHTML = '<div class="cvp-in"><div class="cvp-h"><span class="fc-ic img" aria-hidden="true">' + SZ.fileIco('pptx') + '</span><span class="cnv-t"><b></b><small>' + D.slides.length + ' diapositivas</small></span><button type="button" class="cnv-b" data-dk="down">' + CNV_ICO.down + '<span>Descargar .pptx</span></button><button type="button" class="cnv-b ic" data-cx aria-label="Cerrar">✕</button></div><div class="cvp-b deckv"></div></div>';
   $('.cnv-t b', o).textContent = fileSafe(D.titulo);
   const box = $('.deckv', o);
   [-1, ...D.slides.map((_, i) => i)].forEach(i => {
@@ -45,14 +45,14 @@ let pptxLib = null;
 const loadPptx = () => pptxLib || (pptxLib = new Promise((ok, no) => { if (window.PptxGenJS) return ok(window.PptxGenJS); const s = document.createElement('script'); s.src = 'lib/pptxgen.bundle.js'; s.onload = () => window.PptxGenJS ? ok(window.PptxGenJS) : no(new Error('sin librería')); s.onerror = () => { pptxLib = null; no(new Error('no cargó')); }; document.head.appendChild(s); }));
 async function deckBuild(D){
   const P = await loadPptx(), pres = new P();
-  pres.layout = 'LAYOUT_WIDE'; pres.author = 'SynthZ'; pres.company = 'SynthZ'; pres.title = D.titulo;
+  pres.layout = 'LAYOUT_WIDE'; pres.author = 'SymphorIA'; pres.company = 'SymphorIA'; pres.title = D.titulo;
   const BG = '0B0C10', TX = 'ECEBE7', SOFT = 'C9C8C3', GOLD = 'E6B65F', ROSE = 'C9566C', MUTE = '8D8C88';
   const t = pres.addSlide(); t.background = { color:BG };
   t.addShape(pres.ShapeType.rect, { x:0, y:0, w:13.33, h:.12, fill:{ color:ROSE } });
   t.addShape(pres.ShapeType.rect, { x:.9, y:3.05, w:1.6, h:.08, fill:{ color:GOLD } });
   t.addText(D.titulo, { x:.9, y:1.4, w:11.5, h:1.6, fontFace:'Georgia', fontSize:44, color:TX, bold:false, valign:'bottom', fit:'shrink' });
   if (D.subtitulo) t.addText(D.subtitulo, { x:.9, y:3.3, w:11.5, h:1.2, fontFace:'Calibri', fontSize:22, color:SOFT, valign:'top', fit:'shrink' });
-  t.addText('Hecho con SynthZ', { x:.9, y:6.7, w:6, h:.4, fontFace:'Calibri', fontSize:12, color:MUTE });
+  t.addText('Hecho con SymphorIA', { x:.9, y:6.7, w:6, h:.4, fontFace:'Calibri', fontSize:12, color:MUTE });
   D.slides.forEach((S, i) => {
     const s = pres.addSlide(); s.background = { color:BG };
     s.addShape(pres.ShapeType.rect, { x:0, y:0, w:.12, h:7.5, fill:{ color:GOLD } });

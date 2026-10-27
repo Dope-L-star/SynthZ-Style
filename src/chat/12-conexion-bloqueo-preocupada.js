@@ -56,13 +56,13 @@ function paintLock(){
     const gm = (SZ.SZQ.guest && SZ.SZQ.guest.max) || 5;
     $('#lockT').textContent = gst ? 'Para seguir FlowIAndo, entra a tu cuenta' : done ? 'Se acabaron tus mensajes de prueba' : SZ.SZQ.on === false ? 'Las IAs gratis están descansando' : 'Usaste tu límite gratis de hoy';
     $('#lockS').textContent = gst ? 'Ya usaste tus ' + gm + ' mensajes de prueba de hoy sin cuenta. Crear tu cuenta es gratis, sin correo ni tarjeta, y te da mucho más límite cada día.' : done ? 'Para seguir chateando conecta tu cuenta de Puter (gratis, con un clic).' : 'Vuelve en un momento, o sigue ya con Puter. Conecta tu versión pro de las IAs más usadas.';
-    SZ.telEv('noai', 'sin IA: la de SynthZ está apagada y no hay Puter');
+    SZ.telEv('noai', 'sin IA: la de SymphorIA está apagada y no hay Puter');
     if (side.classList.contains('open')) closeSide();
   } else { wHide(); }
   try{ renderTop(); }catch(e){}
 }
 setInterval(paintLock, 1500);
-{ paintAgent(); $$('.agentb-x').forEach(ab => { ab.addEventListener('click', () => { st().agent = !agentOn(); save(); paintAgent(); toast(agentOn() ? 'Modo agente encendido: antes de enviar, una IA mejora tu pedido y elige la IA que más sabe de eso.' : 'Modo agente apagado: tu mensaje va tal cual.'); }); }); }
+{ paintAgent(); $$('.agentb-x').forEach(ab => { ab.addEventListener('click', () => { st().agent = !agentOn(); save(); paintAgent(); toast(agentOn() ? 'SuperiorSynth encendido: antes de enviar, mejora tu pedido y elige la IA que más sabe de eso.' : 'SuperiorSynth apagado: tu mensaje va tal cual.'); }); }); }
 function lockNudge(){
   try{ SZ.BOT.problem && SZ.BOT.problem('lock'); }catch(e){}
   const c = $('#lockCard'); if (!c || c.hidden) return;
@@ -109,8 +109,8 @@ document.addEventListener('pointermove', e => {
 }, { passive:true });
 const W_FAQ = [
   ['¿Por qué no puedo escribir?', 'Porque ahora no hay ninguna IA libre para ti: usaste tu límite gratis de hoy o las IAs están descansando. Conecta Puter y la caja se abre al instante.'],
-  ['¿Qué es Puter?', 'Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.'],
-  ['¿Me cobran algo?', 'No. SynthZ es gratis y nunca te cobra. Tienes un límite gratis cada día.'],
+  ['¿Qué es Puter?', 'Con Puter usas la versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.'],
+  ['¿Me cobran algo?', 'No. SymphorIA es gratis y nunca te cobra. Tienes un límite gratis cada día.'],
   ['¿Qué hay en la Guía?', 'Te muestro todo paso a paso con mi manita: temas, IA recomendadas para ti, cómo comparar dos y tu primer chat de verdad.']
 ];
 let wTok = 0;
@@ -241,9 +241,9 @@ function openConnect(){
   const hasP = puterOn(), on = szOn(), q = SZ.SZQ, left = Math.max(0, (q.limit || 20000) - (q.used || 0)), legacy = !!(st().keys.openrouter || st().keys.groq);
   connEl = document.createElement('div'); connEl.id = 'conn';
   connEl.innerHTML = '<div class="tcard"><div class="word" id="cWord"></div><div class="tn">TU IA</div><div class="tb"><h3>' + (on ? 'Ya puedes chatear gratis' : 'Las IAs están descansando') + '</h3><p>' + (on ? 'No tienes que conectar nada. Solo escribe.' : 'Vuelve en un momento, o sigue ya con Puter.') + '</p></div>'
-    + SZ.limBar({ title:'Tu límite de hoy' })
-    + '<div class="cbox"><span>' + SZ.puterLogo() + 'Puter <small class="opt">opcional</small></span>' + (hasP ? '<i class="ok">✓ Conectado</i>' : '<button class="btn sm" id="cPU" type="button">Conectar Puter</button>') + '</div>'
-    + '<p class="cnote"><b>¿Qué es Puter?</b> Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.</p>'
+    + SZ.limBar({ title:'Tu EnerX de hoy' })
+    + '<div class="cbox"><span>' + SZ.puterLogo() + 'Puter <small class="opt">tus IAs pro</small></span>' + (hasP ? '<i class="ok">✓ Conectado</i>' : '<button class="btn sm" id="cPU" type="button">Conectar Puter</button>') + '</div>'
+    + '<p class="cnote"><b>¿Qué es Puter?</b> Con Puter usas la versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.</p>'
     + '<div class="tbtn" style="margin-top:18px"><button class="lnk" id="cClose" type="button">Cerrar</button></div></div>';
   document.body.appendChild(connEl); $('#cWord').innerHTML = zWord('Synth');
   requestAnimationFrame(() => connEl.classList.add('on'));

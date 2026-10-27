@@ -1,0 +1,36 @@
+/* v2.3.1 · píldora de modo (Automática · Chat · SuperiorSynth) y qué se muestra en cada una */
+.cpk4{display:inline-flex;align-items:center;gap:8px;min-height:40px;height:40px;padding:0 10px 0 12px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04);color:var(--text);font-size:14px;white-space:nowrap;box-sizing:border-box;transition:background .3s,border-color .3s}
+.cpk4:hover{background:rgba(255,255,255,.08)}
+.cpk4:focus-visible{outline:2px solid var(--accent,#b8c4ff);outline-offset:2px}
+.cpk4 b{font-weight:600}
+.cpk4 .cm-ico{display:grid;place-items:center;width:18px;height:18px}
+.cpk4 .cm-ico svg{width:18px;height:18px}
+.cpk4 .cm-chev{width:15px;height:15px;opacity:.7}
+body[data-cmode="auto"] .cpk4,body[data-cmode="agent"] .cpk4{border-color:rgba(var(--gold-rgb,230,182,95),.4)}
+/* Automática y SuperiorSynth eligen la IA solos: no se muestra el selector. Chat sí. El botón «Apagar» del agente sobra: el modo ya dice dónde estás. */
+body[data-cmode="auto"] .composer #cPick,body[data-cmode="agent"] .composer #cPick,body[data-cmode="auto"] .composer #agPill,body[data-cmode="agent"] .composer #agPill{display:none !important}
+#modeMenu.amenu{position:fixed;left:8px;bottom:80px;z-index:120;width:300px}
+#modeMenu[hidden]{display:none}
+#modeMenu button{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:14px;text-align:left;color:var(--soft)}
+#modeMenu button:hover,#modeMenu button:focus-visible{background:rgba(255,255,255,.08);color:var(--text);outline:none}
+#modeMenu button[aria-checked="true"]{background:rgba(255,255,255,.07);color:var(--text)}
+#modeMenu i{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:rgba(255,255,255,.06);flex:none}
+#modeMenu i svg{width:18px;height:18px}
+#modeMenu span{display:flex;flex-direction:column;min-width:0;flex:1}
+#modeMenu b{font-weight:600;font-size:14px}
+#modeMenu small{font-size:12px;color:var(--mute,#8d909c)}
+#modeMenu em.ck{font-style:normal;font-size:15px;color:var(--text)}
+html.simple .cpk4{background:transparent !important;border-color:var(--sline) !important}
+.composer .cpk4{border-radius:999px !important}
+/* celular: la fila NO se desliza de lado (eso corría todos los íconos hacia la izquierda). Todo cabe en una línea: el nombre de la IA se acorta con «…» */
+@media (max-width:900px){
+  .composer .cpk2 span{display:none}
+  .composer .cpick,body.fresh .comp-in .cpick{flex-wrap:nowrap !important;overflow:hidden !important;min-width:0;gap:6px !important}
+  .composer .cpick>*{flex:0 0 auto}
+  .composer .cpick>#cPick{flex:1 1 0;min-width:0}
+  .composer #cPick b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .composer .cpk4{padding:0 8px 0 10px;gap:6px}
+  .composer .cpk4 .cm-chev{width:13px;height:13px}
+}
+@media (max-width:340px){ .composer .cpk4 b{display:none} .composer .cpk4{padding:0 8px} }
+

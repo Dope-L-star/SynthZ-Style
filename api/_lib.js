@@ -1,4 +1,4 @@
-/* SynthZ · utilidades del servidor: Redis (Upstash), sesiones, contraseñas, Google (opcional) y cifrado.
+/* SymphorIA · utilidades del servidor: Redis (Upstash), sesiones, contraseñas, Google (opcional) y cifrado.
    Los archivos que empiezan con "_" no se publican como rutas en Vercel. */
 import crypto from 'node:crypto';
 
@@ -8,18 +8,11 @@ export const CLIENT_ID = (process.env.GOOGLE_CLIENT_ID || '').trim();
 const SECRET = (process.env.SYNTHZ_SECRET || '').length >= 32 ? process.env.SYNTHZ_SECRET : '';
 /* rotación: las claves anteriores (separadas por coma) solo sirven para LEER lo ya cifrado; todo lo nuevo usa SYNTHZ_SECRET */
 const SECRET_OLD = String(process.env.SYNTHZ_SECRET_OLD || '').split(',').map(s => s.trim()).filter(s => s.length >= 32);
-/* cuentas del equipo de SynthZ: usuario → rango. Solo se pueden crear o reclamar con SYNTHZ_SETUP_CODE */
+/* cuentas del equipo de SymphorIA: usuario → rango. Solo se pueden crear o reclamar con SYNTHZ_SETUP_CODE */
 export const SEED_ROLES = Object.fromEntries(String(process.env.SYNTHZ_RESERVED || 'sammuersynth:owner,sammueladmin:admin,sammuerbusiness:staff').split(',').map(x => x.trim().toLowerCase().split(':')).filter(([u, r]) => u && ['owner', 'admin', 'staff'].includes(r)));
-/* correos de Google del equipo: si Google confirma que el correo es tuyo, esa cuenta recibe su rango (Prime/ZFlow/Symmetrix).
-   Se puede cambiar en Vercel con SYNTHZ_ADMIN_EMAILS (correo:rango, separados por coma). */
-export const ADMIN_EMAILS = Object.fromEntries(String(process.env.SYNTHZ_ADMIN_EMAILS || 'sammuel.loaiza10@gmail.com:owner,sammuel.loaiza@gmail.com:admin,sammuer.business@gmail.com:staff').split(',').map(x => x.trim().toLowerCase().split(':')).filter(([e, r]) => e && ['owner', 'admin', 'staff'].includes(r)));
-const ROLE_N = { user:0, staff:1, admin:2, owner:3 };
-export const topRole = (a, b) => (ROLE_N[b] || 0) > (ROLE_N[a] || 0) ? b : (a || '');
-export const roleForEmail = (email, verified) => verified ? (ADMIN_EMAILS[String(email || '').trim().toLowerCase()] || '') : '';
 const SETUP_CODE = String(process.env.SYNTHZ_SETUP_CODE || '');
-/* sin variable en Vercel vale el código que Claude le entregó al dueño en privado; aquí solo está su huella (sha-256), no el código */
-const SETUP_HASH = 'gPdr9BebZicVNRBvdmxxy2dSywVwV2gXjVjIF3joHAc';
-export const setupOk = code => typeof code === 'string' && code.length >= 12 && sameHash(sha('setup:' + code.trim().toUpperCase()), SETUP_CODE.length >= 12 ? sha('setup:' + SETUP_CODE.trim().toUpperCase()) : SETUP_HASH);
+/* el código solo vive en Vercel (el repo es público): sin la variable, nadie puede reclamar las cuentas del equipo */
+export const setupOk = code => typeof code === 'string' && code.length >= 12 && SETUP_CODE.trim().length >= 12 && sameHash(sha('setup:' + code.trim().toUpperCase()), sha('setup:' + SETUP_CODE.trim().toUpperCase()));
 /* espacio en la nube por usuario (MB). 2 MB × 100 usuarios ≈ 200 MB, dentro de los 256 MB del plan gratis de Upstash */
 export const QUOTA = Math.round(Math.min(64, Math.max(0.5, +process.env.SYNTHZ_USER_MB || 2)) * 1024 * 1024);
 const CERTS = process.env.GOOGLE_CERTS_URL || 'https://www.googleapis.com/oauth2/v3/certs';
@@ -52,10 +45,12 @@ export async function body(req, max = 1_500_000){
 export function route(handlers){
   return { async fetch(req){
     try{
-      if (!ready()) return fail(503, 'Las cuentas de SynthZ aún no están configuradas en el servidor.', { missing:missing() });
+      if (!ready()) return fail(503, 'Las cuentas de SymphorIA aún no están configuradas en el servidor.', { missing:missing() });
       const h = handlers[req.method]; if (!h) return fail(405, 'Método no permitido.');
       await loadKey();
-      return await h(req);
+      const res = await h(req);
+      await flushUse();
+      return res;
     }catch(e){
       const s = e && e.status ? e.status : 500;
       const known = !!(e && e.code);                       /* errores pensados (con código) se muestran tal cual, aunque sean 5xx */
@@ -66,7 +61,14 @@ export function route(handlers){
 }
 
 /* ---------- Redis por REST (Upstash) ---------- */
+let CMDN = 0;                                                /* comandos de Redis usados en esta llamada (para el medidor de lo gratis) */
+const monthKey = () => new Date().toISOString().slice(0, 7);
+async function flushUse(){
+  const n = CMDN; CMDN = 0;
+  try{ const m = monthKey(); await fetch(R_URL.replace(/\/$/, '') + '/pipeline', { method:'POST', headers:{ Authorization:'Bearer ' + R_TOK, 'content-type':'application/json' }, body:JSON.stringify([['INCRBY', 'use:c:' + m, n + 2], ['INCR', 'use:r:' + m]]) }); }catch(e){}
+}
 export async function redis(...cmd){
+  CMDN++;
   const r = await fetch(R_URL, { method:'POST', headers:{ Authorization:'Bearer ' + R_TOK, 'content-type':'application/json' }, body:JSON.stringify(cmd) });
   const d = await r.json().catch(() => ({}));
   if (d.error) throw new Error('Redis: ' + d.error);
@@ -74,6 +76,7 @@ export async function redis(...cmd){
 }
 export async function pipe(cmds){
   if (!cmds.length) return [];
+  CMDN += cmds.length;
   const r = await fetch(R_URL.replace(/\/$/, '') + '/pipeline', { method:'POST', headers:{ Authorization:'Bearer ' + R_TOK, 'content-type':'application/json' }, body:JSON.stringify(cmds) });
   const d = await r.json().catch(() => []);
   if (!Array.isArray(d)) throw new Error('Redis: respuesta inesperada');
@@ -100,7 +103,7 @@ export async function limit(key, n, s){
 }
 
 /* ---------- cifrado de llaves (AES-256-GCM) ---------- */
-/* Si no pusiste SYNTHZ_SECRET, SynthZ crea una clave al azar la primera vez y la guarda en tu base de datos.
+/* Si no pusiste SYNTHZ_SECRET, SymphorIA crea una clave al azar la primera vez y la guarda en tu base de datos.
    Así funciona sin configurar nada; con SYNTHZ_SECRET la clave vive fuera de la base (más seguro). */
 const kdf = s => crypto.createHash('sha256').update('synthz:v1:' + s).digest();
 const kidOf = k => crypto.createHash('sha256').update(k).digest('base64url').slice(0, 8);
@@ -195,7 +198,7 @@ export async function verifyGoogle(token){
   return claims;
 }
 
-/* ---------- sesiones propias de SynthZ ---------- */
+/* ---------- sesiones propias de SymphorIA ---------- */
 const SESS_TTL = 60 * 60 * 24 * 30;
 export async function newSession(sub){
   const token = rid(32), h = sha(token);
@@ -203,16 +206,24 @@ export async function newSession(sub){
   return token;
 }
 export function bearer(req){ const a = req.headers.get('authorization') || ''; return a.startsWith('Bearer ') ? a.slice(7).trim() : ''; }
+/* v2.9.1 · la sesión también viaja en una cookie HttpOnly (el JavaScript de la página no la puede leer, así un XSS no se roba la cuenta).
+   SameSite=Strict: otra página no puede hacer pedidos con tu sesión. El «Bearer» sigue sirviendo mientras se pasan los dispositivos viejos */
+const COOKIE = '__Host-szs';
+export const sessCookie = token => COOKIE + '=' + (token || '') + '; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=' + (token ? SESS_TTL : 0);
+export const withCookie = (res, token) => { res.headers.append('set-cookie', sessCookie(token)); return res; };
+const cookieTok = req => { const m = /(?:^|;\s*)__Host-szs=([A-Za-z0-9_-]{21,})/.exec(req.headers.get('cookie') || ''); return m ? m[1] : ''; };
+/* un Bearer corto (la marca «c…» que guarda la página) no es una sesión: se usa la cookie */
+export const sessTok = req => { const b = bearer(req); return b.length > 20 ? b : cookieTok(req); };
 export async function auth(req, optional){
-  const t = bearer(req);
+  const t = sessTok(req);
   const sub = t && t.length > 20 ? await redis('GET', 's:' + sha(t)) : null;
   if (!sub){ if (optional) return null; throw Object.assign(new Error('Tu sesión cerró. Vuelve a entrar.'), { status:401 }); }
   const user = await getJ('u:' + sub);
   if (!user){ if (optional) return null; throw Object.assign(new Error('Tu cuenta ya no existe.'), { status:401 }); }
-  if (user.blocked){ if (optional) return null; throw Object.assign(new Error('Esta cuenta está suspendida. Escríbele al equipo de SynthZ.'), { status:403 }); }
+  if (user.blocked){ if (optional) return null; throw Object.assign(new Error('Esta cuenta está suspendida. Escríbele al equipo de SymphorIA.'), { status:403 }); }
   return user;
 }
-export async function endSession(req){ const t = bearer(req); if (!t) return; const h = sha(t), sub = await redis('GET', 's:' + h); await pipe([['DEL', 's:' + h]].concat(sub ? [['SREM', 'ss:' + sub, h]] : [])); }
+export async function endSession(req){ const t = sessTok(req); if (!t) return; const h = sha(t), sub = await redis('GET', 's:' + h); await pipe([['DEL', 's:' + h]].concat(sub ? [['SREM', 'ss:' + sub, h]] : [])); }
 
 /* ---------- SynXCoin's en la nube: una fila por dispositivo (hash lg:<sub>) ----------
    Cada dispositivo sube SOLO su fila (y la fila «legacy» de versiones viejas). El servidor junta cada fila con la que

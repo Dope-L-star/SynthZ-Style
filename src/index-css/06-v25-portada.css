@@ -1,0 +1,317 @@
+/* ===== v2.5 · portada igual al boceto: sin barra lateral, SynthonIA de cuerpo entero que te acompaña,
+   un fondo distinto en cada sección y los íconos 3D del boceto ===== */
+:root{--rw:0px}
+.rail{display:none !important}
+body{overflow-x:clip}
+@media (min-width:761px){
+  nav#nav{left:clamp(12px,3vw,40px)}
+  #nav #helpBtn,#nav #cfgBtn,#nav #accBtn{display:inline-flex;align-items:center;justify-content:center}
+}
+/* los botones redondos del menú: el ícono centrado y el mismo borde de vidrio que la píldora y «Entrar» */
+#nav .cfgb{padding:0;line-height:1;border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.05)}
+#nav .cfgb:hover{border-color:rgba(255,255,255,.3)}
+#nav .logo{gap:10px}
+#nav .logo .lgz{height:36px}
+#nav .word{font-size:27px}
+#nav .accb.out{padding:9px 20px;border-radius:999px;font:500 15px var(--sans);background:rgba(255,255,255,.1);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+#nav .accb.out:hover{border-color:rgba(61,224,255,.6);box-shadow:0 0 22px -6px rgba(61,224,255,.7),inset 0 1px 0 rgba(255,255,255,.25)}
+#nav .pulseb svg{width:18px;height:18px}
+
+/* foco visible en todo (teclado) */
+main a:focus-visible,main button:focus-visible,main summary:focus-visible,#nav a:focus-visible,#nav button:focus-visible,footer a:focus-visible,.szroam:focus-visible{outline:2px solid #3de0ff;outline-offset:3px;border-radius:14px}
+
+/* botones del kit: principal en degradado que brilla; secundario de vidrio con ▶ */
+.btn.flowbtn{background:linear-gradient(100deg,#6a2cf0 0%,#b03be6 40%,#ff3d9a 70%,#ff7a45 100%);border:1px solid rgba(255,255,255,.28);transition:transform .35s var(--ease),box-shadow .35s,filter .35s}
+.btn.flowbtn:hover{transform:translateY(-2px);filter:brightness(1.08);box-shadow:0 0 0 2px rgba(255,255,255,.65),0 0 34px -4px rgba(255,61,154,.9),0 14px 40px -12px rgba(123,63,242,.9)}
+.btn.flowbtn:active{transform:translateY(1px) scale(.98);filter:brightness(.88)}
+.btn.flowbtn:focus-visible{outline:2px solid #3de0ff;outline-offset:4px}
+.lgbtn:active{transform:scale(.98)}
+
+/* ---------- hero ---------- */
+.v24hero{padding-top:120px;min-height:min(100vh,900px);align-items:center}
+.v24hero #h1{font-weight:700;font-size:clamp(42px,5.7vw,84px)}
+.hstage{min-height:600px;justify-content:flex-start;padding-top:10px}
+.sbody{width:auto;--ex:0px;--ey:0px;--tilt:0deg;filter:drop-shadow(0 30px 40px rgba(10,4,30,.55))}
+.sbody .szbody{width:min(300px,62vw);height:auto}
+.szbody .fe{translate:var(--ex,0px) var(--ey,0px);transition:translate .35s ease-out}
+.hdemo{position:absolute !important;right:-2%;bottom:7%;margin:0 !important;width:min(100%,470px);z-index:3}
+.hd-c small{gap:6px;color:#fff;font-size:12px;font-weight:500}
+.hd-c small .gi{width:18px;height:18px;object-fit:contain;flex:none}
+.hd-c small .sforb{font-size:15px}
+.hd-c:nth-child(1){box-shadow:inset 0 0 0 1px rgba(61,224,255,.6),0 0 18px -8px rgba(61,224,255,.8)}
+.hd-c:nth-child(2){box-shadow:inset 0 0 0 1px rgba(255,122,69,.6),0 0 18px -8px rgba(255,122,69,.8)}
+.hd-c:nth-child(3){box-shadow:inset 0 0 0 1px rgba(190,120,255,.6),0 0 18px -8px rgba(190,120,255,.8)}
+.hd-tag{position:absolute;left:16px;top:-10px;padding:2px 9px;border-radius:999px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);background:rgba(20,12,44,.9);border:1px solid var(--lg-edge)}
+/* burbujas de vidrio y polvo dorado (boceto) */
+.hb-bub{position:absolute;left:var(--x);top:var(--y);width:var(--d);height:var(--d);border-radius:50%;pointer-events:none;z-index:1;
+  background:radial-gradient(circle at 30% 26%,rgba(255,255,255,.95) 0 5%,transparent 16%),radial-gradient(circle,transparent 55%,rgba(61,224,255,.22) 72%,rgba(255,61,154,.35) 88%,rgba(255,255,255,.55) 100%);
+  box-shadow:inset 0 0 14px rgba(255,61,154,.35),0 0 22px -6px rgba(61,224,255,.6);animation:hbub 7s ease-in-out infinite alternate}
+.hb-bub:nth-of-type(2n){animation-duration:9s;animation-delay:-3s}
+.hb-bub:nth-of-type(3n){animation-duration:11s;animation-delay:-6s}
+@keyframes hbub{to{transform:translate(10px,-26px) scale(1.06)}}
+.hb-dust{position:absolute;inset:-6% -4%;pointer-events:none;z-index:0}
+.hb-dust i{position:absolute;left:var(--x);top:var(--y);width:var(--s);height:var(--s);border-radius:50%;background:#ffc857;box-shadow:0 0 6px 1px rgba(255,200,87,.9);animation:hdust var(--t) ease-in-out infinite;animation-delay:var(--dl)}
+@keyframes hdust{0%,100%{opacity:.15;transform:translateY(0)}50%{opacity:1;transform:translateY(-14px)}}
+
+/* ---------- un solo fondo para toda la página ---------- */
+/* v2.6: la portada es UN fondo continuo que baja con la página. Arriba, el espacio con la cinta de neón;
+   después cada sección le suma sus detalles (rejilla, nebulosa, ondas, estrellas, auroras, radar, cintas)
+   como luces transparentes que se funden con la de al lado: no hay cajas ni bordes, ni nada encima de otro fondo.
+   Todo es degradado suave (sin desenfoques, que eran el lag) y solo se mueve lo que estás viendo. */
+html.szlive .aurora{position:absolute;bottom:auto;height:var(--heroH,100vh)}
+html.szlive .aurora::after{background:linear-gradient(180deg,transparent calc(100% - 220px),var(--sb-bg)),radial-gradient(ellipse at calc(50% + var(--sp,0) * 30%) calc(30% + var(--sp,0) * 45%),rgba(11,12,16,.2),rgba(11,12,16,.5) 78%)}
+main>section{position:relative;isolation:isolate}
+.secbg{position:absolute;top:-140px;bottom:-140px;left:calc(50% - 50vw);width:100vw;z-index:-1;pointer-events:none;overflow:hidden;contain:layout paint}
+.secbg i{position:absolute;display:block;animation-play-state:paused}
+.secbg i::before{animation-play-state:paused}
+.secbg.run i,.secbg.run i::before{animation-play-state:running}
+/* Así de fácil: piso de rejilla con luz cian */
+.bg-grid{background:radial-gradient(36% 28% at 82% 34%,rgba(61,224,255,.2),transparent),radial-gradient(32% 26% at 12% 66%,rgba(255,61,154,.16),transparent)}
+.bg-grid i:nth-child(1){left:-40%;right:-40%;bottom:8%;height:50%;overflow:hidden;transform:perspective(520px) rotateX(64deg);transform-origin:50% 100%;
+  -webkit-mask:linear-gradient(0deg,transparent,#000 22%,#000 40%,transparent 92%);mask:linear-gradient(0deg,transparent,#000 22%,#000 40%,transparent 92%)}
+.bg-grid i:nth-child(1)::before{content:"";position:absolute;left:0;right:0;top:-70px;bottom:0;background-image:linear-gradient(rgba(61,224,255,.28) 1px,transparent 1px),linear-gradient(90deg,rgba(61,224,255,.28) 1px,transparent 1px);background-size:70px 70px;animation:gridrun 5s linear infinite}
+.bg-grid i:nth-child(2){display:none}
+.bg-grid i:nth-child(3){right:6%;top:14%;width:40vw;height:40vw;border-radius:50%;background:radial-gradient(closest-side,rgba(61,224,255,.22),transparent);animation:glowp 6s ease-in-out infinite}
+@keyframes gridrun{to{transform:translateY(70px)}}
+@keyframes glowp{50%{opacity:.55;transform:scale(1.08)}}
+/* Modos: nebulosa violeta con estrellas */
+.bg-nebula{background:radial-gradient(44% 34% at 50% 48%,rgba(52,22,108,.7),transparent)}
+.bg-nebula i:nth-child(1){inset:0;background:radial-gradient(26% 24% at 30% 42%,rgba(123,63,242,.42),transparent),radial-gradient(22% 20% at 72% 55%,rgba(255,61,154,.28),transparent),radial-gradient(20% 16% at 52% 76%,rgba(61,224,255,.16),transparent);animation:nebdrift 18s ease-in-out infinite alternate}
+.bg-nebula i:nth-child(2),.bg-stars i:nth-child(1){inset:0;background-image:radial-gradient(1.2px 1.2px at 12% 18%,#fff,transparent),radial-gradient(1px 1px at 72% 12%,#fff,transparent),radial-gradient(1.6px 1.6px at 40% 66%,#ffe7b0,transparent),radial-gradient(1px 1px at 86% 72%,#fff,transparent),radial-gradient(1.3px 1.3px at 22% 84%,#bfe9ff,transparent),radial-gradient(1px 1px at 58% 32%,#fff,transparent);background-size:340px 300px;opacity:.7;animation:twk 4s ease-in-out infinite alternate;
+  -webkit-mask:linear-gradient(180deg,transparent,#000 18%,#000 82%,transparent);mask:linear-gradient(180deg,transparent,#000 18%,#000 82%,transparent)}
+.bg-nebula i:nth-child(3){left:50%;top:50%;width:1000px;height:1000px;margin:-500px 0 0 -500px;border-radius:50%;background:conic-gradient(from 0deg,transparent,rgba(123,63,242,.12),transparent 30%,rgba(255,61,154,.09),transparent 60%,rgba(61,224,255,.09),transparent);-webkit-mask:radial-gradient(closest-side,#000 30%,transparent);mask:radial-gradient(closest-side,#000 30%,transparent);animation:spin 40s linear infinite}
+@keyframes nebdrift{to{transform:translate(3%,-2%) scale(1.06) rotate(3deg)}}
+@keyframes twk{to{opacity:.35}}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* SynthonIA es para ti: ondas líquidas de color que se apagan hacia abajo */
+.bg-liquid{background:radial-gradient(46% 30% at 50% 58%,rgba(46,16,92,.55),transparent)}
+.bg-liquid i:nth-child(1){left:-10%;right:-10%;bottom:9%;height:40%;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 400' preserveAspectRatio='none'><path d='M0 200C360 90 760 330 1440 130V400H0Z' fill='%235b2bd8'/><path d='M0 200C360 90 760 330 1440 130' fill='none' stroke='%23fff' stroke-opacity='.35' stroke-width='3'/><path d='M0 250C400 150 780 360 1440 200V400H0Z' fill='%23ff3d9a'/><path d='M0 300C420 210 820 390 1440 265V400H0Z' fill='%23ff7a45'/><path d='M0 345C440 280 840 410 1440 330V400H0Z' fill='%23ffc857'/></svg>") 0 100%/100% 100% no-repeat;opacity:.55;animation:liq 12s ease-in-out infinite alternate;transform-origin:50% 100%;
+  -webkit-mask:linear-gradient(180deg,#000 45%,transparent 96%);mask:linear-gradient(180deg,#000 45%,transparent 96%)}
+.bg-liquid i:nth-child(2){display:none}
+.bg-liquid i:nth-child(3){left:0;top:12%;width:50%;height:50%;background:radial-gradient(closest-side,rgba(123,63,242,.24),transparent)}
+@keyframes liq{to{transform:scaleY(1.1) translateX(-3%)}}
+/* Todas las IAs: cielo de estrellas con una órbita y una estrella fugaz */
+.bg-stars{background:radial-gradient(34% 28% at 72% 36%,rgba(123,63,242,.24),transparent),radial-gradient(24% 20% at 20% 70%,rgba(61,224,255,.1),transparent)}
+.bg-stars i:nth-child(1){background-size:260px 240px;opacity:.85}
+.bg-stars i:nth-child(2){right:-6%;top:18%;width:60vw;height:25vw;border-radius:50%;border:1px solid rgba(255,255,255,.1);box-shadow:0 0 0 40px rgba(255,255,255,.018),0 0 0 90px rgba(255,255,255,.012);transform:rotate(-12deg);animation:orbit 30s linear infinite}
+.bg-stars i:nth-child(3){right:20%;top:22%;width:8px;height:8px;border-radius:50%;background:#3de0ff;box-shadow:0 0 14px 3px #3de0ff;animation:shoot 9s ease-in infinite}
+@keyframes orbit{to{transform:rotate(348deg)}}
+@keyframes shoot{0%,80%{opacity:0;transform:translate(0,0)}82%{opacity:1}100%{opacity:0;transform:translate(-40vw,26vw)}}
+/* Tu IA ya está lista y SynthFlow: auroras (cortinas de luz suaves) */
+.bg-aurora i,.bg-aurora2 i{top:10%;height:80%;width:40%;opacity:.55;transform:skewX(-18deg);animation:aur 14s ease-in-out infinite alternate}
+.bg-aurora i:nth-child(1){left:2%;background:radial-gradient(50% 50% at 50% 50%,rgba(61,224,255,.42),rgba(20,200,168,.14) 45%,transparent)}
+.bg-aurora i:nth-child(2){left:34%;background:radial-gradient(50% 50% at 50% 50%,rgba(123,63,242,.46),transparent);animation-delay:-5s}
+.bg-aurora i:nth-child(3){left:64%;background:radial-gradient(50% 50% at 50% 50%,rgba(61,224,255,.3),transparent);animation-delay:-9s}
+.bg-aurora2 i:nth-child(1){left:-2%;background:radial-gradient(50% 50% at 50% 50%,rgba(255,61,154,.38),transparent)}
+.bg-aurora2 i:nth-child(2){left:36%;background:radial-gradient(50% 50% at 50% 50%,rgba(255,122,69,.32),transparent);animation-delay:-4s}
+.bg-aurora2 i:nth-child(3){left:68%;background:radial-gradient(50% 50% at 50% 50%,rgba(123,63,242,.42),transparent);animation-delay:-8s}
+@keyframes aur{to{transform:skewX(-8deg) translateX(8%) scaleY(1.06);opacity:.8}}
+/* Siempre sabes cuánto tienes: puntitos con un radar cian */
+.bg-dots{background:radial-gradient(30% 24% at 22% 34%,rgba(61,224,255,.13),transparent)}
+.bg-dots::before{content:"";position:absolute;inset:0;background:radial-gradient(rgba(255,255,255,.1) 1px,transparent 1.6px) 0 0/24px 24px;-webkit-mask:radial-gradient(55% 40% at 50% 50%,#000,transparent);mask:radial-gradient(55% 40% at 50% 50%,#000,transparent)}
+.bg-dots i:nth-child(1){left:6%;top:18%;width:520px;height:520px;border-radius:50%;border:2px solid rgba(61,224,255,.12);box-shadow:inset 0 0 60px rgba(61,224,255,.07),0 0 0 70px rgba(61,224,255,.025)}
+.bg-dots i:nth-child(2){left:6%;top:18%;width:520px;height:520px;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 78%,rgba(61,224,255,.24) 96%,transparent);animation:spin 7s linear infinite}
+.bg-dots i:nth-child(3){right:4%;bottom:16%;width:40vw;height:40vw;border-radius:50%;background:radial-gradient(closest-side,rgba(255,200,87,.13),transparent)}
+/* Preguntas: cintas de neón y confeti cerca de «¿Listo para sintonizar?» */
+.bg-ribbon{background:radial-gradient(38% 28% at 78% 68%,rgba(255,61,154,.16),transparent)}
+.bg-ribbon i:nth-child(1){left:-5%;right:-5%;top:36%;height:46%;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 300' preserveAspectRatio='none' fill='none' stroke-linecap='round'><g stroke-opacity='.22'><path d='M0 220C300 120 520 280 820 170S1250 40 1440 90' stroke='%237b3ff2' stroke-width='40'/><path d='M0 248C300 148 520 308 820 198S1250 68 1440 118' stroke='%23ff3d9a' stroke-width='40'/><path d='M0 272C300 172 520 332 820 222S1250 92 1440 142' stroke='%23ff7a45' stroke-width='26'/></g><path d='M0 220C300 120 520 280 820 170S1250 40 1440 90' stroke='%237b3ff2' stroke-width='14'/><path d='M0 238C300 138 520 298 820 188S1250 58 1440 108' stroke='%23ff3d9a' stroke-width='12'/><path d='M0 256C300 156 520 316 820 206S1250 76 1440 126' stroke='%23ff7a45' stroke-width='10'/><path d='M0 272C300 172 520 332 820 222S1250 92 1440 142' stroke='%23ffc857' stroke-width='6'/></svg>") 0 0/100% 100% no-repeat;opacity:.75;animation:ribb 10s ease-in-out infinite alternate}
+.bg-ribbon i:nth-child(2){left:0;right:0;top:-380px;bottom:0;background-image:radial-gradient(3px 6px at 70% 62%,#ff5fb4,transparent),radial-gradient(4px 3px at 78% 58%,#3de0ff,transparent),radial-gradient(3px 3px at 84% 66%,#ffc857,transparent),radial-gradient(3px 5px at 66% 70%,#b06bff,transparent);background-size:420px 380px;opacity:.6;animation:conf 6s linear infinite}
+@keyframes ribb{to{transform:translateY(-4%) scaleY(1.08)}}
+@keyframes conf{to{transform:translateY(380px)}}
+html.noanim .secbg i,html.noanim .secbg i::before,html.noanim .hb-bub,html.noanim .hb-dust i{animation:none !important}
+/* cuando bajas de la portada, el espacio de arriba deja de dibujarse (ya no se ve) */
+html.sb-off .sb-root{visibility:hidden}
+
+/* ---------- íconos del boceto ---------- */
+.mi-ic .gi{display:block;width:118px;height:118px;object-fit:contain;filter:drop-shadow(0 0 16px rgba(123,63,242,.55));transition:transform .5s var(--ease)}
+.mode:hover .mi-ic .gi{transform:translateY(-4px) rotate(-4deg) scale(1.05)}
+#usos .use{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;overflow:hidden}
+#usos .use h3{font:700 clamp(22px,2.2vw,30px) var(--sans)}
+#usos .use p{color:var(--soft);font-size:16px}
+#usos .uscene{display:block;width:calc(100% + 24px);margin:10px -12px -4px;aspect-ratio:400/214;border-radius:16px;transition:transform .7s var(--ease)}
+#usos .use:hover .uscene{transform:scale(1.04)}
+#usos .ugo{margin-top:10px}
+.ft .gi{display:block;width:84px;height:84px;object-fit:contain;filter:drop-shadow(0 6px 14px rgba(0,0,0,.35));transition:transform .5s var(--ease)}
+.ft:hover .gi{transform:translateY(-4px) scale(1.06)}
+.hub-i{display:inline-flex;align-items:center;gap:10px;padding:8px 14px 8px 8px}
+.hub-i .gi{width:34px;height:34px;border-radius:9px;object-fit:cover;flex:none}
+.hub-i b{font-weight:500}
+.hub-c{width:150px;height:150px;margin:-75px 0 0 -75px}
+.hub-c svg{width:96px;height:96px}
+/* ¿Cuánto gasta cada cosa? */
+.cost{margin-top:18px;padding:24px 26px;border-radius:28px}
+.cost h3{font:600 clamp(20px,2vw,26px) var(--sans);margin-bottom:12px}
+.cost-l{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 22px}
+.cost-l li{display:flex;align-items:center;gap:14px;font-size:15px;color:var(--soft);min-width:0}
+.cost-l .gi{width:48px;height:48px;border-radius:12px;flex:none;object-fit:cover}
+.cost-l b{color:#fff;font-weight:600}
+@media (max-width:760px){.cost-l{grid-template-columns:minmax(0,1fr)}}
+div.ready .rd-f{margin:-110px 0 -30px}
+/* su cabeza sale por arriba de la caja: se deja ese espacio libre para que no tape las preguntas */
+@media (min-width:761px){div.ready{margin-top:104px}}
+div.ready .rd-f .szbody{width:min(230px,50vw);height:auto}
+
+/* ---------- SynthonIA que te acompaña ---------- */
+.szroam{position:fixed;top:21vh;z-index:58;width:132px;cursor:pointer;opacity:0;pointer-events:none;transform:scale(.6) translateY(30px);transition:opacity .5s var(--ease),transform .6s cubic-bezier(.34,1.56,.64,1);--ex:0px;--ey:0px;--tilt:0deg}
+.szroam[data-side="r"]{right:18px}.szroam[data-side="l"]{left:18px}
+.szroam.abs{position:absolute;z-index:45;right:auto !important;bottom:auto !important;transition:opacity .5s var(--ease),transform .6s cubic-bezier(.34,1.56,.64,1)}
+.szroam.on{opacity:1;pointer-events:auto;transform:none}
+.szroam .rb-fig{display:block;animation:roamf 4.8s ease-in-out infinite}
+.szroam .szbody{width:100%;height:auto}
+@keyframes roamf{50%{transform:translateY(-12px)}}
+.szroam .rb-say{position:absolute;top:22px;width:max-content;max-width:230px;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.35;color:#fff;background:var(--lg-bg),rgba(20,12,44,.62);border:1px solid var(--lg-edge);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:var(--lg-shadow);opacity:0;transform:scale(.85);transition:opacity .35s,transform .45s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+.szroam .rb-say{top:auto;bottom:calc(100% - 8px);left:50%;translate:-50% 0;transform-origin:50% 100%;border-bottom-left-radius:4px;text-align:center}
+.szroam[data-side="r"] .rb-say{left:30%}.szroam[data-side="l"] .rb-say{left:70%}
+.szroam.talk .rb-say{opacity:1;transform:none}
+.szroam.bside .rb-say{bottom:auto;top:16%;translate:0 0;transform-origin:0 50%}
+.szroam.bside[data-side="r"] .rb-say{left:calc(100% - 4px);right:auto;border-radius:16px 16px 16px 4px}
+.szroam.bside[data-side="l"] .rb-say{left:auto;right:calc(100% - 4px);transform-origin:100% 50%;border-radius:16px 16px 4px 16px}
+.szroam:hover .rb-fig{animation-play-state:paused;transform:translateY(-6px) scale(1.04)}
+@media (max-width:760px){
+  .szroam{top:auto;width:74px;bottom:14px}
+  .szroam .rb-say{max-width:min(220px,70vw);font-size:13px;translate:0 0}
+  .szroam[data-side="l"] .rb-say{left:0}.szroam[data-side="r"] .rb-say{left:auto;right:0}
+  .szroam[data-side="r"]{right:8px}.szroam[data-side="l"]{left:8px}
+}
+html.noanim .szroam .rb-fig{animation:none}
+
+/* ---------- celular (320–414 px) ---------- */
+@media (max-width:980px){
+  .hstage{min-height:0;padding-top:0}
+  .hdemo{position:relative !important;right:auto;bottom:auto;margin-top:-30px !important}
+  .sbody .szbody{width:min(240px,58vw)}
+  #heroBot{min-height:calc(min(240px,58vw) * 4 / 3)}   /* guarda el sitio de SynthonIA antes de que aparezca: nada salta al cargar */
+}
+@media (max-width:620px){
+  .v24hero{padding-top:96px}
+  .v24hero #h1{font-size:clamp(34px,10.5vw,46px)}
+  .hub{display:flex;flex-direction:column;align-items:center}
+  .hub-c{display:grid;position:relative;left:auto;top:auto;margin:0 auto 10px;width:110px;height:110px}
+  .hub-c svg{width:72px;height:72px}
+  .hub-i{font-size:13.5px}
+  .mi-ic .gi{width:96px;height:96px}
+  .ft .gi{width:64px;height:64px}
+  .hb-bub:nth-of-type(n+4){display:none}
+  #comparar .band .set{gap:8px;padding-right:8px}
+}
+@media (max-width:360px){
+  .cta{flex-direction:column;align-items:stretch}
+  .cta .btn{justify-content:center}
+  #nav .word{font-size:23px}
+}
+#railPulse[hidden]{display:none !important}
+@media (max-width:760px){
+  nav#nav.scrolled{background:var(--lg-bg),rgba(14,8,34,.82)}
+}
+@media (max-width:480px){
+  .bl-g{grid-template-columns:minmax(0,1fr)}
+  .bl-c.first p{margin-top:22px}
+}
+
+/* ---------- v2.6 · vidrio liviano ---------- */
+/* los iconitos de las IAs (la cinta que se desliza tiene 44) no necesitan desenfocar lo de atrás: un vidrio que se mueve
+   obliga a recalcular el desenfoque en cada cuadro. Se ven igual con un relleno translúcido */
+main .gico,main .hub-i{backdrop-filter:none;-webkit-backdrop-filter:none}
+main .gico{background-color:rgba(26,16,58,.55)}
+main .hub-i{background:var(--lg-bg),rgba(20,12,44,.62)}
+/* el desenfoque de verdad es lo que más pesa al bajar por la página. Sobre este fondo (luces suaves) se ve igual
+   con un vidrio «pintado»: el mismo brillo y borde, un poquito más de tinte. El desenfoque real queda solo donde
+   pasan cintas de color por detrás: «Todo esto es gratis» y «¿Listo para sintonizar?» (y arriba, el menú y el ejemplo) */
+main .lqg,main .card,main .launch,main details,.v24foot.lqg{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--lg-bg),rgba(22,13,50,.42)}
+main .free.lqg,main div.ready.lqg{backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);background:var(--lg-bg),rgba(20,12,44,.16)}
+@media (max-width:760px){
+  main .free.lqg,main div.ready.lqg{backdrop-filter:blur(8px) saturate(1.6);-webkit-backdrop-filter:blur(8px) saturate(1.6)}
+}
+
+/* ---------- v2.6 · SynthonIA es la ayudante: sin bolita en la portada ---------- */
+html.szlive #szBot,html.szlive #betaBot{opacity:0 !important;pointer-events:none !important;visibility:hidden}
+#heroBot,#readyFace{cursor:pointer}
+#heroBot:focus-visible,#readyFace:focus-visible{outline:2px solid #3de0ff;outline-offset:6px;border-radius:24px}
+/* los títulos de las tarjetas de «Tu IA ya está lista» venían en letra con serifa: van en la misma letra de todo */
+.card-top h3{font-family:var(--sans);font-weight:600;font-size:22px;letter-spacing:-.01em;line-height:1.15}
+/* área de toque mínima de 24 px (WCAG 2.2, 2.5.8): enlaces del pie y la etiqueta BETA */
+.v24foot a{display:inline-flex;align-items:center;min-height:28px}
+#nav .beta-tag{min-height:24px}
+/* «Todas las IAs»: entre tablet y PC chico el círculo de etiquetas no cabe al lado del título: va debajo, a lo ancho */
+@media (min-width:621px) and (max-width:1180px){
+  .cmp-top{grid-template-columns:minmax(0,1fr)}
+  .cmp-top .head{text-align:center}
+  .hub{max-width:860px;width:100%;margin:0 auto}
+}
+.hub-i{text-align:left}
+/* «SynthonIA es para ti» no tenía margen a los lados: las tarjetas tocaban el borde de la pantalla */
+#usos{padding-left:clamp(18px,4vw,40px);padding-right:clamp(18px,4vw,40px)}
+/* «Descansando» en grande se salía de su tarjeta en celulares chicos: el texto se achica y nunca pasa del borde */
+#consumo .limbig>div{min-width:0;flex:1}
+#consumo .limbig b{overflow-wrap:anywhere}
+@media (max-width:420px){#consumo .limbig b{font-size:clamp(24px,8vw,32px)}#consumo .limbig #bigRing{flex:none;transform:scale(.8);margin:-6px}}
+/* gráfica sin mensajes todavía: un aviso amable en el centro, en vez de un cuadro vacío */
+#chartPanel{position:relative}
+#chartPanel .ch-empty{display:none;position:absolute;left:50%;top:58%;translate:-50% -50%;width:min(360px,80%);margin:0;text-align:center;color:var(--soft);font-size:15px;line-height:1.45}
+#chartPanel.empty .ch-empty{display:block}
+#chartPanel.empty .chart{opacity:.35}
+/* nombres propios con explicación: un subrayado punteado suave, y su burbujita de vidrio */
+.term{text-decoration:underline dotted;text-decoration-color:rgba(184,196,255,.55);text-underline-offset:4px;text-decoration-thickness:1.5px;cursor:help;border-radius:4px}
+.term:hover,.term:focus-visible{text-decoration-color:var(--sb-light,#3de0ff);outline:none}
+.term:focus-visible{box-shadow:0 0 0 2px #3de0ff}
+#szTip{position:fixed;z-index:9900;left:0;top:0;max-width:min(280px,calc(100vw - 20px));padding:9px 13px;border-radius:12px;font:500 13.5px/1.4 var(--sans);color:#fff;background:linear-gradient(160deg,rgba(255,255,255,.12),rgba(255,255,255,.03)),rgba(22,13,50,.94);border:1px solid rgba(255,255,255,.18);box-shadow:0 14px 40px -10px rgba(0,0,0,.6);pointer-events:none;opacity:0;translate:0 4px;transition:opacity .18s ease,translate .18s ease}
+#szTip.on{opacity:1;translate:0 0}
+#szTip::after{content:"";position:absolute;left:var(--ax,50%);width:10px;height:10px;margin-left:-5px;background:rgba(22,13,50,.94);border:1px solid rgba(255,255,255,.18);rotate:45deg}
+#szTip[data-up="1"]::after{bottom:-6px;border-top:0;border-left:0}
+#szTip[data-up="0"]::after{top:-6px;border-bottom:0;border-right:0}
+@media (prefers-reduced-motion:reduce){#szTip{transition:none}}
+/* «Pregúntale lo que sea» en la portada: un cuadro de vidrio con flecha, como en ChatGPT o Claude */
+.hask{position:relative;display:flex;align-items:center;gap:8px;width:min(520px,100%);margin:22px 0 4px;padding:6px 6px 6px 20px;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.03)),rgba(20,12,44,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 18px 50px -20px rgba(123,63,242,.6);transition:border-color .3s,box-shadow .3s}
+.hask:focus-within{border-color:rgba(61,224,255,.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 4px rgba(61,224,255,.14),0 18px 50px -20px rgba(123,63,242,.7)}
+.hask-l{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.hask input{flex:1;min-width:0;height:44px;border:0;outline:0;background:none;color:#fff;font:400 16px var(--sans)}
+.hask input::placeholder{color:rgba(232,228,255,.55);transition:opacity .3s}
+.hask .send{width:44px;height:44px;background:var(--grad);color:#fff;box-shadow:0 8px 22px -8px rgba(255,61,154,.8)}
+.hask .send svg{width:20px;height:20px}
+.hask .send:hover{transform:translateX(2px)}
+.hask.nudge{animation:hnudge .42s ease}
+@keyframes hnudge{25%{translate:-6px 0}50%{translate:5px 0}75%{translate:-3px 0}}
+.hask+.cta{margin-top:16px}
+@media (max-width:760px){.hask{margin:18px auto 2px}}
+@media (prefers-reduced-motion:reduce){.hask.nudge{animation:none}}
+.hask input{text-overflow:ellipsis}
+/* «¿Qué IA es mejor para…?» */
+.bestfor{margin-top:22px;padding:30px clamp(18px,3vw,36px);border-radius:28px;text-align:center}
+.bestfor h3{font:700 clamp(24px,2.6vw,34px)/1.15 var(--sans);letter-spacing:-.02em}
+.bestfor .bf-lead{margin:8px auto 20px;max-width:560px;color:var(--soft);font-size:15.5px}
+.bf-g{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;text-align:left}
+.bf-g li{display:flex;flex-direction:column;gap:10px;padding:16px 18px;border-radius:18px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04)}
+.bf-g li>b{font:600 16.5px var(--sans)}
+.bf-ais{display:flex;flex-wrap:wrap;gap:8px}
+.bf-ais .bf-ai{display:inline-flex;align-items:center;gap:7px;padding:5px 11px 5px 5px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(20,12,44,.5);font-size:14px}
+.bestfor .bf-note{margin:18px auto 0;max-width:620px;color:var(--soft);font-size:14.5px}
+.bestfor .bf-note b{color:#fff}
+@media (max-width:980px){.bf-g{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.bf-g{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:520px){.bf-g li{padding:12px 14px;gap:8px}.bestfor{padding:24px 16px}}
+/* «¿Listo para sintonizar?»: el listón de colores pasaba justo detrás del texto; un velo oscuro suave del lado del texto lo hace legible */
+main div.ready.lqg{background:linear-gradient(90deg,rgba(12,7,30,.62),rgba(12,7,30,.34) 55%,rgba(12,7,30,.08)),var(--lg-bg),rgba(20,12,44,.16)}
+@media (max-width:620px){main div.ready.lqg{background:linear-gradient(180deg,rgba(12,7,30,.6),rgba(12,7,30,.3) 60%,rgba(12,7,30,.1)),var(--lg-bg),rgba(20,12,44,.16)}}
+/* celular: la caja va en columna; SynthonIA quedaba subida encima del botón «Empezar gratis». Va debajo, sin pisarlo */
+@media (max-width:620px){div.ready .rd-f{margin:14px 0 -44px}div.ready .rd-f .szbody{width:min(190px,52vw)}}
+/* el campo no empuja el ancho de la portada en celulares chicos (antes la estiraba a 347 px en una pantalla de 320) */
+.hask{width:100%;max-width:520px;box-sizing:border-box}
+.hask input{width:0}
+/* la tarjeta «Ejemplo» quedaba montada sobre el aro de luz de la base de SynthonIA: un poco más abajo, sin tocarla */
+.hdemo{bottom:0}
+@media (max-width:980px){.hdemo{margin-top:8px !important}}
+/* tablet y PC chico (561–1023 px): los enlaces del menú no cabían, se partían en dos líneas y «Entrar» quedaba cortado.
+   Ahí los enlaces pasan al botón de menú (☰), como en el celular */
+.navlinks a{white-space:nowrap}
+@media (max-width:1023px){#nav .navlinks{display:none}#nav .navmenu{display:grid}}
+@media (max-width:760px){#nav #helpBtn,#nav #cfgBtn{display:none}}   /* en el menú ☰ ya están «Guía» y «Configuración» */
+/* «Instalar la app» en el pie (llenando el espacio que estaba vacío) y en el menú ☰ */
+.vf-b{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.vf-inst{margin-top:14px;display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:0 18px;border-radius:999px;background:var(--grad);color:#fff;font-weight:600;box-shadow:0 10px 30px -12px rgba(255,61,154,.75),inset 0 1px 0 rgba(255,255,255,.35);border:0}
+.vf-inst svg,.nd-inst svg{width:18px;height:18px;flex:none}
+.vf-inst-n{max-width:300px;color:var(--mute);font-size:12.5px;line-height:1.45}
+.navdrop .nd-inst{display:flex;align-items:center;gap:9px;margin-top:4px;color:#fff;background:linear-gradient(90deg,rgba(123,63,242,.35),rgba(255,61,154,.25))}
+#faq details .lnk[data-install]{display:inline;padding:0;min-height:0;color:var(--sb-light,#3de0ff);text-decoration:underline;text-underline-offset:3px;font:inherit}
+[data-install][hidden],[data-install-note][hidden]{display:none !important}
+/* el menú ☰ con el mismo vidrio que el resto */
+.navdrop{background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.02)),rgba(18,10,40,.9);border-color:rgba(255,255,255,.14)}

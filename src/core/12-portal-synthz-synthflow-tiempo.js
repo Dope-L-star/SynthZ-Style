@@ -1,42 +1,10 @@
-/* ---------- portal SynthZ ⇄ SynthFlow (v1.3: en tiempo real, con los logos de vidrio) ----------
-   ida:   «SynthZ» sale de su esquina y llega al centro → la Z de vidrio se derrite en vivo y se vuelve «Flow»
-          (queda «SynthFlow») → la barrita de luz se come «Synth» → la cámara entra en la «o»
-   vuelta: lo mismo al revés y «SynthZ» vuelve a su esquina
-   mientras dura, la página no se puede tocar (ni con el ratón ni con el teclado) */
-const FO = { x:.517, y:.62, w:.085 };      /* el hueco de la «o» dentro de la imagen «Flow» */
-const glassS = t => t === 'Synth' ? '<span class="gS">S</span>ynth' : esc(t);
-const MELT_SVG = '<svg class="szpdefs" width="0" height="0" aria-hidden="true"><filter id="szMelt" x="-20%" y="-30%" width="140%" height="160%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="0.012 0.03" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="0" xChannelSelector="R" yChannelSelector="G"/></filter></svg>';
-function portalStage(){
-  const o = document.createElement('div'); o.id = 'portal'; o.className = 'szportal';
-  o.innerHTML = MELT_SVG + '<i class="pg"></i><div class="szpw"><span class="szps"><span>' + glassS('Synth') + '</span></span><span class="szpslot">'
-    + '<span class="szpm"><img class="szpz" src="media/z-glass.webp" alt="" draggable="false"><img class="szpfl" src="media/flow-glass.webp" alt="" draggable="false"></span><i class="szpbar"></i></span></div>';
-  document.body.appendChild(o);
-  const q = c => o.querySelector(c), W = q('.szpw'), SY = q('.szps'), SL = q('.szpslot'), M = q('.szpm'), ZZ = q('.szpz'), FL = q('.szpfl'), BAR = q('.szpbar'), PG = q('.pg');
-  const DM = q('feDisplacementMap'), TB = q('feTurbulence');
-  const fs = parseFloat(getComputedStyle(W).fontSize) || 120;
-  const wS = SY.firstChild.getBoundingClientRect().width;
-  const wZ = fs * .84 * (284 / 256) + fs * .1, wF = fs * .8 * (412 / 200) + fs * .12;
-  SY.style.width = wS + 'px'; SL.style.width = wZ + 'px';
-  return { o, W, SY, SL, M, ZZ, FL, BAR, PG, DM, TB, fs, wS, wZ, wF };
-}
-/* la Z se derrite y se vuelve «Flow» (o al revés), en vivo: el vidrio se ondula, cambia de forma y se aquieta */
-function melt(P, toFlow, D){
-  P.M.style.filter = 'url(#szMelt)';
-  P.SL.style.transition = 'width ' + (D * .55 / 1000).toFixed(2) + 's ' + PE; P.SL.style.width = (toFlow ? P.wF : P.wZ) + 'px';
-  const a = toFlow ? P.ZZ : P.FL, b = toFlow ? P.FL : P.ZZ, s0 = Math.random() * 50;
-  return tween(D, (e, k) => {
-    const w = Math.sin(Math.PI * k);                                  /* sube y baja la ola */
-    P.DM.setAttribute('scale', (w * P.fs * .42).toFixed(1));
-    P.TB.setAttribute('baseFrequency', (0.010 + w * .006).toFixed(4) + ' ' + (0.028 + w * .02).toFixed(4));
-    P.TB.setAttribute('seed', String(Math.round(s0 + k * 14)));
-    const m = Math.min(1, Math.max(0, (k - .32) / .36));             /* el cambio de forma, en el medio */
-    a.style.opacity = (1 - m).toFixed(3); b.style.opacity = m.toFixed(3);
-    a.style.transform = 'scale(' + (1 + w * .06).toFixed(3) + ',' + (1 - w * .1).toFixed(3) + ')';
-    b.style.transform = 'scale(' + (1 + w * .04).toFixed(3) + ',' + (1 - w * .06).toFixed(3) + ')';
-    P.M.style.setProperty('--glow', w.toFixed(3));
-  }).then(() => { P.M.style.filter = 'none'; P.DM.setAttribute('scale', '0'); a.style.transform = b.style.transform = 'none'; });
-}
-/* bloquea ratón, toque y teclado mientras se ve la transición */
+/* v2.8 · el portal nuevo, con los logos de ahora (pedido de Sammuel: «sorpréndeme»):
+   ida:    «SymphorIA» sale de su esquina y llega al centro → la S de vidrio gira y se vuelve el orbe de SynthFlow,
+           «mphorIA» se borra y aparece «nthFlow» letra por letra (v3.0: Sy-mphorIA → Sy-nthFlow) → la «o» de «Flow» late y la cámara entra por su hueco
+           (y en el chat se abre en círculo)
+   vuelta: sales por la «o», el orbe vuelve a ser la S y «SymphorIA» vuelve a su esquina.
+   v2.9: sin SynthonIA (Sammuel: el portal queda mejor solo con los logos).
+   Todo es transform y opacidad (va fluido en celulares); mientras dura, la página no se puede tocar. */
 let lockOff = null;
 function portalLock(on){
   if (lockOff){ lockOff(); lockOff = null; }
@@ -46,47 +14,114 @@ function portalLock(on){
   ev.forEach(t => addEventListener(t, stop, { capture:true, passive:false }));
   lockOff = () => ev.forEach(t => removeEventListener(t, stop, { capture:true }));
 }
-const PE = 'cubic-bezier(.65,0,.35,1)', PEO = 'cubic-bezier(.22,1,.36,1)';
-const tween = (D, fn, ease) => new Promise(res => { const t0 = performance.now(); (function f(now){ const k = Math.min(1, (now - t0) / D); fn(ease ? ease(k) : k, k); if (k < 1) requestAnimationFrame(f); else res(); })(t0); });
-const eio = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2, eout = k => 1 - Math.pow(1 - k, 3);
-/* entra (o sale) por el hueco de la «o» de «Flow» */
-function zoomO(P, into, D){
-  P.W.style.transform = 'none'; P.W.style.transformOrigin = '0 0';
-  const r = P.FL.getBoundingClientRect(), wr = P.W.getBoundingClientRect();
-  const cx = r.left + r.width * FO.x, cy = r.top + r.height * FO.y, d = Math.max(6, r.width * FO.w);
-  P.W.style.transformOrigin = (cx - wr.left).toFixed(1) + 'px ' + (cy - wr.top).toFixed(1) + 'px';
-  const K = Math.min(60, Math.hypot(innerWidth, innerHeight) / d * 2.2), tx = innerWidth / 2 - cx, ty = innerHeight / 2 - cy;
-  P.o.classList.add('zooming');      /* sin sombras ni brillos mientras se agranda: así no se traba en celulares */
-  const at = q => { const z = Math.exp(Math.log(K) * q), m = Math.min(1, q * 1.6); P.W.style.transform = 'translate(' + (tx * m).toFixed(1) + 'px,' + (ty * m).toFixed(1) + 'px) scale(' + z.toFixed(4) + ')'; P.W.style.opacity = q > .82 ? Math.max(0, 1 - (q - .82) / .18).toFixed(3) : '1'; };
-  return tween(D, e => at(into ? e : 1 - e), eio).then(() => { if (!into) P.o.classList.remove('zooming'); });
+const PE = 'cubic-bezier(.65,0,.35,1)', PEO = 'cubic-bezier(.22,1,.36,1)', PSPR = 'cubic-bezier(.34,1.56,.64,1)';
+/* los mismos cuadros al revés (para la vuelta) */
+const pRev = K => [...K].reverse().map(k => k.offset == null ? k : Object.assign({}, k, { offset:1 - k.offset }));
+const pAnim = (el, kf, o) => el.animate(kf, Object.assign({ fill:'forwards', easing:PE }, o)).finished.catch(() => {});
+function portalStage(){
+  const o = document.createElement('div'); o.id = 'portal'; o.className = 'szportal p8';
+  o.innerHTML = '<i class="p8-bg"></i><i class="p8-ring"></i><i class="p8-flash"></i>'
+    + '<div class="p8-w"><span class="p8-mk"><img class="p8-z" src="media/v30/symphoria.svg" alt="" draggable="false">' + flowOrb('p8-orb') + '</span>'
+    + '<span class="p8-t zw"><span class="p8-sy">Sy</span><span class="p8-zl">mphor<span class="zt">IA</span></span><span class="p8-fl">' + [...'nthFlow'].map((c, i) => '<i style="--i:' + i + '">' + c + '</i>').join('') + '</span></span></div>';
+  document.body.appendChild(o);
+  const q = c => o.querySelector(c);
+  return { o, BG:q('.p8-bg'), RING:q('.p8-ring'), FL:q('.p8-flash'), W:q('.p8-w'), MK:q('.p8-mk'), Z:q('.p8-z'), ORB:q('.p8-orb'), T:q('.p8-t'), ZL:q('.p8-zl'), FW:q('.p8-fl') };
 }
+/* dónde está el logo de la esquina (para salir de ahí y volver ahí) */
+/* el rectángulo donde de verdad se ve una imagen con object-fit:contain (sin el aire de los lados) */
+function fitBox(img){
+  const r = img.getBoundingClientRect(), nw = img.naturalWidth || 1, nh = img.naturalHeight || 1, k = Math.min(r.width / nw, r.height / nh);
+  return { x:r.left + r.width / 2, y:r.top + r.height / 2, w:nw * k, h:nh * k };
+}
+/* dónde está el logo de la esquina y cómo es: tamaño de la Z, de la letra y el espacio entre ambas
+   (el portal copia esas medidas para que el «SymphorIA» que viaja calce justo encima del de la esquina) */
 function logoRect(){
-  const n = document.querySelector('#navWord');
-  if (n && n.getClientRects().length){ const r = n.getBoundingClientRect(); if (r.width) return { x:r.left, y:r.top, w:r.width, h:r.height }; }
+  const n = document.querySelector('#nav .logo');
+  if (n && n.getClientRects().length){
+    const r = n.getBoundingClientRect(), m = n.querySelector('.mark'), wd = n.querySelector('.word');
+    if (r.width){
+      const o = { x:r.left, y:r.top, w:r.width, h:r.height };
+      if (m && wd && m.naturalWidth){
+        const tx = wd.querySelector('.zw') || wd, a = fitBox(m), b = tx.getBoundingClientRect(), cs = getComputedStyle(tx);
+        Object.assign(o, { mx:a.x, my:a.y, mw:a.w, mh:a.h, gap:b.left - (a.x + a.w / 2), fs:parseFloat(cs.fontSize) || 0, fw:cs.fontWeight, ls:parseFloat(cs.letterSpacing) || 0 });
+      }
+      return o;
+    }
+  }
   try{ const s = JSON.parse(sessionStorage.getItem('synthz:logo') || 'null'); if (s && s.h) return s; }catch(e){}
-  return { x:innerWidth < 600 ? 62 : 78, y:innerWidth < 600 ? 16 : 22, w:112, h:28 };
+  return { x:innerWidth < 600 ? 30 : 70, y:innerWidth < 600 ? 22 : 26, w:150, h:40 };
 }
-/* FLIP: la palabra completa (Synth + Z) desde/hacia el logo de la esquina */
+/* el «SymphorIA» del portal toma las proporciones del logo de la esquina (Z, letra, espacio, grosor) */
+function fitPortal(P, R){
+  if (!R.fs) return;
+  const tf = parseFloat(getComputedStyle(P.T).fontSize), k = tf / R.fs;
+  P.MK.style.width = (R.mw * k).toFixed(1) + 'px'; P.MK.style.height = (R.mh * k).toFixed(1) + 'px';
+  P.W.style.gap = Math.max(0, R.gap * k).toFixed(1) + 'px';
+  P.T.style.fontWeight = R.fw; P.T.style.letterSpacing = (R.ls / R.fs).toFixed(3) + 'em';
+}
+/* la palabra entera viaja entre la esquina y el centro (FLIP): la Z del portal cae justo sobre la Z de la esquina */
 function flyWord(P, toCorner, D){
-  const R = logoRect(), W = P.W;
-  W.style.transform = 'none'; W.style.transformOrigin = '0 0';
-  const r = W.getBoundingClientRect(), s = R.h / (P.fs * 1.0);
-  const dx = R.x - r.left, dy = R.y + R.h / 2 - (r.top + r.height / 2 * s);
-  const at = q => { const k = toCorner ? q : 1 - q, sc = 1 + (s - 1) * k; W.style.transform = 'translate(' + (dx * k).toFixed(1) + 'px,' + (dy * k).toFixed(1) + 'px) scale(' + sc.toFixed(4) + ')'; W.style.filter = k > .02 && k < .98 ? 'blur(' + (Math.sin(Math.PI * k) * 1.2).toFixed(2) + 'px)' : 'none'; };
-  at(0);
-  return tween(D, e => at(e), eio).then(() => { W.style.filter = 'none'; });
+  const R = logoRect(), r = P.W.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  let s = R.h / r.height, dx = R.x + R.w / 2 - cx, dy = R.y + R.h / 2 - cy;
+  if (R.fs){
+    const m = fitBox(P.Z), tf = parseFloat(getComputedStyle(P.T).fontSize);
+    s = R.fs / tf; dx = R.mx - cx - (m.x - cx) * s; dy = R.my - cy - (m.y - cy) * s;
+  }
+  const corner = 'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px) scale(' + s.toFixed(4) + ')';
+  return pAnim(P.W, toCorner ? [{ transform:'none' }, { transform:corner }] : [{ transform:corner }, { transform:'none' }], { duration:D, easing:PE });
 }
-const imgsReady = P => Promise.race([Promise.all([P.ZZ, P.FL].map(i => i.decode ? i.decode().catch(() => {}) : Promise.resolve())), sleepRaw(1500)]);
-/* el portal es la animación del logo: se ve siempre, también en modo Rendimiento */
-const PCALM = false;
+/* la Z de vidrio gira y se vuelve el orbe; la «Z» se borra y «Flow» se escribe (o al revés) */
+function morph(P, toFlow, D){
+  P.o.classList.toggle('flow', toFlow);
+  const zOut = [{ transform:'none', opacity:1 }, { transform:'rotate(-200deg) scale(.15)', opacity:0 }];
+  const oIn = [{ transform:'rotate(160deg) scale(.1)', opacity:0 }, { transform:'none', opacity:1 }];
+  return Promise.all([
+    pAnim(P.Z, toFlow ? zOut : pRev(zOut), { duration:D * .7, easing:toFlow ? 'cubic-bezier(.5,0,.75,0)' : PSPR, delay:toFlow ? 0 : D * .3 }),
+    pAnim(P.ORB, toFlow ? oIn : pRev(oIn), { duration:D * .75, easing:toFlow ? PSPR : 'cubic-bezier(.5,0,.75,0)', delay:toFlow ? D * .25 : 0 })
+  ]);
+}
+const pSleep = ms => new Promise(r => setTimeout(r, ms));
+/* el hueco de la «o» de «Flow»: centro y ancho reales del agujero (con las medidas de la letra, no de su cajita) */
+let pMeas = null;
+function oSpot(P){
+  const o = [...P.FW.children].find(x => x.textContent === 'o'), r = o.getBoundingClientRect(), cs = getComputedStyle(o);
+  const x = (pMeas = pMeas || document.createElement('canvas').getContext('2d'));
+  x.font = cs.fontStyle + ' ' + cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+  const m = x.measureText('o'), fa = m.fontBoundingBoxAscent || parseFloat(cs.fontSize) * .9, fd = m.fontBoundingBoxDescent || parseFloat(cs.fontSize) * .22;
+  const base = r.top + (r.height - (fa + fd)) / 2 + fa, asc = m.actualBoundingBoxAscent || parseFloat(cs.fontSize) * .52;
+  const ls = parseFloat(cs.letterSpacing) || 0, gw = m.width || r.width;
+  return { x:r.left + (r.width - ls) / 2, y:base - asc / 2 + (m.actualBoundingBoxDescent || 0) / 2, hole:Math.max(4, gw * .4), el:o };
+}
+/* v2.9: la «o» de «Flow» late y suelta un anillo de luz (por ahí entra la cámara, como antes) */
+function orbPulse(P){
+  P.FW.style.overflow = 'visible';      /* «Flow» ya está escrito: el latido y el brillo de la «o» no se recortan */
+  const s = oSpot(P);
+  s.el.animate([{ transform:'none', filter:'none' }, { transform:'scale(1.22)', filter:'drop-shadow(0 0 10px rgba(255,255,255,.85))' }, { transform:'none', filter:'none' }], { duration:560, easing:PSPR });
+  P.RING.style.left = s.x + 'px'; P.RING.style.top = s.y + 'px';
+  P.RING.animate([{ transform:'translate(-50%,-50%) scale(.3)', opacity:.9 }, { transform:'translate(-50%,-50%) scale(9)', opacity:0 }], { duration:900, easing:'cubic-bezier(.2,.8,.2,1)' });
+}
+/* la cámara entra (o sale) por el hueco de la «o» de «Flow»: la letra crece hasta que su agujero tapa la pantalla */
+function dive(P, into, D){
+  P.FW.style.overflow = 'visible';
+  const s = oSpot(P), K = Math.hypot(innerWidth, innerHeight) / s.hole * 1.15;
+  const tx = innerWidth / 2 - s.x, ty = innerHeight / 2 - s.y;
+  P.W.style.transformOrigin = (s.x - P.W.getBoundingClientRect().left).toFixed(1) + 'px ' + (s.y - P.W.getBoundingClientRect().top).toFixed(1) + 'px';
+  P.o.classList.add('diving');
+  const kw = [{ transform:'none' }, { transform:'translate(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px) scale(' + K.toFixed(2) + ')' }];
+  return Promise.all([
+    pAnim(P.W, into ? kw : pRev(kw), { duration:D, easing:into ? 'cubic-bezier(.7,0,.84,0)' : 'cubic-bezier(.16,1,.3,1)' }),
+    pAnim(P.FL, into ? [{ opacity:0 }, { opacity:0, offset:.7 }, { opacity:1 }] : [{ opacity:1 }, { opacity:0, offset:.3 }, { opacity:0 }], { duration:D, easing:'linear' })
+  ]);
+}
 /* v1.8: con «Animaciones» apagado no hay película: un fundido corto y listo (los logos siempre se ven) */
 function quickGo(href, back){
   if (document.getElementById('portal')) return;
   try{ sessionStorage.setItem(back ? 'synthz:back' : 'synthz:portal', 'fade'); }catch(e){}
-  const v = document.createElement('div'); v.id = 'portal'; v.style.cssText = 'position:fixed;inset:0;z-index:2147483000;background:#0b0c10;opacity:0;transition:opacity .18s ease';
+  const v = document.createElement('div'); v.id = 'portal'; v.style.cssText = 'position:fixed;inset:0;z-index:2147483000;background:#0b0820;opacity:0;transition:opacity .18s ease';
   document.body.appendChild(v); requestAnimationFrame(() => { v.style.opacity = '1'; });
   setTimeout(() => { location.href = href; }, 200);
 }
+const pReady = P => Promise.race([Promise.all([P.Z.decode ? P.Z.decode().catch(() => {}) : 0, document.fonts ? document.fonts.ready : 0]), pSleep(1200)]);
 async function portalOut(href){
   if (document.getElementById('portal')) return;
   if (reduce && !(typeof EV !== 'undefined' && EV.pending())) return quickGo(href, false);
@@ -96,36 +131,31 @@ async function portalOut(href){
   try{ sessionStorage.setItem('synthz:portal', 'o'); }catch(e){}
   try{
     const P = portalStage(), nav = document.querySelector('#nav .logo');
-    P.o.classList.add('clear'); await imgsReady(P);
-    await new Promise(r => requestAnimationFrame(r));
-    /* 1 · «SynthZ» sale de su esquina, crece y llega al centro */
+    await pReady(P); fitPortal(P, logoRect()); await new Promise(r => requestAnimationFrame(r));
+    /* 1 · «SymphorIA» sale de su esquina y llega al centro, mientras cae la noche */
     if (nav) nav.style.visibility = 'hidden';
-    P.o.animate([{ backgroundColor:'rgba(11,12,16,0)' }, { backgroundColor:'rgba(11,12,16,1)' }], { duration:900, easing:'ease-out', fill:'forwards' });
-    await flyWord(P, false, 1100);
+    pAnim(P.BG, [{ opacity:0 }, { opacity:1 }], { duration:800, easing:'ease-out' });
+    await flyWord(P, false, 950);
     /* evento especial: en vez del portal normal, la página «se reprograma» y luego carga el chat */
     const evn = typeof EV !== 'undefined' && EV.pending();
     if (evn){ await EV.play(evn); portalLock(true); go(); return; }
-    P.W.style.transition = 'transform .5s ' + PEO; P.W.style.transform = 'none';
-    await sleepRaw(200); P.W.style.transition = '';
-    /* 2 · la Z de vidrio se derrite y se vuelve «Flow»: queda «SynthFlow» */
-    SND.shimmer(); await melt(P, true, 1500);
-    P.M.classList.add('shine'); await sleepRaw(520);
-    /* 3 · la barrita de luz se come «Synth» */
-    P.BAR.classList.add('on'); await sleepRaw(160);
-    P.SY.style.transition = 'width .85s ' + PE; P.SY.style.width = '0px';
-    await sleepRaw(880); P.BAR.classList.remove('on');
-    await sleepRaw(180);
-    /* 4 · la cámara entra en la «o» */
-    P.PG.animate([{ opacity:0 }, { opacity:.5 }, { opacity:0 }], { duration:1200, easing:'ease-out' }); SND.warp();
-    await zoomO(P, true, 1300);
+    /* 2 · la Z gira y se vuelve el orbe de SynthFlow; «Flow» se escribe */
+    try{ SND.shimmer(); }catch(e){}
+    await morph(P, true, 900);
+    /* 3 · la «o» de «Flow» late una vez y suelta su anillo de luz */
+    await pSleep(260); orbPulse(P);
+    await pSleep(440);
+    /* 4 · la cámara entra por el hueco de la «o» (Sammuel: el zoom va en la O, como siempre) */
+    try{ SND.warp(); }catch(e){}
+    await dive(P, true, 1000);
     go();
   }catch(e){
     console.error('[synthz] portal', e && e.message);
-    const p = document.getElementById('portal'); if (p){ p.style.background = '#0b0c10'; p.style.opacity = '1'; }
+    const p = document.getElementById('portal'); if (p){ p.style.background = '#0b0820'; p.style.opacity = '1'; }
     setTimeout(go, 200);
   }
 }
-/* de vuelta a SynthZ: la misma película al revés */
+/* de vuelta a SymphorIA: la misma película al revés */
 async function portalBack(href){
   if (document.getElementById('portal')) return;
   if (reduce) return quickGo(href, true);
@@ -134,24 +164,23 @@ async function portalBack(href){
   try{ sessionStorage.setItem('synthz:back', 'o'); }catch(e){}
   try{
     const P = portalStage();
-    /* empieza como terminó la ida: «Flow» sin «Synth», dentro de la «o» */
-    P.SY.style.width = '0px'; P.SL.style.width = P.wF + 'px'; P.ZZ.style.opacity = '0'; P.FL.style.opacity = '1';
-    await imgsReady(P);
-    await new Promise(r => requestAnimationFrame(r));
-    await zoomO(P, true, 1);
-    P.o.animate([{ opacity:0 }, { opacity:1 }], { duration:380, easing:'ease-out', fill:'forwards' }); await sleepRaw(380);
-    await zoomO(P, false, 1200);
-    P.W.style.transform = 'none';
-    await sleepRaw(140);
-    /* la barrita devuelve «Synth» */
-    P.BAR.classList.add('on'); await sleepRaw(140);
-    P.SY.style.transition = 'width .8s ' + PE; P.SY.style.width = P.wS + 'px';
-    await sleepRaw(840); P.BAR.classList.remove('on'); await sleepRaw(200);
-    /* «Flow» se derrite y vuelve a ser la Z */
-    SND.shimmer(); await melt(P, false, 1400);
-    await sleepRaw(260);
-    /* «SynthZ» vuelve a su esquina */
-    await flyWord(P, true, 1000);
+    P.o.classList.add('flow', 'start'); P.Z.style.opacity = '0'; P.ORB.style.opacity = '1';
+    await pReady(P); fitPortal(P, logoRect()); await new Promise(r => requestAnimationFrame(r));
+    P.BG.style.opacity = '1';
+    /* 1 · sales por el hueco de la «o» */
+    try{ SND.warp(); }catch(e){}
+    pAnim(P.o, [{ opacity:0 }, { opacity:1 }], { duration:280, easing:'ease-out' });
+    await dive(P, false, 950);
+    P.o.classList.remove('diving'); P.W.style.transformOrigin = '';
+    /* 2 · la «o» late al salir */
+    orbPulse(P); await pSleep(420);
+    /* 3 · el orbe vuelve a ser la Z; se borra «Flow» y vuelve la «Z» */
+    try{ SND.shimmer(); }catch(e){}
+    await morph(P, false, 900);
+    await pSleep(150);
+    /* 4 · «SymphorIA» vuelve a su esquina */
+    pAnim(P.BG, [{ opacity:1 }, { opacity:.92 }], { duration:800 });
+    await flyWord(P, true, 900);
     go();
   }catch(e){
     console.error('[synthz] portal', e && e.message);
@@ -164,7 +193,7 @@ function portalArrive(veil){
   if (!veil) return;
   const R = Math.hypot(innerWidth, innerHeight) / 2 + 60, t0 = performance.now(), D = 1100;
   const ring = document.createElement('i'); ring.className = 'szpring'; document.body.appendChild(ring);
-  veil.style.transition = 'none'; veil.style.opacity = '1'; veil.style.background = '#0b0c10';
+  veil.style.transition = 'none'; veil.style.opacity = '1'; veil.style.background = '#0b0820';
   (function f(now){
     const k = Math.min(1, (now - t0) / D), e = 1 - Math.pow(1 - k, 3), rr = (R * e).toFixed(1);
     const m = 'radial-gradient(circle at 50% 50%, transparent ' + rr + 'px, #000 ' + (R * e + 34).toFixed(1) + 'px)';
@@ -193,6 +222,7 @@ const MI = (d) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const MICO = {
   copy:MI('<rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>'),
   new:MI('<path d="M12 20h8"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'),
+  globe:MI('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/>'),
   search:MI('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'),
   cog:MI('<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>'),
   help:MI('<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/>'),

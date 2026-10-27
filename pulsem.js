@@ -23,12 +23,12 @@ $('#pCorner') && ($('#pCorner').innerHTML = '<svg viewBox="0 0 24 24">' + SZ.ICO
 function gate(kind, msg){
   $('#app').hidden = true; const g = $('#gate'); g.hidden = false;
   if (kind === 'login'){
-    g.innerHTML = '<div class="tcard"><div class="word">' + SZ.zWord('Synth') + '</div><div class="tn">PULSEM · SOLO EL EQUIPO</div><div class="tb"><h3>Entra con tu cuenta del equipo</h3><p>El Pulsem muestra cómo está SynthZ por dentro. Solo pueden verlo las cuentas Prime, ZFlow y Symmetrix.</p></div><div id="gAuth"></div><div class="tbtn" style="margin-top:14px"><a class="lnk" href="index.html">Volver a SynthZ</a></div></div>';
+    g.innerHTML = '<div class="tcard"><div class="word">' + SZ.zWord('Synth') + '</div><div class="tn">PULSEM · SOLO EL EQUIPO</div><div class="tb"><h3>Entra con tu cuenta del equipo</h3><p>El Pulsem muestra cómo está SymphorIA por dentro. Solo pueden verlo las cuentas Prime, ZFlow y Symmetrix.</p></div><div id="gAuth"></div><div class="tbtn" style="margin-top:14px"><a class="lnk" href="index.html">Volver a SymphorIA</a></div></div>';
     SZ.authBox($('#gAuth'), () => setTimeout(load, 300), () => toast('Tu navegador bloqueó la ventana. Permite las ventanas emergentes de este sitio.'));
   } else if (kind === 'team'){
-    g.innerHTML = '<div class="tcard"><div class="word">' + SZ.zWord('Synth') + '</div><div class="tn">PULSEM · SOLO EL EQUIPO</div><div class="tb"><h3>Esta página es del equipo</h3><p>Solo las cuentas con rango Prime, ZFlow o Symmetrix pueden ver Pulsem. Si necesitas ayuda, escríbele al equipo desde SynthonIA.</p></div><div class="tbtn" style="margin-top:14px"><a class="lnk" href="index.html">Volver a SynthZ</a><a class="btn sm" href="chat.html">Ir a SynthFlow</a></div></div>';
+    g.innerHTML = '<div class="tcard"><div class="word">' + SZ.zWord('Synth') + '</div><div class="tn">PULSEM · SOLO EL EQUIPO</div><div class="tb"><h3>Esta página es del equipo</h3><p>Solo las cuentas con rango Prime, ZFlow o Symmetrix pueden ver Pulsem. Si necesitas ayuda, escríbele al equipo desde SynthonIA.</p></div><div class="tbtn" style="margin-top:14px"><a class="lnk" href="index.html">Volver a SymphorIA</a><a class="btn sm" href="chat.html">Ir a SynthFlow</a></div></div>';
   } else {
-    g.innerHTML = '<div class="tcard"><div class="word">' + SZ.zWord('Synth') + '</div><div class="tn">PULSEM</div><div class="tb"><h3>No pude abrir Pulsem</h3><p>' + esc(msg || 'Revisa tu conexión e inténtalo de nuevo.') + '</p></div><div class="tbtn" style="margin-top:14px"><a class="lnk" href="index.html">Volver a SynthZ</a><button class="btn sm" type="button" id="gRetry">Reintentar</button></div></div>';
+    g.innerHTML = '<div class="tcard"><div class="word">' + SZ.zWord('Synth') + '</div><div class="tn">PULSEM</div><div class="tb"><h3>No pude abrir Pulsem</h3><p>' + esc(msg || 'Revisa tu conexión e inténtalo de nuevo.') + '</p></div><div class="tbtn" style="margin-top:14px"><a class="lnk" href="index.html">Volver a SymphorIA</a><button class="btn sm" type="button" id="gRetry">Reintentar</button></div></div>';
     $('#gRetry').addEventListener('click', load);
   }
   const c = $('.tcard', g); if (c && !SZ.reduce) c.animate([{ opacity:0, transform:'translateY(20px) scale(.96)', filter:'blur(8px)' }, { opacity:1, transform:'none', filter:'blur(0)' }], { duration:700, easing:'cubic-bezier(.22,1,.36,1)' });
@@ -83,9 +83,13 @@ function renderHealth(){
   $('#hLamp').innerHTML = '<b>' + L[3] + '</b>';
   $('#hTitle').textContent = L[1]; $('#hText').textContent = L[2];
   $('#hWhy').innerHTML = h.why.map(w => '<span>' + esc(w) + '</span>').join('');
-  const K = [[(P.online || []).length, 'en línea ahora'], [d0.req || 0, 'mensajes hoy'], [d0.tok || 0, 'palabras usadas hoy · IAs conectadas'], [(d0.err || 0) + (d0.fail || 0), 'errores de IA hoy'], [d0.req ? ((d0.ms || 0) / d0.req / 1000) : 0, 'segundos por respuesta']];
+  const K = [[(P.online || []).length, 'en línea ahora'], [d0.req || 0, 'mensajes hoy'], [SZ.coinsOf(d0.tok || 0), SZ.t('pm.spent')], [(d0.err || 0) + (d0.fail || 0), 'errores de IA hoy'], [d0.req ? ((d0.ms || 0) / d0.req / 1000) : 0, 'segundos por respuesta']];
   $('#hKpi').innerHTML = K.map(([v, l], i) => '<div class="kpi"><b data-k="' + i + '">0</b><span>' + l + '</span></div>').join('');
   K.forEach(([v], i) => { const b = $('[data-k="' + i + '"]'); if (i === 4){ b.textContent = v ? v.toFixed(1).replace('.', ',') : '–'; } else SZ.countTo(b, v); });
+  { const U = P.use || {}, B = [['Vercel · llamadas al servidor', U.req || 0, 100000], ['Upstash · comandos de datos', U.cmd || 0, 500000]];
+    let m = $('#hUse'); if (!m){ m = document.createElement('div'); m.id = 'hUse'; m.className = 'use'; $('#hKpi').insertAdjacentElement('afterend', m); }
+    m.innerHTML = '<p class="usel">Lo gratis de este mes (' + esc(U.month || '') + ')</p>' + B.map(([l, v, mx]) => { const p = Math.min(100, v / mx * 100), col = p >= 90 ? '#ff8f7a' : p >= 70 ? '#f2b36b' : '#7fd6b8'; return '<div class="ub"><span>' + l + '</span><i><b style="width:' + p.toFixed(1) + '%;background:' + col + '"></b></i><em>' + fmt(v) + ' de ' + fmt(mx) + ' · ' + p.toFixed(p < 10 ? 1 : 0).replace('.', ',') + ' %</em></div>'; }).join('')
+      + (B.some(x => x[1] / x[2] >= .7) ? '<p class="usew">Ya pasaste el 70 %: cuando llegue al 100 % esa parte se detiene hasta el mes siguiente.</p>' : ''); }
   $('#pRank').textContent = P.rank; $('#pRank').className = 'rkp r-' + rc(P.rank);
 }
 
@@ -141,7 +145,7 @@ function renderKeys(){
   $('#kList').innerHTML = ks.length ? ks.map((k, i) => {
     const [d, s] = keyState(k), mine = k.mine || (k.owner && T && T.keys && T.keys.find(x => x.id === k.id && x.mine));
     const pct = k.cap ? Math.min(1, (k.n || 0) / k.cap) : 0;
-    return '<div class="krow" style="--i:' + i + '"><i class="dot ' + d + '"></i><div style="display:flex;gap:10px;align-items:center">' + SZ.glassIcon({ id:k.prov, vendor:k.prov === 'mistral' ? 'mistralai' : k.prov }, 'sm') + '<div><b>' + esc(k.provName || k.prov) + '</b><small>' + esc(k.owner ? k.owner.name + ' · ' + k.owner.rank : '') + (k.key ? ' · ' + esc(k.key) : '') + (k.src === 'vercel' ? ' · Vercel' : '') + '</small></div></div><div><small>' + esc(s) + '</small>' + (k.check && !k.check.ok && k.check.detail ? '<small style="color:#ffc0b2">' + esc(k.provName || k.prov) + ' dijo: «' + esc(k.check.detail) + '»</small>' : '') + '</div><div class="kmeter" style="min-width:110px"><div class="meter"><i style="transform:scaleX(' + pct.toFixed(3) + ')"></i></div><small>hoy ' + fmt(k.n || 0) + ' / ' + fmt(k.cap || 0) + ' · ' + fmt(k.tok || 0) + ' palabras</small></div><div class="kact">' + (can || mine ? '<button class="mini" type="button" data-check="' + esc(k.id) + '">Probar</button>' : '') + '</div></div>';
+    return '<div class="krow" style="--i:' + i + '"><i class="dot ' + d + '"></i><div style="display:flex;gap:10px;align-items:center">' + SZ.glassIcon({ id:k.prov, vendor:k.prov === 'mistral' ? 'mistralai' : k.prov }, 'sm') + '<div><b>' + esc(k.provName || k.prov) + '</b><small>' + esc(k.owner ? k.owner.name + ' · ' + k.owner.rank : '') + (k.key ? ' · ' + esc(k.key) : '') + (k.src === 'vercel' ? ' · Vercel' : '') + '</small></div></div><div><small>' + esc(s) + '</small>' + (k.check && !k.check.ok && k.check.detail ? '<small style="color:#ffc0b2">' + esc(k.provName || k.prov) + ' dijo: «' + esc(k.check.detail) + '»</small>' : '') + '</div><div class="kmeter" style="min-width:110px"><div class="meter"><i style="transform:scaleX(' + pct.toFixed(3) + ')"></i></div><small>hoy ' + fmt(k.n || 0) + ' / ' + fmt(k.cap || 0) + ' · ' + fmt(k.tok || 0) + ' palabras</small></div><div class="kact">' + (can || mine ? '<button class="mini" type="button" data-check="' + esc(k.id) + '">' + SZ.t('pm.test') + '</button>' + (k.src === 'vercel' ? '' : '<button class="mini kdel" type="button" data-kdel="' + esc(k.id) + '" data-n="' + esc(k.provName || k.prov) + '" data-own="' + (mine ? 1 : '') + '">' + SZ.t('pm.del') + '</button>') : '') + '</div></div>';
   }).join('') : '<div class="empty">Todavía no hay llaves. Agrega las tuyas abajo: las IAs conectadas se activa para todos al instante.</div>';
 }
 function renderMyKeys(){
@@ -182,14 +186,22 @@ $('#myKeys').addEventListener('click', async e => {
     await keysPost({ action:'keys', [id]:'' }, d, 'Quitando…');
   }
 });
-$('#kList').addEventListener('click', e => { const b = e.target.closest('[data-check]'); if (b) keysPost({ action:'check', id:b.dataset.check }, b); });
+$('#kList').addEventListener('click', async e => {
+  const b = e.target.closest('[data-check]'); if (b) return keysPost({ action:'check', id:b.dataset.check }, b);
+  const x = e.target.closest('[data-kdel]'); if (!x) return;
+  /* quitar: pide confirmación, se borra en el servidor y la lista se vuelve a pedir */
+  if (!(await SZ.szConfirm(SZ.t('pm.delQ', { n:x.dataset.n }), SZ.t(x.dataset.own ? 'pm.delP' : 'pm.delPo'), SZ.t('pm.del'), true))) return;
+  x.disabled = true; x.textContent = SZ.t('pm.deling');
+  try{ await api('trial', { method:'POST', body:{ action:'delkey', id:x.dataset.kdel }, keep:true }); toast(SZ.t('pm.deled', { n:x.dataset.n })); T = await api('trial', { keep:true }).catch(() => T); renderKeys(); renderMyKeys(); renderSettings(); }
+  catch(er){ toast(er.message); if (x.isConnected){ x.disabled = false; x.textContent = SZ.t('pm.del'); } }
+});
 $('#kAll').addEventListener('click', e => keysPost({ action:'check' }, e.currentTarget, 'Probando todas…'));
 
 /* ---------- ajustes (Prime y ZFlow) ---------- */
 function renderSettings(){
   const can = !!P.canEdit, g = (T && T.google) || {}, dv = (T && T.drive) || {};
   const src = s => s === 'vercel' ? ' · desde Vercel' : s === 'panel' ? ' · desde Pulsem' : '';
-  $('#setG').innerHTML = '<div class="set"><b>Tope diario por persona</b><p>Cuánto puede usar cada persona al día con las IAs conectadas (Puter no cuenta). 800 ≈ 1 mensaje. Entre 1.000 y 500.000.</p>' + (can ? '<label class="field"><input type="number" min="1000" max="500000" step="1000" id="sLimit" value="' + (P.dayLimit || 20000) + '"></label><div class="acts" style="margin-top:8px"><button class="btn sm" type="button" data-set="limit">Guardar</button></div>' : '<div class="val">' + fmt(P.dayLimit || 20000) + ' SynXCoin\'s</div>') + '</div>'
+  $('#setG').innerHTML = '<div class="set"><b>Tope diario por persona</b><p>' + SZ.t('pm.capP', { tok:fmt(P.dayLimit || 20000), w:SZ.coinsFmt(SZ.coinsOf(P.dayLimit || 20000)) }) + '</p>' + (can ? '<label class="field"><input type="number" min="1000" max="500000" step="1000" id="sLimit" value="' + (P.dayLimit || 20000) + '"></label><div class="acts" style="margin-top:8px"><button class="btn sm" type="button" data-set="limit">Guardar</button></div>' : '<div class="val">' + SZ.coinsFmt(SZ.coinsOf(P.dayLimit || 20000)) + ' SynXCoin\'s</div>') + '</div>'
     + '<div class="set"><b>Imágenes al día por persona</b><p>Cuántas imágenes puede crear cada cuenta al día con Pollinations (el equipo tiene al menos 20). 0 = pausadas. No gasta Puter ni el límite del chat.</p>' + (can ? '<label class="field"><input type="number" min="0" max="50" step="1" id="sImg" value="' + (T && T.imgDay != null ? T.imgDay : 3) + '"></label><div class="acts"><button class="mini" type="button" data-set="img">Guardar</button></div>' : '<p><b>' + (T && T.imgDay != null ? T.imgDay : 3) + '</b> al día</p>') + '</div>'
     + '<div class="set"><b>Entrar con Google</b><p>El «ID de cliente» de Google Cloud (es público, no es una contraseña). Sin cobros.</p>' + (can ? '<label class="field"><input type="text" id="sGoogle" placeholder="123456-abc….apps.googleusercontent.com" value="' + esc(g.clientId || '') + '" spellcheck="false"' + (g.source === 'vercel' ? ' disabled' : '') + '></label><div class="acts" style="margin-top:8px"><button class="btn sm" type="button" data-set="google"' + (g.source === 'vercel' ? ' disabled' : '') + '>Guardar</button><small style="color:var(--mute)">' + (g.clientId ? 'activado' + src(g.source) : 'sin activar') + '</small></div>' : '<div class="val">' + (g.clientId ? esc(g.clientId.slice(0, 18)) + '…' + src(g.source) : 'sin activar') + '</div>') + '</div>'
     + '<div class="set"><b>Google Drive</b><p>Opcional: otro ID solo para Drive. Si lo dejas vacío, se usa el de «Entrar con Google». Activa la Drive API y el permiso <code>drive.appdata</code>.</p>' + (can ? '<label class="field"><input type="text" id="sDrive" placeholder="(opcional)" value="' + esc(dv.clientId || '') + '" spellcheck="false"' + (dv.source === 'vercel' ? ' disabled' : '') + '></label><div class="acts" style="margin-top:8px"><button class="btn sm" type="button" data-set="drive"' + (dv.source === 'vercel' ? ' disabled' : '') + '>Guardar</button><small style="color:var(--mute)">' + (dv.clientId ? 'activado' + src(dv.source) : g.clientId ? 'usa el de Google' : 'sin activar') + '</small></div>' : '<div class="val">' + (dv.clientId ? 'activado' + src(dv.source) : 'usa el de Google') + '</div>') + '</div>';
@@ -197,11 +209,16 @@ function renderSettings(){
   $('#setG').insertAdjacentHTML('beforeend', '<div class="set"><b>Supabase (base de datos)</b><p>' + (sp.on ? '✓ Conectada: cuentas, perfiles, chats, logros y opiniones se guardan también en Supabase.' : 'Aún no conectada. Falta poner la llave secreta de Supabase en Vercel (variable <code>SUPABASE_SECRET_KEY</code>) y volver a publicar.') + '</p><p>' + (sp.google ? '✓ «Entrar con Google» por Supabase: activo.' : '«Entrar con Google» por Supabase: apagado (se activa en Supabase › Authentication › Providers › Google).') + '</p>'
     + ((sp.errs || []).length ? '<p class="cnote">Últimos avisos: ' + sp.errs.slice(0, 3).map(x => esc(x.m)).join(' · ') + '</p>' : '')
     + (P.rank === 'Prime' && sp.on ? '<div class="acts" style="margin-top:8px"><button class="mini" type="button" data-set="sbsync">Copiar todo lo de antes a Supabase</button></div>' : '') + '</div>');
+  const mt = (T && T.maint) || {};
+  if (can) $('#setG').insertAdjacentHTML('beforeend', '<div class="set' + (mt.on ? ' mton' : '') + '"><b>Aviso de mantenimiento' + (mt.on ? ' <span class="mtlive">● Encendido</span>' : '') + '</b><p>Cubre toda la página con este aviso y SynthonIA en el centro para charlar mientras arreglan. Pulsem nunca se cubre; Prime y ZFlow pueden «Entrar igual».</p>'
+    + '<label class="field"><textarea id="sMaint" rows="3" maxlength="300" placeholder="Estamos presentando fallas o actualizaciones. Espera un momento.">' + esc(mt.text || '') + '</textarea></label>'
+    + '<div class="acts" style="margin-top:8px">' + (mt.on ? '<button class="btn sm" type="button" data-set="maint" data-on="1">Cambiar texto</button><button class="btn sm ghost" type="button" data-set="maint" data-on="0">Apagar aviso</button>' : '<button class="btn sm" type="button" data-set="maint" data-on="1">Encender aviso</button>') + '</div></div>');
   $('#setNote').hidden = can;
 }
 $('#setG').addEventListener('click', async e => {
   const b = e.target.closest('[data-set]'); if (!b) return; const k = b.dataset.set, l = b.textContent; b.disabled = true; b.textContent = 'Guardando…';
   try{
+    if (k === 'maint'){ const on = b.dataset.on === '1'; const d = await api('trial', { method:'POST', body:{ action:'maint', on, text:($('#sMaint') ? $('#sMaint').value : '') }, keep:true }); T = Object.assign({}, T, { maint:d.maint }); toast(on ? 'Aviso encendido: la página ya muestra el mantenimiento.' : 'Aviso apagado.'); renderSettings(); return; }
     if (k === 'sbsync'){ let cur = 0, n = 0, c = 0; for (let i = 0; i < 200; i++){ const d = await api('trial', { method:'POST', body:{ action:'sbsync', cursor:cur }, keep:true }); n += d.accounts; c += d.chats; b.textContent = 'Copiando… ' + n + ' cuentas'; cur = d.cursor; if (d.done) break; } toast('Listo: copié ' + n + ' cuentas y ' + c + ' chats a Supabase.'); renderSettings(); return; }
     if (k === 'img'){ const d = await api('trial', { method:'POST', body:{ action:'limit', imgDay:+$('#sImg').value }, keep:true }); if (T) T.imgDay = d.imgDay; toast(d.imgDay ? 'Imágenes: ' + d.imgDay + ' al día por persona.' : 'Imágenes pausadas.'); }
     else if (k === 'limit'){ const d = await api('trial', { method:'POST', body:{ action:'limit', dayLimit:+$('#sLimit').value }, keep:true }); P.dayLimit = d.dayLimit; toast('Tope diario: ' + fmt(d.dayLimit) + ' por persona (unos ' + Math.round(d.dayLimit / 800) + ' mensajes).'); }
@@ -236,7 +253,7 @@ $('#hEnd').addEventListener('click', async () => { if (!helpCur) return; try{ aw
 document.addEventListener('click', e => { const b = e.target.closest('[data-reach]'); if (b) reach(b.dataset.reach, b.dataset.nm); });
 function reach(sub, name){
   const o = document.createElement('div'); o.className = 'szm';
-  o.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="Contactar"><div class="word">' + SZ.zWord('Synth') + '</div><div class="tn">CONTACTAR · COMO ' + esc(String(P.rank).toUpperCase()) + '</div><div class="tb"><h3>Escríbele a ' + esc(name || 'esta persona') + '</h3><p>Le aparece una ventana «Chat con…» en SynthZ y te responde aquí, en la bandeja de ayuda.</p></div><label class="field" style="margin-top:12px"><textarea rows="3" maxlength="1000" id="rTxt" placeholder="¡Hola! Vi que tuviste un problema. ¿Te ayudo?"></textarea></label><div class="tbtn" style="margin-top:14px"><button class="lnk" type="button" data-close>Cancelar</button><button class="btn sm" type="button" id="rGo">Enviar</button></div></div>';
+  o.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="Contactar"><div class="word">' + SZ.zWord('Synth') + '</div><div class="tn">CONTACTAR · COMO ' + esc(String(P.rank).toUpperCase()) + '</div><div class="tb"><h3>Escríbele a ' + esc(name || 'esta persona') + '</h3><p>Le aparece una ventana «Chat con…» en SymphorIA y te responde aquí, en la bandeja de ayuda.</p></div><label class="field" style="margin-top:12px"><textarea rows="3" maxlength="1000" id="rTxt" placeholder="¡Hola! Vi que tuviste un problema. ¿Te ayudo?"></textarea></label><div class="tbtn" style="margin-top:14px"><button class="lnk" type="button" data-close>Cancelar</button><button class="btn sm" type="button" id="rGo">Enviar</button></div></div>';
   document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('on'));
   const close = () => { o.classList.remove('on'); setTimeout(() => o.remove(), 420); };
   $('[data-close]', o).addEventListener('click', close); o.addEventListener('pointerdown', e => { if (e.target === o) close(); });
@@ -267,7 +284,7 @@ function renderAlerts(){
   let b = $('#pAlert'); const L = P.alerts || [];
   if (!L.length){ if (b) b.remove(); return; }
   if (!b){ b = document.createElement('div'); b.id = 'pAlert'; b.className = 'card palert'; const m = $('main') || document.body; m.insertBefore(b, m.firstChild); }
-  b.innerHTML = '<b>⚠ Alerta de las IAs</b><p>' + L.map(a => '<strong>' + esc(a.name) + '</strong> pidió pago o cambió su plan gratis' + (a.t ? ' (' + ago(a.t) + ')' : '') + (a.msg ? ': «' + esc(a.msg) + '»' : '')).join('<br>') + '</p><p class="cnote">SynthZ ya pausó esas llaves: nunca se paga nada. Revisa la cuenta del proveedor y pulsa «Probar» en la llave cuando lo arregles; si vuelve a funcionar, la alerta se quita sola.</p>';
+  b.innerHTML = '<b>⚠ Alerta de las IAs</b><p>' + L.map(a => '<strong>' + esc(a.name) + '</strong> pidió pago o cambió su plan gratis' + (a.t ? ' (' + ago(a.t) + ')' : '') + (a.msg ? ': «' + esc(a.msg) + '»' : '')).join('<br>') + '</p><p class="cnote">SymphorIA ya pausó esas llaves: nunca se paga nada. Revisa la cuenta del proveedor y pulsa «Probar» en la llave cuando lo arregles; si vuelve a funcionar, la alerta se quita sola.</p>';
 }
 function render(){
   renderAlerts();
@@ -279,3 +296,34 @@ function render(){
 load();
 })();
 
+
+/* ===== v2.4 · Pulsem como un tablero común: menú a la izquierda y una sección a la vez ===== */
+(() => {
+const nav = document.getElementById('dNav'); if (!nav) return;
+const I = d => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
+const V = [
+  ['res', 'Resumen', 'Cómo está SymphorIA ahora mismo: salud, quién está en línea, dificultades y carga.', I('<path d="M4 13h4l2-5 4 10 2-5h4"/>'), null],
+  ['keys', 'Llaves', 'Las llaves gratis que comparten las IAs conectadas, y las tuyas.', I('<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/>'), null],
+  ['set', 'Ajustes', 'Tope diario, imágenes, cuentas y aviso de mantenimiento.', I('<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>'), null],
+  ['fb', 'Comentarios', 'Lo que escriben en «Cuéntanos qué mejorar».', I('<path d="M5 5h14v10H9l-4 4z"/>'), 'fN'],
+  ['help', 'Ayuda', 'Pedidos de ayuda de los Synthers.', I('<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5M12 17h.01"/>'), 'hN']];
+nav.innerHTML = '<p class="dn-l">Pulsem</p>' + V.map(([k, l, , ic]) => '<button type="button" class="dn-i" data-v="' + k + '">' + ic + '<span>' + l + '</span><i class="dn-b" data-b="' + k + '" hidden></i></button>').join('')
+  + '<a class="dn-i dn-x" href="chat.html">' + I('<path d="M4 5h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 4V7a2 2 0 0 1 2-2z"/>') + '<span>Ir a SynthFlow</span></a>';
+let cur = 'res';
+function show(k, quiet){
+  if (!V.some(v => v[0] === k)) k = 'res';
+  cur = k; try{ localStorage.setItem('synthz:pulsemView', k); }catch(e){}
+  document.querySelectorAll('#app [data-view]').forEach(s => { s.hidden = s.dataset.view !== k; });
+  nav.querySelectorAll('[data-v]').forEach(b => b.setAttribute('aria-current', String(b.dataset.v === k)));
+  const v = V.find(x => x[0] === k); document.getElementById('dTitle').textContent = v[1]; document.getElementById('dSub').textContent = v[2];
+  if (!quiet) window.scrollTo({ top:0, behavior:'smooth' });
+}
+nav.addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (b) show(b.dataset.v); });
+let k0 = 'res'; try{ k0 = localStorage.getItem('synthz:pulsemView') || 'res'; }catch(e){} show(k0, true);
+/* los numeritos del menú salen de lo que ya dice cada sección (comentarios nuevos, ayuda esperando, dificultades) */
+function badges(){
+  V.forEach(([k, , , , src]) => { const b = nav.querySelector('[data-b="' + k + '"]'), el = src && document.getElementById(src); if (!b) return; const n = el ? parseInt(el.textContent, 10) || 0 : 0; b.hidden = !n; b.textContent = n; });
+  const t = document.getElementById('tSum'), br = nav.querySelector('[data-b="res"]'), n = t ? parseInt(t.textContent, 10) || 0 : 0; if (br){ br.hidden = !n; br.textContent = n; br.classList.add('warn'); }
+}
+{ const mo = new MutationObserver(badges); ['fN', 'hN', 'tSum'].forEach(id => { const el = document.getElementById(id); if (el) mo.observe(el, { subtree:true, childList:true, characterData:true }); }); badges(); }
+})();

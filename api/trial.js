@@ -1,24 +1,25 @@
-/* Llaves del equipo, ajustes de la IA de SynthZ y la prueba de la guía (beta 2)
+/* Llaves del equipo, ajustes de la IA de SymphorIA y la prueba de la guía (beta 2)
    GET                                         → (equipo) estado de cada llave, tope diario, Google y Drive
    POST { action:'keys', groq?, mistral?, cloudflare?, cfAccount?, openrouter? } → tus llaves (Prime, ZFlow y Symmetrix: cada uno las suyas)
+   POST { action:'delkey', id }              → quitar una llave de la lista (la tuya; Prime/ZFlow cualquiera menos las de Vercel)
    POST { action:'check' }                     → probar llaves (Prime/ZFlow todas; Symmetrix solo las suyas)
    POST { action:'limit', dayLimit }           → tope de SynXCoin's al día por persona (Prime/ZFlow)
    POST { action:'google', clientId }          → «ID de cliente» de Google para entrar con Google y Drive (Prime/ZFlow)
    POST { action:'drive', clientId }           → (opcional) otro ID solo para Drive (Prime/ZFlow)
-   POST { action:'start' } / { action:'chat', token, messages } → prueba de la guía (5 mensajes), ahora con la IA de SynthZ
+   POST { action:'start' } / { action:'chat', token, messages } → prueba de la guía (5 mensajes), ahora con la IA de SymphorIA
    Reglas: cero cobros (solo modelos gratis y topes propios), las llaves nunca salen del servidor. */
 import { route, body, json, fail, auth, redis, pipe, getJ, setJ, rid, limit, today, str, roleOf, sha, sbOn, sbAccount, sbProfile, sbPrefs, sbChats, ipOf } from './_lib.js';
 import { CID_RX } from './config.js';
-import { loadKeys, saveOwnerKeys, status, checkKey, settings, saveSettings, chat, models, ownersRaw, mask, ORDER, PROV, KEY_PROVS, provName } from './_pool.js';
+import { loadKeys, saveOwnerKeys, removeKey, status, checkKey, settings, saveSettings, chat, models, ownersRaw, mask, ORDER, PROV, KEY_PROVS, provName } from './_pool.js';
 
 export const TRIAL_MAX = 5;
 const RANK = { owner:'Prime', admin:'ZFlow', staff:'Symmetrix' };
 const GLOBAL_DAY = +process.env.TRIAL_DAY_CAP || 300;
-const SYSTEM = 'Eres el asistente de la prueba guiada de SynthFlow (SynthZ). Responde en español, claro y amable, en menos de 120 palabras. Si te preguntan por SynthZ: es un espacio para hablar gratis con muchas IA, compararlas y ver cuánto consumen.';
+const SYSTEM = 'Eres el asistente de la prueba guiada de SynthFlow (SymphorIA). Responde en español, claro y amable, en menos de 120 palabras. Si te preguntan por SymphorIA: es un espacio para hablar gratis con muchas IA, compararlas y ver cuánto consumen.';
 const err = (s, m, code) => Object.assign(new Error(m), { status:s, code });
 const team = me => roleOf(me) !== 'user', boss = me => ['owner', 'admin'].includes(roleOf(me));
 
-/* para SynthonIA (ayudante): una respuesta corta con la IA de SynthZ (cuenta en su propio tope) */
+/* para SynthonIA (ayudante): una respuesta corta con la IA de SymphorIA (cuenta en su propio tope) */
 export async function trialComplete(messages, maxTokens = 320, who = 'helper'){
   const r = await chat({ who:'h:' + who, ipKey:'h:' + who, messages, model:'sz:auto', maxTokens, stream:false });
   return { text:r.text, via:r.meta.provName };
@@ -27,11 +28,12 @@ export async function trialComplete(messages, maxTokens = 320, who = 'helper'){
 export default route({
   async GET(req){
     const me = await auth(req);
-    if (!team(me)) return fail(403, 'Solo el equipo de SynthZ puede ver esto.');
+    if (!team(me)) return fail(403, 'Solo el equipo de SymphorIA puede ver esto.');
     const [st, set, owners, cat, gg, dv] = await Promise.all([status(), settings(), ownersRaw(), models(false).catch(() => ({ list:[], provs:[] })), getJ('cfg:google'), getJ('cfg:drive')]);
     const mine = owners[me.sub] || { keys:{} };
     const genv = (process.env.GOOGLE_CLIENT_ID || '').trim(), denv = (process.env.GOOGLE_DRIVE_CLIENT_ID || '').trim();
-    return json({ rank:RANK[roleOf(me)], canEdit:boss(me), dayLimit:set.dayLimit,
+    const mt = await getJ('cfg:maint').catch(() => null);
+    return json({ rank:RANK[roleOf(me)], canEdit:boss(me), maint:mt || { on:false }, dayLimit:set.dayLimit,
       keys:st.map(k => Object.assign(k, { mine:!!(k.owner && k.owner.sub === me.sub) })),
       mine:Object.fromEntries(KEY_PROVS.map(p => [p, mine.keys && mine.keys[p] ? 'guardada' : ''])), cfAccount:mine.cfAccount || '',
       models:{ n:cat.list.length, byProv:ORDER.map(p => ({ id:p, name:PROV[p].name, n:cat.list.filter(m => m.prov === p).length })) }, imgDay:set.imgDay,
@@ -41,9 +43,16 @@ export default route({
   async POST(req){
     const ip = ipOf(req), b = await body(req, 600_000), a = b.action;
 
+    if (a === 'delkey'){
+      const me = await auth(req);
+      if (!team(me)) return fail(403, 'Solo el equipo de SymphorIA puede quitar llaves.');
+      await limit('trial-admin:' + me.sub, 30, 600);
+      const r = await removeKey(str(b.id, 24), me, boss(me));
+      return r.ok ? json({ ok:true, prov:r.prov }) : fail(r.status, r.error);
+    }
     if (a === 'keys' || a === 'check'){
       const me = await auth(req);
-      if (!team(me)) return fail(403, 'Solo el equipo de SynthZ puede agregar llaves.');
+      if (!team(me)) return fail(403, 'Solo el equipo de SymphorIA puede agregar llaves.');
       await limit('trial-admin:' + me.sub, 30, 600);
       const patch = {};
       if (a === 'keys'){
@@ -56,6 +65,12 @@ export default route({
       const res = await Promise.all(keys.map(async k => Object.assign({ id:k.id, prov:k.prov, provName:provName(k.prov), key:mask(k.key), owner:k.owner }, await checkKey(k))));
       await redis('DEL', 'pool:models');
       return json({ ok:true, keys:res });
+    }
+    if (a === 'maint'){
+      const me = await auth(req); if (!boss(me)) return fail(403, 'Solo Prime y ZFlow pueden poner el aviso de mantenimiento.');
+      const on = !!b.on; const cur = { on, text:String(b.text || '').trim().slice(0, 300) || 'Estamos presentando fallas o actualizaciones. Espera un momento.', t:Date.now(), by:RANK[roleOf(me)] || 'equipo' };
+      await setJ('cfg:maint', cur);
+      return json({ ok:true, maint:cur });
     }
     if (a === 'limit'){
       const me = await auth(req); if (!boss(me)) return fail(403, 'Solo Prime y ZFlow pueden cambiar el tope.');
@@ -90,7 +105,7 @@ export default route({
       return json({ ok:true, clientId:id });
     }
 
-    /* prueba de la guía: 5 mensajes con la IA de SynthZ (sigue existiendo para la Guía Asistida) */
+    /* prueba de la guía: 5 mensajes con la IA de SymphorIA (sigue existiendo para la Guía Asistida) */
     if (a === 'start'){
       if (!(await loadKeys()).length) throw err(503, 'La prueba todavía no está activada. Mientras tanto, conecta Puter: es gratis y con un clic.', 'trial_off');
       await limit('trial-start:' + ip, 3, 86400);

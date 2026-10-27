@@ -57,58 +57,49 @@ function authModal(first, next, opts){
   opts = opts || {};
   if ($('#authm')) return $('#authm');
   const o = document.createElement('div'); o.id = 'authm'; o.className = 'szm';
-  o.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="Entrar a SynthZ"><div class="word">' + zWord('Synth') + '</div><div class="tn">' + (first ? 'BIENVENIDO' : 'TU CUENTA') + '</div><div class="tb"><h3>' + (first ? 'Bienvenido a SynthZ' : 'Entra a SynthZ') + '</h3><p>Crea tu cuenta gratis con un usuario y una contraseña: tus chats y favoritos te siguen a cualquier dispositivo y personalizas tu perfil.</p><div id="authBox"></div></div><div class="tbtn" style="margin-top:14px"><button class="lnk" type="button" data-close>' + (first ? 'Continuar sin cuenta' : 'Cerrar') + '</button></div></div>';
+  o.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="Entrar a SymphorIA"><div class="word">' + zWord('Synth') + '</div><div class="tn">' + (first ? 'BIENVENIDO' : 'TU CUENTA') + '</div><div class="tb"><h3>' + (first ? 'Bienvenido a SymphorIA' : 'Entra a SymphorIA') + '</h3><p>Crea tu cuenta gratis con un usuario y una contraseña: tus chats y favoritos te siguen a cualquier dispositivo y personalizas tu perfil.</p><div id="authBox"></div></div><div class="tbtn" style="margin-top:14px"><button class="lnk" type="button" data-close>' + (first ? 'Continuar sin cuenta' : 'Cerrar') + '</button></div></div>';
   document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('on'));
   if (!opts.hold) $('.tcard', o).animate([{ transform:'scale(.92) translateY(20px)', opacity:0, filter:'blur(8px)' }, { transform:'none', opacity:1, filter:'blur(0)' }], { duration:650, easing:'cubic-bezier(.22,1,.36,1)' });
   let done = false;
   const out = ok => { o.classList.remove('on'); setTimeout(() => o.remove(), 450); if (!done){ done = true; if (next) next(ok); } };
   $('[data-close]', o).addEventListener('click', () => out(false));
-  SZ.authBox($('#authBox', o), m => { toast(m === 'tmp' ? '¡Listo! Estás en una cuenta temporal.' : '¡Bienvenido a tu cuenta de SynthZ!'); updateTotals(); out(true); }, k => showBlockHelp(k));
+  SZ.authBox($('#authBox', o), m => { toast(m === 'tmp' ? '¡Listo! Estás en una cuenta temporal.' : '¡Bienvenido a tu cuenta de SymphorIA!'); updateTotals(); out(true); }, k => showBlockHelp(k));
   return o;
 }
 function openHelp(){ SZ.helpGuide({ extra:[['Recorrido por la página', () => pageTour()], ['Abrir SynthFlow', () => openChat()]] }); }
 /* Guía: Asistida (SynthonIA en SynthFlow, con la cinemática y 5 mensajes de prueba) o Lectura (aquí mismo) */
-function openGuide(){
-  SZ.guideAsk({ topics:[['portada', 'Esta página (SynthZ)', 'Lo que hay en la portada.']].concat(SZ.GTOPICS), fullTxt:'Te llevo al chat y te muestro todo, paso a paso (unos 2 minutos).',
-    full:() => SZ.portalOut('chat.html?guia=1'), read:openHelp,
-    pick:list => { const rest = list.filter(k => k !== 'portada'); if (list[0] === 'portada') pageTour(() => { if (rest.length){ try{ sessionStorage.setItem('synthz:gtopics', JSON.stringify(rest)); }catch(e){} SZ.portalOut('chat.html'); } }); else { try{ sessionStorage.setItem('synthz:gtopics', JSON.stringify(rest)); }catch(e){} SZ.portalOut('chat.html'); } } });
-}
+function openGuide(){ pageTour(() => setTimeout(() => { if (!SZ.ACC.ready) authModal(false, () => updateTotals()); }, 400)); }
 $('#helpBtn').addEventListener('click', openGuide);
 /* menú del celular */
 {
   const nb = $('#navMenu'), nd = $('#navDrop');
   const setOpen = on => { nb.setAttribute('aria-expanded', String(on)); if (on){ nd.hidden = false; requestAnimationFrame(() => nd.classList.add('on')); } else { nd.classList.remove('on'); setTimeout(() => { if (!nd.classList.contains('on')) nd.hidden = true; }, 380); } };
   nb.addEventListener('click', e => { e.stopPropagation(); setOpen(nb.getAttribute('aria-expanded') !== 'true'); });
-  nd.addEventListener('click', e => { const b = e.target.closest('[data-nd]'); setOpen(false); if (b){ if (b.dataset.nd === 'help') openGuide(); else if (b.dataset.nd === 'acc') $('#accBtn').click(); else $('#cfgBtn').click(); } });
+  nd.addEventListener('click', e => { const b = e.target.closest('[data-nd]'); setOpen(false); if (b){ if (b.dataset.nd === 'help') openGuide(); else if (b.dataset.nd === 'acc') $('#accBtn').click(); else if (b.dataset.nd !== 'lang') $('#cfgBtn').click(); } });
   document.addEventListener('click', e => { if (!nd.hidden && !e.target.closest('#navDrop')) setOpen(false); });
   addEventListener('keydown', e => { if (e.key === 'Escape' && !nd.hidden){ setOpen(false); nb.focus(); } });
 }
 /* primera vez: primero el tutorial; entrar o crear cuenta viene después (o con «Ahora no») */
-function firstRun(){
-  SZ.guideChooser({ lead:'¡Bienvenido a SynthZ! Antes de nada te muestro cómo funciona. Asistida: SynthonIA te lo enseña en SynthFlow con su manita. Lectura: un recorrido corto por esta página.',
-    asistida:() => SZ.portalOut('chat.html?guia=1'),
-    lectura:() => pageTour(() => setTimeout(() => { if (!SZ.ACC.ready) authModal(true, () => updateTotals()); }, 500)),
-    later:() => setTimeout(() => { if (!SZ.ACC.ready) authModal(true, () => updateTotals()); }, 300) });
-}
+function firstRun(){ pageTour(() => setTimeout(() => { if (!SZ.ACC.ready) authModal(true, () => updateTotals()); }, 500)); }
 function pageTour(onEnd){
   if ($('#ptour')) return;
   let pick = SZ.CFG.perf;
   const vis = sel => { const e = sel && document.querySelector(sel); return !sel || !!(e && e.offsetWidth && e.getClientRects().length); };
   const first = (...L) => L.find(x => vis(x)) || L[L.length - 1];
   const steps = [
-    { s:'.logo', t:'Este es SynthZ', p:'El lugar para usar muchas IA gratis, desde un solo sitio. Toca el logo cuando quieras volver arriba.' },
-    { s:'.navlinks', t:'El menú', p:'Desde aquí vas a tus IA, al chat (SynthFlow) o a ver cuánto has usado, en un toque.' },
-    { s:'.pill-total', t:'Tu límite de hoy', p:'Cada día tienes un límite gratis para usar las IAs conectadas. Este anillo se va vaciando mientras chateas. A medianoche se vuelve a llenar.' },
-    { s:first('#railMe', '#accBtn', '#navMenu'), t:'Tu cuenta', p:'Entra a tu cuenta de SynthZ: tus chats quedan guardados y los ves en cualquier celular o computador, personalizas tu perfil y hablas con el equipo si necesitas ayuda.' },
-    { s:first('#railCfg', '#cfgBtn', '#navMenu'), t:'Configuración', p:'¿Lo quieres más bonito o más rápido? Elige y mira abajo cómo se verá. Puedes cambiarlo cuando quieras desde este botón.', x:'cfg' },
-    { s:'#como', t:'Así de fácil', p:'Preguntas, comparas y SynthonIA te acompaña. Baja despacio y mira cómo se animan.' },
-    { s:'#conectar', t:'Tu IA ya está lista', p:'Ya puedes chatear gratis. Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.' },
-    { s:'#chat', t:'Pregunta desde aquí', p:'Escribe tu pregunta aquí y te llevo al chat (SynthFlow) con tu pregunta lista.' },
-    { s:'#consumo', t:'Tu uso', p:'Cómo va tu límite de hoy y cuánto chateaste estos días.' },
-    { s:null, t:'¡Todo listo!', p:'Ya conoces SynthZ. En SynthFlow te espera una guía corta para elegir tu primera IA.' }
+    { s:'.logo', t:SZ.t('tour.logo.t'), p:SZ.t('tour.logo.p') },
+    { s:'.navlinks', t:SZ.t('tour.menu.t'), p:SZ.t('tour.menu.p') },
+    { s:'.pill-total', t:SZ.t('tour.lim.t'), p:SZ.t('tour.lim.p') },
+    { s:first('#railMe', '#accBtn', '#navMenu'), t:SZ.t('tour.acc.t'), p:SZ.t('tour.acc.p') },
+    { s:first('#railCfg', '#cfgBtn', '#navMenu'), t:SZ.t('tour.cfg.t'), p:SZ.t('tour.cfg.p'), x:'cfg' },
+    { s:'#como', t:SZ.t('tour.como.t'), p:SZ.t('tour.como.p') },
+    { s:'#conectar', t:SZ.t('tour.con.t'), p:SZ.t('tour.con.p') },
+    { s:'#chat', t:SZ.t('tour.chat.t'), p:SZ.t('tour.chat.p') },
+    { s:'#consumo', t:SZ.t('tour.uso.t'), p:SZ.t('tour.uso.p') },
+    { s:null, t:SZ.t('tour.fin.t'), p:SZ.t('tour.fin.p') }
   ].filter(x => vis(x.s));
   const o = document.createElement('div'); o.id = 'ptour';
-  o.innerHTML = '<div class="catch"></div><div class="hole"></div><div class="pcard tcard" role="dialog" aria-modal="true" aria-label="Recorrido por SynthZ"><div class="tn"></div><div class="tb"><h3></h3><p></p><div class="tx"></div></div><div class="tdots">' + steps.map(() => '<i></i>').join('') + '</div><div class="tbtn"><button class="lnk" type="button" data-skip>Saltar</button><span style="flex:1"></span><button class="lnk" type="button" data-back>Atrás</button><button class="btn sm" type="button" data-next>Siguiente</button></div></div>';
+  o.innerHTML = '<div class="catch"></div><div class="hole"></div><div class="pcard tcard" role="dialog" aria-modal="true" aria-label="' + SZ.t('tour.aria') + '"><div class="tn"></div><div class="tb"><h3></h3><p></p><div class="tx"></div></div><div class="tdots">' + steps.map(() => '<i></i>').join('') + '</div><div class="tbtn"><button class="lnk" type="button" data-skip>' + SZ.t('tour.skip') + '</button><span style="flex:1"></span><button class="lnk" type="button" data-back>' + SZ.t('tour.back') + '</button><button class="btn sm" type="button" data-next>' + SZ.t('tour.next') + '</button></div></div>';
   document.body.appendChild(o);
   const hole = $('.hole', o), card = $('.pcard', o);
   let i = 0, target = null, follow = 0;
@@ -147,7 +138,7 @@ function pageTour(onEnd){
     $$('.tdots i', card).forEach((d, k) => d.classList.toggle('on', k === i));
     $('[data-back]', card).style.visibility = i ? 'visible' : 'hidden';
     $('[data-skip]', card).style.visibility = last ? 'hidden' : 'visible';
-    $('[data-next]', card).textContent = last ? 'Empezar' : 'Siguiente';
+    $('[data-next]', card).textContent = last ? SZ.t(SZ.ACC.ready ? 'tour.start' : 'tour.signin') : SZ.t('tour.next');
     card.animate([{ opacity:.2, filter:'blur(6px)' }, { opacity:1, filter:'blur(0)' }], { duration:450, easing:'cubic-bezier(.22,1,.36,1)' });
     chase(); setTimeout(guide, 450);
   };
@@ -163,7 +154,7 @@ function pageTour(onEnd){
   };
   $('[data-skip]', card).addEventListener('click', end);
   $('[data-back]', card).addEventListener('click', () => { if (i > 0){ i--; show(); } });
-  $('[data-next]', card).addEventListener('click', () => { if (i < steps.length - 1){ i++; show(); } else { end(); toast('¡A disfrutar SynthZ!'); } });
+  $('[data-next]', card).addEventListener('click', () => { if (i < steps.length - 1){ i++; show(); } else { end(); toast(SZ.t('tour.enjoy')); } });
   o.animate([{ opacity:0 }, { opacity:1 }], { duration:400 });
   show();
 }

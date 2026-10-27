@@ -1,0 +1,55 @@
+/* ===== v2.8 · aurora en vivo (core 25h): el cielo de toda la página, detrás de todo ===== */
+.au8{position:fixed;inset:0;z-index:-3;pointer-events:none;overflow:hidden;contain:strict;background:var(--sb-bg)}
+.au8 canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.au8-d{opacity:.8}
+.au8-tw{animation:au8-tw 4.2s ease-in-out infinite alternate}
+@keyframes au8-tw{from{opacity:.12}to{opacity:1}}
+/* la aurora reemplaza los brillos y el fondo liso de antes; las estrellas, la cinta y las burbujas siguen encima */
+html.au8on .aurora{background:transparent}
+html.au8on .aurora::after{background:none !important}
+html.au8on .sb-base,html.au8on .sb-glow,html.au8on .sb-canvas{display:none}
+/* v2.9: los fondos de cada sección (rejilla, cintas, auroras, radar…) eran de antes del cielo en vivo: se apilaban encima
+   y en el celular se estiraban en franjas. Ahora el cielo es uno solo para toda la página */
+html.au8on .secbg{display:none}
+/* v2.9: en SynthFlow el espacio de antes (cinta de neón y burbuja) se veía como rayas y una mancha detrás de los mensajes */
+html.au8on .sb-root[data-kind="chat"]{display:none}
+html.simple .au8{display:none}
+html.nobg .au8-tw,html.noanim .au8-tw,html.pmode .au8-tw{animation:none;opacity:.55}
+@media (prefers-reduced-motion:reduce){.au8-tw{animation:none}}
+
+/* conversación (SynthFlow con mensajes): una ola de noche sube desde la caja de escribir y la deja calma;
+   por su borde corre un filo de aurora. En un chat nuevo la ola baja y se va por donde vino. */
+@property --au8r{syntax:'<percentage>';inherits:false;initial-value:0%}
+.au8-wash,.au8-edge{position:absolute;inset:0;--au8r:0%;transition:--au8r 1.7s cubic-bezier(.65,.05,.25,1)}
+.au8-wash{background:linear-gradient(180deg,color-mix(in srgb,var(--sb-bg) 58%,transparent),color-mix(in srgb,var(--sb-bg) 76%,transparent) 70%);
+  -webkit-mask:radial-gradient(circle at 50% 112%,#000 calc(var(--au8r) - 20%),transparent var(--au8r));mask:radial-gradient(circle at 50% 112%,#000 calc(var(--au8r) - 20%),transparent var(--au8r))}
+.au8-edge{opacity:0;mix-blend-mode:screen;background:linear-gradient(90deg,var(--sb-light),var(--sb-primary) 35%,var(--sb-secondary) 68%,var(--sb-warm));
+  -webkit-mask:radial-gradient(circle at 50% 112%,transparent calc(var(--au8r) - 12%),#000 calc(var(--au8r) - 3%),transparent var(--au8r));mask:radial-gradient(circle at 50% 112%,transparent calc(var(--au8r) - 12%),#000 calc(var(--au8r) - 3%),transparent var(--au8r));
+  transition:--au8r 1.7s cubic-bezier(.65,.05,.25,1),opacity .6s ease}
+html.szconv .au8-wash,html.szconv .au8-edge{--au8r:175%}
+.au8.sweep .au8-edge{opacity:.6}
+/* lo que vive dentro del espacio de antes (cinta de neón, estrellas, burbujas) también se apaga al conversar */
+html.au8on .sb-root{transition:opacity 1.6s ease}
+html.au8on.szconv .sb-root{opacity:.3}
+html.au8-now .au8 *,html.au8-now .sb-root,html.au8-now .sb-rib{transition:none !important}
+html.noanim .au8-wash,html.noanim .au8-edge{transition:none}
+
+/* escenas de la portada: cúmulos, galaxia, planeta y estrellas fugaces (se encienden según la escena) */
+.au8 .off{visibility:hidden}
+.au8 .off,.au8 .off *{animation-play-state:paused !important}
+.au8-cl{opacity:0}
+.au8-gx{position:absolute;left:72%;top:22%;width:clamp(190px,25vw,400px);aspect-ratio:1;transform:translate(-50%,-50%) rotate(-20deg) scaleY(.52);opacity:0}
+.au8-gx canvas{width:100%;height:100%;animation:au8-spin 260s linear infinite}
+@keyframes au8-spin{to{transform:rotate(-360deg)}}
+.au8-pl{position:absolute;left:21%;top:74%;width:clamp(170px,19vw,320px);transform:translate(-50%,-50%);opacity:0}
+.au8-pl svg{display:block;width:100%;height:auto;overflow:visible;animation:au8-float 12s ease-in-out infinite alternate}
+@keyframes au8-float{to{transform:translate3d(6px,-10px,0) rotate(1.5deg)}}
+.au8-sw{position:absolute;inset:0;opacity:0}
+.au8-ss{position:absolute;left:62%;top:14%;width:150px;height:1.5px;border-radius:2px;background:linear-gradient(90deg,rgba(255,255,255,.95),rgba(190,240,255,.4) 30%,transparent);opacity:0;
+  transform:rotate(-26.6deg);transform-origin:0 50%;animation:au8-ss 9s cubic-bezier(.2,.6,.3,1) 2s infinite}
+.au8-ss.s2{left:70%;top:58%;width:110px;animation-duration:13s;animation-delay:6.5s}
+@keyframes au8-ss{0%{opacity:0;translate:0 0}1.5%{opacity:1}8%{opacity:0;translate:-240px 120px}100%{opacity:0;translate:-240px 120px}}
+html.nobg .au8 *,html.noanim .au8 *,html.pmode .au8 *{animation:none !important}
+html.nobg .au8-ss,html.noanim .au8-ss,html.pmode .au8-ss{display:none}
+@media (prefers-reduced-motion:reduce){.au8 *{animation:none !important}.au8-ss{display:none}}
+@media (max-width:760px){.au8-gx{left:74%;top:16%;width:46vw}.au8-pl{left:24%;top:80%;width:44vw}}

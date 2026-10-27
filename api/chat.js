@@ -17,7 +17,7 @@ export default route({
     if (t.freeOnly !== false && !/:free$/.test(model)) return fail(403, 'Tu equipo solo permite modelos gratis (los que terminan en :free).');
     if (!Array.isArray(b.messages) || !b.messages.length || b.messages.length > 60) return fail(400, 'Mensajes inválidos.');
     const ukey = 'tu:' + t.id + ':' + me.sub + ':' + today();
-    if (+t.daily > 0 && +(await redis('GET', ukey) || 0) >= +t.daily) return fail(429, 'Llegaste al límite diario de SynXCoin\'s que te dio tu equipo. Se reinicia mañana.', { switchTo:'pu' });
+    if (+t.daily > 0 && +(await redis('GET', ukey) || 0) >= +t.daily) return fail(429, 'Se acabó la EnerX que te dio tu equipo para hoy. Se carga otra vez a medianoche.', { switchTo:'pu' });
     let key; try{ key = dec(t.keyEnc); }catch(e){ return fail(500, 'No pude abrir la llave del equipo. Pídele al dueño que la vuelva a guardar.'); }
     if (needsReenc(t.keyEnc)) withLock('t:' + t.id, async () => { const x = await getJ('t:' + t.id); if (x && x.keyEnc === t.keyEnc){ x.keyEnc = enc(key); await setJ('t:' + t.id, x); } }).catch(() => {});   /* rotación perezosa */
     const stream = b.stream !== false;
@@ -26,7 +26,7 @@ export default route({
     if (b.reasoning && ['low', 'medium', 'high'].includes(b.reasoning.effort)) payload.reasoning = { effort:b.reasoning.effort };   /* esfuerzo de la IA */
     const up = await fetch((process.env.OPENROUTER_URL || 'https://openrouter.ai/api/v1') + '/chat/completions', {
       method:'POST', signal:req.signal,
-      headers:{ Authorization:'Bearer ' + key, 'content-type':'application/json', 'HTTP-Referer':new URL(req.url).origin, 'X-Title':'SynthZ' },
+      headers:{ Authorization:'Bearer ' + key, 'content-type':'application/json', 'HTTP-Referer':new URL(req.url).origin, 'X-Title':'SymphorIA' },
       body:JSON.stringify(payload)
     });
     const count = async n => { if (n > 0) await redis('INCRBY', ukey, String(Math.round(n))).then(() => redis('EXPIRE', ukey, '259200')).catch(() => {}); };

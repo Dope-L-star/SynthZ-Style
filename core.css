@@ -1,4 +1,4 @@
-/* SynthZ · estilos compartidos entre la página principal y el chat (v12) */
+/* SymphorIA · estilos compartidos entre la página principal y el chat (v12) */
 
 /* el logo: al señalarlo todo crece parejo y suave (círculos y letras igual); el péndulo se frena desde core.js */
 .logo .mark,a .mark,button .mark{transition:transform .8s cubic-bezier(.22,1,.36,1),opacity .8s var(--ease)}
@@ -39,7 +39,7 @@
 
 /* guía de OpenRouter */
 .og .ogs{display:grid;grid-template-columns:30px 1fr;gap:12px;margin-top:14px}
-.ogn{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:600 13px var(--mono);font-style:normal;color:#0b0c10;background:linear-gradient(135deg,#8fb0ff,#c9566c)}
+.ogn{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:600 13px var(--mono);font-style:normal;color:#0b0c10;background:linear-gradient(135deg,#8fb0ff,var(--wine))}
 .og .ogs b{font-weight:600;color:var(--text)}
 .og .ogs p{margin:3px 0 6px;color:var(--soft);font-size:13.5px;min-height:0}
 .og code{font:12px var(--mono);padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.08)}
@@ -123,7 +123,7 @@
 .rccode{padding:14px 18px;border:1px dashed rgba(242,196,107,.6);border-radius:16px;background:rgba(242,196,107,.07);font:600 clamp(16px,4.6vw,21px) var(--mono);letter-spacing:.08em;color:#f6dca6;user-select:all;cursor:text}
 .rcact{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 .rcchk{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--soft);cursor:pointer}
-.rcchk input{width:17px;height:17px;accent-color:#c9566c}
+.rcchk input{width:17px;height:17px;accent-color:var(--wine)}
 .rcv [data-go]{width:100%;justify-content:center}
 .rcv [data-go]:disabled{opacity:.45}
 
@@ -140,7 +140,7 @@
 .bl-row em{font-style:normal;color:var(--text);font-weight:600}
 .bl-row small{display:block;margin-top:3px;font:10.5px var(--mono);color:var(--mute)}
 .bl-row .pu-logo{width:24px;height:24px;margin-top:2px}
-.bl-ico{display:grid;place-items:center;flex:none;width:24px;height:24px;margin-top:2px;border-radius:6px;font:700 9.5px var(--mono);color:#0b0c10;background:linear-gradient(135deg,#8fb0ff,#c9566c)}
+.bl-ico{display:grid;place-items:center;flex:none;width:24px;height:24px;margin-top:2px;border-radius:6px;font:700 9.5px var(--mono);color:#0b0c10;background:linear-gradient(135deg,#8fb0ff,var(--wine))}
 .bl-load{font:12px var(--mono);color:var(--mute);padding:10px 2px}
 .sxerr{margin:8px 0 0;padding:10px 12px;border:1px solid rgba(255,143,122,.45);border-radius:12px;background:rgba(255,143,122,.08);color:#ffc0b3;font-size:13px}
 @media (max-width:520px){.sxsplit{grid-template-columns:1fr 1fr}.sxsplit div:last-child{grid-column:1 / -1}}
@@ -150,7 +150,7 @@
 #cd.hand #chd{opacity:1;transform:none}
 #cd.hand #ca{visibility:hidden}
 #cd.hand #cw{opacity:0 !important}
-/* sin el cursor de SynthZ: manita normal del sistema en esas mismas opciones */
+/* sin el cursor de SymphorIA: manita normal del sistema en esas mismas opciones */
 html:not(.cursor-on) :is(a[href],button:not(:disabled),select,summary,[role=tab],[data-hover],.chip,.cfgsw,.sxsw){cursor:pointer}
 /* switches del menú: foco visible con teclado, sin cuadro de selección del cursor */
 #cfgm .cfgsw:focus-visible{outline:2px solid #b8c4ff;outline-offset:3px}
@@ -177,15 +177,15 @@ body:has(#inp) #szHelp{bottom:118px}
 
 /* SynthFlow: logotipo con destellos en «Flow» (cada 2 s); en modo rendimiento, quieto */
 .flw-w{display:inline-flex;align-items:baseline;white-space:nowrap}
-.flw{position:relative;margin-left:.04em;background:linear-gradient(100deg,#c9566c 0%,#e6b65f 40%,#fff4dc 50%,#e6b65f 60%,#c9566c 100%);background-size:260% 100%;background-position:100% 0;-webkit-background-clip:text;background-clip:text;color:transparent;animation:flwShine 2s cubic-bezier(.45,0,.2,1) infinite}
+.flw{position:relative;margin-left:.04em;background:linear-gradient(100deg,var(--wine) 0%,var(--gold) 40%,#fff4dc 50%,var(--gold) 60%,var(--wine) 100%);background-size:260% 100%;background-position:100% 0;-webkit-background-clip:text;background-clip:text;color:transparent;animation:flwShine 2s cubic-bezier(.45,0,.2,1) infinite}
 @keyframes flwShine{0%{background-position:100% 0}55%,100%{background-position:-60% 0}}
-.flw .sp{position:absolute;width:9px;height:9px;background:#fff6e0;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);filter:drop-shadow(0 0 3px #e6b65f);opacity:0;pointer-events:none;animation:flwSpark 2s ease-in-out infinite}
+.flw .sp{position:absolute;width:9px;height:9px;background:#fff6e0;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);filter:drop-shadow(0 0 3px var(--gold));opacity:0;pointer-events:none;animation:flwSpark 2s ease-in-out infinite}
 .flw .s1{top:-5px;right:-7px}
 .flw .s2{top:38%;left:-3px;width:6px;height:6px;animation-delay:.65s}
 .flw .s3{bottom:-3px;right:34%;width:7px;height:7px;animation-delay:1.3s}
 @keyframes flwSpark{0%,100%{opacity:0;transform:scale(.2) rotate(0deg)}14%{opacity:1;transform:scale(1) rotate(45deg)}32%{opacity:0;transform:scale(.35) rotate(90deg)}}
 /* los logos siempre se animan, incluso en modo Rendimiento (solo el péndulo se puede quitar) */
-/* al señalarlo: sale la flechita y «SynthFlow» se transforma en el logo de SynthZ con sus 3 círculos */
+/* al señalarlo: sale la flechita y «SynthFlow» se transforma en el logo de SymphorIA con sus 3 círculos */
 .sfb{position:relative}
 .sfb .arr{width:0;opacity:0;margin-right:-12px;transform:translateX(10px);transition:width .55s var(--ease),opacity .35s,margin .55s var(--ease),transform .55s var(--ease)}
 .sfx{display:grid;align-items:center;justify-items:start}
@@ -197,14 +197,22 @@ body:has(#inp) #szHelp{bottom:118px}
 .sfb:hover .sf-b,.sfb:focus-visible .sf-b{opacity:1;filter:none;transform:none}
 html.noanim .sfx>span,html.noanim .sfb .arr{transition:none}
 
+/* v2.3 · los dos colores de la marca, con nombre: así los temas de SynthFlow los cambian de una vez */
+:root{--gold:#e6b65f;--gold-rgb:230,182,95;--wine:#c9566c;--wine-rgb:201,86,108}
+/* temas de SynthFlow (solo en el chat; el estilo Simple usa sus propios colores) */
+html[data-theme="oceano"]{--gold:#7cc9e3;--gold-rgb:124,201,227;--wine:#5a7bd6;--wine-rgb:90,123,214}
+html[data-theme="bosque"]{--gold:#9bd68f;--gold-rgb:155,214,143;--wine:#3fa58a;--wine-rgb:63,165,138}
+html[data-theme="lavanda"]{--gold:#bfa9f2;--gold-rgb:191,169,242;--wine:#d46fb0;--wine-rgb:212,111,176}
+html[data-theme] .aurora i:nth-child(3){background:var(--gold)}
+html[data-theme] .aurora i:nth-child(2){background:var(--wine)}
 /* ===== v15: SynthonIA (carita) y bienvenida tras 12 horas ===== */
 .szface{display:block;overflow:visible;flex:none}
 .szface .fe{transform-box:fill-box;transform-origin:center;animation:szblink 5.2s ease-in-out infinite}
 .szface[data-mood=dormida] .fe,.szface[data-mood=flow] .fe{animation:none}
 .szface .fb{transform-box:fill-box;transform-origin:center;animation:szant 2.6s ease-in-out infinite}
 @keyframes szblink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.12)}}
-@keyframes szant{0%,100%{transform:scale(1);filter:none}50%{transform:scale(1.18);filter:drop-shadow(0 0 4px #c9566c)}}
-#szWelcome{position:fixed;left:50%;top:18px;z-index:9600;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"f t" "f b";align-items:center;gap:6px 16px;width:min(620px,calc(100vw - 24px));padding:16px 46px 16px 16px;border:1px solid rgba(230,182,95,.32);border-radius:26px;background:rgba(18,16,20,.78);backdrop-filter:blur(26px) saturate(1.5);-webkit-backdrop-filter:blur(26px) saturate(1.5);box-shadow:0 30px 90px -20px rgba(0,0,0,.75),0 0 60px -30px rgba(230,182,95,.6);color:#ecebe7;font-family:var(--sans,system-ui);opacity:0;transform:translate(-50%,-30px) scale(.94);filter:blur(10px);transition:opacity .5s ease,transform .8s cubic-bezier(.22,1,.36,1),filter .55s ease}
+@keyframes szant{0%,100%{transform:scale(1);filter:none}50%{transform:scale(1.18);filter:drop-shadow(0 0 4px var(--wine))}}
+#szWelcome{position:fixed;left:50%;top:18px;z-index:9600;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"f t" "f b";align-items:center;gap:6px 16px;width:min(620px,calc(100vw - 24px));padding:16px 46px 16px 16px;border:1px solid rgba(var(--gold-rgb),.32);border-radius:26px;background:rgba(18,16,20,.78);backdrop-filter:blur(26px) saturate(1.5);-webkit-backdrop-filter:blur(26px) saturate(1.5);box-shadow:0 30px 90px -20px rgba(0,0,0,.75),0 0 60px -30px rgba(var(--gold-rgb),.6);color:#ecebe7;font-family:var(--sans,system-ui);opacity:0;transform:translate(-50%,-30px) scale(.94);filter:blur(10px);transition:opacity .5s ease,transform .8s cubic-bezier(.22,1,.36,1),filter .55s ease}
 #szWelcome.on{opacity:1;transform:translate(-50%,0);filter:none}
 #szWelcome.bye{opacity:0;transform:translate(-50%,-24px) scale(.96);filter:blur(8px);transition-duration:.4s,.6s,.4s}
 #szWelcome .wbface{grid-area:f;position:relative;width:64px;height:64px;animation:wbbob 3.4s ease-in-out infinite}
@@ -216,7 +224,7 @@ html.noanim .sfx>span,html.noanim .sfb .arr{transition:none}
 #szWelcome .wbtx p{margin:4px 0 0;font-size:13.5px;color:#a3a6b1;line-height:1.45}
 #szWelcome .wbtx em{font-style:normal;color:#f0d8a8}
 #szWelcome .wbbtn{grid-area:b;display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
-#szWelcome .btn.flow{background:linear-gradient(90deg,#c9566c,#e6b65f);color:#1a0f08;font-weight:600;border:0}
+#szWelcome .btn.flow{background:linear-gradient(90deg,var(--wine),var(--gold));color:#1a0f08;font-weight:600;border:0}
 #szWelcome .btn.flow .wbmini{margin:-4px 2px -4px -6px;transition:transform .5s cubic-bezier(.22,1,.36,1)}
 #szWelcome .btn.flow:hover .wbmini{transform:rotate(-12deg) scale(1.15)}
 #szWelcome .wbx{position:absolute;right:12px;top:12px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#8d909c;font-size:13px;background:none;border:0;cursor:pointer;transition:color .3s,background .3s}
@@ -228,25 +236,25 @@ html.noanim #szWelcome,html.noanim #szWelcome .wbface,html.noanim .szface:not(#s
 #szBot:hover .bf,#szBot.cur-hov .bf{animation-play-state:running}
 
 /* ===== v16: la manita de SynthonIA, su burbuja, el aro de luz y la Guía ===== */
-#szHand{position:fixed;left:0;top:0;z-index:9750;width:40px;height:40px;pointer-events:none;opacity:0;transition:opacity .45s ease,filter .45s ease;filter:drop-shadow(0 6px 14px rgba(0,0,0,.55)) drop-shadow(0 0 10px rgba(230,182,95,.35));will-change:transform}
+#szHand{position:fixed;left:0;top:0;z-index:9750;width:40px;height:40px;pointer-events:none;opacity:0;transition:opacity .45s ease,filter .45s ease;filter:drop-shadow(0 6px 14px rgba(0,0,0,.55)) drop-shadow(0 0 10px rgba(var(--gold-rgb),.35));will-change:transform}
 #szHand.on{opacity:1}
 #szHand .hs{width:40px;height:40px;transition:transform .14s cubic-bezier(.22,1,.36,1)}
 #szHand .hs svg{width:40px;height:40px;display:block;overflow:visible;animation:hshape .28s cubic-bezier(.22,1,.36,1)}
 @keyframes hshape{from{transform:scale(.7) rotate(-10deg);opacity:.2}}
 #szHand.press .hs{transform:scale(.82) translateY(2px)}
-#szHand .hl{position:absolute;left:30px;top:34px;padding:3px 9px;border-radius:999px;background:linear-gradient(90deg,#c9566c,#e6b65f);color:#1a0f08;font:600 11px var(--sans,system-ui);white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+#szHand .hl{position:absolute;left:30px;top:34px;padding:3px 9px;border-radius:999px;background:linear-gradient(90deg,var(--wine),var(--gold));color:#1a0f08;font:600 11px var(--sans,system-ui);white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.4)}
 #szHand[data-s=text] .hl{left:26px;top:30px}
-.szripple{position:fixed;z-index:9740;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px solid #e6b65f;pointer-events:none;animation:szrip .65s cubic-bezier(.22,1,.36,1) forwards}
+.szripple{position:fixed;z-index:9740;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px solid var(--gold);pointer-events:none;animation:szrip .65s cubic-bezier(.22,1,.36,1) forwards}
 @keyframes szrip{from{transform:scale(.4);opacity:1}to{transform:scale(4.2);opacity:0}}
-#szSpot{position:fixed;z-index:9690;pointer-events:none;opacity:0;border-radius:18px;box-shadow:0 0 0 2px rgba(230,182,95,.85),0 0 28px 6px rgba(230,182,95,.35),0 0 0 200vmax rgba(5,6,10,.5);transition:left .6s cubic-bezier(.22,1,.36,1),top .6s cubic-bezier(.22,1,.36,1),width .6s cubic-bezier(.22,1,.36,1),height .6s cubic-bezier(.22,1,.36,1),border-radius .6s ease,opacity .45s ease}
+#szSpot{position:fixed;z-index:9690;pointer-events:none;opacity:0;border-radius:18px;box-shadow:0 0 0 2px rgba(var(--gold-rgb),.85),0 0 28px 6px rgba(var(--gold-rgb),.35),0 0 0 200vmax rgba(5,6,10,.5);transition:left .6s cubic-bezier(.22,1,.36,1),top .6s cubic-bezier(.22,1,.36,1),width .6s cubic-bezier(.22,1,.36,1),height .6s cubic-bezier(.22,1,.36,1),border-radius .6s ease,opacity .45s ease}
 #szSpot.on{opacity:1;animation:spotp 2.4s ease-in-out infinite}
-@keyframes spotp{50%{box-shadow:0 0 0 2px rgba(230,182,95,1),0 0 40px 10px rgba(230,182,95,.45),0 0 0 200vmax rgba(5,6,10,.5)}}
-#szSay{position:fixed;z-index:9760;display:flex;gap:12px;align-items:flex-start;box-sizing:border-box;padding:14px 16px;border-radius:20px;border:1px solid rgba(230,182,95,.32);background:rgba(20,17,20,.82);backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);box-shadow:0 26px 70px -16px rgba(0,0,0,.85);color:#ecebe7;opacity:0;transform:translateY(10px) scale(.97);filter:blur(6px);pointer-events:none;transition:opacity .4s ease,transform .5s cubic-bezier(.22,1,.36,1),filter .4s ease,left .55s cubic-bezier(.22,1,.36,1),top .55s cubic-bezier(.22,1,.36,1)}
+@keyframes spotp{50%{box-shadow:0 0 0 2px rgba(var(--gold-rgb),1),0 0 40px 10px rgba(var(--gold-rgb),.45),0 0 0 200vmax rgba(5,6,10,.5)}}
+#szSay{position:fixed;z-index:9760;display:flex;gap:12px;align-items:flex-start;box-sizing:border-box;padding:14px 16px;border-radius:20px;border:1px solid rgba(var(--gold-rgb),.32);background:rgba(20,17,20,.82);backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);box-shadow:0 26px 70px -16px rgba(0,0,0,.85);color:#ecebe7;opacity:0;transform:translateY(10px) scale(.97);filter:blur(6px);pointer-events:none;transition:opacity .4s ease,transform .5s cubic-bezier(.22,1,.36,1),filter .4s ease,left .55s cubic-bezier(.22,1,.36,1),top .55s cubic-bezier(.22,1,.36,1)}
 #szSay.on{opacity:1;transform:none;filter:none;pointer-events:auto}
 #szSay .sf{flex:none;animation:wbbob 3.4s ease-in-out infinite}
 @media (max-width:560px){#szSay .sf svg{width:44px;height:44px}}
 #szSay .st{min-width:0;flex:1}
-#szSay .st b{display:block;font:600 12px var(--sans,system-ui);letter-spacing:.04em;color:#e6b65f;text-transform:uppercase;margin-bottom:3px}
+#szSay .st b{display:block;font:600 12px var(--sans,system-ui);letter-spacing:.04em;color:var(--gold);text-transform:uppercase;margin-bottom:3px}
 #szSay .st p{margin:0;font-size:14.5px;line-height:1.5;color:#ecebe7}
 #szSay .sb{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 #szSay .sb .btn{min-height:38px}
@@ -257,53 +265,53 @@ html.noanim #szSay,html.noanim #szSpot{transition-duration:.01s}
 #szGch .tcard{width:min(640px,calc(100vw - 32px))}
 .gch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
 .gco{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:18px;border-radius:22px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.035);color:#ecebe7;text-align:left;cursor:pointer;transition:transform .45s cubic-bezier(.22,1,.36,1),border-color .35s,background .35s,box-shadow .5s}
-.gco:hover,.gco:focus-visible{transform:translateY(-4px);border-color:rgba(230,182,95,.5);background:rgba(230,182,95,.06);box-shadow:0 22px 50px -24px rgba(201,86,108,.7)}
+.gco:hover,.gco:focus-visible{transform:translateY(-4px);border-color:rgba(var(--gold-rgb),.5);background:rgba(var(--gold-rgb),.06);box-shadow:0 22px 50px -24px rgba(var(--wine-rgb),.7)}
 .gco.l:hover,.gco.l:focus-visible{border-color:rgba(184,196,255,.5);background:rgba(184,196,255,.06);box-shadow:0 22px 50px -24px rgba(120,140,255,.6)}
 .gco .gf{transition:transform .6s cubic-bezier(.22,1,.36,1)}
 .gco:hover .gf{transform:rotate(-8deg) scale(1.08)}
 .gco b{font-family:var(--serif,Georgia,serif);font-weight:400;font-size:28px;line-height:1}
 .gco small{font-size:13.5px;line-height:1.45;color:#a3a6b1}
-.gco em{font-style:normal;font-family:var(--mono,monospace);font-size:11px;letter-spacing:.06em;color:#e6b65f;text-transform:uppercase}
+.gco em{font-style:normal;font-family:var(--mono,monospace);font-size:11px;letter-spacing:.06em;color:var(--gold);text-transform:uppercase}
 .gco.l em{color:#b8c4ff}
 @media (max-width:560px){.gch{grid-template-columns:1fr}.gco{flex-direction:row;flex-wrap:wrap;align-items:center}.gco small{flex-basis:100%}}
 
-/* ===== v1.0B: portal SynthZ ⇄ SynthFlow ===== */
+/* ===== v1.0B: portal SymphorIA ⇄ SynthFlow ===== */
 #portal.szportal{position:fixed;inset:0;z-index:9950;display:grid;place-items:center;overflow:hidden;background:#0b0c10;pointer-events:none;opacity:0}
 #portal.szportal.clear{opacity:1;background:transparent}
-#portal.szportal .pg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(255,226,168,.4),rgba(230,182,95,.14) 35%,transparent 70%);opacity:0}
-.szpw{position:relative;display:flex;align-items:flex-start;font-family:'Instrument Serif',Georgia,'Times New Roman',serif;font-weight:400;font-size:clamp(64px,12vw,180px);line-height:1;letter-spacing:-.02em;color:#ecebe7;white-space:nowrap;will-change:transform}
+#portal.szportal .pg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(255,226,168,.4),rgba(var(--gold-rgb),.14) 35%,transparent 70%);opacity:0}
+.szpw{position:relative;display:flex;align-items:flex-start;font-family:var(--serif,'Bricolage Grotesque',system-ui,sans-serif);font-weight:400;font-size:clamp(64px,12vw,180px);line-height:1;letter-spacing:-.02em;color:#ecebe7;white-space:nowrap;will-change:transform}
 .szps{display:block;overflow:hidden;flex:none;height:1.12em;margin-bottom:-.12em}
 .szps>span{display:block;line-height:1}
 .szpslot{position:relative;display:block;flex:none;height:1em}
 .szpz,.szpcur{position:absolute;left:.08em;top:.1em;width:.8em;height:.8em;overflow:visible}
 .szpcur{opacity:0}
-.szpcur path{stroke-dasharray:1;stroke-dashoffset:1;filter:drop-shadow(0 0 6px rgba(230,182,95,.55))}
-.szpf{position:absolute;left:0;top:0;display:block;line-height:1;opacity:0;padding-right:.04em;background:linear-gradient(90deg,#c9566c,#e6b65f 62%,#ffd9a0);-webkit-background-clip:text;background-clip:text;color:transparent}
+.szpcur path{stroke-dasharray:1;stroke-dashoffset:1;filter:drop-shadow(0 0 6px rgba(var(--gold-rgb),.55))}
+.szpf{position:absolute;left:0;top:0;display:block;line-height:1;opacity:0;padding-right:.04em;background:linear-gradient(90deg,var(--wine),var(--gold) 62%,#ffd9a0);-webkit-background-clip:text;background-clip:text;color:transparent}
 .szpf.shine{animation:szpshine 1.6s cubic-bezier(.22,1,.36,1) both}
-@keyframes szpshine{0%,100%{filter:none}35%{filter:brightness(1.35) drop-shadow(0 0 18px rgba(230,182,95,.6))}}
-.szpbar{position:absolute;left:-2px;width:3px;border-radius:3px;background:linear-gradient(#fff,#ffe7b0 70%,#e6b65f);box-shadow:0 0 12px 2px rgba(255,231,176,.7),0 0 34px 6px rgba(230,182,95,.3);opacity:0;transform:scaleY(0);transform-origin:50% 0;transition:opacity .25s ease,transform .32s cubic-bezier(.22,1,.36,1)}
+@keyframes szpshine{0%,100%{filter:none}35%{filter:brightness(1.35) drop-shadow(0 0 18px rgba(var(--gold-rgb),.6))}}
+.szpbar{position:absolute;left:-2px;width:3px;border-radius:3px;background:linear-gradient(#fff,#ffe7b0 70%,var(--gold));box-shadow:0 0 12px 2px rgba(255,231,176,.7),0 0 34px 6px rgba(var(--gold-rgb),.3);opacity:0;transform:scaleY(0);transform-origin:50% 0;transition:opacity .25s ease,transform .32s cubic-bezier(.22,1,.36,1)}
 .szpbar.on{opacity:1;transform:scaleY(1)}
 .szpcaret{position:absolute;left:0;width:2px;margin-left:1px;border-radius:2px;background:#fff;box-shadow:0 0 8px rgba(255,255,255,.75);opacity:0;transition:opacity .2s ease,transform .12s cubic-bezier(.22,1,.36,1)}
 .szpcaret.on{opacity:1}
-.szpring{position:fixed;left:50%;top:50%;z-index:301;width:0;height:0;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;box-shadow:0 0 0 2px rgba(230,182,95,.7),0 0 40px 8px rgba(230,182,95,.25)}
+.szpring{position:fixed;left:50%;top:50%;z-index:301;width:0;height:0;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;box-shadow:0 0 0 2px rgba(var(--gold-rgb),.7),0 0 40px 8px rgba(var(--gold-rgb),.25)}
 html.backin::before{content:"";position:fixed;inset:0;z-index:9998;background:#0b0c10;pointer-events:none;opacity:.92;transition:opacity .85s ease}
 html.backin.backout::before{opacity:0}
 /* las iniciales del perfil siempre centradas y visibles, aunque el avatar quede dentro de otra lista */
 span.av-me.av-me{display:grid;place-items:center;color:#0b0c10;font-family:var(--sans,system-ui);font-weight:600;line-height:1;text-align:center;flex:none;min-width:0;padding:0;margin-left:0}
 .rme.out span.av-me.av-me{color:var(--soft)}
 /* ---------- SynthonIA, la ayudante ---------- */
-#szBot{position:fixed;right:22px;bottom:22px;z-index:9600;width:60px;height:60px;padding:0;border-radius:50%;border:1px solid rgba(230,182,95,.45);background:radial-gradient(circle at 50% 30%,rgba(230,182,95,.18),rgba(24,18,20,.94) 70%);box-shadow:0 18px 44px -14px rgba(0,0,0,.85),0 0 0 0 rgba(230,182,95,.35);display:grid;place-items:center;cursor:pointer;touch-action:none;opacity:0;transform:translateY(24px) scale(.6);transition:opacity .45s ease,transform .7s cubic-bezier(.34,1.56,.64,1),box-shadow .3s ease}
+#szBot{position:fixed;right:22px;bottom:22px;z-index:9600;width:60px;height:60px;padding:0;border-radius:50%;border:1px solid rgba(var(--gold-rgb),.45);background:radial-gradient(circle at 50% 30%,rgba(var(--gold-rgb),.18),rgba(24,18,20,.94) 70%);box-shadow:0 18px 44px -14px rgba(0,0,0,.85),0 0 0 0 rgba(var(--gold-rgb),.35);display:grid;place-items:center;cursor:pointer;touch-action:none;opacity:0;transform:translateY(24px) scale(.6);transition:opacity .45s ease,transform .7s cubic-bezier(.34,1.56,.64,1),box-shadow .3s ease}
 #szBot.on{opacity:1;transform:none}
-#szBot:hover{box-shadow:0 18px 44px -14px rgba(0,0,0,.85),0 0 0 6px rgba(230,182,95,.12)}
+#szBot:hover{box-shadow:0 18px 44px -14px rgba(0,0,0,.85),0 0 0 6px rgba(var(--gold-rgb),.12)}
 #szBot.drag{transition:none;cursor:grabbing;transform:scale(1.06)}
 #szBot .bf{display:grid;place-items:center;animation:wbbob 3.4s ease-in-out infinite}
-#szBot .bdot{position:absolute;top:-2px;right:-2px;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:999px;background:#c9566c;color:#fff;font:600 11px/20px var(--sans,system-ui);font-style:normal;text-align:center;box-shadow:0 0 0 3px #0b0c10;animation:bdotP 1.6s ease-in-out infinite}
+#szBot .bdot{position:absolute;top:-2px;right:-2px;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:999px;background:var(--wine);color:#fff;font:600 11px/20px var(--sans,system-ui);font-style:normal;text-align:center;box-shadow:0 0 0 3px #0b0c10;animation:bdotP 1.6s ease-in-out infinite}
 #szBot .bdot:empty{min-width:12px;height:12px;padding:0;top:2px;right:2px}
 #szBot.inhead{position:absolute;right:auto;bottom:auto;width:40px;height:40px;margin:0;flex:none;z-index:3}
 #szBot.inhead .szface{width:30px;height:30px}
 @keyframes bdotP{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
 html.guiding #szBot,html.bflowing #szBot,body.szworrying #szBot,html.leaving #szBot{opacity:0 !important;pointer-events:none}
-#szBotB{position:fixed;z-index:9650;box-sizing:border-box;padding:11px 14px;border-radius:16px;border:1px solid rgba(230,182,95,.35);background:rgba(20,17,20,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);color:#ecebe7;font-size:13.5px;line-height:1.45;box-shadow:0 18px 50px -16px rgba(0,0,0,.85);opacity:0;transform:translateY(8px) scale(.94);transition:opacity .35s ease,transform .5s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+#szBotB{position:fixed;z-index:9650;box-sizing:border-box;padding:11px 14px;border-radius:16px;border:1px solid rgba(var(--gold-rgb),.35);background:rgba(20,17,20,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);color:#ecebe7;font-size:13.5px;line-height:1.45;box-shadow:0 18px 50px -16px rgba(0,0,0,.85);opacity:0;transform:translateY(8px) scale(.94);transition:opacity .35s ease,transform .5s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
 #szBotB.on{opacity:1;transform:none}
 #szBotP{position:fixed;z-index:9620;display:flex;flex-direction:column;box-sizing:border-box;border-radius:24px;border:1px solid rgba(255,255,255,.13);background:rgba(18,17,22,.88);backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);box-shadow:0 40px 110px -30px rgba(0,0,0,.9);color:#ecebe7;opacity:0;transform:translateY(16px) scale(.96);transform-origin:90% 100%;filter:blur(6px);pointer-events:none;transition:opacity .35s ease,transform .55s cubic-bezier(.22,1,.36,1),filter .35s ease;overflow:hidden}
 #szBotP.on{opacity:1;transform:none;filter:none;pointer-events:auto}
@@ -319,52 +327,52 @@ html.guiding #szBot,html.bflowing #szBot,body.szworrying #szBot,html.leaving #sz
 #szBotP .btabs[hidden]{display:none}
 #szBotP .btabs button{flex:1;min-height:34px;border-radius:999px;border:1px solid rgba(255,255,255,.1);background:none;color:#a3a6b1;font:inherit;font-size:13px;cursor:pointer}
 #szBotP .btabs button[aria-selected="true"]{background:rgba(255,255,255,.08);color:#ecebe7}
-#szBotP .btabs em{font-style:normal;margin-left:4px;padding:0 6px;border-radius:999px;background:#c9566c;color:#fff;font-size:11px}
+#szBotP .btabs em{font-style:normal;margin-left:4px;padding:0 6px;border-radius:999px;background:var(--wine);color:#fff;font-size:11px}
 #szBotP .btabs em:empty{display:none}
 #szBotP .bl{flex:1;min-height:0;overflow:auto;padding:12px 14px;display:flex;flex-direction:column;gap:10px;overscroll-behavior:contain}
 #szBotP .bm{display:flex;gap:8px;align-items:flex-start;animation:bmIn .45s cubic-bezier(.22,1,.36,1) both}
 #szBotP .bm p{margin:0;white-space:pre-wrap;font-size:14px;line-height:1.5}
-#szBotP .bm.a>div{padding:9px 12px;border-radius:4px 16px 16px 16px;background:rgba(230,182,95,.08);border:1px solid rgba(230,182,95,.2);max-width:88%}
+#szBotP .bm.a>div{padding:9px 12px;border-radius:4px 16px 16px 16px;background:rgba(var(--gold-rgb),.08);border:1px solid rgba(var(--gold-rgb),.2);max-width:88%}
 #szBotP .bm.a .btn{margin-top:8px}
 #szBotP .bm.u{justify-content:flex-end}
 #szBotP .bm.u p{padding:9px 12px;border-radius:16px 4px 16px 16px;background:rgba(236,235,231,.92);color:#0b0c10;max-width:85%}
 #szBotP .bm.t{flex-direction:column;gap:4px;padding:10px 12px;border-radius:16px;background:rgba(143,176,255,.08);border:1px solid rgba(143,176,255,.22)}
 #szBotP .bm.t b{font-weight:600;font-size:13px}
 #szBotP .rk{align-self:flex-start;padding:2px 9px;border-radius:999px;font:600 10.5px var(--mono,monospace);letter-spacing:.06em;text-transform:uppercase;background:rgba(255,255,255,.08);color:#ecebe7}
-#szBotP .rk.r-prime{background:linear-gradient(90deg,#c9566c,#e6b65f);color:#0b0c10}
+#szBotP .rk.r-prime{background:linear-gradient(90deg,var(--wine),var(--gold));color:#0b0c10}
 #szBotP .rk.r-zflow{background:linear-gradient(90deg,#8fb0ff,#b8c4ff);color:#0b0c10}
 #szBotP .rk.r-symmetrix{background:linear-gradient(90deg,#7fd6b8,#8fd3e8);color:#0b0c10}
 #szBotP .dots{display:flex;gap:4px;padding:4px 0}
-#szBotP .dots i{width:6px;height:6px;border-radius:50%;background:#e6b65f;animation:bdots 1s ease-in-out infinite}
+#szBotP .dots i{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:bdots 1s ease-in-out infinite}
 #szBotP .dots i:nth-child(2){animation-delay:.15s}#szBotP .dots i:nth-child(3){animation-delay:.3s}
 @keyframes bdots{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
 @keyframes bmIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 #szBotP .bq{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 8px}
 #szBotP .bq:empty{display:none}
 #szBotP .bq button{min-height:32px;padding:0 11px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#c3c5ce;font:inherit;font-size:12.5px;cursor:pointer;transition:background .25s,border-color .25s,color .25s}
-#szBotP .bq button:hover{background:rgba(230,182,95,.1);border-color:rgba(230,182,95,.35);color:#ecebe7}
+#szBotP .bq button:hover{background:rgba(var(--gold-rgb),.1);border-color:rgba(var(--gold-rgb),.35);color:#ecebe7}
 #szBotP .bin{display:flex;gap:8px;padding:10px 12px;border-top:1px solid rgba(255,255,255,.08)}
 #szBotP .bin[hidden]{display:none}
 #szBotP .bin input{flex:1;min-width:0;min-height:42px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.3);color:#ecebe7;font:inherit;font-size:14px;outline:0}
-#szBotP .bin input:focus{border-color:rgba(230,182,95,.5)}
+#szBotP .bin input:focus{border-color:rgba(var(--gold-rgb),.5)}
 #szBotP .bs{flex:none;width:42px;height:42px;border:0;border-radius:50%;background:#ecebe7;color:#0b0c10;display:grid;place-items:center;cursor:pointer}
 #szBotP .bs svg{width:17px;height:17px}
 #szBotP .bfoot{display:flex;justify-content:space-between;gap:10px;padding:0 16px 12px;font-size:12.5px}
 #szBotP .bctx{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px;color:#a3a6b1;padding-bottom:4px;border-bottom:1px dashed rgba(255,255,255,.1)}
 #szBotP .bctx span{flex:1;min-width:0}
 #szBotP .bi{display:flex;flex-direction:column;gap:3px;text-align:left;padding:10px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:#ecebe7;font:inherit;cursor:pointer}
-#szBotP .bi.urg{border-color:rgba(201,86,108,.5);background:rgba(201,86,108,.08)}
+#szBotP .bi.urg{border-color:rgba(var(--wine-rgb),.5);background:rgba(var(--wine-rgb),.08)}
 #szBotP .bi span{font-size:13px;color:#c3c5ce}
 #szBotP .bi small{font:11px var(--mono,monospace);color:#8d909c}
 #szBotP .bempty{margin:auto;color:#8d909c;font-size:13.5px}
 html.noglass #szBotP,html.noglass #szBotB{background:#16141a;backdrop-filter:none;-webkit-backdrop-filter:none}
 @media (max-width:760px){#szBot:not(.inhead){right:14px;bottom:calc(84px + env(safe-area-inset-bottom))}}
-/* ===== beta 2: IA de SynthZ (compartida y gratis) ===== */
-.sz-logo{display:inline-block;width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:6px;border-radius:5px;background:#15121c url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-6 -6 60 60'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%238fb0ff'/%3E%3Cstop offset='.55' stop-color='%23c9566c'/%3E%3Cstop offset='1' stop-color='%23e6b65f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M13 4H44V12L18 36H49L39 40H45L35 44H4V36L30 12H-1L9 8H3Z' fill='url(%23g)'/%3E%3C/svg%3E") center/88% no-repeat;box-shadow:0 0 0 1px rgba(230,182,95,.28)}
+/* ===== beta 2: IA de SymphorIA (compartida y gratis) ===== */
+.sz-logo{display:inline-block;width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:6px;border-radius:5px;background:#15121c url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-6 -6 60 60'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%238fb0ff'/%3E%3Cstop offset='.55' stop-color='%23c9566c'/%3E%3Cstop offset='1' stop-color='%23e6b65f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M13 4H44V12L18 36H49L39 40H45L35 44H4V36L30 12H-1L9 8H3Z' fill='url(%23g)'/%3E%3C/svg%3E") center/88% no-repeat;box-shadow:0 0 0 1px rgba(var(--gold-rgb),.28)}
 .prov .sz-logo{width:14px;height:14px;margin-right:4px;vertical-align:-2px}
-.mpay.sz{border-color:rgba(230,182,95,.55);color:#f3d79e;background:rgba(230,182,95,.06)}
-.payl.sz,.paym.sz{border-color:rgba(230,182,95,.42);color:#f0d8a8}
-.payl.sz i,.paym.sz i{background:var(--gold,#e6b65f);box-shadow:0 0 8px var(--gold,#e6b65f);animation:szlive 2.4s ease-in-out infinite}
+.mpay.sz{border-color:rgba(var(--gold-rgb),.55);color:#f3d79e;background:rgba(var(--gold-rgb),.06)}
+.payl.sz,.paym.sz{border-color:rgba(var(--gold-rgb),.42);color:#f0d8a8}
+.payl.sz i,.paym.sz i{background:var(--gold,var(--gold));box-shadow:0 0 8px var(--gold,var(--gold));animation:szlive 2.4s ease-in-out infinite}
 @keyframes szlive{50%{opacity:.45;transform:scale(.8)}}
 .bl-ico.sz{background:none;width:24px;height:24px}.bl-ico.sz .sz-logo{width:24px;height:24px;margin:0}
 .cbox.szrow>span{display:flex;align-items:center;font-weight:500}
@@ -373,7 +381,7 @@ html.noglass #szBotP,html.noglass #szBotB{background:#16141a;backdrop-filter:non
 .cbox>span .pu-logo{margin-right:7px}
 .cmeter{margin:10px 0 2px}
 .cmeter>span{display:block;height:6px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden}
-.cmeter>span i{display:block;height:100%;transform-origin:left;background:linear-gradient(90deg,#8fb0ff,#c9566c,#e6b65f);border-radius:inherit;transition:transform .9s cubic-bezier(.22,1,.36,1)}
+.cmeter>span i{display:block;height:100%;transform-origin:left;background:linear-gradient(90deg,#8fb0ff,var(--wine),var(--gold));border-radius:inherit;transition:transform .9s cubic-bezier(.22,1,.36,1)}
 .cmeter small{display:block;margin-top:6px;font-size:12px;color:var(--mute,#9aa0b4)}
 .cmeter small b{color:var(--text,#eef0f6);font-weight:600}
 /* guía: ¿qué es Puter? */
@@ -398,7 +406,7 @@ html.noanim .gp-pc,html.noanim .gp-pi{animation:none}
 #szChat .cwh{display:flex;align-items:center;gap:12px;padding:16px 16px 12px;border-bottom:1px solid rgba(255,255,255,.08)}
 #szChat .cwa{flex:none;display:grid;place-items:center;width:44px;height:44px}
 #szChat .cwi{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;font:700 18px var(--sans,system-ui);font-style:normal;color:#0b0c10;background:linear-gradient(135deg,#ecebe7,#b8c4ff)}
-#szChat .cwi.r-prime{background:linear-gradient(135deg,#c9566c,#e6b65f)}#szChat .cwi.r-zflow{background:linear-gradient(135deg,#8fb0ff,#b8c4ff)}#szChat .cwi.r-symmetrix{background:linear-gradient(135deg,#7fd6b8,#8fd3e8)}
+#szChat .cwi.r-prime{background:linear-gradient(135deg,var(--wine),var(--gold))}#szChat .cwi.r-zflow{background:linear-gradient(135deg,#8fb0ff,#b8c4ff)}#szChat .cwi.r-symmetrix{background:linear-gradient(135deg,#7fd6b8,#8fd3e8)}
 #szChat .cwt{flex:1;min-width:0}
 #szChat .cwt b{display:block;font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #szChat .cwt small{display:flex;align-items:center;gap:6px;margin-top:3px;font-size:12px;color:#9a9ca6}
@@ -406,17 +414,17 @@ html.noanim .gp-pc,html.noanim .gp-pi{animation:none}
 #szChat .cwl{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:16px;overscroll-behavior:contain}
 #szChat .bm{display:flex;gap:8px;align-items:flex-start;animation:cwIn .5s cubic-bezier(.22,1,.36,1) both}
 #szChat .bm p{margin:0;white-space:pre-wrap;font-size:14px;line-height:1.5}
-#szChat .bm.a>div{padding:9px 12px;border-radius:4px 16px 16px 16px;background:rgba(230,182,95,.08);border:1px solid rgba(230,182,95,.2);max-width:88%}
+#szChat .bm.a>div{padding:9px 12px;border-radius:4px 16px 16px 16px;background:rgba(var(--gold-rgb),.08);border:1px solid rgba(var(--gold-rgb),.2);max-width:88%}
 #szChat .bm.u{justify-content:flex-end}
 #szChat .bm.u p{padding:9px 12px;border-radius:16px 4px 16px 16px;background:rgba(236,235,231,.92);color:#0b0c10;max-width:85%}
 #szChat .bm.t{flex-direction:column;gap:4px;padding:10px 12px;border-radius:16px;background:rgba(143,176,255,.08);border:1px solid rgba(143,176,255,.22);max-width:88%}
 #szChat .bm.t b{font-weight:600;font-size:13px}
 #szChat .rk{align-self:flex-start;padding:2px 9px;border-radius:999px;font:600 10.5px var(--mono,monospace);letter-spacing:.06em;text-transform:uppercase;background:rgba(255,255,255,.08);color:#ecebe7}
-#szChat .rk.r-prime{background:linear-gradient(90deg,#c9566c,#e6b65f);color:#0b0c10}#szChat .rk.r-zflow{background:linear-gradient(90deg,#8fb0ff,#b8c4ff);color:#0b0c10}#szChat .rk.r-symmetrix{background:linear-gradient(90deg,#7fd6b8,#8fd3e8);color:#0b0c10}
+#szChat .rk.r-prime{background:linear-gradient(90deg,var(--wine),var(--gold));color:#0b0c10}#szChat .rk.r-zflow{background:linear-gradient(90deg,#8fb0ff,#b8c4ff);color:#0b0c10}#szChat .rk.r-symmetrix{background:linear-gradient(90deg,#7fd6b8,#8fd3e8);color:#0b0c10}
 #szChat .bempty{margin:6px 0;text-align:center;font-size:13px;color:#9a9ca6}
 #szChat .cwin{display:flex;gap:8px;padding:10px 12px;border-top:1px solid rgba(255,255,255,.08)}
 #szChat .cwin input{flex:1;min-width:0;min-height:44px;padding:0 15px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.3);color:#ecebe7;font:inherit;font-size:14px;outline:0}
-#szChat .cwin input:focus{border-color:rgba(230,182,95,.5)}
+#szChat .cwin input:focus{border-color:rgba(var(--gold-rgb),.5)}
 #szChat .bs{flex:none;width:44px;height:44px;border:0;border-radius:50%;background:#ecebe7;color:#0b0c10;display:grid;place-items:center;cursor:pointer}
 #szChat .bs svg{width:17px;height:17px}
 #szChat .cwf{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:0 16px 14px;font-size:12px;color:#9a9ca6}
@@ -428,14 +436,14 @@ html.noanim #szChat{transition-duration:.25s}html.noanim #szChat .bm{animation:n
 .rbtn[hidden]{display:none !important}
 /* rayita de escritura que se vuelve letra (y letras que se desprenden al borrar) */
 .field.mw.mcar textarea{caret-color:transparent !important}
-.field .mc{position:absolute;left:0;top:0;width:2px;border-radius:2px;background:linear-gradient(#e6b65f,#c9566c 55%,#8fb0ff);box-shadow:0 0 10px rgba(230,182,95,.7),0 0 2px rgba(255,255,255,.6);pointer-events:none;z-index:2;opacity:0;transition:transform .14s cubic-bezier(.22,1,.36,1),opacity .2s}
+.field .mc{position:absolute;left:0;top:0;width:2px;border-radius:2px;background:linear-gradient(var(--gold),var(--wine) 55%,#8fb0ff);box-shadow:0 0 10px rgba(var(--gold-rgb),.7),0 0 2px rgba(255,255,255,.6);pointer-events:none;z-index:2;opacity:0;transition:transform .14s cubic-bezier(.22,1,.36,1),opacity .2s}
 .field .mc.on{opacity:1}
 .field .mc.idle{animation:mcblink 1.05s steps(1) infinite}
 .field .mc.back{animation:mcmorph .42s cubic-bezier(.22,1,.36,1)}
 @keyframes mcblink{50%{opacity:0}}
 @keyframes mcmorph{0%{transform-origin:left;width:9px;border-radius:3px;opacity:.15;filter:blur(2px)}55%{width:3px;opacity:.7}100%{width:2px;opacity:1;filter:none}}
 .mir .nw{display:inline-block;white-space:pre;animation:nwmorph .55s cubic-bezier(.22,1,.36,1) both !important}
-@keyframes nwmorph{0%{transform:scaleX(.12) scaleY(1.25);opacity:.9;color:#e6b65f;filter:blur(1.5px);text-shadow:0 0 14px #e6b65f}55%{transform:scaleX(1.12) scaleY(.96);color:#ffd9a0;filter:none;text-shadow:0 0 10px rgba(230,182,95,.7)}100%{transform:none;color:var(--text,#ecebe7);text-shadow:none}}
+@keyframes nwmorph{0%{transform:scaleX(.12) scaleY(1.25);opacity:.9;color:var(--gold);filter:blur(1.5px);text-shadow:0 0 14px var(--gold)}55%{transform:scaleX(1.12) scaleY(.96);color:#ffd9a0;filter:none;text-shadow:0 0 10px rgba(var(--gold-rgb),.7)}100%{transform:none;color:var(--text,#ecebe7);text-shadow:none}}
 .mghost{position:absolute;z-index:3;pointer-events:none;white-space:pre;line-height:1;will-change:transform,opacity}
 html.noanim .mir .nw{animation:none !important}
 /* ===== iconos reales de cada IA, en vidrio líquido ===== */
@@ -453,17 +461,17 @@ html.noglass .gico{backdrop-filter:none;-webkit-backdrop-filter:none}
 .work{margin:6px 0 10px;max-width:100%}
 .wk-row{display:inline-flex;align-items:center;gap:12px;max-width:100%;padding:7px 12px 7px 7px;border-radius:16px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.015));backdrop-filter:blur(14px) saturate(1.5);-webkit-backdrop-filter:blur(14px) saturate(1.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.12);color:inherit;text-align:left;cursor:pointer;transition:border-color .3s,background .3s}
 .wk-row:hover{border-color:rgba(255,255,255,.2)}
-.pxw{position:relative;flex:none;display:grid;place-items:center;width:56px;height:56px;border-radius:12px;background:radial-gradient(90% 70% at 30% 15%,rgba(255,255,255,.18),transparent 55%),linear-gradient(150deg,color-mix(in srgb,var(--b1,#c9566c) 22%,rgba(14,14,18,.7)),rgba(10,10,14,.75));border:1px solid rgba(255,255,255,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -8px 14px -8px color-mix(in srgb,var(--b1,#c9566c) 60%,transparent);overflow:hidden}
+.pxw{position:relative;flex:none;display:grid;place-items:center;width:56px;height:56px;border-radius:12px;background:radial-gradient(90% 70% at 30% 15%,rgba(255,255,255,.18),transparent 55%),linear-gradient(150deg,color-mix(in srgb,var(--b1,var(--wine)) 22%,rgba(14,14,18,.7)),rgba(10,10,14,.75));border:1px solid rgba(255,255,255,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -8px 14px -8px color-mix(in srgb,var(--b1,var(--wine)) 60%,transparent);overflow:hidden}
 .pxw::after{content:"";position:absolute;inset:1px 1px 55% 1px;border-radius:11px 11px 40% 40%;background:linear-gradient(180deg,rgba(255,255,255,.28),transparent);pointer-events:none}
 .pxg{display:grid;grid-template-columns:repeat(8,5px);grid-auto-rows:5px;gap:1px}
 .pxg i{border-radius:1.2px;background:rgba(255,255,255,.05);transform:scale(.4);transition:transform .32s cubic-bezier(.34,1.56,.64,1),background .3s,box-shadow .3s,opacity .3s}
-.pxg i.on{transform:none;background:linear-gradient(140deg,#fff 0%,var(--b1,#c9566c) 45%,color-mix(in srgb,var(--b1,#c9566c) 70%,#000) 100%);box-shadow:0 0 4px color-mix(in srgb,var(--b1,#c9566c) 70%,transparent)}
-.pxg i.on.c2{background:linear-gradient(140deg,#fff 0%,var(--b2,#e6b65f) 45%,color-mix(in srgb,var(--b2,#e6b65f) 70%,#000) 100%);box-shadow:0 0 4px color-mix(in srgb,var(--b2,#e6b65f) 70%,transparent)}
+.pxg i.on{transform:none;background:linear-gradient(140deg,#fff 0%,var(--b1,var(--wine)) 45%,color-mix(in srgb,var(--b1,var(--wine)) 70%,#000) 100%);box-shadow:0 0 4px color-mix(in srgb,var(--b1,var(--wine)) 70%,transparent)}
+.pxg i.on.c2{background:linear-gradient(140deg,#fff 0%,var(--b2,var(--gold)) 45%,color-mix(in srgb,var(--b2,var(--gold)) 70%,#000) 100%);box-shadow:0 0 4px color-mix(in srgb,var(--b2,var(--gold)) 70%,transparent)}
 .pxg i.out{transform:scale(.2) rotate(45deg);opacity:0;transition-duration:.25s}
 .pxw.done .pxg{animation:pxshine .6s ease}
-@keyframes pxshine{40%{filter:brightness(1.6) drop-shadow(0 0 6px var(--b1,#c9566c))}}
+@keyframes pxshine{40%{filter:brightness(1.6) drop-shadow(0 0 6px var(--b1,var(--wine)))}}
 .wk-t{display:flex;flex-direction:column;min-width:0}
-.wk-w{font-weight:500;font-size:14px;background:linear-gradient(90deg,var(--text,#ecebe7) 0%,var(--text,#ecebe7) 40%,color-mix(in srgb,var(--b1,#c9566c) 60%,#fff) 50%,var(--text,#ecebe7) 60%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:wkshim 2.2s linear infinite}
+.wk-w{font-weight:500;font-size:14px;background:linear-gradient(90deg,var(--text,#ecebe7) 0%,var(--text,#ecebe7) 40%,color-mix(in srgb,var(--b1,var(--wine)) 60%,#fff) 50%,var(--text,#ecebe7) 60%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:wkshim 2.2s linear infinite}
 .wk-w.sw{animation:wkshim 2.2s linear infinite,wkin .45s cubic-bezier(.22,1,.36,1)}
 @keyframes wkshim{from{background-position:100% 0}to{background-position:-150% 0}}
 @keyframes wkin{from{opacity:0;transform:translateY(6px);filter:blur(3px)}}
@@ -483,7 +491,7 @@ html.noanim .pxg i{transition-duration:.05s}html.noanim .wk-w{animation:none}
 /* ===== textos de las IA: tablas, citas, títulos y fórmulas ===== */
 .body h1,.body h2,.body h3,.body h4,.body h5,.body h6{font-weight:600;line-height:1.3;margin:1.1em 0 .45em}
 .body h1{font-size:1.45em}.body h2{font-size:1.28em}.body h3{font-size:1.14em}.body h4,.body h5,.body h6{font-size:1em}
-.body blockquote{margin:.7em 0;padding:.5em 1em;border-left:3px solid var(--b1,var(--c,#c9566c));background:rgba(255,255,255,.03);border-radius:0 12px 12px 0;color:var(--soft,#c3c5ce)}
+.body blockquote{margin:.7em 0;padding:.5em 1em;border-left:3px solid var(--b1,var(--c,var(--wine)));background:rgba(255,255,255,.03);border-radius:0 12px 12px 0;color:var(--soft,#c3c5ce)}
 .body ul ul,.body ol ol,.body ul ol,.body ol ul{margin:.25em 0 .25em 1.2em}
 .body hr{border:0;height:1px;background:rgba(255,255,255,.12);margin:1em 0}
 .body .tbw{max-width:100%;overflow-x:auto;margin:.8em 0;border-radius:12px;border:1px solid rgba(255,255,255,.1)}
@@ -512,14 +520,14 @@ html.noanim .pxg i{transition-duration:.05s}html.noanim .wk-w{animation:none}
 body:has(#vintro) #szBot,body:has(#intro) #szBot,body:has(#intro) #szBotB,body:has(#vintro) #szBotB,body:has(#intro) #szBot,body:has(#vintro) #szBotB{opacity:0 !important;pointer-events:none !important}
 .gico.lgi{width:20px;height:20px;border-radius:6px;vertical-align:-5px}
 /* BETA y «Cuéntanos qué mejorar» */
-.beta-tag{display:inline-flex;align-items:center;margin-left:8px;padding:2px 7px;border-radius:999px;font:600 9.5px var(--mono,monospace);letter-spacing:.12em;color:#f3d79e;border:1px solid rgba(230,182,95,.45);background:linear-gradient(135deg,rgba(230,182,95,.16),rgba(201,86,108,.12));box-shadow:inset 0 1px 0 rgba(255,255,255,.2);vertical-align:middle;cursor:pointer;transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s}
-.beta-tag:hover{transform:translateY(-1px) scale(1.06);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 0 16px -4px rgba(230,182,95,.7)}
+.beta-tag{display:inline-flex;align-items:center;margin-left:8px;padding:2px 7px;border-radius:999px;font:600 9.5px var(--mono,monospace);letter-spacing:.12em;color:#f3d79e;border:1px solid rgba(var(--gold-rgb),.45);background:linear-gradient(135deg,rgba(var(--gold-rgb),.16),rgba(var(--wine-rgb),.12));box-shadow:inset 0 1px 0 rgba(255,255,255,.2);vertical-align:middle;cursor:pointer;transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s}
+.beta-tag:hover{transform:translateY(-1px) scale(1.06);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 0 16px -4px rgba(var(--gold-rgb),.7)}
 .fbc{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
 .fbc button{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:#c3c5ce;font-size:14px;text-align:left;transition:all .3s}
 .fbc button span{font-size:18px}
-.fbc button[aria-checked="true"]{border-color:rgba(230,182,95,.55);background:rgba(230,182,95,.1);color:#ecebe7}
+.fbc button[aria-checked="true"]{border-color:rgba(var(--gold-rgb),.55);background:rgba(var(--gold-rgb),.1);color:#ecebe7}
 .fbt textarea{display:block;width:100%;margin-top:12px;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.28);color:#ecebe7;font:inherit;font-size:14.5px;resize:vertical;outline:0}
-.fbt textarea:focus{border-color:rgba(230,182,95,.5)}
+.fbt textarea:focus{border-color:rgba(var(--gold-rgb),.5)}
 /* selector de IA en pantallas bajitas: cabecera compacta para que se vean varias IA */
 @media (max-height:760px) and (min-width:761px){
   #side.side{height:calc(100vh - 24px) !important;gap:8px !important;padding-top:14px !important}
@@ -559,7 +567,7 @@ body:has(#vintro) #szBot,body:has(#intro) #szBot,body:has(#intro) #szBotB,body:h
 #side.two-p .pfoot{flex:none;max-height:none;justify-content:flex-end;gap:10px}
 @media (min-width:900px){
   #side.side.two-p{width:min(1180px,calc(100vw - 48px)) !important;height:min(86vh,820px) !important;display:grid !important;grid-template-columns:minmax(330px,400px) minmax(0,1fr);gap:18px !important;padding:0 !important;border:0 !important;background:none !important;box-shadow:none !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;overflow:visible !important}
-  #side.two-p .pf-l,#side.two-p .pf-r{padding:22px 20px 16px 22px;border:1px solid rgba(255,255,255,.14);border-radius:28px;background:rgba(18,17,22,.9);backdrop-filter:blur(30px) saturate(1.4);-webkit-backdrop-filter:blur(30px) saturate(1.4);box-shadow:0 50px 140px -30px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.07),0 0 0 1px rgba(201,86,108,.1);overflow:hidden}
+  #side.two-p .pf-l,#side.two-p .pf-r{padding:22px 20px 16px 22px;border:1px solid rgba(255,255,255,.14);border-radius:28px;background:rgba(18,17,22,.9);backdrop-filter:blur(30px) saturate(1.4);-webkit-backdrop-filter:blur(30px) saturate(1.4);box-shadow:0 50px 140px -30px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.07),0 0 0 1px rgba(var(--wine-rgb),.1);overflow:hidden}
   #side.two-p .pf-l{overflow-y:auto;scrollbar-width:thin;transform:translateX(var(--shift,0px));transition:transform .75s cubic-bezier(.65,0,.35,1)}
   #side.two-p .pf-r{clip-path:inset(0 100% 0 0 round 28px);opacity:0;visibility:hidden;transform:translateX(-60px) scale(.97);filter:blur(8px);pointer-events:none;transition:clip-path .8s cubic-bezier(.22,1,.36,1),opacity .5s ease,transform .8s cubic-bezier(.22,1,.36,1),filter .6s ease,visibility 0s linear .8s}
   #side.two-p.two .pf-l{transform:none}
@@ -579,6 +587,9 @@ body:has(#vintro) #szBot,body:has(#intro) #szBot,body:has(#intro) #szBotB,body:h
   #side.two-p:not(.two) .pf-l{transform:none}
   #side.two-p .pr-head b{font-size:26px}
 }
+/* v2.4: con el selector cerrado nada suyo recibe clics (antes la lista «Las IA» quedaba invisible encima de la página y se robaba los clics: no dejaba escribir ni elegir) */
+#side.side:not(.open),#side.side:not(.open) *{pointer-events:none !important}
+#side.side:not(.open) .pf-r{visibility:hidden !important}
 html.noanim #side.two-p .pf-l,html.noanim #side.two-p .pf-r{transition-duration:.01s !important;transition-delay:0s !important}
 /* ===== límite de hoy (reemplaza a los SynXCoins) ===== */
 .lring{flex:none;color:#7fd6b8;filter:drop-shadow(0 0 6px rgba(127,214,184,.45))}
@@ -590,7 +601,7 @@ html.noanim #side.two-p .pf-l,html.noanim #side.two-p .pf-r{transition-duration:
 .lb-h b{font-weight:600;font-size:14px}.lb-h span{font-size:13px;color:var(--soft,#c3c5ce)}
 .lb-t{margin-top:9px;height:9px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.4)}
 .lb-t i{display:block;height:100%;border-radius:inherit;transform-origin:left;background:linear-gradient(90deg,#7fd6b8,#8fd3e8);box-shadow:0 0 10px rgba(127,214,184,.5);transition:transform 1s cubic-bezier(.22,1,.36,1)}
-.lbar.warn .lb-t i{background:linear-gradient(90deg,#f2b36b,#e6b65f)}.lbar.full .lb-t i{background:linear-gradient(90deg,#ff8f7a,#c9566c)}
+.lbar.warn .lb-t i{background:linear-gradient(90deg,#f2b36b,var(--gold))}.lbar.full .lb-t i{background:linear-gradient(90deg,#ff8f7a,var(--wine))}
 .lbar small{display:block;margin-top:7px;font-size:12px;color:var(--mute,#8d909c);line-height:1.4}
 .limbig{display:flex;align-items:center;gap:16px;margin:14px 0 4px}
 .limbig b{display:block;font-family:var(--serif);font-weight:400;font-size:48px;line-height:1}
@@ -600,20 +611,6 @@ html.noanim #side.two-p .pf-l,html.noanim #side.two-p .pf-r{transition-duration:
 @media (max-width:560px){.pill-total.lim{font-size:12px}}
 .sxfoot.lim{display:flex;align-items:center;gap:10px}
 .rcoin .lring{margin:0 -1px}
-/* v2.3.1 · arreglos del selector de IA («¿Con quién fluyes hoy?»)
-   1) Al cerrarlo, «Las IA» quedaba invisible pero seguía recibiendo clics encima de la caja de escribir:
-      tocar para escribir elegía otra IA. Cerrado = nada del selector se ve ni se toca. */
-#side.side:not(.open),#side.side:not(.open) *{pointer-events:none !important}
-#side.side:not(.open) .pf-l,#side.side:not(.open) .pf-r{visibility:hidden !important}
-/* 2) Con el efecto vidrio apagado, la caja entera (1180 px) se pintaba oscura detrás de los paneles:
-      el fondo va solo en cada panel, como con vidrio. */
-@media (min-width:900px){
-  html.noglass #side.side.two-p{background:none !important;border:0 !important;box-shadow:none !important}
-  html.noglass #side.two-p .pf-l,html.noglass #side.two-p .pf-r{background:#16151b !important}
-}
-/* 3) «De dónde» se veía como una barra vacía en pantallas bajitas: sus botones (con scroll propio) se encogían hasta desaparecer.
-      Nada del panel izquierdo se encoge: si no cabe, el panel se desplaza. */
-#side.two-p .pf-l>*{flex-shrink:0}
 /* ===== v1.3 · logos de vidrio: la S de «Synth», la Z y «Flow» ===== */
 .gS{position:relative;display:inline-block;color:transparent;background:linear-gradient(165deg,rgba(255,255,255,.96) 0%,rgba(255,198,220,.62) 20%,rgba(196,128,214,.42) 46%,rgba(255,150,140,.62) 70%,rgba(255,255,255,.92) 100%);background-size:100% 240%;-webkit-background-clip:text;background-clip:text;-webkit-text-stroke:.024em rgba(255,236,246,.78);filter:drop-shadow(0 0 .12em rgba(232,140,190,.42)) drop-shadow(0 .03em .02em rgba(0,0,0,.35));animation:gSflow 6s ease-in-out infinite;padding-right:.01em}
 @keyframes gSflow{0%,100%{background-position:0 0}50%{background-position:0 100%}}
@@ -666,13 +663,13 @@ html.idle-sleep #szBot::after{content:"z z";position:absolute;right:-4px;top:-14
 #szBot .bf>*{position:absolute;inset:0;display:grid;place-items:center;transition:opacity .34s ease,transform .42s cubic-bezier(.34,1.56,.64,1),filter .34s ease}
 #szBot .bf>.in{opacity:0;transform:scale(.78) translateY(3px);filter:blur(2px)}
 #szBot .bf>.out{opacity:0;transform:scale(1.12);filter:blur(2.5px)}
-#szBot .pxface{border-radius:13px;background:#110c0e;box-shadow:inset 0 0 0 1.5px rgba(230,182,95,.4)}
+#szBot .pxface{border-radius:13px;background:#110c0e;box-shadow:inset 0 0 0 1.5px rgba(var(--gold-rgb),.4)}
 #szBot .pxface .pxg{grid-template-columns:repeat(8,3.4px);grid-auto-rows:3.4px;gap:.8px}
 #szBot.inhead .pxface .pxg{grid-template-columns:repeat(8,2.6px);grid-auto-rows:2.6px;gap:.5px}
 #szBot{transition:scale .55s cubic-bezier(.34,1.56,.64,1),opacity .4s,transform .5s}
 #szBot.g1{scale:1.22}
-#szBot.g2{scale:1.5;box-shadow:0 0 0 6px rgba(230,182,95,.14),0 18px 44px -14px rgba(0,0,0,.85)}
-#szBotB{display:flex;align-items:center;gap:12px;padding:14px 18px 14px 12px;font-size:15.5px;line-height:1.5;border-radius:20px;border-color:rgba(230,182,95,.5);box-shadow:0 22px 60px -18px rgba(0,0,0,.9),0 0 0 1px rgba(230,182,95,.12),0 0 40px -10px rgba(230,182,95,.35)}
+#szBot.g2{scale:1.5;box-shadow:0 0 0 6px rgba(var(--gold-rgb),.14),0 18px 44px -14px rgba(0,0,0,.85)}
+#szBotB{display:flex;align-items:center;gap:12px;padding:14px 18px 14px 12px;font-size:15.5px;line-height:1.5;border-radius:20px;border-color:rgba(var(--gold-rgb),.5);box-shadow:0 22px 60px -18px rgba(0,0,0,.9),0 0 0 1px rgba(var(--gold-rgb),.12),0 0 40px -10px rgba(var(--gold-rgb),.35)}
 #szBotB.big{font-size:17px;padding:16px 20px 16px 14px}
 #szBotB .bbf{flex:none;width:52px;height:52px;animation:bbfIn .5s cubic-bezier(.34,1.56,.64,1)}
 #szBotB.big .bbf svg{width:62px;height:62px}#szBotB.big .bbf{width:62px;height:62px}
@@ -680,7 +677,7 @@ html.idle-sleep #szBot::after{content:"z z";position:absolute;right:-4px;top:-14
 @keyframes bbfIn{from{transform:scale(.6) rotate(-10deg);opacity:0}}
 #szBotP .bm.a .mf svg{width:36px;height:36px}
 #szBotP .bm p{font-size:14.5px}
-#szBotP .pxmf{display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:#110c0e;box-shadow:inset 0 0 0 1.5px rgba(230,182,95,.4)}
+#szBotP .pxmf{display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:#110c0e;box-shadow:inset 0 0 0 1.5px rgba(var(--gold-rgb),.4)}
 #szBotP .pxmf .pxg{grid-template-columns:repeat(8,3px);grid-auto-rows:3px;gap:.7px}
 /* ===== v1.4 · eventos especiales ===== */
 html.glitching body{animation:glitchB .18s steps(2) infinite}
@@ -752,24 +749,24 @@ html.glitch-red body{filter:hue-rotate(-40deg) saturate(1.8)}
 .gq-f svg{width:64px;height:64px}
 .gq-say b{display:block;font:600 11px var(--mono,monospace);letter-spacing:.1em;text-transform:uppercase;color:#f3d79e;margin-bottom:3px}
 .gq-say p{margin:0;font-size:16px;color:var(--text,#ecebe7)}
-.gq-full{width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:14px 16px;border-radius:16px;border:1px solid rgba(230,182,95,.45);background:linear-gradient(150deg,rgba(230,182,95,.14),rgba(201,86,108,.08));color:var(--text,#ecebe7);font:inherit;text-align:left;transition:transform .3s,box-shadow .3s}
+.gq-full{width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:14px 16px;border-radius:16px;border:1px solid rgba(var(--gold-rgb),.45);background:linear-gradient(150deg,rgba(var(--gold-rgb),.14),rgba(var(--wine-rgb),.08));color:var(--text,#ecebe7);font:inherit;text-align:left;transition:transform .3s,box-shadow .3s}
 .gq-full span{font-weight:600;font-size:16px}
 .gq-full small{color:var(--soft,#c3c5ce);font-size:13px}
-.gq-full:hover{transform:translateY(-1px);box-shadow:0 10px 30px -10px rgba(230,182,95,.5)}
+.gq-full:hover{transform:translateY(-1px);box-shadow:0 10px 30px -10px rgba(var(--gold-rgb),.5)}
 .gq-or{margin:14px 0 8px;font-size:13.5px;color:var(--soft,#c3c5ce)}
 .gq-or small{display:block;color:var(--mute,#8d909c);font-size:12px}
 .gq-chips{display:flex;flex-wrap:wrap;gap:8px}
 .gq-c{display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:var(--soft,#c3c5ce);font:inherit;font-size:13.5px;transition:background .25s,border-color .25s,color .25s}
 .gq-c i{display:grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1.5px solid currentColor;font:700 10.5px var(--mono,monospace);font-style:normal;opacity:.5}
-.gq-c[aria-pressed="true"]{border-color:rgba(230,182,95,.6);background:rgba(230,182,95,.14);color:#f3d79e}
-.gq-c[aria-pressed="true"] i{opacity:1;background:#e6b65f;border-color:#e6b65f;color:#1a1408}
+.gq-c[aria-pressed="true"]{border-color:rgba(var(--gold-rgb),.6);background:rgba(var(--gold-rgb),.14);color:#f3d79e}
+.gq-c[aria-pressed="true"] i{opacity:1;background:var(--gold);border-color:var(--gold);color:#1a1408}
 .gq-b{margin-top:16px;flex-wrap:wrap}
 .gq-b .btn[disabled]{opacity:.45;pointer-events:none}
 .nw-l{margin:4px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
 .nw-l li{position:relative;padding:10px 14px 10px 34px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);font-size:14px;animation:nwIn .5s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(.25s + var(--i) * .12s)}
-.nw-l li::before{content:"✦";position:absolute;left:13px;top:10px;color:#e6b65f}
+.nw-l li::before{content:"✦";position:absolute;left:13px;top:10px;color:var(--gold)}
 @keyframes nwIn{from{opacity:0;transform:translateY(8px)}}
-.szdisc{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));z-index:470;display:flex;align-items:center;gap:12px;width:min(420px,calc(100vw - 24px));padding:12px 14px;border-radius:20px;border:1px solid rgba(230,182,95,.45);background:rgba(20,18,24,.95);box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 40px -10px rgba(230,182,95,.4);transform:translate(-50%,20px) scale(.96);opacity:0;transition:transform .45s cubic-bezier(.22,1,.36,1),opacity .35s}
+.szdisc{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));z-index:470;display:flex;align-items:center;gap:12px;width:min(420px,calc(100vw - 24px));padding:12px 14px;border-radius:20px;border:1px solid rgba(var(--gold-rgb),.45);background:rgba(20,18,24,.95);box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 40px -10px rgba(var(--gold-rgb),.4);transform:translate(-50%,20px) scale(.96);opacity:0;transition:transform .45s cubic-bezier(.22,1,.36,1),opacity .35s}
 .szdisc.on{transform:translate(-50%,0) scale(1);opacity:1}
 .szdisc .dc-f{flex:none;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.06)}
 .szdisc small{display:block;font:600 10.5px var(--mono,monospace);letter-spacing:.1em;text-transform:uppercase;color:#f3d79e}
@@ -786,14 +783,86 @@ html.noglass .szdisc{background:#16141a}
 #szAlert .al-t{font:400 34px/1.1 var(--serif,Georgia,serif);color:#ffb0b0}
 #szAlert p{margin:0;color:var(--soft,#c3c5ce);font-size:15px}
 #szAlert .al-w{display:flex;align-items:center;gap:10px;margin-top:6px;color:var(--text,#ecebe7)}
-#szAlert .al-w i{width:16px;height:16px;border-radius:50%;border:2px solid #e6b65f;border-top-color:transparent;animation:agSpin .9s linear infinite;flex:none}
+#szAlert .al-w i{width:16px;height:16px;border-radius:50%;border:2px solid var(--gold);border-top-color:transparent;animation:agSpin .9s linear infinite;flex:none}
 @keyframes agSpin{to{transform:rotate(360deg)}}
-/* v2.2 · utilidades de cuenta (la app instalable vuelve más adelante) */
-.inst-ol{margin:10px 0 0;padding-left:22px;text-align:left;display:grid;gap:8px;color:var(--ink2,#cfc8e6);font-size:14.5px;line-height:1.45}
-.inst-ol b{color:var(--ink,#fff);font-weight:600}
-.inst-p{margin-top:12px;font-size:13px;opacity:.75}
-.is-app .only-web{display:none!important}
-.signed .only-guest{display:none!important}
+/* ===== v2.3 · «Descarga nuestra app SynthFlow» (solo en el celular, desde el navegador) =====
+   v2.9: ventana de vidrio (se ve el cielo detrás) con un celular dibujado en código; sin el video viejo */
+.appp{position:fixed;inset:0;z-index:9800;display:flex;align-items:flex-end;justify-content:center;padding:12px 10px calc(10px + env(safe-area-inset-bottom));background:rgba(6,4,20,.3);opacity:0;transition:opacity .4s ease}
+.appp.on{opacity:1}
+.ap-card{position:relative;width:min(440px,100%);max-height:calc(100dvh - 24px);overflow-y:auto;border-radius:30px;scrollbar-width:none;
+  background:radial-gradient(120% 60% at 0% 0%,rgba(255,255,255,.14),transparent 46%),linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.015) 55%,rgba(255,255,255,.05)),rgba(14,9,36,.32);
+  border:1px solid rgba(255,255,255,.2);-webkit-backdrop-filter:blur(20px) saturate(185%) brightness(.9);backdrop-filter:blur(20px) saturate(185%) brightness(.9);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.34),0 -20px 80px -24px rgba(3,1,14,.8);transform:translateY(40px);transition:transform .55s cubic-bezier(.22,1,.36,1)}
+html.noglass .ap-card{-webkit-backdrop-filter:blur(18px) saturate(170%) brightness(.9) !important;backdrop-filter:blur(18px) saturate(170%) brightness(.9) !important}
+.appp.on .ap-card{transform:none}
+/* el celular de vidrio con SynthFlow adentro y el ícono de la app saliendo hacia tu pantalla de inicio */
+.ap-hero{position:relative;height:min(36dvh,250px);margin:10px 10px 0;border-radius:22px;overflow:hidden;display:grid;place-items:center;
+  background:radial-gradient(70% 60% at 30% 20%,color-mix(in srgb,var(--sb-secondary) 30%,transparent),transparent 70%),radial-gradient(70% 70% at 80% 90%,color-mix(in srgb,var(--sb-light) 26%,transparent),transparent 70%),color-mix(in srgb,var(--sb-deep) 50%,transparent)}
+.ap-glow{position:absolute;left:50%;top:55%;width:70%;aspect-ratio:1;translate:-50% -50%;border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--sb-primary) 45%,transparent),transparent);animation:apglow 4s ease-in-out infinite alternate}
+@keyframes apglow{to{scale:1.15;opacity:.7}}
+.ap-phone{position:relative;width:122px;height:212px;border-radius:26px;padding:7px;rotate:-6deg;translate:-22px 6px;
+  background:linear-gradient(150deg,rgba(255,255,255,.3),rgba(255,255,255,.06) 40%,rgba(255,255,255,.14));border:1px solid rgba(255,255,255,.4);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 24px 50px -16px rgba(3,1,14,.8);animation:apfloat 5s ease-in-out infinite alternate}
+@keyframes apfloat{to{translate:-22px -4px;rotate:-3deg}}
+.ap-scr{position:relative;width:100%;height:100%;border-radius:20px;overflow:hidden;display:flex;flex-direction:column;gap:5px;padding:9px 8px;
+  background:radial-gradient(90% 60% at 80% 0%,color-mix(in srgb,var(--sb-secondary) 40%,transparent),transparent 70%),radial-gradient(80% 50% at 0% 100%,color-mix(in srgb,var(--sb-light) 30%,transparent),transparent 70%),var(--sb-bg)}
+.ap-scr video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ap-top{display:flex;align-items:center;gap:4px;font:700 9.5px/1 var(--sans,system-ui);color:#fff}
+.ap-top .sforb{font-size:11px}
+.ap-top b{font-weight:700;letter-spacing:-.02em}
+.ap-dots{margin-left:auto;display:grid;place-items:center;width:12px;height:12px;border-radius:50%;border:1px solid rgba(255,255,255,.22);font:700 5px/1 system-ui;font-style:normal;letter-spacing:-.5px;color:rgba(255,255,255,.8)}
+.ap-dots::before{content:"•••"}
+.ap-chip{align-self:center;display:flex;align-items:center;gap:3px;padding:2px 6px;border-radius:999px;font:500 5.5px/1.2 var(--sans,system-ui);color:rgba(255,255,255,.75);border:1px solid color-mix(in srgb,var(--sb-warm) 45%,transparent);background:rgba(255,255,255,.05)}
+.ap-chip i{width:3px;height:3px;border-radius:50%;background:var(--sb-warm)}
+.ap-q{margin-top:6px;text-align:center;font:400 13px/1.05 var(--serif,Georgia,serif);color:#fff}
+.ap-q em{background:var(--grad-text);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ap-m{display:block;border-radius:8px}
+.ap-m.me{align-self:flex-end;width:58%;height:12px;margin-top:4px;background:rgba(255,255,255,.18);animation:apin .5s .6s both}
+.ap-m.ai{display:grid;gap:4px;width:84%;padding:5px 6px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);animation:apin .5s 1.1s both}
+.ap-m.ai i{display:block;height:3.5px;border-radius:3px;background:linear-gradient(90deg,var(--sb-light),var(--sb-primary),var(--sb-secondary));opacity:.75;transform-origin:left;animation:apline 2.6s 1.3s ease-in-out infinite}
+.ap-m.ai i:nth-child(2){width:80%;animation-delay:1.45s}.ap-m.ai i:nth-child(3){width:55%;animation-delay:1.6s}
+@keyframes apin{from{opacity:0;translate:0 8px}}
+@keyframes apline{0%{scale:0 1}40%,100%{scale:1 1}}
+.ap-in{margin-top:auto;height:20px;border-radius:10px;border:1px solid color-mix(in srgb,var(--sb-light) 45%,rgba(255,255,255,.2));background:rgba(255,255,255,.06);box-shadow:0 0 10px color-mix(in srgb,var(--sb-light) 25%,transparent);display:flex;justify-content:space-between;align-items:center;padding:0 3px 0 5px}
+.ap-auto{font:500 5.5px/1 var(--sans,system-ui);color:rgba(255,255,255,.8);padding:2px 5px;border-radius:999px;border:1px solid rgba(255,255,255,.18)}
+.ap-auto::before{content:"✦ ";color:var(--sb-spark)}
+.ap-in > i{width:13px;height:13px;border-radius:4px;background:var(--grad)}
+.ap-tabs{display:flex;justify-content:space-around;align-items:center;margin:0 -8px -9px;padding:5px 6px 7px;border-top:1px solid rgba(255,255,255,.1);background:rgba(10,6,28,.55)}
+.ap-tabs i{width:8px;height:7px;border-radius:2px;border:1.2px solid rgba(255,255,255,.55)}
+.ap-tabs i.ring{width:9px;height:9px;border-radius:50%;border-color:#4fe3a8;box-shadow:0 0 5px rgba(79,227,168,.6)}
+.ap-ico{position:absolute;left:calc(50% + 44px);top:calc(50% - 50px);width:62px;height:62px;border-radius:18px;padding:4px;display:grid;place-items:center;
+  background:linear-gradient(150deg,rgba(255,255,255,.35),rgba(255,255,255,.08));border:1px solid rgba(255,255,255,.45);box-shadow:0 14px 30px -10px rgba(3,1,14,.8),0 0 30px color-mix(in srgb,var(--sb-secondary) 45%,transparent);
+  animation:apico 3.4s cubic-bezier(.34,1.56,.64,1) infinite}
+.ap-ico img{width:100%;height:100%;border-radius:14px;display:block}
+@keyframes apico{0%{transform:translate(-40px,40px) scale(.4);opacity:0}22%{transform:none;opacity:1}78%{transform:none;opacity:1}100%{transform:translate(0,-6px) scale(.96);opacity:1}}
+.ap-sp{position:absolute;width:10px;height:10px;background:#fff6e0;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);filter:drop-shadow(0 0 4px #f2a6c8);animation:apsp 2.6s ease-in-out infinite}
+.ap-sp.s1{left:calc(50% + 100px);top:24%}.ap-sp.s2{left:calc(50% + 36px);top:70%;width:7px;height:7px;animation-delay:.8s}.ap-sp.s3{left:calc(50% - 96px);top:22%;width:8px;height:8px;animation-delay:1.5s}
+@keyframes apsp{0%,100%{opacity:0;scale:.4}50%{opacity:1;scale:1}}
+.ap-body{padding:14px 20px 18px}
+.ap-kick{display:inline-block;font-size:11.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--sb-warm)}
+.ap-body h3{margin:6px 0 14px;font:700 clamp(23px,5.6vw,28px)/1.1 var(--sans,"Figtree",system-ui,sans-serif);letter-spacing:-.025em;color:#fff}
+.ap-body h3 em{font-style:normal;background:var(--grad-text);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ap-why{list-style:none;margin:0 0 6px;padding:0;display:grid;gap:10px}
+.ap-why li{display:flex;gap:12px;align-items:flex-start;font-size:14px;line-height:1.45;color:rgba(246,243,255,.8)}
+.ap-why li i{flex:none;width:32px;height:32px;display:grid;place-items:center;border-radius:11px;font-style:normal;color:#fff;
+  background:linear-gradient(150deg,rgba(255,255,255,.18),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
+.ap-why li:nth-child(1) i{color:var(--sb-spark)}.ap-why li:nth-child(2) i{color:var(--sb-light)}.ap-why li:nth-child(3) i{color:var(--sb-secondary)}
+.ap-why li i svg{width:17px;height:17px}
+.ap-why b{color:#fff}
+.ap-steps{list-style:none;margin:12px 0 2px;padding:12px;display:grid;gap:10px;border-radius:18px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14)}
+.ap-steps li{display:flex;gap:10px;align-items:center;font-size:14px;line-height:1.4;color:rgba(246,243,255,.88)}
+.ap-n{flex:none;width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:var(--grad);color:#fff;font-size:12.5px;font-weight:700}
+.ap-k{display:inline-grid;place-items:center;vertical-align:-4px;width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.12);font-style:normal}
+.ap-acts{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px}
+.ap-acts .btn{flex:1;max-width:240px;min-height:48px;border-radius:999px;font-weight:600}
+.ap-acts .ap-go{background:var(--grad);color:#fff;border:0;box-shadow:0 10px 34px -10px rgba(255,61,154,.75),inset 0 1px 0 rgba(255,255,255,.4)}
+@media (min-width:700px){.appp{align-items:center}}
+@media (prefers-reduced-motion:reduce){.ap-card{transition:none}.ap-hero *{animation:none !important}}
+html.noanim .ap-hero *{animation:none !important}
+/* v2.6: con los pasos a la vista, el dibujo se achica para que todo quepa sin bajar */
+.ap-card:has(.ap-steps) .ap-hero{height:min(18dvh,140px);transition:height .4s ease}
+.ap-card:has(.ap-steps) .ap-phone{scale:.62}
+.ap-card:has(.ap-steps) .ap-ico{scale:.7}
 /* ===== v2.2 · menús, etiquetas, ajustes con pestañas y el «!» de novedades ===== */
 .ctxm{min-width:236px;max-width:min(320px,calc(100vw - 20px));padding:6px;gap:1px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(22,22,28,.86);backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);box-shadow:0 24px 60px -18px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.06)}
 .ctxm button{display:flex;align-items:center;gap:10px;width:100%;min-height:34px;padding:7px 10px;border-radius:9px;font-size:14px;color:var(--soft,#c3c5ce);text-align:left}
@@ -803,7 +872,7 @@ html.noglass .szdisc{background:#16141a}
 .ctxm .mico svg{width:17px;height:17px}
 .ctxm button:hover .mico{color:var(--text,#ecebe7)}
 .ctxm kbd{font:11px var(--sans,system-ui);color:var(--mute,#8d909c);opacity:.8}
-.ctxm .mck{font-style:normal;color:#e6b65f;width:14px;text-align:center}
+.ctxm .mck{font-style:normal;color:var(--gold);width:14px;text-align:center}
 .ctxm hr{border:0;height:1px;margin:5px 6px;background:rgba(255,255,255,.08)}
 .ctxm .mhd{padding:6px 10px 4px;font-size:11.5px;color:var(--mute,#8d909c);letter-spacing:.02em}
 .ctxm .dng,.ctxm .dng .mi{color:#ff9d8a}
@@ -832,12 +901,12 @@ html.noglass .szdisc{background:#16141a}
 .cfgmem .memclr{margin-top:8px;font-size:13px}
 .cfglinks{display:flex;flex-direction:column;gap:6px}
 .cfglk{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 10px;padding:11px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);text-align:left;transition:background .25s,border-color .25s}
-.cfglk:hover{background:rgba(255,255,255,.07);border-color:rgba(230,182,95,.35)}
+.cfglk:hover{background:rgba(255,255,255,.07);border-color:rgba(var(--gold-rgb),.35)}
 .cfglk b{font-weight:500;font-size:14.5px;color:var(--text,#ecebe7)}
 .cfglk small{grid-column:1;font-size:12.5px;color:var(--mute,#8d909c)}
 .cfglk svg{grid-row:1/3;grid-column:2;width:16px;height:16px;color:var(--mute,#8d909c)}
 /* «!» de novedades sobre la cabeza de SynthonIA */
-.nwbang{position:absolute;left:50%;top:-16px;z-index:3;width:22px;height:22px;margin-left:-11px;display:grid;place-items:center;border-radius:50%;background:linear-gradient(135deg,#ffcf7a,#e6b65f);color:#1a1206;font:800 14px/1 var(--sans,system-ui);box-shadow:0 0 0 2px rgba(11,12,16,.9),0 6px 18px -4px rgba(230,182,95,.8);cursor:pointer;animation:bangin .6s cubic-bezier(.34,1.56,.64,1) both,bangbob 2.4s ease-in-out .6s infinite}
+.nwbang{position:absolute;left:50%;top:-16px;z-index:3;width:22px;height:22px;margin-left:-11px;display:grid;place-items:center;border-radius:50%;background:linear-gradient(135deg,#ffcf7a,var(--gold));color:#1a1206;font:800 14px/1 var(--sans,system-ui);box-shadow:0 0 0 2px rgba(11,12,16,.9),0 6px 18px -4px rgba(var(--gold-rgb),.8);cursor:pointer;animation:bangin .6s cubic-bezier(.34,1.56,.64,1) both,bangbob 2.4s ease-in-out .6s infinite}
 .nwbang:hover{filter:brightness(1.1)}
 .nwbang.out{animation:bangout .35s ease both}
 #szBot.inhead .nwbang{top:-10px;width:18px;height:18px;margin-left:-9px;font-size:12px}
@@ -849,3 +918,499 @@ html.noanim .nwbang{animation:none}
 .ftalk{opacity:0;transition:opacity .12s}
 /* con sesión: nada de «entra a tu cuenta» */
 .signed .only-guest{display:none!important}
+/* v2.3 · aviso de mantenimiento: SynthonIA en el centro, viva, con su charla */
+#szMaint{position:fixed;inset:0;z-index:2147483000;display:flex;justify-content:center;overflow-y:auto;overscroll-behavior:contain;padding:max(18px,env(safe-area-inset-top)) 16px max(18px,env(safe-area-inset-bottom));background:#08070b;color:#f3ece2;font-family:inherit}
+#szMaint .mt-bg{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+#szMaint .mt-bg i{position:absolute;border-radius:50%;filter:blur(70px);opacity:.42;animation:mtDrift 16s ease-in-out infinite alternate}
+#szMaint .mt-bg i:nth-child(1){width:46vmax;height:46vmax;left:-12vmax;top:-14vmax;background:var(--wine)}
+#szMaint .mt-bg i:nth-child(2){width:40vmax;height:40vmax;right:-14vmax;top:18vh;background:var(--gold);opacity:.26;animation-delay:-5s}
+#szMaint .mt-bg i:nth-child(3){width:36vmax;height:36vmax;left:20vw;bottom:-20vmax;background:#6f5bd6;opacity:.22;animation-delay:-9s}
+#szMaint .mt-wrap{position:relative;width:min(560px,100%);margin:auto;display:flex;flex-direction:column;align-items:center;gap:16px}
+#szMaint .mt-face{position:relative;width:168px;height:168px;cursor:pointer;-webkit-tap-highlight-color:transparent;animation:mtFloat 3.6s ease-in-out infinite;filter:drop-shadow(0 18px 40px rgba(var(--wine-rgb),.35))}
+#szMaint .mt-face .szface{width:168px;height:168px}
+#szMaint .mt-face::after{content:"";position:absolute;left:22%;right:22%;bottom:-18px;height:14px;border-radius:50%;background:rgba(0,0,0,.55);filter:blur(6px);animation:mtShadow 3.6s ease-in-out infinite;z-index:-1}
+#szMaint.thinking .mt-face{animation:mtFloat 1.6s ease-in-out infinite}
+#szMaint .mt-pt{position:absolute;left:50%;top:45%;font-style:normal;font-size:22px;pointer-events:none;will-change:transform,opacity}
+#szMaint .mt-head{text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+#szMaint .mt-chip{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:99px;border:1px solid rgba(var(--gold-rgb),.35);background:rgba(var(--gold-rgb),.08);color:var(--gold);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+#szMaint .mt-chip i{width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 0 rgba(var(--gold-rgb),.6);animation:mtPing 1.8s ease-out infinite}
+#szMaint h2{margin:4px 0 0;font-family:var(--serif,Georgia,serif);font-weight:500;font-size:clamp(28px,7vw,40px);line-height:1.1;letter-spacing:-.01em}
+#szMaint .mt-text{margin:0;max-width:44ch;color:rgba(243,236,226,.78);font-size:15.5px;line-height:1.5}
+#szMaint .mt-ago{color:rgba(243,236,226,.45);font-size:12.5px}
+#szMaint .mt-chat{width:100%;display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:22px;background:rgba(22,18,24,.72);border:1px solid rgba(255,255,255,.09);box-shadow:0 30px 80px -30px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.05);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+#szMaint .mt-msgs{display:flex;flex-direction:column;gap:8px;max-height:min(34vh,300px);min-height:64px;overflow-y:auto;padding:4px 2px;scrollbar-width:thin}
+#szMaint .mt-m{max-width:86%;padding:9px 13px;border-radius:16px;font-size:14.5px;line-height:1.45;animation:mtIn .35s cubic-bezier(.22,1,.36,1)}
+#szMaint .mt-m p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+#szMaint .mt-m.ia{align-self:flex-start;background:rgba(255,255,255,.07);border-bottom-left-radius:6px}
+#szMaint .mt-m.me{align-self:flex-end;background:linear-gradient(135deg,var(--gold),#d9935a);color:#1b1208;border-bottom-right-radius:6px;font-weight:500}
+#szMaint .mt-sugs{display:flex;gap:6px;flex-wrap:wrap}
+#szMaint .mt-sugs:empty{display:none}
+#szMaint .mt-sug{padding:6px 11px;border-radius:99px;border:1px solid rgba(255,255,255,.14);background:transparent;color:rgba(243,236,226,.85);font:inherit;font-size:13px;cursor:pointer;transition:background .2s,border-color .2s}
+#szMaint .mt-sug:hover{background:rgba(255,255,255,.06);border-color:rgba(var(--gold-rgb),.5)}
+#szMaint .mt-form{display:flex;gap:8px;align-items:center}
+#szMaint .mt-in{flex:1;min-width:0;height:46px;padding:0 15px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.35);color:inherit;font:inherit;font-size:16px;outline:none;transition:border-color .2s}
+#szMaint .mt-in:focus{border-color:rgba(var(--gold-rgb),.6)}
+#szMaint .mt-send{flex:none;width:46px;height:46px;display:grid;place-items:center;border-radius:14px;border:0;background:#f3ece2;color:#120d10;cursor:pointer;transition:transform .15s,opacity .2s}
+#szMaint .mt-send svg{width:20px;height:20px}
+#szMaint .mt-send:active{transform:scale(.94)}
+#szMaint .mt-send:disabled{opacity:.4}
+#szMaint .mt-exit{background:none;border:1px dashed rgba(255,255,255,.25);color:rgba(243,236,226,.7);border-radius:12px;padding:8px 14px;font:inherit;font-size:13px;cursor:pointer}
+#szMaint .mt-exit:hover{border-color:rgba(var(--gold-rgb),.6);color:var(--gold)}
+html.mt-on,html.mt-on body{overflow:hidden!important}
+html.mt-on #szBot{display:none!important}
+@keyframes mtFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes mtShadow{0%,100%{transform:scaleX(1);opacity:.7}50%{transform:scaleX(.8);opacity:.4}}
+@keyframes mtDrift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(6vw,4vh) scale(1.12)}}
+@keyframes mtPing{0%{box-shadow:0 0 0 0 rgba(var(--gold-rgb),.6)}100%{box-shadow:0 0 0 9px rgba(var(--gold-rgb),0)}}
+@keyframes mtIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (max-width:480px){#szMaint .mt-face,#szMaint .mt-face .szface{width:132px;height:132px}#szMaint .mt-wrap{gap:12px}#szMaint .mt-chat{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(22,18,24,.92)}}
+@media (prefers-reduced-motion:reduce){#szMaint *,#szMaint .mt-face{animation:none!important}}
+html.noanim #szMaint .mt-bg i,html.noanim #szMaint .mt-face{animation:none}
+
+/* sin resaltado azul al tocar en el celular (todas las páginas) */
+html{-webkit-tap-highlight-color:transparent}
+@media (hover:none){button,a,label,summary,[role=button],[role=tab]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}}
+:focus:not(:focus-visible){outline:none}
+/* v2.3 · Seguridad y acceso: cómo entras a tu cuenta */
+.sacc{display:grid;gap:8px;margin:10px 0 4px}
+.sa-r{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.025)}
+.sa-r.on{border-color:rgba(127,214,184,.35);background:rgba(127,214,184,.05)}
+.sa-i{width:34px;height:34px;flex:none;display:grid;place-items:center;border-radius:10px;background:rgba(255,255,255,.06);font-size:16px}
+.sa-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.sa-t b{font-size:14.5px;font-weight:600}
+.sa-t small{font-size:12.5px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sa-ok{font-style:normal;font-size:12.5px;color:#7fd6b8;white-space:nowrap}
+.sa-no{font-size:12px;color:var(--mute)}
+.sa-g{flex:none;min-height:32px;display:flex;align-items:center}
+.lin .at{padding-left:12px;color:var(--mute)}
+/* v2.3 · Ajustes: colores de SynthFlow */
+.cfgth{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.cfgth button{position:relative;display:flex;flex-direction:column;align-items:center;gap:7px;padding:12px 6px 10px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.025);color:var(--soft);font-size:12.5px;cursor:pointer;transition:border-color .25s,background .25s}
+.cfgth button i{width:34px;height:34px;border-radius:50%;background:conic-gradient(from 200deg,var(--t1),var(--t2),var(--t1));box-shadow:0 0 0 3px rgba(0,0,0,.35),0 6px 18px -6px var(--t1)}
+.cfgth button[aria-pressed="true"]{border-color:var(--t1);background:rgba(255,255,255,.06);color:var(--text)}
+.cfgth button[aria-pressed="true"]::after{content:"✓";position:absolute;top:6px;right:8px;font-size:11px;color:var(--t1)}
+.cfgth button:disabled{opacity:.5;cursor:not-allowed}
+.cfgth button em{position:absolute;top:6px;right:6px;font-style:normal;font-size:9.5px;padding:2px 6px;border-radius:99px;background:rgba(255,255,255,.08);color:var(--mute);letter-spacing:.03em}
+/* ===== v2.4 · «Noche Synth»: colores del boceto, fondo espacial y vidrio líquido ===== */
+:root{
+  --sb-bg:#0b0820;--sb-deep:#2a1458;--sb-primary:#7b3ff2;--sb-secondary:#ff3d9a;--sb-warm:#ff7a45;--sb-spark:#ffc857;--sb-light:#3de0ff;--sb-text:#f6f3ff;
+  /* los dos colores de siempre ahora salen del tema nuevo: el «dorado» es el naranja cálido y el «vino» es el rosa */
+  --gold:#ff9a52;--gold-rgb:255,154,82;--wine:#ff3d9a;--wine-rgb:255,61,154;--accent:#3de0ff;
+  --bg:#0b0820;--text:#f6f3ff;--soft:#ddd7ef;--mute:#b4adcf;--line:rgba(255,255,255,.12);--card:rgba(255,255,255,.05);
+  --grad:linear-gradient(100deg,var(--sb-primary),var(--sb-secondary) 55%,var(--sb-warm));
+  --grad-text:linear-gradient(95deg,var(--sb-light),var(--sb-primary) 38%,var(--sb-secondary) 70%,var(--sb-warm));
+  /* vidrio líquido: casi transparente (se ve 60-75 % de lo de atrás), con desenfoque suave, borde de luz y un brillo en la esquina */
+  --lg-blur:blur(14px) saturate(175%) brightness(1.06);
+  --lg-fill:rgba(255,255,255,.065);
+  --lg-bg:radial-gradient(130% 70% at 0% 0%,rgba(255,255,255,.13),transparent 46%),linear-gradient(160deg,rgba(255,255,255,.075),rgba(255,255,255,.025) 60%,rgba(255,255,255,.05));
+  --lg-edge:rgba(255,255,255,.2);
+  --lg-shadow:inset 0 1px 0 rgba(255,255,255,.32),inset 0 -1px 0 rgba(255,255,255,.06),inset 0 0 0 1px rgba(255,255,255,.03),0 18px 50px -18px rgba(4,1,18,.75);
+}
+html[data-theme="oceano"]{--sb-bg:#060b1f;--sb-deep:#0f2a66;--sb-primary:#2f6bff;--sb-secondary:#3de0ff;--sb-warm:#ffd166;--sb-spark:#9ae6ff;--sb-light:#a5b4ff;--sb-text:#eef4ff;
+  --gold:#7cc9e3;--gold-rgb:124,201,227;--wine:#5a7bd6;--wine-rgb:90,123,214;--bg:#060b1f}
+html[data-theme="bosque"]{--sb-bg:#051a1c;--sb-deep:#0b3d42;--sb-primary:#14c8a8;--sb-secondary:#3da9ff;--sb-warm:#b8f25c;--sb-spark:#ffe66d;--sb-light:#7df9ff;--sb-text:#efffFB;
+  --gold:#9bd68f;--gold-rgb:155,214,143;--wine:#3fa58a;--wine-rgb:63,165,138;--bg:#051a1c}
+html[data-theme="lavanda"]{--sb-bg:#120a24;--sb-deep:#34205e;--sb-primary:#a98bff;--sb-secondary:#d46fb0;--sb-warm:#ffb3c7;--sb-spark:#fff0c2;--sb-light:#bfa9f2;--sb-text:#f7f2ff;
+  --gold:#bfa9f2;--gold-rgb:191,169,242;--wine:#d46fb0;--wine-rgb:212,111,176;--bg:#120a24}
+@property --sb-bg{syntax:'<color>';inherits:true;initial-value:#0b0820}
+@property --sb-deep{syntax:'<color>';inherits:true;initial-value:#2a1458}
+@property --sb-primary{syntax:'<color>';inherits:true;initial-value:#7b3ff2}
+@property --sb-secondary{syntax:'<color>';inherits:true;initial-value:#ff3d9a}
+@property --sb-warm{syntax:'<color>';inherits:true;initial-value:#ff7a45}
+@property --sb-light{syntax:'<color>';inherits:true;initial-value:#3de0ff}
+:root{transition:--sb-bg .9s ease,--sb-deep .9s ease,--sb-primary .9s ease,--sb-secondary .9s ease,--sb-warm .9s ease,--sb-light .9s ease}
+html,body{background:var(--sb-bg)}
+::selection{background:rgba(123,63,242,.45)}
+
+/* el fondo viejo se queda como contenedor (los ajustes y scripts lo siguen usando), pero sus manchas se esconden */
+.aurora{z-index:-2;background:var(--sb-bg)}
+.aurora>i,.aurora .orbit{display:none !important}
+.grain{opacity:.045 !important}
+
+.sb-root{position:absolute;inset:0;overflow:hidden;pointer-events:none;--sy:0;--mx:0;--my:0;--p:0;--dim:1}
+.sb-root *{pointer-events:none}
+.sb-base{position:absolute;inset:0;background:radial-gradient(130% 100% at 50% 0%,color-mix(in srgb,var(--sb-deep) 70%,transparent),transparent 75%)}
+.sb-layer{position:absolute;inset:0;will-change:transform;transform:translate3d(calc((var(--mx)*1px - var(--p)*3vw)*var(--k)),calc((var(--my)*8px - var(--sy)*.05px)*var(--k)),0)}
+.sb-pos{position:absolute;left:0;top:0;transform:translate(calc(var(--x)*1vw),calc(var(--y)*1vh)) scale(var(--s,1))}
+.sb-glow{width:62vmax;height:62vmax;margin:-31vmax 0 0 -31vmax;border-radius:50%;background:radial-gradient(circle,var(--c) 0%,color-mix(in srgb,var(--c) 40%,transparent) 30%,transparent 70%);opacity:calc(.62*var(--dim));animation:sb-float 24s ease-in-out infinite alternate}
+.sb-canvas{position:absolute;inset:0;width:100%;height:100%}
+.sb-rib svg{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;opacity:calc(.95*var(--dim))}
+/* se mueve el dibujo entero (una capa que la tarjeta gráfica solo desliza), no cada cinta: así el brillo no se recalcula en cada cuadro */
+.sb-rib svg{will-change:transform;animation:sb-sway 14s ease-in-out infinite alternate}
+.rb-glow{filter:blur(14px);opacity:.75}
+.rb-sharp .rb{opacity:.95}
+.rb-sharp .rb4{opacity:.9}
+.sb-bubble{position:relative;width:var(--d);height:var(--d);margin:calc(var(--d)/-2) 0 0 calc(var(--d)/-2);border-radius:50%;opacity:.75;border:1px solid rgba(255,255,255,.35);
+  background:radial-gradient(circle at 32% 26%,rgba(255,255,255,.9) 0 4%,transparent 15%),radial-gradient(circle,transparent 50%,color-mix(in srgb,var(--sb-light) 30%,transparent) 100%);
+  box-shadow:inset 0 0 18px color-mix(in srgb,var(--sb-secondary) 45%,transparent),0 0 26px -6px var(--sb-light);animation:sb-bob 9s ease-in-out infinite alternate}
+.sb-bubble::before{content:"";position:absolute;inset:0;border-radius:50%;opacity:.55;mix-blend-mode:screen;background:conic-gradient(from 210deg,var(--sb-light),var(--sb-secondary),var(--sb-spark),var(--sb-primary),var(--sb-light));
+  -webkit-mask:radial-gradient(circle,transparent 58%,#000 78%,transparent 100%);mask:radial-gradient(circle,transparent 58%,#000 78%,transparent 100%)}
+@keyframes sb-float{to{transform:translate3d(3vw,-3vh,0) scale(1.07)}}
+@keyframes sb-bob{to{transform:translate3d(0,-22px,0) rotate(8deg)}}
+@keyframes sb-sway{from{transform:translate3d(-1.5%,0,0)}to{transform:translate3d(1.5%,-16px,0)}}
+html.nobg .sb-root{display:none}
+html.noanim .sb-root *,html.pmode .sb-root *{animation:none !important}
+@media (prefers-reduced-motion:reduce){.sb-root *{animation:none !important}}
+/* en el celular: sin cintas borrosas ni burbujas (pesan), solo brillos y estrellas */
+@media (max-width:760px){.rb-glow,.sb-bubble{display:none}}
+/* ===== v2.4 · SynthonIA nueva: ojos cian que brillan, ondas de voz a la derecha (habla) y a la izquierda (escucha) ===== */
+.szface .fe{filter:drop-shadow(0 0 2px rgba(246,217,160,.55))}
+.szface .fhead{filter:drop-shadow(0 0 5px rgba(196,120,255,.4))}
+.szface .fwr,.szface .fwl,.szbody .fwr,.szbody .fwl{opacity:0;transition:opacity .25s}
+.szface .fwr path,.szface .fwl path,.szbody .fwr path,.szbody .fwl path{transform-box:fill-box;opacity:calc(1 - var(--i)*.25)}
+.szface .fwr path,.szbody .fwr path{transform-origin:0 50%}
+.szface .fwl path,.szbody .fwl path{transform-origin:100% 50%}
+/* habla: las ondas laten con cada sílaba (--amp lo pone el «lipSync») */
+.szface.talking .fwr,.szbody.talking .fwr{opacity:calc(.35 + var(--amp,.6)*.65)}
+.szface.talking .fwr path,.szbody.talking .fwr path{animation:szwave .42s ease-in-out infinite alternate;animation-delay:calc(var(--i)*-.12s)}
+/* escucha: mientras escribes, ondas azules del otro lado */
+html.szlisten .szface .fwl,.szbody[data-mood=escuchando] .fwl{opacity:.95}
+html.szlisten .szface .fwl path,.szbody[data-mood=escuchando] .fwl path{animation:szwave .8s ease-in-out infinite alternate;animation-delay:calc(var(--i)*-.2s)}
+@keyframes szwave{from{transform:scale(.82);opacity:.35}to{transform:scale(1.06)}}
+html.noanim .szface .fwr path,html.noanim .szface .fwl path{animation:none}
+
+/* ===== v2.5 · SynthonIA del boceto: expresiones con ondas fijas, cuerpo entero y sus detalles ===== */
+.szface.wl .fwl{opacity:.95}.szface.wr .fwr,.szbody[data-mood=hablando] .fwr{opacity:.95}
+.szface.wl .fwl path,.szface.wr .fwr path,.szbody[data-mood=hablando] .fwr path{animation:szwave .7s ease-in-out infinite alternate;animation-delay:calc(var(--i)*-.18s)}
+.szface .fx{transform-box:fill-box;transform-origin:center}
+.szface[data-mood=pensando] .fx,.szbody[data-mood=pensando] .fx{animation:szgear 3s linear infinite}
+.szface[data-mood=creando] .fx,.szbody[data-mood=creando] .fx{animation:szbulb 1.6s ease-in-out infinite}
+.szface[data-mood=dormida] .fx,.szface[data-mood=descansando] .fx,.szbody[data-mood=dormida] .fx{animation:szzz 2.6s ease-in-out infinite}
+.szface[data-mood=celebrando] .fx,.szbody[data-mood=celebrando] .fx{animation:szconf 1.8s ease-in-out infinite}
+.szface .fscan{animation:szscan 1.6s ease-in-out infinite alternate}
+.szface .ftear{animation:sztear 2.2s ease-in infinite}
+.szface[data-mood=error] .fe{animation:szglitch 1.1s steps(2) infinite}
+.szface[data-mood=analizando] .fe{animation:szscanE 1.6s ease-in-out infinite alternate}
+@keyframes szgear{to{transform:rotate(360deg)}}
+@keyframes szbulb{50%{opacity:.55;transform:scale(1.1)}}
+@keyframes szzz{50%{transform:translate(2px,-3px);opacity:.6}}
+@keyframes szconf{50%{transform:translateY(-3px) rotate(6deg)}}
+@keyframes szscan{to{transform:translateY(6px)}}
+@keyframes sztear{0%{transform:translateY(0);opacity:0}20%{opacity:1}100%{transform:translateY(9px);opacity:0}}
+@keyframes szglitch{0%{transform:translateX(0)}50%{transform:translateX(1.6px)}100%{transform:translateX(-1.2px)}}
+@keyframes szscanE{to{transform:translateX(3px)}}
+/* v2.9 · SynthonIA es su cabecita y dos manitas sueltas que flotan cerca (escenario 300 × 400, todo en SVG).
+   Capas de cada mano: .syb-hp la lleva a su lugar de la pose (vuela suave), .syb-bob la hace flotar,
+   .syb-wv hace el gesto (saludar, teclear, golpecito al pensar). Giran desde la muñeca */
+.szbody{position:relative;display:block;width:var(--sz,240px);aspect-ratio:3/4;height:auto;user-select:none;-webkit-user-select:none}
+.szbody .syb-glow{position:absolute;left:6%;top:8%;width:88%;height:66%;border-radius:50%;background:radial-gradient(closest-side,rgba(201,86,108,.28),rgba(110,90,255,.13) 55%,transparent);pointer-events:none;animation:sybglow 3.6s ease-in-out infinite alternate}
+.szbody .syb-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.szbody :is(.syb-up,.syb-head,.syb-hd,.syb-shadow,.syb-hp,.syb-bob,.syb-wv){transform-box:view-box}
+.szbody .syb-up{animation:sybfloat 3.6s ease-in-out infinite alternate}
+.szbody .syb-shadow{transform-origin:150px 370px;animation:sybshadow 3.6s ease-in-out infinite alternate}
+.szbody .syb-head{transform-origin:150px 262px;animation:sybhead 7s ease-in-out infinite}
+.szbody .syb-hd{transform-origin:150px 262px;transform:rotate(var(--tilt,0deg));transition:transform .5s ease-out}
+.szbody .syb-hsvg .fe{filter:drop-shadow(0 0 2px rgba(246,217,160,.6))}
+.szbody .syb-hsvg .fhead{filter:none}
+/* parpadea de vez en cuando (menos cuando tiene lentes, duerme, analiza o se cuelga) */
+.szbody .syb-hsvg:not([data-mood=flow],[data-mood=dormida],[data-mood=descansando],[data-mood=error],[data-mood=analizando]) .fe{transform-box:fill-box;transform-origin:center;animation:sybblink 5.4s ease-in-out infinite}
+.szbody[data-mood=encantada] .syb-hsvg .fe{animation:sybbeat 1s ease-in-out infinite}
+/* las manos */
+.szbody .syb-hp{transition:transform .8s cubic-bezier(.34,1.45,.64,1)}
+.szbody .hl .syb-hp{transform:translate(var(--lx,40px),var(--ly,280px)) rotate(var(--lr,8deg))}
+.szbody .hr .syb-hp{transform:translate(var(--rx,40px),var(--ry,280px)) rotate(var(--rr,8deg))}
+.szbody .syb-bob,.szbody .syb-wv{transform-origin:0 0}
+.szbody .hl .syb-bob{animation:sybbob 3.1s ease-in-out infinite alternate}
+.szbody .hr .syb-bob{animation:sybbob 3.5s ease-in-out -1.4s infinite alternate}
+.szbody .syb-wv{animation:sybfid 9s ease-in-out infinite}
+.szbody .hr .syb-wv{animation-delay:-4.5s}
+.szbody[data-wave=r] .hr .syb-wv{animation:sybwave 1.1s ease-in-out infinite}
+.szbody[data-pose=celebra] .syb-wv{animation:sybwave .8s ease-in-out infinite}
+.szbody[data-pose=celebra] .hr .syb-wv{animation-delay:-.4s}
+.szbody[data-pose=celebra] .syb-up{animation:sybhop .45s cubic-bezier(.3,0,.5,1) infinite alternate}
+.szbody[data-pose=sorpresa] .syb-wv{animation:sybpop .6s cubic-bezier(.34,1.6,.64,1)}
+.szbody[data-pose=escribe] .syb-bob{animation:sybtype .26s ease-in-out infinite alternate}
+.szbody[data-pose=escribe] .hr .syb-bob{animation-delay:-.13s}
+.szbody[data-pose=piensa] .hr .syb-wv{animation:sybtap 1.8s ease-in-out infinite}
+.szbody[data-pose=escucha] .hr .syb-wv{animation:sybcup 2.2s ease-in-out infinite alternate}
+.szbody[data-pose=lee] .syb-wv{animation:sybpage 3.2s ease-in-out infinite}
+.szbody.talking .syb-head{animation:sybnod .45s ease-in-out infinite}
+/* si le pasas el mouse: sacude la cabecita y te saluda con la otra mano */
+@media (hover:hover){
+  .szbody:hover .syb-hd{animation:sybjig .7s ease-in-out}
+  .szbody:hover .hl .syb-wv{animation:sybwave .9s ease-in-out 2}
+}
+/* chispitas y los detalles de cada cara */
+.szbody .syb-sp{fill:#fff3d6;transform-box:fill-box;transform-origin:center;opacity:0;filter:drop-shadow(0 0 3px #f2a6c8);animation:sybsp 3s ease-in-out infinite;animation-delay:var(--d,0s)}
+.szbody .syb-f{animation:sybrise 2.7s ease-out infinite;animation-delay:var(--d,0s);opacity:0}
+.szbody .syb-cf{transform-box:fill-box;transform-origin:center;animation:sybconf 2s linear infinite;animation-delay:var(--d,0s);opacity:0}
+.szbody .syb-tb{fill:#f6d9a0}
+.szbody .syb-tb circle{transform-box:fill-box;transform-origin:center;animation:sybtb 1.5s ease-in-out infinite}
+.szbody .syb-tb circle:nth-child(2){animation-delay:.25s}.szbody .syb-tb circle:nth-child(3){animation-delay:.5s}
+.szbody .syb-wow{transform-box:fill-box;transform-origin:50% 100%;animation:sybwow 2.4s ease-in-out infinite}
+.szbody.syb-off *{animation-play-state:paused !important}
+@keyframes sybglow{to{opacity:.6;transform:scale(1.06)}}
+@keyframes sybfloat{to{transform:translateY(-11px)}}
+@keyframes sybshadow{to{transform:scale(.8);opacity:.55}}
+@keyframes sybhead{0%,100%{transform:rotate(0)}30%{transform:rotate(-2.5deg)}70%{transform:rotate(2deg)}}
+@keyframes sybblink{0%,90%,96%,100%{transform:none}93%{transform:scaleY(.12)}}
+@keyframes sybbeat{50%{transform:scale(1.18)}}
+@keyframes sybbob{to{transform:translate(-3px,-10px) rotate(-5deg)}}
+@keyframes sybfid{0%,84%,100%{transform:none}87%{transform:rotate(-16deg)}90%{transform:rotate(11deg)}93%{transform:rotate(-6deg)}96%{transform:rotate(2deg)}}
+@keyframes sybwave{0%,100%{transform:rotate(14deg)}50%{transform:rotate(-20deg)}}
+@keyframes sybhop{to{transform:translateY(-18px)}}
+@keyframes sybpop{0%{transform:scale(.4) rotate(-20deg)}70%{transform:scale(1.12)}100%{transform:none}}
+@keyframes sybtype{to{transform:translateY(8px) rotate(4deg)}}
+@keyframes sybtap{0%,60%,100%{transform:none}70%{transform:rotate(-10deg)}80%{transform:none}90%{transform:rotate(-8deg)}}
+@keyframes sybcup{to{transform:rotate(-9deg) translateY(-3px)}}
+@keyframes sybpage{0%,70%,100%{transform:none}80%{transform:rotate(-14deg)}88%{transform:rotate(4deg)}}
+@keyframes sybnod{50%{transform:rotate(1.6deg) translateY(2px)}}
+@keyframes sybjig{25%{transform:rotate(-7deg) scale(1.04)}50%{transform:rotate(6deg)}75%{transform:rotate(-3deg)}}
+@keyframes sybsp{0%,100%{opacity:0;transform:scale(.3) rotate(0)}50%{opacity:1;transform:scale(1) rotate(45deg)}}
+@keyframes sybrise{0%{opacity:0;transform:translate(0,0) scale(.5)}20%{opacity:1;transform:translate(calc(var(--dx,0px)*.3),-12px) scale(1)}100%{opacity:0;transform:translate(var(--dx,0px),-74px) scale(.8)}}
+@keyframes sybconf{0%{opacity:0;transform:translate(0,-12px) rotate(0)}12%{opacity:1}85%{opacity:1}100%{opacity:0;transform:translate(var(--dx,0px),170px) rotate(560deg)}}
+@keyframes sybtb{0%,100%{opacity:.25;transform:scale(.7)}50%{opacity:1;transform:scale(1)}}
+@keyframes sybwow{0%,40%,100%{transform:none}8%{transform:scale(1.35) rotate(-10deg)}16%{transform:scale(.94) rotate(6deg)}24%{transform:rotate(-2deg)}}
+@media (prefers-reduced-motion:reduce){.szbody *{animation:none !important;transition:none !important}}
+html.noanim .szface .fx,html.noanim .szface .fe,html.noanim .szbody *{animation:none !important}
+/* ===== v2.5 · logos del boceto ===== */
+/* v3.0 · SymphorIA: la S de vidrio con su órbita + «Symphor» blanco con «IA» en degradado (letra Chakra Petch, de la rama simple) */
+.lgz{display:block;flex:none;width:auto;height:38px;aspect-ratio:1;object-fit:contain;filter:drop-shadow(0 0 10px rgba(176,92,255,.45));transition:transform .5s cubic-bezier(.22,1,.36,1),filter .4s}
+a:hover>.lgz,.logo:hover .lgz{transform:rotate(-8deg) scale(1.08);filter:drop-shadow(0 0 14px rgba(255,61,154,.6))}
+.sf-b .lgz{height:22px;width:auto;margin-right:6px}
+.zw{font-family:var(--brand,"Chakra Petch",system-ui,sans-serif);font-weight:700;letter-spacing:.01em;color:#f6f3ff}
+.zw .zt{background:linear-gradient(160deg,#9b5cff 0%,#ff3d9a 55%,#ff7a45 100%);-webkit-background-clip:text;background-clip:text;color:transparent;padding-right:.04em}
+.word .zw{font-size:.86em}
+/* SynthFlow: la esfera de vidrio con la onda (la misma del centro de «Todas las IAs») */
+.sforb{position:relative;display:inline-grid;place-items:center;flex:none;width:1.35em;height:1.35em;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.5),rgba(123,63,242,.25) 45%,rgba(10,6,30,.4));
+  border:1px solid rgba(255,255,255,.35);box-shadow:0 0 .5em rgba(123,63,242,.7),inset 0 0 .3em rgba(61,224,255,.35)}
+.sforb svg{width:80%;height:80%;overflow:visible}
+.sforb path{stroke-dasharray:80;animation:sforbw 3.2s ease-in-out infinite}
+@keyframes sforbw{50%{stroke-dashoffset:-14}}
+.flw-w{display:inline-flex;align-items:center;gap:.32em}
+.flw-w .fw-t{font-family:var(--sans,"Figtree",system-ui,sans-serif);font-weight:700;letter-spacing:-.025em;color:#f6f3ff;font-size:.86em}
+html.noanim .sforb path{animation:none}
+html[data-scheme="light"] .zw,html[data-scheme="light"] .flw-w .fw-t{color:#1b1035}
+.logo .lgz.mark,.sf-b .lgz.mark{width:auto}
+.gico .zmini{width:86%;height:86%;object-fit:contain;filter:drop-shadow(0 0 4px rgba(176,92,255,.5))}
+:where(a,button,[role="button"],summary,input,textarea,select,[tabindex]):focus-visible{outline:2px solid #3de0ff;outline-offset:2px}
+/* v2.7 · íconos de vidrio dibujados en código (core 25g): el dibujo brilla con su color y se mueve al pasar por su tarjeta */
+.gi{display:inline-block;width:1.4em;height:1.4em;flex:none;line-height:0;vertical-align:middle}
+.gi svg,svg.fico{display:block;width:100%;height:100%;overflow:visible;stroke:none;filter:none}
+.gi .gi-g{filter:drop-shadow(0 0 2.2px var(--gg))}
+.gi .gi-tw,.gi .gi-dot,.gi .gi-w,.gi .gi-lens,.gi .gi-brush,.gi .gi-sync,.gi .gi-star,.gi .gi-beam,.gi .gi-sun,.gi .gi-eyes,.gi .gi-pie{transform-box:fill-box;transform-origin:center}
+.gi .gi-tassel{transform-box:fill-box;transform-origin:50% 0}
+.gi .gi-run{stroke-dasharray:12 88;opacity:0}
+/* en reposo, los tres modos ya están vivos (son los grandes); el resto despierta al pasar el mouse o al enfocarlo */
+.mode .gi .gi-tw{animation:gitw 2.4s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.34s)}
+.mode .gi .gi-dot{animation:gidot 1.4s ease-in-out infinite;animation-delay:calc(var(--i,0) * .18s)}
+.mode .gi[data-gi=rayo] .gi-g{animation:giflick 5s steps(1) infinite}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-tw{animation:gitw 1.2s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.17s)}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-dot{animation:gidot .8s ease-in-out infinite;animation-delay:calc(var(--i,0) * .12s)}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-run{opacity:1;animation:girun 1.8s linear infinite}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-w{animation:giw 1.2s ease-in-out infinite}
+.gi .gi-w.w2{animation-delay:.18s !important}.gi .gi-w.w3{animation-delay:.36s !important}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-lens{animation:gilens 1.6s ease-in-out infinite alternate}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-brush{animation:gibrush .9s ease-in-out infinite alternate}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-sync{animation:gispin 1.6s linear infinite}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-star{animation:gistar 1.8s ease-in-out infinite}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-beam{animation:gibeam 1.6s ease-in-out infinite alternate}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-tassel{animation:gitassel 1s ease-in-out infinite alternate}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-sun{animation:gisun 1.4s ease-in-out infinite alternate}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-eyes{animation:gieyes 2.2s ease-in-out infinite}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-pie{animation:gipie 1.2s ease-in-out infinite alternate}
+:is(a,.ft,.hub-i,li,.hd-c,button):is(:hover,:focus-visible) .gi .gi-ink{animation:giink 1.6s ease-in-out infinite}
+@keyframes gitw{50%{opacity:.45;transform:scale(.72)}}
+@keyframes gidot{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-3px)}}
+@keyframes giflick{0%,100%{opacity:1}91%{opacity:.55}93%{opacity:1}95%{opacity:.7}}
+@keyframes girun{to{stroke-dashoffset:-100}}
+@keyframes giw{0%,100%{opacity:.25}45%{opacity:1}}
+@keyframes gilens{to{transform:translate(-3px,-3px) rotate(-10deg)}}
+@keyframes gibrush{to{transform:rotate(-14deg) translate(-1px,1px)}}
+@keyframes gispin{to{transform:rotate(360deg)}}
+@keyframes gistar{50%{transform:rotate(45deg) scale(.86)}}
+@keyframes gibeam{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
+@keyframes gitassel{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
+@keyframes gisun{to{transform:scale(1.25)}}
+@keyframes gieyes{0%,40%,48%,100%{transform:scaleY(1)}44%{transform:scaleY(.12)}}
+@keyframes gipie{to{transform:translate(1.6px,-1.6px)}}
+@keyframes giink{0%{stroke-dasharray:1 1;stroke-dashoffset:1}60%,100%{stroke-dasharray:1 1;stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){.gi *{animation:none !important}}
+html.noanim .gi *{animation:none !important}
+/* v2.8 · el portal nuevo (core 12): la Z se vuelve el orbe de SynthFlow, SynthonIA salta adentro y la cámara se zambulle */
+#portal.p8{position:fixed;inset:0;z-index:9950;display:grid;place-items:center;overflow:hidden;background:transparent;opacity:1;pointer-events:auto;cursor:default}
+#portal.p8 .p8-bg{position:absolute;inset:0;opacity:0;pointer-events:none;
+  background:radial-gradient(55% 45% at 50% 50%,rgba(123,63,242,.34),transparent 70%),radial-gradient(35% 35% at 72% 30%,rgba(255,61,154,.16),transparent 70%),radial-gradient(35% 35% at 28% 72%,rgba(61,224,255,.14),transparent 70%),#0b0820}
+#portal.p8 .p8-ring{position:fixed;left:50%;top:50%;width:110px;height:110px;border-radius:50%;opacity:0;pointer-events:none;transform:translate(-50%,-50%);
+  border:2px solid rgba(255,255,255,.75);box-shadow:0 0 30px rgba(123,63,242,.85),inset 0 0 26px rgba(61,224,255,.55)}
+#portal.p8 .p8-flash{position:absolute;inset:0;opacity:0;pointer-events:none;background:radial-gradient(circle at 50% 50%,#2c1a70,#0b0820 72%)}
+.p8-w{position:relative;display:flex;align-items:center;gap:.28em;font-size:clamp(46px,8.5vw,112px);line-height:1;white-space:nowrap;will-change:transform}
+.p8-mk{position:relative;display:block;width:1.1em;height:1.1em;flex:none}
+.p8-z{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 .22em rgba(176,92,255,.65))}
+.p8-mk .sforb{position:absolute;left:50%;top:50%;width:1.24em;height:1.24em;margin:-.62em 0 0 -.62em;opacity:0}
+.p8-t{display:flex;align-items:baseline;font-size:.86em}
+.p8-zl{display:inline-block;overflow:hidden;white-space:nowrap;max-width:4.6em;transition:max-width .6s cubic-bezier(.65,0,.35,1),opacity .4s,filter .4s,transform .5s}
+.p8.flow .p8-zl{max-width:0;opacity:0;filter:blur(6px);transform:translateY(-.3em) scale(.6)}
+.p8-fl{display:inline-flex;overflow:hidden;max-width:0;transition:max-width .7s cubic-bezier(.22,1,.36,1) .12s}
+.p8.flow .p8-fl{max-width:4.4em}
+.p8-fl i{font-style:normal;display:inline-block;opacity:0;transform:translateY(.45em) rotate(8deg);filter:blur(4px);
+  transition:opacity .35s ease,transform .5s cubic-bezier(.34,1.56,.64,1),filter .35s ease;transition-delay:calc(var(--i) * 75ms + .22s)}
+.p8.flow .p8-fl i{opacity:1;transform:none;filter:none}
+.p8.start .p8-fl,.p8.start .p8-fl i,.p8.start .p8-zl{transition:none}
+/* SynthonIA aparece debajo del logo, saluda y salta al orbe */
+  transition:opacity .35s ease,transform .6s cubic-bezier(.34,1.56,.64,1)}
+/* mientras se zambulle: sin sombras ni filtros, así va fluido */
+.p8.diving .p8-z,.p8.diving .sforb{filter:none !important;box-shadow:none !important}
+.p8.diving .p8-w{will-change:transform}
+/* ===== v2.8 · aurora en vivo (core 25h): el cielo de toda la página, detrás de todo ===== */
+.au8{position:fixed;inset:0;z-index:-3;pointer-events:none;overflow:hidden;contain:strict;background:var(--sb-bg)}
+.au8 canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.au8-d{opacity:.8}
+.au8-tw{animation:au8-tw 4.2s ease-in-out infinite alternate}
+@keyframes au8-tw{from{opacity:.12}to{opacity:1}}
+/* la aurora reemplaza los brillos y el fondo liso de antes; las estrellas, la cinta y las burbujas siguen encima */
+html.au8on .aurora{background:transparent}
+html.au8on .aurora::after{background:none !important}
+html.au8on .sb-base,html.au8on .sb-glow,html.au8on .sb-canvas{display:none}
+/* v2.9: los fondos de cada sección (rejilla, cintas, auroras, radar…) eran de antes del cielo en vivo: se apilaban encima
+   y en el celular se estiraban en franjas. Ahora el cielo es uno solo para toda la página */
+html.au8on .secbg{display:none}
+/* v2.9: en SynthFlow el espacio de antes (cinta de neón y burbuja) se veía como rayas y una mancha detrás de los mensajes */
+html.au8on .sb-root[data-kind="chat"]{display:none}
+html.simple .au8{display:none}
+html.nobg .au8-tw,html.noanim .au8-tw,html.pmode .au8-tw{animation:none;opacity:.55}
+@media (prefers-reduced-motion:reduce){.au8-tw{animation:none}}
+
+/* conversación (SynthFlow con mensajes): una ola de noche sube desde la caja de escribir y la deja calma;
+   por su borde corre un filo de aurora. En un chat nuevo la ola baja y se va por donde vino. */
+@property --au8r{syntax:'<percentage>';inherits:false;initial-value:0%}
+.au8-wash,.au8-edge{position:absolute;inset:0;--au8r:0%;transition:--au8r 1.7s cubic-bezier(.65,.05,.25,1)}
+.au8-wash{background:linear-gradient(180deg,color-mix(in srgb,var(--sb-bg) 58%,transparent),color-mix(in srgb,var(--sb-bg) 76%,transparent) 70%);
+  -webkit-mask:radial-gradient(circle at 50% 112%,#000 calc(var(--au8r) - 20%),transparent var(--au8r));mask:radial-gradient(circle at 50% 112%,#000 calc(var(--au8r) - 20%),transparent var(--au8r))}
+.au8-edge{opacity:0;mix-blend-mode:screen;background:linear-gradient(90deg,var(--sb-light),var(--sb-primary) 35%,var(--sb-secondary) 68%,var(--sb-warm));
+  -webkit-mask:radial-gradient(circle at 50% 112%,transparent calc(var(--au8r) - 12%),#000 calc(var(--au8r) - 3%),transparent var(--au8r));mask:radial-gradient(circle at 50% 112%,transparent calc(var(--au8r) - 12%),#000 calc(var(--au8r) - 3%),transparent var(--au8r));
+  transition:--au8r 1.7s cubic-bezier(.65,.05,.25,1),opacity .6s ease}
+html.szconv .au8-wash,html.szconv .au8-edge{--au8r:175%}
+.au8.sweep .au8-edge{opacity:.6}
+/* lo que vive dentro del espacio de antes (cinta de neón, estrellas, burbujas) también se apaga al conversar */
+html.au8on .sb-root{transition:opacity 1.6s ease}
+html.au8on.szconv .sb-root{opacity:.3}
+html.au8-now .au8 *,html.au8-now .sb-root,html.au8-now .sb-rib{transition:none !important}
+html.noanim .au8-wash,html.noanim .au8-edge{transition:none}
+
+/* escenas de la portada: cúmulos, galaxia, planeta y estrellas fugaces (se encienden según la escena) */
+.au8 .off{visibility:hidden}
+.au8 .off,.au8 .off *{animation-play-state:paused !important}
+.au8-cl{opacity:0}
+.au8-gx{position:absolute;left:72%;top:22%;width:clamp(190px,25vw,400px);aspect-ratio:1;transform:translate(-50%,-50%) rotate(-20deg) scaleY(.52);opacity:0}
+.au8-gx canvas{width:100%;height:100%;animation:au8-spin 260s linear infinite}
+@keyframes au8-spin{to{transform:rotate(-360deg)}}
+.au8-pl{position:absolute;left:21%;top:74%;width:clamp(170px,19vw,320px);transform:translate(-50%,-50%);opacity:0}
+.au8-pl svg{display:block;width:100%;height:auto;overflow:visible;animation:au8-float 12s ease-in-out infinite alternate}
+@keyframes au8-float{to{transform:translate3d(6px,-10px,0) rotate(1.5deg)}}
+.au8-sw{position:absolute;inset:0;opacity:0}
+.au8-ss{position:absolute;left:62%;top:14%;width:150px;height:1.5px;border-radius:2px;background:linear-gradient(90deg,rgba(255,255,255,.95),rgba(190,240,255,.4) 30%,transparent);opacity:0;
+  transform:rotate(-26.6deg);transform-origin:0 50%;animation:au8-ss 9s cubic-bezier(.2,.6,.3,1) 2s infinite}
+.au8-ss.s2{left:70%;top:58%;width:110px;animation-duration:13s;animation-delay:6.5s}
+@keyframes au8-ss{0%{opacity:0;translate:0 0}1.5%{opacity:1}8%{opacity:0;translate:-240px 120px}100%{opacity:0;translate:-240px 120px}}
+html.nobg .au8 *,html.noanim .au8 *,html.pmode .au8 *{animation:none !important}
+html.nobg .au8-ss,html.noanim .au8-ss,html.pmode .au8-ss{display:none}
+@media (prefers-reduced-motion:reduce){.au8 *{animation:none !important}.au8-ss{display:none}}
+@media (max-width:760px){.au8-gx{left:74%;top:16%;width:46vw}.au8-pl{left:24%;top:80%;width:44vw}}
+/* ===== v2.9 · ventanas flotantes de vidrio líquido (como el de Apple): se ve 60-75 % de lo que hay detrás =====
+   Ajustes, Conectar IA, Tu límite de hoy, menús, el panel del celular… Antes eran casi opacas (y en «Más rápido» del todo).
+   Ahora todas: un tinte de noche de ~30 %, un desenfoque que deja leer, borde de luz y un brillo en la esquina.
+   El modo Simple se queda como está (sin efectos, a propósito). */
+html:not(.simple) :is(.tcard,.amenu,.ctxm,.navdrop,.navfly){
+  background:radial-gradient(120% 70% at 0% 0%,rgba(255,255,255,.13),transparent 48%),linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.015) 55%,rgba(255,255,255,.05)),rgba(14,9,36,.3) !important;
+  border:1px solid rgba(255,255,255,.2) !important;
+  -webkit-backdrop-filter:blur(20px) saturate(185%) brightness(.9) !important;backdrop-filter:blur(20px) saturate(185%) brightness(.9) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.34),inset 1px 0 0 rgba(255,255,255,.07),inset 0 -1px 0 rgba(255,255,255,.05),0 30px 80px -24px rgba(3,1,14,.72) !important}
+/* el fondo de atrás apenas se oscurece: si se tapa, el vidrio no tiene nada que mostrar */
+html:not(.simple) :is(.szm,#sx,#acc,#conn,#tour,#blk,#szGate,#drv){background:rgba(6,4,20,.26) !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+/* el panel que sale de un lado en el celular (chats, IAs) también es vidrio */
+@media (max-width:860px){
+  html:not(.simple) #side.side{background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.015) 60%),rgba(12,8,30,.36) !important;
+    -webkit-backdrop-filter:blur(22px) saturate(180%) brightness(.88) !important;backdrop-filter:blur(22px) saturate(180%) brightness(.88) !important;
+    border-right:1px solid rgba(255,255,255,.16) !important}
+  /* los filtros se deslizan encima de la lista: van casi opacos, si no se mezclan las letras de los dos */
+  html:not(.simple) #side.side .pf-l{background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.01) 60%),rgba(13,8,32,.94) !important;
+    -webkit-backdrop-filter:blur(26px) saturate(160%) !important;backdrop-filter:blur(26px) saturate(160%) !important}
+}
+/* dentro del vidrio, las cajitas son vidrio también (nada de bloques negros) */
+html:not(.simple) .tcard :is(.lbar,.sxsave,.bl,.cfgsw,.cfg-row,.acc-box):not(.mp){background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.12)}
+
+/* «Tu límite de hoy»: más compacto y con la letra de la página (antes un número gigante en otra letra) */
+#sx .tcard{padding:24px 24px 18px}
+#sx .tcard .word{display:none}
+#sx .tn{margin-top:0}
+#sx .tcard h3{font-size:clamp(26px,4vw,34px)}
+.limbig{gap:14px;margin:12px 0 6px}
+.limbig svg{width:64px;height:64px;flex:none}
+.limbig b{font:700 clamp(26px,3.6vw,34px)/1.05 var(--sans,"Figtree",system-ui,sans-serif);letter-spacing:-.03em;background:var(--grad-text);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.limbig span{margin-top:3px}
+@media (max-width:520px){
+  #sx{padding:10px !important;align-items:end}
+  #sx .tcard{width:100%;max-height:min(78dvh,640px);padding:18px 16px 12px;border-radius:24px}
+  #sx .tcard h3{font-size:24px}
+  #sx .tcard .tb p{font-size:14px;line-height:1.45}
+  .limbig svg{width:52px;height:52px}
+  .limbig b{font-size:26px}
+  #sx .sxsave p{font-size:13.5px}
+  #sx .sxlbl{margin-top:12px}
+}
+
+/* revisión antes de main: la ventanita de SynthonIA y «¡Descubriste algo nuevo!» también son vidrio (antes gris oscuro opaco) */
+html:not(.simple) :is(#szBotP,.szdisc){
+  background:radial-gradient(120% 70% at 0% 0%,rgba(255,255,255,.12),transparent 48%),linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.015) 55%,rgba(255,255,255,.04)),rgba(14,9,36,.42) !important;
+  border:1px solid rgba(255,255,255,.2) !important;
+  -webkit-backdrop-filter:blur(22px) saturate(180%) brightness(.85) !important;backdrop-filter:blur(22px) saturate(180%) brightness(.85) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 30px 80px -24px rgba(3,1,14,.72) !important}
+html:not(.simple) #szBotP .bh{border-bottom-color:rgba(255,255,255,.12)}
+/* «¡Descubriste algo nuevo!» sale arriba: abajo tapaba el menú que acabas de abrir (adjuntar, modos…) */
+.szdisc{bottom:auto !important;top:calc(env(safe-area-inset-top) + 74px)}
+
+/* ===== v2.9.1 · accesibilidad: respeta lo que la persona eligió en su celular o PC =====
+   · «Reducir transparencia» (iPhone, Mac, Windows): el vidrio pasa a fondo sólido y se lee igual de bien.
+     core (00) le pone a la página .rtr y .noglass; aquí también va por @media, por si el JS tarda.
+   · «Aumentar contraste»: bordes y letras más fuertes.
+   · «Reducir movimiento»: se apagan las animaciones (core 00 también apaga las de JS).
+   · Teclado: todo lo que se puede enfocar muestra un anillo visible. */
+
+/* --- reducir transparencia --- */
+html.rtr:not(.simple) :is(.tcard,.amenu,.ctxm,.navdrop,.navfly,#szBotP,.szdisc,.lqg,.ap-card,.rin,.chats,#side.side,#side.side .pf-l,.tabbar){
+  background:#15122a !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;border-color:rgba(255,255,255,.24) !important}
+html.rtr:not(.simple) :is(.szm,#sx,#acc,#conn,#tour,#blk,#szGate,#drv){background:rgba(4,3,14,.86) !important}
+html.rtr *,html.rtr *::before,html.rtr *::after{-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+@media (prefers-reduced-transparency:reduce){
+  html:not(.simple) :is(.tcard,.amenu,.ctxm,.navdrop,.navfly,#szBotP,.szdisc,.lqg,.ap-card){background:#15122a !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+}
+
+/* el estilo Simple ya es plano y tiene su paleta cálida (como Claude): «reducir transparencia» y «más contraste»
+   no lo pintan de morado; solo quitan lo que quede de vidrio y, con más contraste, marcan los bordes */
+html.rtr.simple :is(.tcard,.amenu,.ctxm,#szBotP,.szdisc,.lqg,.ap-card){background:#2a2927 !important}
+html.rtr.simple :is(.szm,#sx,#acc,#conn,#tour,#blk,#szGate,#drv){background:rgba(16,15,14,.86) !important}
+@media (prefers-contrast:more){
+  html.simple{--sline:rgba(255,255,255,.4);--smute:#d6d2c8;--ssoft:#ebe7de}
+  html.simple :is(.tcard,.amenu,.ctxm,#szBotP,.szdisc,.lqg,.ap-card){background:#232220 !important;border:1px solid rgba(255,255,255,.55) !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+}
+
+/* --- aumentar contraste --- */
+@media (prefers-contrast:more){
+  :root{--mute:#e4e1f0;--soft:#f2f0f8}
+  html:not(.simple) :is(.tcard,.amenu,.ctxm,.navdrop,.navfly,#szBotP,.szdisc,.lqg,.ap-card){background:#100d22 !important;border:1px solid rgba(255,255,255,.6) !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+  :is(button,.btn,input,textarea,select){border-color:rgba(255,255,255,.55)}
+  :is(p,li) a{text-decoration:underline}
+}
+
+/* --- reducir movimiento --- */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;scroll-behavior:auto !important}
+  .au8-ss,.iz-cm{display:none !important}
+}
+
+/* --- teclado: anillo de foco visible (antes 9 sitios lo quitaban sin reemplazo) --- */
+:root{--focus-ring:#8fd8ff}
+:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+:is(#effMenu,#modeMenu,.ctxm) button:focus-visible,.hsug-i:focus-visible,.term:focus-visible{outline:2px solid var(--focus-ring) !important;outline-offset:-2px}
+/* cajas de texto sin borde propio: el anillo lo lleva la cajita que las envuelve (.field, .pj-q y la caja de SynthFlow ya se marcan solas) */
+:is(.lin,.hask):focus-within{box-shadow:0 0 0 3px rgba(143,216,255,.38)}
+:is(.pj-f input,.pj-f textarea,.pj-ta,#szMaint .mt-in,#szChat .cwin input,#szBotP .bin input,.fbt textarea):focus-visible{outline:2px solid var(--focus-ring);outline-offset:1px}
+/* ===== v3.0 · EnerX: el límite del día es una batería (antes un anillo y SynXCoin's) ===== */
+.lbatt{flex:none;overflow:visible}
+.lbatt .lb-f{transition:width 1s cubic-bezier(.22,1,.36,1)}
+.lbatt.ok{color:#5fe3c8}
+.lbatt.warn{color:#ffc857}
+.lbatt.full{color:#ff6b6b}
+html.noanim .lbatt .lb-f{transition:none}

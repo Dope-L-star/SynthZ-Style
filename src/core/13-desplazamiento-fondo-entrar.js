@@ -52,39 +52,28 @@ function orbitBg(src){
   (src || window).addEventListener('scroll', () => { if (!q) q = requestAnimationFrame(upd); }, { passive:true });
   upd();
 }
-/* ---------- entrar a SynthZ: usuario y contraseña (y Google, si el servidor lo tiene activado) ---------- */
+/* ---------- entrar a SymphorIA: usuario y contraseña (y Google, si el servidor lo tiene activado) ---------- */
 const isBlocked = e => !!(e && (e.error === 'popup_blocked' || e.code === 'popup_blocked'));
 let gsiP = null, gsiDone = null;
 function loadGsi(){ return gsiP || (gsiP = new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true; s.onload = () => ok(window.google); s.onerror = () => { gsiP = null; no(new Error('gsi')); }; document.head.appendChild(s); })); }
 async function signedIn(d){
-  setSess(d.token); ACC.user = d.user; ACC.profile = d.profile || null; ACC.ready = false;
+  setSess(d.token, d.cookie); ACC.user = d.user; ACC.profile = d.profile || null; ACC.ready = false;
   await accStart();
   try{ dispatchEvent(new Event('synthz-acc')); }catch(e){}
   toast(d.isNew ? '¡Bienvenido a ' + BRAND() + ', ' + accName() + '!' : '¡Hola de nuevo, ' + accName() + '!');
 }
-/* al volver de Google por Supabase: el token llega en la dirección (#access_token=…), se cambia por tu sesión de SynthZ y se borra de la barra */
+/* al volver de Google por Supabase: el token llega en la dirección (#access_token=…), se cambia por tu sesión de SymphorIA y se borra de la barra */
 (async function sbReturn(){
   const h = location.hash || ''; if (!/access_token=|error_description=/.test(h)) return;
   const p = new URLSearchParams(h.slice(1)); try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){}
-  /* ¿volviste de Google para VINCULARLO a tu cuenta (ya habías entrado)? */
-  let linking = false; try{ linking = sessionStorage.getItem('synthz:linkG') === '1' && !!SESS; sessionStorage.removeItem('synthz:linkG'); }catch(e){}
-  if (linking){
-    if (p.get('error_description')){ setTimeout(() => toast('No se pudo vincular con Google: ' + p.get('error_description')), 800); return; }
-    try{ await accLink({ token:p.get('access_token') }); }
-    catch(e){ setTimeout(() => toast((e && e.message) || 'No pude vincular ese Google. Intenta de nuevo.'), 800); }
-    return;
-  }
   if (p.get('access_token')){ ACC.joining = true; root.classList.add('joining'); }
-  if (p.get('error_description')){ setTimeout(() => toast('No se pudo entrar con Google: ' + p.get('error_description')), 800); return; }
+  let linking = false; try{ linking = sessionStorage.getItem('synthz:link') === '1'; sessionStorage.removeItem('synthz:link'); }catch(e){}
+  if (p.get('error_description')){ ACC.joining = false; root.classList.remove('joining'); setTimeout(() => toast('No se pudo ' + (linking ? 'vincular' : 'entrar con') + ' Google: ' + p.get('error_description')), 800); return; }
+  if (linking && SESS){ ACC.joining = false; root.classList.remove('joining'); setTimeout(() => linkGoogleDone({ token:p.get('access_token') }), 600); return; }
   try{ const d = await api('auth', { method:'POST', body:{ mode:'supabase', token:p.get('access_token') } }); await signedIn(d); askDrive(); }
   catch(e){ ACC.joining = false; root.classList.remove('joining'); setTimeout(() => toast((e && e.message) || 'No pude entrar con Google. Intenta de nuevo.'), 800); }
 })();
 async function onGoogle(resp){
-  if (SESS && ACC.user){                                  /* ya entraste: este Google se une a tu cuenta, no crea otra */
-    try{ await accLink({ credential:resp.credential }); if (gsiDone) gsiDone('link'); }
-    catch(e){ toast(e.message || 'No pude vincular ese Google. Intenta de nuevo.'); }
-    return;
-  }
   try{ const d = await api('auth', { method:'POST', body:{ credential:resp.credential } }); await signedIn(d); if (gsiDone) gsiDone(d.isNew ? 'new' : 'in'); askDrive(); }
   catch(e){ toast(e.message || 'No pude entrar. Intenta de nuevo.'); }
 }
@@ -120,7 +109,7 @@ function recoveryPanel(box, code, user, onOk, again){
   chk.addEventListener('change', () => { go.disabled = !chk.checked; });
   $('[data-cp]', box).addEventListener('click', e => { (navigator.clipboard ? navigator.clipboard.writeText(code) : Promise.reject()).then(() => { e.target.textContent = '¡Copiado!'; }).catch(() => { const r = document.createRange(); r.selectNodeContents($('.rccode', box)); getSelection().removeAllRanges(); getSelection().addRange(r); toast('Selecciónalo y cópialo con Ctrl+C.'); }); });
   $('[data-dl]', box).addEventListener('click', () => {
-    const txt = 'SynthZ · código de recuperación\r\n\r\nUsuario: @' + user + '\r\nCódigo: ' + code + '\r\n\r\nÚsalo en «¿Olvidaste tu contraseña?» si no recuerdas tu contraseña.\r\nNo se lo compartas a nadie.\r\n';
+    const txt = 'SymphorIA · código de recuperación\r\n\r\nUsuario: @' + user + '\r\nCódigo: ' + code + '\r\n\r\nÚsalo en «¿Olvidaste tu contraseña?» si no recuerdas tu contraseña.\r\nNo se lo compartas a nadie.\r\n';
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type:'text/plain' })); a.download = 'synthz-recuperacion-' + user + '.txt'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
   });
   go.addEventListener('click', onOk);
@@ -131,7 +120,7 @@ function authBox(box, done, onBlocked, start){
   const say = h => { box.innerHTML = '<p class="gmsg">' + h + '</p>'; };
   box.innerHTML = '<div class="gbox"><span class="gload">Preparando…</span></div>';
   accConfig().then(ok => {
-    if (!ok){ say(location.protocol === 'file:' ? 'Las cuentas funcionan cuando la página está publicada (por ejemplo en Vercel).' : 'Las cuentas de ' + BRAND() + ' aún no están activadas: falta conectar la base de datos en Vercel.' + (ACC.missing.length ? '<br><small>Faltan: ' + ACC.missing.map(esc).join(', ') + '</small>' : '')); return; }
+    if (!ok){ say(location.protocol === 'file:' ? 'Las cuentas funcionan cuando la página está publicada (por ejemplo en Vercel).' : 'Las cuentas de ' + BRAND() + ' abren muy pronto. Mientras tanto, tus chats se guardan en este equipo y puedes usar todo sin cuenta.'); return; }
     paint();
   });
   function paint(){
@@ -174,12 +163,12 @@ function authBox(box, done, onBlocked, start){
       try{
         const d = await api('auth', { method:'POST', body:bodyOut, keep:true });
         const finish = async () => { await signedIn(d); if (done) done(d.isNew ? 'new' : 'in'); };
-        if (d.recovery){ setSess(d.token); recoveryPanel(box, d.recovery, user, () => finish(), R); }
+        if (d.recovery){ setSess(d.token, d.cookie); recoveryPanel(box, d.recovery, user, () => finish(), R); }
         else await finish();
       }catch(x){
         go.disabled = false; go.textContent = label;
         if (x.data && x.data.code === 'reserved' && !f.elements.setup){
-          const l = document.createElement('label'); l.innerHTML = 'Código de configuración<span class="lin"><input name="setup" type="text" data-sec="1" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other" spellcheck="false" placeholder="Solo para el equipo de SynthZ"></span>';
+          const l = document.createElement('label'); l.innerHTML = 'Código de configuración<span class="lin"><input name="setup" type="text" data-sec="1" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other" spellcheck="false" placeholder="Solo para el equipo de SymphorIA"></span>';
           f.insertBefore(l, err); l.animate([{ opacity:0, transform:'translateY(-6px)' }, { opacity:1, transform:'none' }], { duration:400, easing:'cubic-bezier(.22,1,.36,1)' }); l.querySelector('input').focus();
         }
         err.textContent = x.net ? 'No pude conectar con ' + BRAND() + '. Revisa tu internet.' : (x.message || 'Algo falló. Intenta de nuevo.');
@@ -194,7 +183,7 @@ async function googleBtn(slot, done, onBlocked){
   if (ACC.sbg && ACC.sb && ACC.sb.url){
     slot.innerHTML = '<button type="button" class="sbg"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continuar con Google</button>';
     slot.querySelector('.sbg').addEventListener('click', () => {
-      try{ sessionStorage.setItem('synthz:sbback', location.pathname + location.search); if (SESS && ACC.user) sessionStorage.setItem('synthz:linkG', '1'); }catch(e){}
+      try{ sessionStorage.setItem('synthz:sbback', location.pathname + location.search); }catch(e){}
       location.href = ACC.sb.url + '/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent(location.origin + location.pathname);
     });
     return;

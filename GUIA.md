@@ -29,14 +29,14 @@ Al conectarla, Vercel crea solas las variables `KV_REST_API_URL` y `KV_REST_API_
 
 Rangos de SynthZ: **Prime** (dueño), **ZFlow** (administración, mismos poderes que Prime), **Symmetrix** (equipo y marketing) y **Synther** (todas las demás personas).
 
-Los usuarios **sammuersynth** (Prime), **sammueladmin** (ZFlow) y **sammuerbusiness** (Symmetrix) están reservados: solo se crean con el **código de activación** que Claude te entregó en privado. En el código de SynthZ solo está su huella; el código en sí no se puede sacar de ahí.
+Los usuarios **sammuersynth** (Prime), **sammueladmin** (ZFlow) y **sammuerbusiness** (Symmetrix) están reservados: solo se crean con el **código de activación**, que vive únicamente en la variable `SYNTHZ_SETUP_CODE` de Vercel (el repo es público, así que en el código no hay nada del código: ni siquiera su huella). Usa uno largo y al azar, de 20 caracteres o más. Sin esa variable nadie puede reclamar esas cuentas.
 
 1. Abre SynthFlow → **Entrar → Crear cuenta** y escribe el usuario (por ejemplo `sammuersynth`) y una contraseña.
 2. Pulsa «Crear mi cuenta». Aparece el campo **Código de configuración**: pega tu código de activación.
 3. Guarda el código de recuperación que te muestra.
 4. Si alguna de esas cuentas ya existía, entra con ella y en **Tu cuenta → Activar mi rango** pega el código.
 
-Si algún día quieres cambiar el código, crea en Vercel la variable `SYNTHZ_SETUP_CODE` con uno nuevo. Mientras exista, reemplaza al anterior.
+Para cambiar el código, cambia el valor de `SYNTHZ_SETUP_CODE` en Vercel y vuelve a desplegar.
 
 ## Prueba guiada (la paga SynthZ): pegar las llaves
 
@@ -85,7 +85,7 @@ Formato interno: lo nuevo se guarda como `v2.<id de la clave>.<datos>`, y así S
 | Variable | Para qué sirve |
 |---|---|
 | `SYNTHZ_SECRET` / `SYNTHZ_SECRET_OLD` | La clave de cifrado y las anteriores (ver la sección de arriba). |
-| `SYNTHZ_SETUP_CODE` | Reemplaza el código de activación de las cuentas del equipo. |
+| `SYNTHZ_SETUP_CODE` | El código de activación de las cuentas del equipo (20+ caracteres al azar). Sin ella no se pueden reclamar. |
 | `SYNTHZ_USER_MB` | Espacio en la nube por persona, en MB. Por defecto 2: con 100 usuarios son ~200 MB, dentro de los 256 MB del plan gratis de Upstash. Cuando alguien lo llena, sus chats siguen en su dispositivo y se le avisa. |
 | `SYNTHZ_RESERVED` | Para cambiar las cuentas reservadas. Formato: `usuario:rango,usuario:rango`. Rangos: owner (Prime), admin (ZFlow), staff (Symmetrix). |
 | `GOOGLE_CLIENT_ID` | Agrega el botón «Continuar con Google» debajo del de usuario y contraseña. Necesita un ID de cliente de OAuth en Google Cloud con tu dominio en «Orígenes de JavaScript autorizados». Si cambias de dominio, hay que actualizar ese dato en Google. |

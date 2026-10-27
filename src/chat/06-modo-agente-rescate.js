@@ -2,21 +2,35 @@
    y te muestra cada paso. Al final decides: quedarte con esa IA o seguir en modo agente ---------- */
 let agentBusy = false;
 const agentOn = () => !!st().agent && !trialOn;
-$('#agPill').addEventListener('click', () => { if (isMobile()) closeChatsSheet && closeChatsSheet(); cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(false); });
-function paintAgent(){ try{ paintMode(); }catch(e){} $$('.agentb, #railAgent').forEach(b => { b.setAttribute('aria-pressed', String(agentOn())); b.classList.toggle('on', agentOn()); }); document.body.classList.toggle('agenting', agentOn()); inp.placeholder = agentOn() ? 'Modo agente: cuéntame qué necesitas…' : (isLocked() ? inp.placeholder : 'Escribe tu mensaje...'); }
+$('#agPill').addEventListener('click', () => { if (isMobile()) closeChatsSheet && closeChatsSheet(); setAgent(false); });
+function paintAgent(){ try{ paintMode(); }catch(e){} $$('.agentb, #railAgent').forEach(b => { b.setAttribute('aria-pressed', String(agentOn())); b.classList.toggle('on', agentOn()); }); document.body.classList.toggle('agenting', agentOn()); inp.placeholder = agentOn() ? 'SuperiorSynth: cuéntame qué necesitas…' : (isLocked() ? inp.placeholder : 'Escribe tu mensaje...'); }
 function setAgent(on){
   if (!!st().agent === !!on){ paintAgent(); return; }
   if (mode !== 'solo'){ stopNow(); cmpRun++; cmpLast = null; mode = 'solo'; }
   st().agent = !!on; save(); paintAgent(); gen++;
   try{ renderMsgs(); updateHint(); renderTop(true); renderNow(); renderChats(false); }catch(e){}
-  toast(on ? 'Modo agente activado: tú escribes y el agente elige la IA que más sabe de eso.' : 'Modo agente apagado: ahora eliges tú la IA.');
+  toast(on ? 'Modo SuperiorSynth activado: tú escribes y SuperiorSynth elige la IA que más sabe de eso.' : 'Modo SuperiorSynth apagado: ahora eliges tú la IA.');
 }
 const AG_STEPS = ['Entendiendo tu pedido', 'Mejorando tu pedido para que la IA lo entienda mejor', 'Eligiendo la IA que más sabe de esto', 'Pasándole tu pedido a la IA'];
-const AG_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>';
+/* v2.3 · SuperiorSynth: su ícono propio, animado (una estrella que late con un satélite que la orbita) */
+function ssIco(cls){
+  const run = !SZ.reduce && !root.classList.contains('noanim');
+  /* la órbita pasa por detrás de la estrella (arco de arriba) y por delante (arco de abajo): se siente en 3D */
+  return '<svg class="ssi' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(-24 12 12)">'
+    + '<path class="ssi-o" d="M1.3 12a10.7 3.7 0 0 1 21.4 0" fill="none" stroke="url(#ssG)" stroke-width="1.35" stroke-linecap="round" opacity=".55"/></g>'
+    + '<path class="ssi-s" d="M12 2.6l2.05 7.35L21.4 12l-7.35 2.05L12 21.4l-2.05-7.35L2.6 12l7.35-2.05z" fill="url(#ssG)"/>'
+    + '<g transform="rotate(-24 12 12)"><path class="ssi-o" d="M22.7 12a10.7 3.7 0 0 1-21.4 0" fill="none" stroke="url(#ssG)" stroke-width="1.35" stroke-linecap="round"/>'
+    + '<circle class="ssi-d" r="1.6" fill="#fff4dc"' + (run ? '><animateMotion dur="3.6s" repeatCount="indefinite" path="M1.3 12a10.7 3.7 0 1 0 21.4 0a10.7 3.7 0 1 0-21.4 0"/></circle>' : ' cx="22.7" cy="12"/>') + '</g>'
+    + '<path class="ssi-k" d="M19.6 2.2l.5 1.4 1.4.5-1.4.5-.5 1.4-.5-1.4-1.4-.5 1.4-.5z" fill="#ffe7b8"/></svg>';
+}
+if (!document.getElementById('ssDefs')) document.body.insertAdjacentHTML('afterbegin', '<svg id="ssDefs" width="0" height="0" style="position:absolute;width:0;height:0" aria-hidden="true" focusable="false"><defs><linearGradient id="ssG" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff1d2"/><stop offset=".45" stop-color="#e6b65f"/><stop offset="1" stop-color="#c9566c"/></linearGradient></defs></svg>');
+const ssMount = () => $$('.ssmount').forEach(m => { if (!m.firstChild) m.innerHTML = ssIco(); });
+ssMount();
+const AG_ICO = ssIco();
 /* lo que hace el agente, en vivo: su loguito de píxeles y los pasos que se van marcando */
 function agentCard(){
   const el = document.createElement('div'); el.className = 'agrun';
-  el.innerHTML = '<div class="ag-h"><span class="pxw">' + SZ.pixelGrid() + '</span><span class="ag-t"><b>Modo agente</b><small>Trabajando en tu pedido…</small></span></div><ol class="ag-s">' + AG_STEPS.map((t, i) => '<li data-i="' + i + '"><i aria-hidden="true"></i><span>' + t + '</span></li>').join('') + '</ol>';
+  el.innerHTML = '<div class="ag-h"><span class="pxw">' + SZ.pixelGrid() + '</span><span class="ag-t"><b>SuperiorSynth</b><small>Trabajando en tu pedido…</small></span></div><ol class="ag-s">' + AG_STEPS.map((t, i) => '<li data-i="' + i + '"><i aria-hidden="true"></i><span>' + t + '</span></li>').join('') + '</ol>';
   const px = SZ.pixelRun($('.pxw', el));
   return {
     el,
@@ -27,7 +41,7 @@ function agentCard(){
 /* lo que queda guardado debajo de tu mensaje: «El agente eligió …» con el pedido mejorado para ver */
 function agentSumEl(a){
   const el = document.createElement('div'); el.className = 'agsum';
-  el.innerHTML = '<button type="button" class="ag-row" aria-expanded="false"><span class="ag-ic">' + AG_ICO + '</span><span class="ag-tx">El agente eligió <b></b><em></em></span>' + (a.ask ? '<svg class="ag-c" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>' : '') + '</button>' + (a.ask ? '<div class="ag-d" hidden><small>Tu pedido mejorado (esto le llegó a la IA)</small><p></p></div>' : '');
+  el.innerHTML = '<button type="button" class="ag-row" aria-expanded="false"><span class="ag-ic">' + AG_ICO + '</span><span class="ag-tx">SuperiorSynth eligió <b></b><em></em></span>' + (a.ask ? '<svg class="ag-c" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>' : '') + '</button>' + (a.ask ? '<div class="ag-d" hidden><small>Tu pedido mejorado (esto le llegó a la IA)</small><p></p></div>' : '');
   $('.ag-tx b', el).textContent = a.name || 'una IA'; $('.ag-tx em', el).textContent = a.tl ? ', que sabe de ' + a.tl : '';
   if (a.ask){ $('.ag-d p', el).textContent = a.ask; const row = $('.ag-row', el), d = $('.ag-d', el); row.addEventListener('click', () => { const on = d.hidden; d.hidden = !on; row.setAttribute('aria-expanded', String(on)); el.classList.toggle('open', on); }); }
   return el;
@@ -52,20 +66,19 @@ function agentPick(tema){
 function agentChoice(pick){
   $$('.agkeep', lane).forEach(x => x.remove());
   const nm = info(pick).name, d = document.createElement('div'); d.className = 'agkeep';
-  d.innerHTML = '<span>¿Te quedas con <b></b> o sigues en modo agente?</span><div class="agk-b"><button type="button" class="btn sm" data-ak="keep"></button><button type="button" class="btn sm ghost" data-ak="go">Seguir en modo agente</button></div><small>Si sigues en modo agente, en tu próximo mensaje vuelvo a elegir la IA que más sepa de eso.</small>';
+  d.innerHTML = '<span>¿Te quedas con <b></b> o sigues con SuperiorSynth?</span><div class="agk-b"><button type="button" class="btn sm" data-ak="keep"></button><button type="button" class="btn sm ghost" data-ak="go">Seguir con SuperiorSynth</button></div><small>Si sigues con SuperiorSynth, en tu próximo mensaje vuelvo a elegir la IA que más sepa de eso.</small>';
   $('span b', d).textContent = nm; $('[data-ak="keep"]', d).textContent = 'Quedarme con ' + nm;
   lane.appendChild(d); follow();
   d.addEventListener('click', e => {
     const b = e.target.closest('[data-ak]'); if (!b) return; d.remove();
-    if (b.dataset.ak === 'go'){ toast('Sigues en modo agente: en tu próximo mensaje vuelvo a elegir la IA.'); return; }
+    if (b.dataset.ak === 'go'){ toast('Sigues con SuperiorSynth: en tu próximo mensaje vuelvo a elegir la IA.'); return; }
     /* la conversación sigue igual, ahora con esa IA y sin el agente */
     const k0 = ckey(), msgs = (st().chats[k0] || []).slice(), tid = 't' + Date.now().toString(36), k1 = 'openrouter::' + pick + '::' + tid;
     st().chats[k1] = msgs; delete st().chats[k0]; st().del = [...(st().del || []), k0].slice(-300);
     const L = (st().threads || {})[AGK]; if (L){ const id0 = curT(), e0 = L.find(x => x.id === id0); st().threads[AGK] = L.filter(x => x.id !== id0); if (e0){ const e1 = thMeta(pick, tid, true); e1.title = e0.title; e1.t = Date.now(); } }
     (st().thread || (st().thread = {}))[pick] = tid; st().model.openrouter = pick; st().pinned = pick; st().agent = false;
-    if (cView === 'agents'){ cView = 'chats'; RS.view = 'chats'; saveRS(); }
     save(); paintAgent(); gen++; applyRail(); paintSel(); renderTop(true); paintAccent(); renderMsgs(); updateHint(); renderChats(false);
-    toast('Listo: sigues con ' + nm + '. El modo agente quedó apagado; lo vuelves a activar en la barra.');
+    toast('Listo: sigues con ' + nm + '. SuperiorSynth quedó apagado; lo vuelves a activar en el botón de modo, junto a la caja de escribir.');
   });
 }
 async function agentPlan(text){
@@ -92,7 +105,7 @@ async function send(){
   if (agentOn() && mode === 'solo' && text && !files.length){
     if (agentBusy) return;
     /* el agente ve que pides una imagen: la crea el creador de imágenes */
-    if (IMG_RX.test(text) && SZ.ACC.ready){ toast('El agente vio que quieres una imagen: la crea el creador de imágenes.'); return createImage(text); }
+    if (IMG_RX.test(text) && SZ.ACC.ready){ toast('SuperiorSynth vio que quieres una imagen: la crea el creador de imágenes.'); return createImage(text); }
     agentBusy = true; inp.readOnly = true; sendBtn.disabled = true;
     try{ localStorage.setItem('synthz:sent', String(sentN() + 1)); }catch(e){}
     try{ frustration(text, false); }catch(e){}
@@ -210,6 +223,10 @@ async function runSolo(onFail, o = {}){
       const ctl = new AbortController(); ctls.add(ctl);
       try{ r = await SZ.askStream(OR, sent, Object.assign({ model:mid, maxTokens: saver ? 700 : 0, signal:ctl.signal, onReason:t => W.reason(t) }, effortOpts(saver)), txt => { mount(); W.write(txt); if (rv) rv.push(txt); }); }finally{ ctls.delete(ctl); }
       addUsage(r.prov || SZ.provOf(mid), r.prompt, r.completion, true, { est:r.est, free:/:free$/.test(mid) || r.prov === 'synthz', rid:r.rid });
+      if (!r.aborted && !r.swapped) SZ.markGood(mid);
+      SZ.TEL.msgs++; SZ.TEL.ai = (r.prov || SZ.provOf(mid)).slice(0, 12);
+      st().sx.saved += Math.max(0, msgCost(naive) - msgCost(sent)); save();
+      if (canCache && !r.aborted) cachePut(ck, r);
       /* si la IA se quedó sin espacio (o se cortó la conexión), sigue sola donde quedó: la persona recibe la respuesta completa sin tocar «Continuar» */
       for (let n = 0; n < 3 && !r.aborted && !r.swapped && g === gen && (r.finish === 'length' || r.cut); n++){
         const base = r.text, ctl2 = new AbortController(); ctls.add(ctl2);
@@ -225,17 +242,13 @@ async function runSolo(onFail, o = {}){
         if (/^\(La IA devolvió una respuesta vacía\.\)$/.test(r2.text)) break;
         r = Object.assign({}, r, { text:base + glue(r2.text) + r2.text, prompt:r.prompt + r2.prompt, completion:r.completion + r2.completion, ms:r.ms + r2.ms, finish:r2.finish, cut:r2.cut, aborted:r2.aborted, est:r.est || r2.est });
       }
-      if (!r.aborted && !r.swapped) SZ.markGood(mid);
-      SZ.TEL.msgs++; SZ.TEL.ai = (r.prov || SZ.provOf(mid)).slice(0, 12);
-      st().sx.saved += Math.max(0, msgCost(naive) - msgCost(sent)); save();
-      if (canCache && !r.aborted) cachePut(ck, r);
     }
     if (g !== gen){ if (rv) rv.skip(); return; }
     const tail = r.aborted ? ' · detenido' : r.cut ? ' · se cortó la conexión' : r.finish === 'length' ? ' · se cortó porque era muy larga (toca «Continuar»)' : '';
     const who = r.swapped ? ' · se acabó tu saldo de Puter este mes; respondió ' + (r.real || 'otra IA') : '';
     W.write(r.text); W.finish({ ms:r.ms, real:r.real || '' });
     const work = { ms:Math.round(r.ms || 0), words:W.state.words, real:r.real || '', steps:W.state.steps.map(([a, b]) => [Math.round(a), b]), reason:(r.reasoning || '').slice(0, 4000) || undefined };
-    const msg = { role:'assistant', content:r.text, work, meta:metaOf(r) + tail + who + (r.via ? ' · vía ' + r.via + ' (prueba de SynthZ)' : ''), model:mid, cont: !!(r.cut || r.finish === 'length') || undefined };
+    const msg = { role:'assistant', content:r.text, work, meta:metaOf(r) + SZ.coinNote(mid, r) + tail + who + (r.via ? ' · vía ' + r.via + ' (prueba de SymphorIA)' : ''), model:mid, cont: !!(r.cut || r.finish === 'length') || undefined };
     chat.push(msg); touchThread(); save();
     if (here()){
       mount(); rv.push(r.text);
@@ -244,6 +257,8 @@ async function runSolo(onFail, o = {}){
       $('.body', el).innerHTML = md(r.text);
       { const u = [...chat].reverse().find(x => x.role === 'user'); el._sources = u && u.sources && u.sources.length ? u.sources : null; }
       finishBot(el, msg.meta, true, msg.cont); follow();
+      if (!r.aborted) synAuto(el);
+      if (!r.aborted) codeAfter(el, chat);   /* v2.4 · la página se prueba sola y, si tiene errores, la IA la arregla */
       if (SZ.BOT.react && !r.aborted && !G) SZ.BOT.react('done', { cool:180000 });
     }
   }catch(err){

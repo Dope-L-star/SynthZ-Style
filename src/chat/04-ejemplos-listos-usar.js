@@ -48,7 +48,7 @@ function recommend(k){
 }
 function limitsOf(m){
   const L = [];
-  if (/^sz:/.test(m.id)) L.push('Gratis: usa tus mensajes de hoy');
+  if (/^sz:/.test(m.id)) L.push('Gratis: usa tu EnerX de hoy');
   else if (/^pu:/.test(m.id)) L.push('Con tu cuenta gratis de Puter');
 
   L.push(m.vision ? 'Acepta imágenes y PDF' : /^pu:/.test(m.id) ? 'No sabemos si esta IA ve fotos; los PDF y textos sí los lee' : 'No ve imágenes; los PDF y textos se leen como texto');
@@ -93,6 +93,7 @@ function updateHint(){
 inp.addEventListener('input', () => { autoGrow(); updateHint(); });
 /* en el celular (pantalla táctil) «Enter» da un salto de línea y se envía con el botón de enviar; en el computador Enter envía y Shift+Enter baja de línea */
 const touchKb = () => { try{ return matchMedia('(hover: none) and (pointer: coarse)').matches; }catch(e){ return false; } };
+{ const kh = document.querySelector('.kbdh'); if (kh && touchKb()) kh.textContent = 'Enter salta de línea · envía con la flecha'; }
 inp.addEventListener('keydown', e => {
   if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
   if (touchKb() && !(e.ctrlKey || e.metaKey)) return;     /* deja el salto de línea normal */

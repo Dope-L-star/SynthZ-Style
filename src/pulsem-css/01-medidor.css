@@ -1,0 +1,14 @@
+/* medidor de lo gratis del mes */
+.use{margin-top:14px;padding:12px 14px;border:1px solid var(--line,rgba(255,255,255,.12));border-radius:14px;background:rgba(255,255,255,.03)}
+.use .usel{margin:0 0 8px;font-size:12.5px;opacity:.75}
+.use .ub{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;margin:8px 0}
+.use .ub span{font-size:13px}
+.use .ub i{display:block;height:8px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}
+.use .ub b{display:block;height:100%;border-radius:99px;transition:width .6s ease}
+.use .ub em{font-style:normal;font-size:12px;opacity:.7}
+.use .usew{margin:8px 0 0;font-size:12.5px;color:#f2b36b}
+/* tarjeta del aviso de mantenimiento */
+.set.mton{border-color:rgba(255,143,122,.45);box-shadow:inset 0 0 0 1px rgba(255,143,122,.15)}
+.set .mtlive{margin-left:6px;font-size:12px;font-weight:600;color:#ff8f7a;letter-spacing:.02em;animation:mtlive 1.6s ease-in-out infinite}
+.set .acts{display:flex;gap:8px;flex-wrap:wrap}
+@keyframes mtlive{50%{opacity:.45}}

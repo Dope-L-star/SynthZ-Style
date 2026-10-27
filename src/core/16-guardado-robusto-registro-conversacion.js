@@ -25,7 +25,7 @@ const chatsReady = idbOpen().then(async ok => {
 });
 /* ---------- consumo por proveedor ---------- */
 const provOf = id => /^sz:/.test(String(id)) ? 'synthz' : /^pu:/.test(String(id)) ? 'puter' : /^tr:/.test(String(id)) ? 'trial' : /^gq:/.test(String(id)) ? 'groq' : 'openrouter';
-/* ---------- prueba guiada que paga SynthZ: 5 mensajes, solo para aprender en la guía ---------- */
+/* ---------- prueba guiada que paga SymphorIA: 5 mensajes, solo para aprender en la guía ---------- */
 const TRIAL_KEY = 'synthz:trial';
 function trialGet(){ try{ return JSON.parse(localStorage.getItem(TRIAL_KEY) || 'null'); }catch(e){ return null; } }
 function trialSet(v){ try{ localStorage.setItem(TRIAL_KEY, JSON.stringify(v)); }catch(e){} try{ dispatchEvent(new CustomEvent('synthz-trial', { detail:v })); }catch(e){} }
@@ -62,23 +62,23 @@ function balanceHtml(b, extra){
   const row = (ico, name, main, sub) => '<div class="bl-row">' + ico + '<div><b>' + name + '</b><span>' + main + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</div></div>';
   let h = '';
   const pu = b.puter;
-  h += row(puterLogo(), 'Puter (opcional)', pu && pu.pct != null ? 'Te queda <em>' + Math.round(pu.pct * 100) + '%</em> de tu crédito gratis de este mes' : pu && pu.err ? 'Puter no respondió con tu saldo. Intenta más tarde.' : window.puter && puter.auth && puter.auth.isSignedIn && puter.auth.isSignedIn() ? 'Puter todavía no nos dice cuánto saldo te queda.' : 'Puter es opcional. Conecta tu versión pro de las IAs más usadas.', 'Saldo de Puter · se llena otra vez cada mes');
+  h += row(puterLogo(), 'Puter', pu && pu.pct != null ? t('bal.puLeft', { p:'<em>' + Math.round(pu.pct * 100) + '%</em>' }) : pu && pu.err ? t('bal.puErr') : window.puter && puter.auth && puter.auth.isSignedIn && puter.auth.isSignedIn() ? t('bal.puWait') : t('bal.puOpt'), t('bal.puSub'));
   const or = b.openrouter, fr = todayReq('openrouter', true);
   const orMain = or && !or.err
     ? 'Modelos gratis: <em>' + fmt(fr) + '</em> de ' + (or.freeTier ? '50' : '50 (o 1.000 si compraste 10 créditos o más)') + ' mensajes hoy'
     : or && or.err === 401 ? 'OpenRouter dice que tu llave no es válida.' : or && or.err ? 'OpenRouter no respondió con tu saldo.' : state.useTeam ? 'Usas el OpenRouter de tu equipo (mira el límite abajo).' : 'Pega tu llave de OpenRouter para ver tus límites.';
-  const orSub = or && !or.err ? (or.limit != null && or.left != null ? 'Crédito de tu llave: quedan $' + or.left.toFixed(2) + ' de $' + or.limit.toFixed(2) + ' · ' : 'Tu llave no tiene tope de crédito · ') + 'los mensajes de hoy los cuenta SynthZ en tus dispositivos' : '';
+  const orSub = or && !or.err ? (or.limit != null && or.left != null ? 'Crédito de tu llave: quedan $' + or.left.toFixed(2) + ' de $' + or.limit.toFixed(2) + ' · ' : 'Tu llave no tiene tope de crédito · ') + 'los mensajes de hoy los cuenta SymphorIA en tus dispositivos' : '';
   void orMain; void orSub;
   if (extra) h += extra;
   return '<div class="bl">' + h + '</div>';
 }
-/* desglose: confirmado (lo reportó el proveedor) vs estimado (≈, SynthZ lo calculó por el largo del texto) */
+/* desglose: confirmado (lo reportó el proveedor) vs estimado (≈, SymphorIA lo calculó por el largo del texto) */
 function splitHtml(){ return limBar({ puter:true }); }
 function syncNote(){
-  if (!ACC.ready) return signedish() ? '<p class="cnote">Abriendo tu cuenta…</p>' : '<p class="cnote">Tus chats se guardan en este equipo. Entra a tu cuenta para verlos también en tu celular o en otro computador.</p>';
+  if (!ACC.ready) return signedish() ? '<p class="cnote">' + t('sync.opening') + '</p>' : '<p class="cnote">' + t('sync.local') + '</p>';
   if (ACC.full) return '<p class="sxerr">⚠ ' + esc(ACC.err) + '</p>';
-  if (ACC.err) return '<p class="sxerr">⚠ No pude guardar en tu cuenta (' + esc(ACC.err) + '). Todo sigue aquí y se sube solo cuando vuelva la conexión.</p>';
-  return '<p class="cnote">Guardado en tu cuenta' + (ACC.t ? ' · guardado hace ' + Math.max(1, Math.round((Date.now() - ACC.t) / 1000)) + ' s' : '') + '.</p>';
+  if (ACC.err) return '<p class="sxerr">⚠ ' + t('sync.err', { e:esc(ACC.err) }) + '</p>';
+  return '<p class="cnote">' + t('sync.saved') + (ACC.t ? ' · ' + t('sync.ago', { s:Math.max(1, Math.round((Date.now() - ACC.t) / 1000)) }) : '') + '.</p>';
 }
 
 /* secciones que se abren y cierran suave (alto + desenfoque), SynthZ Style */

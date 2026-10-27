@@ -56,7 +56,7 @@ function warnBlocked(){
 /* ---------- SynXCoin's: medidor, límite diario, avisos y modo ahorro ---------- */
 function todayUsed(){ return SZ.todayAll(); }
 let sxEl = null;
-function budgetOk(){ return true; }        /* ya no hay límite personal: el límite de hoy lo pone SynthZ */
+function budgetOk(){ return true; }        /* ya no hay límite personal: el límite de hoy lo pone SymphorIA */
 let limWarned = '';
 function coinWatch(){
   const q = SZ.SZQ; if (!q.limit || q.on === false) return;
@@ -74,7 +74,7 @@ function coinModal(kind){
   }[kind] || ['Tu límite de hoy', ''];
   sxEl = document.createElement('div'); sxEl.id = 'sx';
   sxEl.innerHTML = '<div class="tcard" role="dialog" aria-modal="true"><div class="word" id="sxWord"></div><div class="tn">TU LÍMITE</div><div class="tb"><h3>' + T[0] + '</h3><p>' + T[1] + '</p></div>'
-    + '<div class="limbig">' + SZ.limRing(84) + '<div><b>' + esc(SZ.limShort()) + '</b><span>tu límite de hoy</span></div></div>'
+    + '<div class="limbig">' + SZ.limRing(84) + '<div><b>' + esc(SZ.limShort()) + '</b><span>tu EnerX de hoy · se carga a medianoche</span></div></div>'
     + SZ.limBar({ title:'IAs conectadas', puter:!puterOn() })
     + '<div id="sxBal"><div class="bl-load">Revisando tu cuenta de Puter…</div></div>'
     + '<div class="sxlbl">RESPUESTAS CORTAS</div><div class="sxsave"><p>La IA responde más corto y usa menos de tu historial. Así te alcanza para más.</p><button class="sxsw" id="sxSw" type="button" aria-pressed="' + st().sx.saver + '" aria-label="Respuestas cortas"></button></div>'

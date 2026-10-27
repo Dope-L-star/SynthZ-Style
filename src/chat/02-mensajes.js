@@ -1,3 +1,5 @@
+/* v2.5 · el ícono del archivo es el del boceto; si no hay, la extensión en letras */
+const fcIc = ext => SZ.fileIco(ext) ? '<span class="fc-ic img" aria-hidden="true">' + SZ.fileIco(ext) + '</span>' : '<span class="fc-ic" aria-hidden="true">' + esc(String(ext).slice(0, 4).toUpperCase()) + '</span>';
 /* ---------- mensajes ---------- */
 const msgsEl = $('#msgs'), lane = $('#lane'), inp = $('#inp'), sendBtn = $('#sendBtn');
 /* v1.8: en modo agente la conversación es una sola aunque cada mensaje lo responda una IA distinta */
@@ -55,7 +57,7 @@ function codeButtons(body){
     if (/^(json|txt)$/.test(M.ext) || /"diapositivas"/.test(M.text)){ const D = deckFrom(M.text); if (D){ deckCard(pre, D); return; } }
     if (isFile(M, pre)){
       const c = document.createElement('div'); c.className = 'fcard'; c.dataset.ext = M.ext;
-      c.innerHTML = '<button type="button" class="fc-main" data-fv="open" title="Abrir ' + esc(M.name) + '"><span class="fc-ic" aria-hidden="true">' + esc(M.ext.slice(0, 4).toUpperCase()) + '</span><span class="fc-t"><b>' + esc(M.name) + '</b><small>' + esc(M.label) + ' · ' + M.lines + (M.lines === 1 ? ' línea' : ' líneas') + (canPreview(M) ? ' · con vista previa' : '') + '</small></span></button>'
+      c.innerHTML = '<button type="button" class="fc-main" data-fv="open" title="Abrir ' + esc(M.name) + '">' + fcIc(M.ext) + '<span class="fc-t"><b>' + esc(M.name) + '</b><small>' + esc(M.label) + ' · ' + M.lines + (M.lines === 1 ? ' línea' : ' líneas') + (canPreview(M) ? ' · con vista previa' : '') + '</small></span></button>'
         + (canPreview(M) ? '<button type="button" class="cnv-b" data-fv="prev">' + CNV_ICO.eye + '<span>Vista previa</span></button>' : '')
         + '<button type="button" class="cnv-b" data-fv="open">' + CNV_ICO.code + '<span>Ver</span></button>'
         + '<button type="button" class="cnv-b" data-fv="down" title="Descargar ' + esc(M.name) + '">' + CNV_ICO.down + '<span>Descargar</span></button>';
@@ -77,7 +79,7 @@ function cnvDownload(M){
 function siblingsOf(card){ const b = card.closest('.body') || card.parentElement; return $$('.fcard pre', b).map(cnvMeta); }
 const escRx = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 function previewDoc(M, sibs){
-  if (M.ext === 'svg') return '<!doctype html><meta charset="utf-8"><style>html,body{margin:0;height:100%;display:grid;place-items:center;background:#fff}svg{max-width:96vw;max-height:96vh}</style>' + M.text;
+  if (M.ext === 'svg') return '<!doctype html><meta charset="utf-8"><style>html,body{margin:0;height:100%;display:grid;place-items:center;background:#fff}svg{max-width:96vw;max-height:96vh}svg:not([width]){width:96vw;height:96vh}</style>' + M.text;
   let h = M.text;
   if (!/<html[\s>]|<body[\s>]|<!doctype/i.test(h)) h = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' + h + '</body></html>';
   (sibs || []).forEach(S => {
@@ -86,17 +88,30 @@ function previewDoc(M, sibs){
   });
   return h;
 }
+/* v2.9.1 · «Sintéticos» (Synthetics): la vista previa ya no es un srcdoc (heredaba las reglas de seguridad de SynthFlow y se rompía con la CSP).
+   Ahora carga /sintetico.html, una página aparte con reglas abiertas, y le pasa el código por postMessage. Igual que los artefactos de Claude. */
+const SYN_URL = '/sintetico.html';
+function synLoad(f, html){
+  const k = 's' + Math.random().toString(36).slice(2, 10); f._synK = k;
+  const on = e => {
+    if (f._synK !== k || !f.isConnected){ removeEventListener('message', on); return; }
+    if (e.source !== f.contentWindow || !e.data || e.data.szs !== 'ready') return;
+    removeEventListener('message', on); f.contentWindow.postMessage({ szs:'doc', html }, '*');
+  };
+  addEventListener('message', on);
+  f.src = SYN_URL + '?k=' + k;
+}
 /* el lienzo: a la derecha en el computador, pantalla completa en el celular */
 let cvEl = null;
 function openCanvas(M, sibs, tab){
   closeCanvas(true);
   const pv = canPreview(M);
   const o = document.createElement('div'); o.className = 'cvp'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', M.name);
-  o.innerHTML = '<div class="cvp-in"><div class="cvp-h"><span class="fc-ic" aria-hidden="true">' + esc(M.ext.slice(0, 4).toUpperCase()) + '</span><span class="cnv-t"><b>' + esc(M.name) + '</b><small>' + esc(M.label) + ' · ' + M.lines + ' líneas</small></span>'
+  o.innerHTML = '<div class="cvp-in"><div class="cvp-h">' + fcIc(M.ext) + '<span class="cnv-t"><b>' + esc(M.name) + '</b><small>' + (pv ? '<span class="cvp-syn" title="Sintético (en inglés, Synthetic): corre aparte y aislado, como en Claude">Sintético</span> · ' : '') + esc(M.label) + ' · ' + M.lines + ' líneas</small></span>'
     + '<button type="button" class="cnv-b" data-cv="copy">' + CNV_ICO.copy + '<span>Copiar</span></button><button type="button" class="cnv-b" data-cv="down">' + CNV_ICO.down + '<span>Descargar</span></button><button type="button" class="cnv-b ic" data-cx aria-label="Cerrar">✕</button></div>'
     + (pv ? '<div class="cvp-tabs" role="tablist"><button type="button" role="tab" data-tab="code">Código</button><button type="button" role="tab" data-tab="prev">Vista previa</button></div>' : '')
     + '<div class="cvp-b"><pre class="cvp-code"><code></code></pre>' + (pv ? '<div class="cvp-prev" hidden></div>' : '') + '</div></div>';
-  const code = $('code', o); code.textContent = M.text;
+  const code = $('code', o); code.innerHTML = hlCode(M.text, M.ext);   /* v2.4 · colores en el código */
   document.body.appendChild(o); cvEl = o; document.body.classList.add('canvasing');
   requestAnimationFrame(() => o.classList.add('on'));
   const box = $('.cvp-prev', o);
@@ -107,8 +122,9 @@ function openCanvas(M, sibs, tab){
       if (M.ext === 'md'){ const d = document.createElement('div'); d.className = 'cvp-md'; d.innerHTML = md(M.text); box.appendChild(d); }
       else {
         /* la vista previa corre aislada: sin acceso a tu cuenta, tus chats ni esta página */
-        const f = document.createElement('iframe'); f.title = 'Vista previa de ' + M.name; f.setAttribute('sandbox', 'allow-scripts allow-modals allow-forms allow-pointer-lock'); f.setAttribute('referrerpolicy', 'no-referrer');
-        f.srcdoc = previewDoc(M, sibs); box.appendChild(f);
+        const f = document.createElement('iframe'); f.title = 'Sintético: vista previa de ' + M.name; f.setAttribute('sandbox', 'allow-scripts allow-modals allow-forms allow-pointer-lock'); f.setAttribute('referrerpolicy', 'no-referrer');
+        box.appendChild(f);
+        if (M.ext === 'svg') synLoad(f, previewDoc(M, sibs)); else cvTools(o, box, M, sibs).load();   /* v2.4 · consola, tamaños de pantalla y volver a cargar */
       }
     }
   };
@@ -119,6 +135,14 @@ function openCanvas(M, sibs, tab){
     const b = e.target.closest('[data-cv]'); if (!b) return;
     if (b.dataset.cv === 'copy'){ await copyText(M.text); flash(b, '¡Copiado!'); } else cnvDownload(M);
   });
+}
+/* v3.0 · al terminar una respuesta con un archivo, su Sintético se abre solo al lado (como en Claude): el que se ve en vivo, si hay; si no, el último.
+   En el celular no se abre solo (taparía todo): queda la tarjeta para tocarla */
+function synAuto(el){
+  if (!el || !matchMedia('(min-width:900px)').matches) return;
+  const cards = $$('.fcard:not(.deck)', el); if (!cards.length) return;
+  const pv = cards.filter(c => canPreview(cnvMeta($('pre', c)))), c = (pv.length ? pv : cards).pop(), M = cnvMeta($('pre', c));
+  openCanvas(M, siblingsOf(c), canPreview(M) ? 'prev' : 'code');
 }
 function closeCanvas(now){ if (!cvEl) return; const o = cvEl; cvEl = null; document.body.classList.remove('canvasing'); if (now){ o.remove(); return; } o.classList.remove('on'); setTimeout(() => o.remove(), 380); }
 addEventListener('keydown', e => { if (e.key === 'Escape' && cvEl){ e.stopPropagation(); closeCanvas(); } }, true);
@@ -156,6 +180,20 @@ const GREET = [
   ['¿En qué te ', 'ayudo', ' hoy?'],
   ['Cuéntame, ¿qué tienes ', 'en mente', '?']
 ];
+/* v3.0 · los mismos saludos en inglés (mismo orden) */
+const GREET_EN = {
+  '¿Qué quieres FlowIA’r hoy?':['What do you want to ', 'FlowIA', ' today?'],
+  '¿Qué quieres FlowIA’r?':['What do you want to ', 'FlowIA', '?'],
+  'Suelta la idea, la FlowIAmos.':['Drop the idea, we\'ll ', 'FlowIA it', '.'],
+  '¿A qué problema le ponemos Flow hoy?':['Which problem gets some ', 'Flow', ' today?'],
+  'Una idea, mucho Flow, cero límites.':['One idea, lots of ', 'Flow', ', zero limits.'],
+  'Tú pones la idea, yo el Flow.':['You bring the idea, ', 'I bring the Flow', '.'],
+  '¿Qué creamos juntos hoy?':['What shall we ', 'create', ' together today?'],
+  '¿Escribimos, programamos o soñamos?':['Shall we write, code ', 'or dream', '?'],
+  'Modo Flow: activado. ¿Qué sigue?':['Flow mode: ', 'on', '. What\'s next?'],
+  '¿En qué te ayudo hoy?':['How can I ', 'help', ' today?'],
+  'Cuéntame, ¿qué tienes en mente?':['Tell me, what do you have ', 'in mind', '?']
+};
 const GKEY = 'synthz:greet';
 let greetI = 0;
 try{ const g = JSON.parse(localStorage.getItem(GKEY) || 'null'); greetI = g && Date.now() - (g.seen || 0) < 12 * 3600e3 && GREET[g.i] ? g.i : 0; }catch(e){}
@@ -163,6 +201,7 @@ function saveGreet(){ try{ localStorage.setItem(GKEY, JSON.stringify({ i:greetI,
 saveGreet();
 function nextGreet(){ let n = greetI; while (n === greetI) n = 1 + Math.floor(Math.random() * (GREET.length - 1)); greetI = n; saveGreet(); }
 function greetHtml(g){
+  if (SZ.lang() === 'en') g = GREET_EN[g.join('')] || g;
   let i = 0;
   const w = s => s.split(/(\s+)/).filter(Boolean).map(x => /^\s+$/.test(x) ? ' ' : '<span class="w" style="--i:' + (i++) + '">' + esc(x) + '</span>').join('');
   const tail = g[2].match(/^[.,!?;:]+/), rest = tail ? g[2].slice(tail[0].length) : g[2];

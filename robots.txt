@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /pulsem.html
+Disallow: /pulso
+Disallow: /alias
+Disallow: /alias.html
+
+Sitemap: https://synthz-style.vercel.app/sitemap.xml

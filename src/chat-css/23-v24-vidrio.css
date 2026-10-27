@@ -1,0 +1,67 @@
+/* ===== v2.4 · SynthFlow con vidrio líquido sobre el fondo espacial (boceto «SynthFlow escritorio») ===== */
+html:not(.simple) .main{background:transparent}
+html:not(.simple) .top{background:transparent;border-color:transparent}
+
+/* barra de íconos y panel de chats: vidrio casi transparente, con su brillo de esquina */
+html:not(.simple):not(.noglass) .rin,html:not(.simple):not(.noglass) .rail.open .rin{background:var(--lg-bg),rgba(18,10,40,.18);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);border-right:1px solid var(--lg-edge);box-shadow:inset -1px 0 0 rgba(255,255,255,.05)}
+html:not(.simple):not(.noglass) .chats{background:var(--lg-bg),rgba(18,10,40,.12);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);border-right:1px solid var(--lg-edge)}
+.rail .rbtn[aria-pressed="true"]{background:linear-gradient(135deg,rgba(123,63,242,.32),rgba(255,61,154,.18));box-shadow:inset 0 0 0 1px rgba(255,255,255,.16),0 0 18px -4px rgba(123,63,242,.7)}
+.chats .cnew{background:var(--lg-bg);border:1px solid var(--lg-edge);box-shadow:var(--lg-shadow)}
+.chats .thi.cur{background:linear-gradient(90deg,rgba(123,63,242,.22),rgba(61,224,255,.08));box-shadow:inset 0 0 0 1px rgba(61,224,255,.28)}
+
+/* caja de escribir: vidrio líquido, borde que se enciende en cian al escribir y botón Enviar con el degradado de la marca */
+html:not(.simple) .composer .comp-in,html:not(.simple) .composer.big .comp-in{background:var(--lg-bg),rgba(20,12,44,.22);border:1px solid var(--lg-edge);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);box-shadow:var(--lg-shadow)}
+html:not(.simple) .composer .comp-in:focus-within{border-color:rgba(61,224,255,.55);box-shadow:var(--lg-shadow),0 0 0 4px rgba(61,224,255,.08),0 0 34px -8px rgba(61,224,255,.45)}
+html:not(.simple) .send:not(.stop){background:var(--grad);color:#fff;box-shadow:0 6px 22px -6px rgba(255,61,154,.65),inset 0 1px 0 rgba(255,255,255,.35)}
+html:not(.simple) .send:not(.stop):hover{filter:brightness(1.12);background:var(--grad)}
+.composer .attach{background:rgba(255,255,255,.05);border-color:var(--lg-edge)}
+
+/* mensajes: tu burbuja es vidrio con un filo violeta; la respuesta va limpia sobre el fondo */
+html:not(.simple) .m.user .bub{background:var(--lg-bg),rgba(123,63,242,.14);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);box-shadow:var(--lg-shadow)}
+.body pre{background:rgba(8,4,24,.55);border-color:var(--lg-edge)}
+
+/* saludo: «FlowIA’r» con el degradado del boceto, que respira lento */
+.greet em,.greet .fl,.hello h1 em{background:var(--grad-text);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:v24shine 9s ease-in-out infinite alternate}
+@keyframes v24shine{to{background-position:100% 0}}
+
+/* ventanas flotantes y menús (Ajustes, cuenta, selector): vidrio más denso para leer bien */
+html:not(.noglass) .tcard,html:not(.noglass) .amenu,html:not(.noglass) .ctxm,html:not(.noglass) #side.side{background:var(--lg-bg),rgba(16,9,38,.55) !important;border:1px solid var(--lg-edge) !important;backdrop-filter:blur(22px) saturate(170%) !important;-webkit-backdrop-filter:blur(22px) saturate(170%) !important;box-shadow:var(--lg-shadow),0 40px 120px -30px rgba(0,0,0,.8) !important}
+/* en computador el selector son dos tarjetas («Filtros» y «Las IA»): el vidrio va en cada una y no en una caja grande detrás */
+@media (min-width:900px){
+  html:not(.noglass) #side.side.two-p{background:none !important;border:0 !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;box-shadow:none !important}
+  html:not(.noglass) #side.two-p .pf-l,html:not(.noglass) #side.two-p .pf-r{background:var(--lg-bg),rgba(16,9,38,.6);border-color:var(--lg-edge);backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%);box-shadow:var(--lg-shadow),0 40px 120px -30px rgba(0,0,0,.8)}
+}
+/* «Medidor del día»: arco de vidrio con el degradado de la marca; brilla un poco cuando cambia */
+#sideFoot .sxfoot.gauge{display:grid;justify-items:center;gap:2px;width:100%;margin:0;padding:12px 12px 10px;border-radius:20px;border:1px solid var(--lg-edge);background:var(--lg-bg),rgba(20,12,44,.2);box-shadow:var(--lg-shadow);text-align:center}
+.sxfoot.gauge .gz-t{font-size:12px;letter-spacing:.04em;color:var(--mute)}
+.sxfoot.gauge .gz{width:118px;height:64px;overflow:visible}
+.sxfoot.gauge .gz path{fill:none;stroke-width:10;stroke-linecap:round}
+.sxfoot.gauge .gz-bg{stroke:rgba(255,255,255,.09)}
+.sxfoot.gauge .gz-v{stroke:url(#gzG);filter:drop-shadow(0 0 6px rgba(123,63,242,.7));transition:stroke-dasharray 1.1s cubic-bezier(.22,1,.36,1)}
+.sxfoot.gauge.warn .gz-v{stroke:#ffc857}.sxfoot.gauge.full .gz-v{stroke:#ff6b6b}
+.sxfoot.gauge .gz-n{margin-top:-30px;display:grid;justify-items:center;text-align:center;line-height:1.15}
+.sxfoot.gauge{flex-direction:column;align-items:center}
+.sxfoot.gauge .gz-n b{font-size:18px;color:#fff}
+.sxfoot.gauge .gz-n small{font-size:11px;color:var(--mute)}
+.sxfoot.gauge .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+#sideFoot .sxfoot.gauge{display:flex !important;flex-direction:column;align-items:center;justify-content:center;position:relative}
+#sideFoot .sxfoot.gauge .gz{display:block;margin-top:4px}
+#sideFoot .sxfoot.gauge .gz-n{margin-top:-26px;align-items:center;justify-items:center}
+/* píldora de modo y esfuerzo (traídas de main) con el mismo vidrio; en el celular, en modo Chat la píldora queda solo con su ícono para que quepa el nombre de la IA */
+html:not(.simple) .composer .cpk3,html:not(.simple) .composer .cpk4{background:var(--lg-bg);border-color:var(--lg-edge);box-shadow:var(--lg-shadow)}
+html:not(.simple) .composer .cpk3.on{border-color:rgba(255,122,69,.55);background:linear-gradient(135deg,rgba(255,122,69,.16),rgba(255,61,154,.1));color:#fff}
+@media (max-width:600px){
+  body[data-cmode="chat"] .composer .cpk4 b,body[data-cmode="chat"] .composer .cpk4 .cm-chev{display:none}
+  body[data-cmode="chat"] .composer .cpk4{width:40px;min-width:40px;padding:0;justify-content:center}
+  .composer #cPick{overflow:hidden}
+}
+/* v2.5 · íconos de archivo del boceto */
+.fc-ic.img{background:none !important;padding:0;overflow:visible}
+.fc-ic.img .fico{width:46px;height:46px;object-fit:contain;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35))}
+.cvp-h .fc-ic.img .fico{width:38px;height:38px}
+#tray .fc .ic.img{background:none;padding:0;display:grid;place-items:center}
+#tray .fc .ic.img .fico{width:30px;height:30px;object-fit:contain}
+/* v3.0 · EnerX: el medidor del día es una batería grande (en vez del arco) */
+#sideFoot .sxfoot.gauge.gbatt .lbatt{display:block;margin:8px 0 4px;width:72px;height:48px}
+#sideFoot .sxfoot.gauge.gbatt .gz-n{margin-top:0}
+.tlim .lbatt{width:26px;height:17px}

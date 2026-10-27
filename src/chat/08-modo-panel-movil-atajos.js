@@ -55,7 +55,7 @@ function sideFlip(open){
 function placeSide(){}
 function openSide(kind, anchor){
   if (isLocked()){ lockNudge(); toast('Primero conecta Puter: es gratis y con un clic.'); return; }
-  if (agentOn() && mode === 'solo' && kind !== 'add'){ toast('En modo agente la IA la elige el agente. Si quieres elegirla tú, apaga el modo agente.'); return; }
+  if (agentOn() && mode === 'solo' && kind !== 'add'){ toast('Con SuperiorSynth la IA la elige él. Si quieres elegirla tú, vuelve a «Chats».'); return; }
   pickMode = kind === 'add' || mode === 'cmp' ? 'add' : 'set';
   $('#pTitle').textContent = pickMode === 'add' ? 'Suma otra IA a la mesa' : '¿Con quién fluyes hoy?';
   const a = anchor && anchor.isConnected ? anchor : $('#curChip') || $('#cPick') || $('#pickRow');

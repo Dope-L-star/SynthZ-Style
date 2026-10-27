@@ -20,7 +20,7 @@ function teamsHtml(){
         + '<div class="tbtn" style="margin-top:8px"><span></span><button class="lnk" type="button" data-ta="delete" data-id="' + esc(x.id) + '" data-nm="' + esc(x.name) + '">Borrar equipo</button></div>';
     } else {
       h += '<div class="tmrow">' + SZ.avatarHtml(x.ownerInfo, x.ownerInfo) + '<div class="tx"><b>' + esc(x.ownerInfo.name) + '</b><small>dueño · ' + x.members.length + ' miembros</small></div></div>';
-      h += x.hasKey ? '<div class="cfgrow"><p>Usar el OpenRouter de este equipo<small>Hoy llevas ' + fmt(x.myUse) + (x.daily ? ' de ' + fmt(x.daily) + ' SynXCoin\'s' : ' SynXCoin\'s') + (x.freeOnly ? ' · solo modelos gratis' : '') + '. El dueño ve cuánto usas, no lo que escribes.</small></p><button class="cfgsw" type="button" data-ta="use" data-id="' + esc(x.id) + '" aria-pressed="' + (st().useTeam === x.id) + '" aria-label="Usar su OpenRouter"></button></div>' + (x.daily ? '<span class="tmbar" style="width:100%;margin-top:6px"><i style="transform:scaleX(' + lim.toFixed(3) + ')"></i></span>' : '')
+      h += x.hasKey ? '<div class="cfgrow"><p>Usar el OpenRouter de este equipo<small>Hoy llevas ' + fmt(x.myUse) + (x.daily ? ' de ' + fmt(x.daily) + ' de ' + SZ.t('enerx.name') : ' de ' + SZ.t('enerx.name')) + (x.freeOnly ? ' · solo modelos gratis' : '') + '. El dueño ve cuánto usas, no lo que escribes.</small></p><button class="cfgsw" type="button" data-ta="use" data-id="' + esc(x.id) + '" aria-pressed="' + (st().useTeam === x.id) + '" aria-label="Usar su OpenRouter"></button></div>' + (x.daily ? '<span class="tmbar" style="width:100%;margin-top:6px"><i style="transform:scaleX(' + lim.toFixed(3) + ')"></i></span>' : '')
         : '<p class="cnote">El dueño todavía no comparte su OpenRouter.</p>';
       h += '<div class="tbtn" style="margin-top:8px"><span></span><button class="lnk" type="button" data-ta="leave" data-id="' + esc(x.id) + '" data-nm="' + esc(x.name) + '">Salir del equipo</button></div>';
     }
@@ -35,7 +35,7 @@ function teamsBind(box, reopen){
     const a = b.dataset.ta, id = b.dataset.id, run = async (body, ok) => { const l = b.textContent; b.disabled = true; if (b.tagName === 'BUTTON' && !b.classList.contains('cfgsw') && !b.classList.contains('x')) b.textContent = '…'; try{ await SZ.api('teams', { method:'POST', body }); if (ok) toast(ok); await loadTeams(); reopen(); }catch(er){ b.disabled = false; b.textContent = l; toast(er.message); } };
     if (a === 'use'){ const on = st().useTeam === id; if (on) delete st().useTeam; else st().useTeam = id; save(); b.setAttribute('aria-pressed', String(!on)); paintProv(); fixModel(true); renderList({ keep:true }); updateHint(); toast(on ? 'Ya no usas el OpenRouter del equipo.' : 'Listo: usas el OpenRouter del equipo.'); return; }
     if (a === 'create'){ const n = $('#tNewName', box).value.trim(); if (!n){ toast('Ponle un nombre a tu equipo.'); return; } return run({ action:'create', name:n }, 'Equipo creado. Ahora invita a tus amigos.'); }
-    if (a === 'invite'){ const v = $('[data-te="' + id + '"]', box).value.trim(); if (!v){ toast('Escribe el @usuario de tu amigo.'); return; } return run({ action:'invite', id, to:v }, 'Invitación enviada. Le aparecerá cuando entre a su cuenta de SynthZ.'); }
+    if (a === 'invite'){ const v = $('[data-te="' + id + '"]', box).value.trim(); if (!v){ toast('Escribe el @usuario de tu amigo.'); return; } return run({ action:'invite', id, to:v }, 'Invitación enviada. Le aparecerá cuando entre a su cuenta de SymphorIA.'); }
     if (a === 'key'){ const v = $('[data-tk="' + id + '"]', box).value.trim(); if (!v){ toast('Pega la llave de OpenRouter.'); return; } return run({ action:'key', id, key:v }, 'Tu equipo ya puede usar tu OpenRouter (sin ver la llave).'); }
     if (a === 'nokey') return run({ action:'key', id, key:'' }, 'Dejaste de compartir tu OpenRouter.');
     if (a === 'free') return run({ action:'settings', id, freeOnly:b.getAttribute('aria-pressed') !== 'true' }, 'Guardado.');
@@ -86,7 +86,6 @@ function renderChats(anim){
   box.classList.toggle('still', !anim);
   $('#thQ').placeholder = cView === 'favs' ? 'Buscar en tus favoritos…' : 'Buscar en tus chats';
   $('#cFavH').hidden = cView !== 'favs'; $('#cNew').hidden = cView === 'favs';
-  $('#cAgH').hidden = cView !== 'agents';
   if (cView === 'favs'){
     const L = allFavs().filter(x => !q || (x.text + ' ' + info(x.model).name).toLowerCase().includes(q));
     box.innerHTML = L.length ? L.map((x, i) => '<div class="fvi" data-k="' + esc(x.k) + '" data-i="' + x.i + '" style="--i:' + Math.min(i, 20) + '"><b>' + esc(info(x.model).name) + '</b><p>' + esc(q ? snipOf(x.text, q) || x.text.slice(0, 220) : x.text.slice(0, 220)) + '</p></div>').join('')
@@ -97,8 +96,8 @@ function renderChats(anim){
   const grp = t => !t ? 'Antes' : t >= d0 ? 'Hoy' : t >= d0 - 864e5 ? 'Ayer' : t >= d0 - 6 * 864e5 ? 'Esta semana' : 'Antes';
   const AG = st().agentT || {};
   const isAg = x => !!AG[x.k] || x.model === AGK;
-  const L = allThreads().filter(x => cView === 'agents' ? isAg(x) : !isAg(x)).map(x => { if (!q) return x; const hitT = (x.title + ' ' + info(x.model).name).toLowerCase().includes(q); let sn = ''; if (!hitT){ const m = (st().chats[x.k] || []).find(mm => (mm.content || '').toLowerCase().includes(q)); if (!m) return null; sn = snipOf(m.content, q); } return Object.assign({}, x, { sn }); }).filter(Boolean);
-  if (!L.length){ box.innerHTML = '<div class="thnone">' + (q ? 'Nada coincide en tus chats.' : cView === 'agents' ? 'Aún no tienes chats con el agente.' : 'Aún no tienes chats.') + '<em>' + (q ? 'Busco en los títulos y dentro de cada mensaje.' : cView === 'agents' ? 'Escribe lo que necesitas: una IA mejora tu pedido y se lo pasa a la IA que más sabe de eso.' : 'Escribe tu primer mensaje y aparecerá aquí.') + '</em></div>'; return; }
+  const L = allThreads().map(x => { if (!q) return x; const hitT = (x.title + ' ' + info(x.model).name).toLowerCase().includes(q); let sn = ''; if (!hitT){ const m = (st().chats[x.k] || []).find(mm => (mm.content || '').toLowerCase().includes(q)); if (!m) return null; sn = snipOf(m.content, q); } return Object.assign({}, x, { sn }); }).filter(Boolean);
+  if (!L.length){ box.innerHTML = '<div class="thnone">' + (q ? 'Nada coincide en tus chats.' : 'Aún no tienes chats.') + '<em>' + (q ? 'Busco en los títulos y dentro de cada mensaje.' : 'Escribe tu primer mensaje y aparecerá aquí.') + '</em></div>'; return; }
   let h = '', g0 = '', n = 0;
   const hlq = t => q ? hl(t, q) : esc(t);
   L.forEach(x => {
@@ -112,7 +111,6 @@ function renderChats(anim){
 $('#thQ').addEventListener('input', () => renderChats(false));
 $('#cNew').addEventListener('click', () => newChat());
 $('#cFavBack').addEventListener('click', () => { cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(true); });
-$('#cAgBack').addEventListener('click', () => { cView = 'chats'; RS.view = 'chats'; saveRS(); applyRail(); renderChats(true); });
 function openThread(model, id, ci){
   if (mode !== 'solo'){ stopNow(); cmpRun++; cmpLast = null; mode = 'solo'; }
   (st().thread || (st().thread = {}))[model] = id;
