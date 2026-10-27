@@ -12,9 +12,9 @@ function renderUsage(){
   $('#useSplit').innerHTML = SZ.limBar({ title:SZ.t('ix.conn'), puter:true }); $('#useSync').innerHTML = SZ.syncNote();
   if (!renderUsage._b || Date.now() - renderUsage._b > 60000){ renderUsage._b = Date.now(); SZ.providerBalance().then(b => { $('#useBal').innerHTML = SZ.balanceHtml(b); }); }
   const req = id => ((U[id] || {}).reqDays || {});
-  const SRC = [['synthz', 'IAs conectadas', '#e6b65f'], ['puter', 'Puter', '#6fd3d6']];
+  const SRC = [['synthz', SZ.t('ix.conn'), '#e6b65f'], ['puter', 'Puter', '#6fd3d6']];
   const tot = id => (U[id] || {}).requests || 0, max = Math.max(1, ...SRC.map(([id]) => tot(id)));
-  $('#rows').innerHTML = SRC.map(([id, n, c], i) => '<div style="--c:' + c + '"><div class="row-h">' + SZ.glassIcon({ id, vendor:id }, 'sm') + '<b>' + n + '</b><small>' + fmt(req(id)[d] || 0) + ' hoy</small><em>' + fmt(tot(id)) + '</em></div><div class="bar"><i style="--i:' + i + ';--w:' + (tot(id) / max).toFixed(4) + '"></i></div></div>').join('') + '<p class="cnote" style="margin-top:6px">Mensajes en total desde que usas SymphorIA.</p>';
+  $('#rows').innerHTML = SRC.map(([id, n, c], i) => '<div style="--c:' + c + '"><div class="row-h">' + SZ.glassIcon({ id, vendor:id }, 'sm') + '<b>' + n + '</b><small>' + fmt(req(id)[d] || 0) + ' ' + SZ.t('ix.today') + '</small><em>' + fmt(tot(id)) + '</em></div><div class="bar"><i style="--i:' + i + ';--w:' + (tot(id) / max).toFixed(4) + '"></i></div></div>').join('') + '<p class="cnote" style="margin-top:6px">' + SZ.t('ix.totalNote') + '</p>';
   const chart = $('#chart');
   if (!chart.children.length) chart.innerHTML = Array.from({ length:14 }, (_, i) => '<div class="col"><div class="tr"><div class="stack" style="--i:' + i + '"></div></div><span></span></div>').join('');
   const days = [];
@@ -23,7 +23,7 @@ function renderUsage(){
   const dmax = Math.max(1, ...per.map(a => a.reduce((s2, x) => s2 + x.v, 0)));
   per.forEach((arr, i) => {
     const col = chart.children[i], sum = arr.reduce((s2, x) => s2 + x.v, 0), st2 = $('.stack', col);
-    col.title = days[i] + ': ' + sum + (sum === 1 ? ' mensaje' : ' mensajes'); col.classList.toggle('today', i === 13);
+    col.title = days[i] + ': ' + sum + ' ' + SZ.t(sum === 1 ? 'ix.msg1' : 'ix.msgN'); col.classList.toggle('today', i === 13);
     $('span', col).textContent = days[i].slice(8);
     st2.style.setProperty('--h', (sum / dmax * 100).toFixed(1) + '%');
     st2.innerHTML = arr.filter(x => x.v).map(x => '<u style="flex:' + x.v + ' 1 0;background:' + x.c + '"></u>').join('');
@@ -32,9 +32,9 @@ function renderUsage(){
   const sums = per.map(a => a.reduce((s2, x) => s2 + x.v, 0)), top = sums.lastIndexOf(Math.max(...sums)), k = $('#chartKpi');
   [...chart.children].forEach((c, i) => c.classList.toggle('top', sums[top] > 0 && i === top));
   /* v2.6: la primera vez la gráfica está vacía: se dice qué va a aparecer ahí, en vez de dejar barras invisibles */
-  const pan = $('#chartPanel'); if (pan){ pan.classList.toggle('empty', !sums.some(Boolean)); if (!$('.ch-empty', pan)) pan.insertAdjacentHTML('beforeend', '<p class="ch-empty">Aún no has chateado. Cuando escribas tu primer mensaje, aquí verás cuántos mandas cada día.</p>'); }
-  if (k){ const dl = s => new Date(s + 'T12:00').toLocaleDateString('es', { weekday:'long', day:'numeric' }), all = sums.reduce((a, b) => a + b, 0);
-    k.innerHTML = '<span><b>' + fmt(sums[13]) + '</b> hoy</span><span><b>' + fmt(all) + '</b> en 14 días</span>' + (sums[top] > 0 ? '<span class="ck-top"><b>' + esc(dl(days[top])) + '</b> tu día más activo · ' + fmt(sums[top]) + (sums[top] === 1 ? ' mensaje' : ' mensajes') + '</span>' : '<span>Aún sin día más activo</span>'); }
+  const pan = $('#chartPanel'); if (pan){ pan.classList.toggle('empty', !sums.some(Boolean)); if (!$('.ch-empty', pan)) pan.insertAdjacentHTML('beforeend', '<p class="ch-empty" data-i18n="ix.chEmpty">' + SZ.t('ix.chEmpty') + '</p>'); }
+  if (k){ const dl = s => new Date(s + 'T12:00').toLocaleDateString(SZ.lang ? SZ.lang() : 'es', { weekday:'long', day:'numeric' }), all = sums.reduce((a, b) => a + b, 0);
+    k.innerHTML = '<span><b>' + fmt(sums[13]) + '</b> ' + SZ.t('ix.today') + '</span><span><b>' + fmt(all) + '</b> ' + SZ.t('ix.in14') + '</span>' + (sums[top] > 0 ? '<span class="ck-top"><b>' + esc(dl(days[top])) + '</b> ' + SZ.t('ix.topDay') + ' · ' + fmt(sums[top]) + ' ' + SZ.t(sums[top] === 1 ? 'ix.msg1' : 'ix.msgN') + '</span>' : '<span>' + SZ.t('ix.noTop') + '</span>'); }
 }
 SZ.hooks.usage = () => { renderUsage(); updateTotals(); };
 
@@ -60,7 +60,7 @@ $('#importFile').addEventListener('change', e => {
   r.readAsText(f); e.target.value = '';
 });
 false && $('#resetBtn').addEventListener('click', async () => { if (await SZ.szConfirm('¿Reiniciar tus contadores?', 'Tu historial de uso vuelve a cero.', 'Reiniciar', true)){ SZ.resetUsage(); renderUsage(); updateTotals(); toast('Contadores en cero.'); } });
-$('#wipeBtn').addEventListener('click', async () => { if (await SZ.szConfirm('¿Borrar todo de este navegador?', 'Se borran tus chats y ajustes de este equipo. Lo que está guardado en tu cuenta de SymphorIA no se toca.', 'Borrar todo', true)){ SZ.state = { keys:{}, model:{}, models:{}, usage:{}, chats:{}, fav:[], cmp:[], ledger:{ ep:Date.now(), dev:{} } }; try{ localStorage.setItem('synthz:ledger', JSON.stringify(SZ.state.ledger)); }catch(_){} save(); renderCards(); observeAll(); renderLaunch(); renderUsage(); updateTotals(); toast('Todo borrado.'); } });
+$('#wipeBtn').addEventListener('click', async () => { if (await SZ.szConfirm(SZ.t('ix.wipeQ'), SZ.t('ix.wipeP'), SZ.t('ix.wipeOk'), true)){ SZ.state = { keys:{}, model:{}, models:{}, usage:{}, chats:{}, fav:[], cmp:[], ledger:{ ep:Date.now(), dev:{} } }; try{ localStorage.setItem('synthz:ledger', JSON.stringify(SZ.state.ledger)); }catch(_){} save(); renderCards(); observeAll(); renderLaunch(); renderUsage(); updateTotals(); toast(SZ.t('ix.wiped')); } });
 
 /* ---------- scroll: solo lo esencial (barra, navegación y sección activa) ---------- */
 const bar = $('#progress'), nav = $('#nav');

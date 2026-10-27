@@ -73,8 +73,8 @@ const eyeSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 function setStatus(card, text, cls){ const s = $('[data-st]', card); s.textContent = text; s.className = 'status ' + (cls || ''); }
 function szCard(){
   const q = SZ.SZQ, on = q.on !== false, left = Math.max(0, (q.limit || 20000) - (q.used || 0));
-  return '<article class="card" data-id="synthz" style="--c:#e6b65f"><div class="card-top">' + ico(byId('synthz')) + '<h3>IAs conectadas</h3><span class="status ' + (on ? 'ok' : '') + '" data-st>' + (on ? 'Listas' : 'Descansando') + '</span></div><p class="desc">Las IAs conectadas son IAs gratis que ya vienen listas en SymphorIA. No tienes que configurar nada ni dar tarjeta: solo escribes. Sin cuenta pruebas con 5 mensajes al día; con tu cuenta gratis, mucho más. Si una está llena, pasa sola a otra.</p>'
-    + SZ.limBar({ small:false }) + '<div class="actions"><button class="btn sm" data-szgo type="button">Abrir SynthFlow</button></div></article>';
+  return '<article class="card" data-id="synthz" style="--c:#e6b65f"><div class="card-top">' + ico(byId('synthz')) + '<h3>' + SZ.t('ix.conn') + '</h3><span class="status ' + (on ? 'ok' : '') + '" data-st>' + SZ.t(on ? 'ix.stOn' : 'ix.stOff') + '</span></div><p class="desc">' + SZ.t('ix.connDesc') + '</p>'
+    + SZ.limBar({ small:false }) + '<div class="actions"><button class="btn sm" data-szgo type="button">' + SZ.t('ixa.abrirsynthflow') + '</button></div></article>';
 }
 function paintSzCard(){ const c = $('#cards [data-id="synthz"]'); if (!c) return; c.outerHTML = szCard(); const b = $('#cards [data-szgo]'); if (b) b.addEventListener('click', () => { launchAI = 'synthz'; openChat(); }); }
 addEventListener('synthz-szq', () => { paintSzCard(); updateTotals(); renderLaunch(); try{ renderUsage(); }catch(e){} });
@@ -161,7 +161,7 @@ function placePill(seg){
 function renderLaunch(){
   const seg = $('#launchSeg');
   $$('button', seg).forEach(b => b.remove());
-  const items = [{ id:'synthz', label:'Gratis', p:byId('synthz') }];
+  const items = [{ id:'synthz', label:SZ.t('ix.046'), p:byId('synthz') }];
   items.forEach(it => {
     const b = document.createElement('button');
     b.setAttribute('role', 'tab'); b.dataset.id = it.id;
@@ -260,9 +260,9 @@ function renderUsage(){
   $('#useSplit').innerHTML = SZ.limBar({ title:SZ.t('ix.conn'), puter:true }); $('#useSync').innerHTML = SZ.syncNote();
   if (!renderUsage._b || Date.now() - renderUsage._b > 60000){ renderUsage._b = Date.now(); SZ.providerBalance().then(b => { $('#useBal').innerHTML = SZ.balanceHtml(b); }); }
   const req = id => ((U[id] || {}).reqDays || {});
-  const SRC = [['synthz', 'IAs conectadas', '#e6b65f'], ['puter', 'Puter', '#6fd3d6']];
+  const SRC = [['synthz', SZ.t('ix.conn'), '#e6b65f'], ['puter', 'Puter', '#6fd3d6']];
   const tot = id => (U[id] || {}).requests || 0, max = Math.max(1, ...SRC.map(([id]) => tot(id)));
-  $('#rows').innerHTML = SRC.map(([id, n, c], i) => '<div style="--c:' + c + '"><div class="row-h">' + SZ.glassIcon({ id, vendor:id }, 'sm') + '<b>' + n + '</b><small>' + fmt(req(id)[d] || 0) + ' hoy</small><em>' + fmt(tot(id)) + '</em></div><div class="bar"><i style="--i:' + i + ';--w:' + (tot(id) / max).toFixed(4) + '"></i></div></div>').join('') + '<p class="cnote" style="margin-top:6px">Mensajes en total desde que usas SymphorIA.</p>';
+  $('#rows').innerHTML = SRC.map(([id, n, c], i) => '<div style="--c:' + c + '"><div class="row-h">' + SZ.glassIcon({ id, vendor:id }, 'sm') + '<b>' + n + '</b><small>' + fmt(req(id)[d] || 0) + ' ' + SZ.t('ix.today') + '</small><em>' + fmt(tot(id)) + '</em></div><div class="bar"><i style="--i:' + i + ';--w:' + (tot(id) / max).toFixed(4) + '"></i></div></div>').join('') + '<p class="cnote" style="margin-top:6px">' + SZ.t('ix.totalNote') + '</p>';
   const chart = $('#chart');
   if (!chart.children.length) chart.innerHTML = Array.from({ length:14 }, (_, i) => '<div class="col"><div class="tr"><div class="stack" style="--i:' + i + '"></div></div><span></span></div>').join('');
   const days = [];
@@ -271,7 +271,7 @@ function renderUsage(){
   const dmax = Math.max(1, ...per.map(a => a.reduce((s2, x) => s2 + x.v, 0)));
   per.forEach((arr, i) => {
     const col = chart.children[i], sum = arr.reduce((s2, x) => s2 + x.v, 0), st2 = $('.stack', col);
-    col.title = days[i] + ': ' + sum + (sum === 1 ? ' mensaje' : ' mensajes'); col.classList.toggle('today', i === 13);
+    col.title = days[i] + ': ' + sum + ' ' + SZ.t(sum === 1 ? 'ix.msg1' : 'ix.msgN'); col.classList.toggle('today', i === 13);
     $('span', col).textContent = days[i].slice(8);
     st2.style.setProperty('--h', (sum / dmax * 100).toFixed(1) + '%');
     st2.innerHTML = arr.filter(x => x.v).map(x => '<u style="flex:' + x.v + ' 1 0;background:' + x.c + '"></u>').join('');
@@ -280,9 +280,9 @@ function renderUsage(){
   const sums = per.map(a => a.reduce((s2, x) => s2 + x.v, 0)), top = sums.lastIndexOf(Math.max(...sums)), k = $('#chartKpi');
   [...chart.children].forEach((c, i) => c.classList.toggle('top', sums[top] > 0 && i === top));
   /* v2.6: la primera vez la gráfica está vacía: se dice qué va a aparecer ahí, en vez de dejar barras invisibles */
-  const pan = $('#chartPanel'); if (pan){ pan.classList.toggle('empty', !sums.some(Boolean)); if (!$('.ch-empty', pan)) pan.insertAdjacentHTML('beforeend', '<p class="ch-empty">Aún no has chateado. Cuando escribas tu primer mensaje, aquí verás cuántos mandas cada día.</p>'); }
-  if (k){ const dl = s => new Date(s + 'T12:00').toLocaleDateString('es', { weekday:'long', day:'numeric' }), all = sums.reduce((a, b) => a + b, 0);
-    k.innerHTML = '<span><b>' + fmt(sums[13]) + '</b> hoy</span><span><b>' + fmt(all) + '</b> en 14 días</span>' + (sums[top] > 0 ? '<span class="ck-top"><b>' + esc(dl(days[top])) + '</b> tu día más activo · ' + fmt(sums[top]) + (sums[top] === 1 ? ' mensaje' : ' mensajes') + '</span>' : '<span>Aún sin día más activo</span>'); }
+  const pan = $('#chartPanel'); if (pan){ pan.classList.toggle('empty', !sums.some(Boolean)); if (!$('.ch-empty', pan)) pan.insertAdjacentHTML('beforeend', '<p class="ch-empty" data-i18n="ix.chEmpty">' + SZ.t('ix.chEmpty') + '</p>'); }
+  if (k){ const dl = s => new Date(s + 'T12:00').toLocaleDateString(SZ.lang ? SZ.lang() : 'es', { weekday:'long', day:'numeric' }), all = sums.reduce((a, b) => a + b, 0);
+    k.innerHTML = '<span><b>' + fmt(sums[13]) + '</b> ' + SZ.t('ix.today') + '</span><span><b>' + fmt(all) + '</b> ' + SZ.t('ix.in14') + '</span>' + (sums[top] > 0 ? '<span class="ck-top"><b>' + esc(dl(days[top])) + '</b> ' + SZ.t('ix.topDay') + ' · ' + fmt(sums[top]) + ' ' + SZ.t(sums[top] === 1 ? 'ix.msg1' : 'ix.msgN') + '</span>' : '<span>' + SZ.t('ix.noTop') + '</span>'); }
 }
 SZ.hooks.usage = () => { renderUsage(); updateTotals(); };
 
@@ -308,7 +308,7 @@ $('#importFile').addEventListener('change', e => {
   r.readAsText(f); e.target.value = '';
 });
 false && $('#resetBtn').addEventListener('click', async () => { if (await SZ.szConfirm('¿Reiniciar tus contadores?', 'Tu historial de uso vuelve a cero.', 'Reiniciar', true)){ SZ.resetUsage(); renderUsage(); updateTotals(); toast('Contadores en cero.'); } });
-$('#wipeBtn').addEventListener('click', async () => { if (await SZ.szConfirm('¿Borrar todo de este navegador?', 'Se borran tus chats y ajustes de este equipo. Lo que está guardado en tu cuenta de SymphorIA no se toca.', 'Borrar todo', true)){ SZ.state = { keys:{}, model:{}, models:{}, usage:{}, chats:{}, fav:[], cmp:[], ledger:{ ep:Date.now(), dev:{} } }; try{ localStorage.setItem('synthz:ledger', JSON.stringify(SZ.state.ledger)); }catch(_){} save(); renderCards(); observeAll(); renderLaunch(); renderUsage(); updateTotals(); toast('Todo borrado.'); } });
+$('#wipeBtn').addEventListener('click', async () => { if (await SZ.szConfirm(SZ.t('ix.wipeQ'), SZ.t('ix.wipeP'), SZ.t('ix.wipeOk'), true)){ SZ.state = { keys:{}, model:{}, models:{}, usage:{}, chats:{}, fav:[], cmp:[], ledger:{ ep:Date.now(), dev:{} } }; try{ localStorage.setItem('synthz:ledger', JSON.stringify(SZ.state.ledger)); }catch(_){} save(); renderCards(); observeAll(); renderLaunch(); renderUsage(); updateTotals(); toast(SZ.t('ix.wiped')); } });
 
 /* ---------- scroll: solo lo esencial (barra, navegación y sección activa) ---------- */
 const bar = $('#progress'), nav = $('#nav');
@@ -671,13 +671,15 @@ else {
 
 /* v2.5 · ya no hay barrita lateral en la portada: todo está en el menú de arriba */
 /* v3.0 · al cambiar de idioma, lo que pinta el JS se vuelve a pintar */
-if (SZ.onLang) SZ.onLang(() => { try{ updateTotals(); renderLaunch(); }catch(e){} });
+if (SZ.onLang) SZ.onLang(() => { try{ paintSzCard(); updateTotals(); renderLaunch(); renderUsage._b = 0; renderUsage(); }catch(e){} });
 $('#limPill').addEventListener('click', () => { const u = $('#consumo'); if (u) u.scrollIntoView({ behavior:SZ.reduce ? 'auto' : 'smooth' }); });
 })();
 
 /* v2.2 · Ajustes › IAs y memoria en la portada, y el «!» de novedades sobre SynthonIA */
-SZ.cfgLinks.push(['Elegir mis IA ideales', () => SZ.surveyModal(), '3 preguntas y te digo cuáles te sirven más'], ['Conectar Puter u otra IA', () => SZ.portalOut('chat.html?conn=1'), 'Tu versión pro de las IAs más usadas, gratis'], ['Abrir SynthFlow', () => { location.href = 'chat.html'; }, 'El chat con todas las IAs']);
-if (!SZ.appStandalone()) SZ.cfgLinks.push(['Descargar la app SynthFlow', () => SZ.appPromo(true), 'Se instala desde aquí: pantalla completa y a un toque']);
+/* el texto se lee al abrir Ajustes, así sigue al idioma */
+const lk = (l, fn, d) => { const a = [, fn]; Object.defineProperties(a, { 0:{ get:() => SZ.t(l) }, 2:{ get:() => SZ.t(d) } }); return a; };
+SZ.cfgLinks.push(lk('ix.lk1', () => SZ.surveyModal(), 'ix.lk1d'), lk('ix.lk2', () => SZ.portalOut('chat.html?conn=1'), 'ix.lk2d'), lk('ixa.abrirsynthflow', () => { location.href = 'chat.html'; }, 'ix.lk3d'));
+if (!SZ.appStandalone()) SZ.cfgLinks.push(lk('ix.lk4', () => SZ.appPromo(true), 'ix.lk4d'));
 setTimeout(() => { if (!document.querySelector('.szm, #vintro, #intro')) SZ.whatsNew(false); }, 4000);
 
 /* ===== v2.4 · portada del boceto: SynthonIA de cuerpo entero, onda «synthonized», compáralas a ciegas y detalles ===== */
@@ -1132,31 +1134,17 @@ if ('IntersectionObserver' in window){
   document.querySelectorAll('main > section, main > header').forEach(s => io.observe(s));
 }
 })();
-/* ===== v3.0 · SymphorIA: la S se dibuja cuando se ve la sección, la chispa recorre la órbita (portador)
-   y los puntos sueltos (el caos del ábaco) se ordenan en una onda (la sintonía). Quieto cuando no se ve. ===== */
+/* ===== v3.0 · SymphorIA: la S se dibuja cuando se ve la sección, la chispa recorre la órbita (portador). Quieto cuando no se ve. ===== */
 (() => {
 const { $ } = SZ;
 /* ES / EN: el botón de la barra cambia el idioma de toda la página (lo guarda 00b-idioma) */
 const lb = $('#langBtn'); if (lb && SZ.setLang) lb.addEventListener('click', () => SZ.setLang(SZ.lang() === 'es' ? 'en' : 'es'));
 const nd = $('#navDrop'); if (nd && SZ.setLang) nd.addEventListener('click', e => { if (e.target.closest('[data-nd="lang"]')) SZ.setLang(SZ.lang() === 'es' ? 'en' : 'es'); });
-const sec = $('#nombre'), flow = $('#syFlow'), svg = $('.sy-svg', sec || document);
-if (!sec || !flow) return;
-const COLS = ['#3de0ff', '#7b3ff2', '#ff3d9a', '#ff7a45', '#ffc857'];
-const N = 26;
-const draw = () => {
-  const w = flow.clientWidth || 300, h = flow.clientHeight || 150;
-  flow.querySelectorAll('i').forEach(x => x.remove());
-  let rnd = 7;
-  const r = () => (rnd = (rnd * 9301 + 49297) % 233280) / 233280;      /* siempre el mismo «caos» */
-  for (let i = 0; i < N; i++){
-    const t = i / (N - 1), d = document.createElement('i');
-    d.style.cssText = '--c:' + COLS[i % COLS.length] + ';--x0:' + (r() * w * .42 + 10).toFixed(0) + 'px;--y0:' + (r() * (h - 30) + 12).toFixed(0) + 'px;--x1:'
-      + (w * .14 + t * w * .8).toFixed(0) + 'px;--y1:' + (h * .46 + Math.sin(t * Math.PI * 2.2) * h * .26).toFixed(0) + 'px;--dl:' + (t * .5).toFixed(2) + 's';
-    flow.append(d);
-  }
-};
-draw();
-let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(draw, 200); });
+/* título y descripción de la pestaña en el idioma elegido */
+const meta = () => { document.title = SZ.t('ix.title'); const d = document.querySelector('meta[name="description"]'); if (d) d.content = SZ.t('ix.metaDesc'); };
+meta(); if (SZ.onLang) SZ.onLang(meta);
+const sec = $('#nombre'), svg = $('.sy-svg', sec || document);
+if (!sec) return;
 const pause = on => { try{ if (svg && svg.pauseAnimations) on ? svg.unpauseAnimations() : svg.pauseAnimations(); }catch(e){} };
 pause(false);
 if ('IntersectionObserver' in window) new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) sec.classList.add('on'); pause(en.isIntersecting); }), { threshold:.25 }).observe(sec);
