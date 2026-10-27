@@ -3,13 +3,13 @@ function updateTotals(){
   const on = SZ.SZQ.on !== false;
   $('#limRing').innerHTML = SZ.limRing(18); $('#navTotal').innerHTML = '<span class="nt-l">' + SZ.limShort() + '</span>';
   $('#limPill').className = 'pill-total lim ' + SZ.limLvl();
-  $('#heroConn').textContent = on ? 'Listo para chatear' : 'Las IAs están descansando';
-  $('#heroTotal').textContent = on ? SZ.limTxt().toLowerCase() : 'vuelve en un momento';
+  $('#heroConn').textContent = SZ.t(on ? 'ix.ready' : 'ix.resting');
+  $('#heroTotal').textContent = on ? SZ.limTxt().toLowerCase() : SZ.t('ix.back');
 }
 function renderUsage(){
   const U = st().usage || {}, d = today();
   $('#bigRing').innerHTML = SZ.limRing(76); $('#bigTotal').textContent = SZ.limShort();
-  $('#useSplit').innerHTML = SZ.limBar({ title:'IAs conectadas', puter:true }); $('#useSync').innerHTML = SZ.syncNote();
+  $('#useSplit').innerHTML = SZ.limBar({ title:SZ.t('ix.conn'), puter:true }); $('#useSync').innerHTML = SZ.syncNote();
   if (!renderUsage._b || Date.now() - renderUsage._b > 60000){ renderUsage._b = Date.now(); SZ.providerBalance().then(b => { $('#useBal').innerHTML = SZ.balanceHtml(b); }); }
   const req = id => ((U[id] || {}).reqDays || {});
   const SRC = [['synthz', 'IAs conectadas', '#e6b65f'], ['puter', 'Puter', '#6fd3d6']];
@@ -41,7 +41,7 @@ SZ.hooks.usage = () => { renderUsage(); updateTotals(); };
 $('#exportBtn').addEventListener('click', () => {
   const blob = new Blob([JSON.stringify({ ledger:st().ledger, usage:st().usage, chats:st().chats, model:st().model }, null, 2)], { type:'application/json' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'synthz-datos-' + today() + '.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-  toast('Listo: descargué una copia de tus datos.');
+  toast(SZ.t('ix.exported'));
 });
 $('#importBtn').addEventListener('click', () => $('#importFile').click());
 $('#importFile').addEventListener('change', e => {
@@ -54,8 +54,8 @@ $('#importFile').addEventListener('change', e => {
       if (d.ledger || d.usage){ SZ.state.ledger = d.ledger ? SZ.cleanLedger(Object.assign({}, d.ledger, { ep:Date.now() })) : { ep:Date.now(), dev:{ legacy:SZ.legacyRow(d.usage) } }; try{ localStorage.setItem('synthz:ledger', JSON.stringify(SZ.state.ledger)); }catch(_){} SZ.normalize(); }
       if (d.chats) st().chats = SZ.cleanChats(d.chats);
       if (d.model) st().model = SZ.cleanStrMap(d.model);
-      save(); renderUsage(); updateTotals(); toast('Datos importados.');
-    }catch(err){ toast('Ese archivo no es válido.'); }
+      save(); renderUsage(); updateTotals(); toast(SZ.t('ix.imported'));
+    }catch(err){ toast(SZ.t('ix.badFile')); }
   };
   r.readAsText(f); e.target.value = '';
 });

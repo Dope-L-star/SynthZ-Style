@@ -8,10 +8,10 @@
 const { $ } = SZ;
 const form = $('#heroAsk'), inp = $('#heroInp');
 if (form && inp){
-  const SUG = [['birrete', 'Explícame la fotosíntesis paso a paso'], ['estrella', 'Dame 5 ideas para un regalo barato'], ['codigo', '¿Cómo hago mi primera página web?']];
+  const SUG = [['birrete', SZ.t('ix.sug1')], ['estrella', SZ.t('ix.sug2')], ['codigo', SZ.t('ix.sug3')]];
   const box = document.createElement('div');
-  box.className = 'hsug'; box.id = 'heroSug'; box.setAttribute('role', 'listbox'); box.setAttribute('aria-label', 'Preguntas de ejemplo'); box.hidden = true;
-  box.innerHTML = '<p class="hsug-t">Prueba con una de estas</p>' + SUG.map(([ic, t], i) => '<button type="button" class="hsug-i" role="option" style="--i:' + i + '"><i class="gi" data-gi="' + ic + '"></i><span>' + t + '</span></button>').join('');
+  box.className = 'hsug'; box.id = 'heroSug'; box.setAttribute('role', 'listbox'); box.setAttribute('aria-label', SZ.t('ix.sugAria')); box.hidden = true;
+  box.innerHTML = '<p class="hsug-t">' + SZ.t('ix.sugT') + '</p>' + SUG.map(([ic, t], i) => '<button type="button" class="hsug-i" role="option" style="--i:' + i + '"><i class="gi" data-gi="' + ic + '"></i><span>' + t + '</span></button>').join('');
   form.appendChild(box); SZ.giFill(box);
   inp.setAttribute('aria-controls', 'heroSug'); inp.setAttribute('aria-autocomplete', 'list');
   let y0 = 0;
@@ -38,13 +38,13 @@ if (form && inp){
 }
 /* «Ver demo» decía demo pero bajaba a los pasos: ahora dice lo que hace */
 const demo = $('#demoBtn');
-if (demo && demo.firstChild && demo.firstChild.nodeType === 3) demo.firstChild.textContent = 'Cómo funciona ';
+if (demo && demo.firstChild && demo.firstChild.nodeType === 3) demo.firstChild.textContent = SZ.t('ix.demo') + ' ';
 /* el botón principal en el menú de arriba, solo cuando el de la portada ya no se ve */
 const nav = $('#nav'), start = $('#startBtn'), navr = nav && nav.querySelector('.navr');
 if (nav && start && navr && 'IntersectionObserver' in window){
   const go = document.createElement('a');
-  go.className = 'navgo'; go.href = 'chat.html'; go.innerHTML = '<span class="ng-l">Empezar gratis</span><span class="ng-s">Empezar</span>';
-  go.setAttribute('aria-label', 'Empezar gratis en SynthFlow'); go.tabIndex = -1;
+  go.className = 'navgo'; go.href = 'chat.html'; go.innerHTML = '<span class="ng-l">' + SZ.t('ix.020') + '</span><span class="ng-s">' + SZ.t('tour.start') + '</span>';
+  go.setAttribute('aria-label', SZ.t('ix.goAria')); go.tabIndex = -1;
   navr.insertBefore(go, $('#accBtn') || navr.firstChild);
   new IntersectionObserver(([e]) => {
     const on = !e.isIntersecting && e.boundingClientRect.top < 0;

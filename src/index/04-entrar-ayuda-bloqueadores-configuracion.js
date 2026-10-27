@@ -87,19 +87,19 @@ function pageTour(onEnd){
   const vis = sel => { const e = sel && document.querySelector(sel); return !sel || !!(e && e.offsetWidth && e.getClientRects().length); };
   const first = (...L) => L.find(x => vis(x)) || L[L.length - 1];
   const steps = [
-    { s:'.logo', t:'Este es SymphorIA', p:'El lugar para usar muchas IA gratis, desde un solo sitio. Toca el logo cuando quieras volver arriba.' },
-    { s:'.navlinks', t:'El menú', p:'Desde aquí vas a tus IA, al chat (SynthFlow) o a ver cuánto has usado, en un toque.' },
-    { s:'.pill-total', t:'Tu límite de hoy', p:'Cada día tienes un límite gratis para usar las IAs conectadas. Este anillo se va vaciando mientras chateas. A medianoche se vuelve a llenar.' },
-    { s:first('#railMe', '#accBtn', '#navMenu'), t:'Tu cuenta', p:'Entra a tu cuenta de SymphorIA: tus chats quedan guardados y los ves en cualquier celular o computador, personalizas tu perfil y hablas con el equipo si necesitas ayuda.' },
-    { s:first('#railCfg', '#cfgBtn', '#navMenu'), t:'Configuración', p:'¿Lo quieres más bonito o más rápido? Elige y mira abajo cómo se verá. Puedes cambiarlo cuando quieras desde este botón.', x:'cfg' },
-    { s:'#como', t:'Así de fácil', p:'Preguntas, comparas y SynthonIA te acompaña. Baja despacio y mira cómo se animan.' },
-    { s:'#conectar', t:'Tu IA ya está lista', p:'Ya puedes chatear gratis. Con Puter usas la versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.' },
-    { s:'#chat', t:'Pregunta desde aquí', p:'Escribe tu pregunta aquí y te llevo al chat (SynthFlow) con tu pregunta lista.' },
-    { s:'#consumo', t:'Tu uso', p:'Cómo va tu límite de hoy y cuánto chateaste estos días.' },
-    { s:null, t:'¡Todo listo!', p:'Ya sabes qué es SymphorIA y por dónde empezar: escribe tu pregunta o abre SynthFlow. Inicia sesión para que no tengas límites.' }
+    { s:'.logo', t:SZ.t('tour.logo.t'), p:SZ.t('tour.logo.p') },
+    { s:'.navlinks', t:SZ.t('tour.menu.t'), p:SZ.t('tour.menu.p') },
+    { s:'.pill-total', t:SZ.t('tour.lim.t'), p:SZ.t('tour.lim.p') },
+    { s:first('#railMe', '#accBtn', '#navMenu'), t:SZ.t('tour.acc.t'), p:SZ.t('tour.acc.p') },
+    { s:first('#railCfg', '#cfgBtn', '#navMenu'), t:SZ.t('tour.cfg.t'), p:SZ.t('tour.cfg.p'), x:'cfg' },
+    { s:'#como', t:SZ.t('tour.como.t'), p:SZ.t('tour.como.p') },
+    { s:'#conectar', t:SZ.t('tour.con.t'), p:SZ.t('tour.con.p') },
+    { s:'#chat', t:SZ.t('tour.chat.t'), p:SZ.t('tour.chat.p') },
+    { s:'#consumo', t:SZ.t('tour.uso.t'), p:SZ.t('tour.uso.p') },
+    { s:null, t:SZ.t('tour.fin.t'), p:SZ.t('tour.fin.p') }
   ].filter(x => vis(x.s));
   const o = document.createElement('div'); o.id = 'ptour';
-  o.innerHTML = '<div class="catch"></div><div class="hole"></div><div class="pcard tcard" role="dialog" aria-modal="true" aria-label="Recorrido por SymphorIA"><div class="tn"></div><div class="tb"><h3></h3><p></p><div class="tx"></div></div><div class="tdots">' + steps.map(() => '<i></i>').join('') + '</div><div class="tbtn"><button class="lnk" type="button" data-skip>Saltar</button><span style="flex:1"></span><button class="lnk" type="button" data-back>Atrás</button><button class="btn sm" type="button" data-next>Siguiente</button></div></div>';
+  o.innerHTML = '<div class="catch"></div><div class="hole"></div><div class="pcard tcard" role="dialog" aria-modal="true" aria-label="' + SZ.t('tour.aria') + '"><div class="tn"></div><div class="tb"><h3></h3><p></p><div class="tx"></div></div><div class="tdots">' + steps.map(() => '<i></i>').join('') + '</div><div class="tbtn"><button class="lnk" type="button" data-skip>' + SZ.t('tour.skip') + '</button><span style="flex:1"></span><button class="lnk" type="button" data-back>' + SZ.t('tour.back') + '</button><button class="btn sm" type="button" data-next>' + SZ.t('tour.next') + '</button></div></div>';
   document.body.appendChild(o);
   const hole = $('.hole', o), card = $('.pcard', o);
   let i = 0, target = null, follow = 0;
@@ -138,7 +138,7 @@ function pageTour(onEnd){
     $$('.tdots i', card).forEach((d, k) => d.classList.toggle('on', k === i));
     $('[data-back]', card).style.visibility = i ? 'visible' : 'hidden';
     $('[data-skip]', card).style.visibility = last ? 'hidden' : 'visible';
-    $('[data-next]', card).textContent = last ? (SZ.ACC.ready ? 'Empezar' : 'Iniciar sesión') : 'Siguiente';
+    $('[data-next]', card).textContent = last ? SZ.t(SZ.ACC.ready ? 'tour.start' : 'tour.signin') : SZ.t('tour.next');
     card.animate([{ opacity:.2, filter:'blur(6px)' }, { opacity:1, filter:'blur(0)' }], { duration:450, easing:'cubic-bezier(.22,1,.36,1)' });
     chase(); setTimeout(guide, 450);
   };
@@ -154,7 +154,7 @@ function pageTour(onEnd){
   };
   $('[data-skip]', card).addEventListener('click', end);
   $('[data-back]', card).addEventListener('click', () => { if (i > 0){ i--; show(); } });
-  $('[data-next]', card).addEventListener('click', () => { if (i < steps.length - 1){ i++; show(); } else { end(); toast('¡A disfrutar SymphorIA!'); } });
+  $('[data-next]', card).addEventListener('click', () => { if (i < steps.length - 1){ i++; show(); } else { end(); toast(SZ.t('tour.enjoy')); } });
   o.animate([{ opacity:0 }, { opacity:1 }], { duration:400 });
   show();
 }

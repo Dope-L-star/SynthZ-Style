@@ -57,7 +57,7 @@ async function intro(){
   const k = FIRST ? 1 : .7;
   const sleep = ms => sleepRaw(skip ? 0 : ms * k);
   ov.style.setProperty('--izd', (1.15 * k).toFixed(2) + 's');
-  if (matchMedia('(pointer: coarse)').matches) $('span', skipEl).textContent = 'Mantén presionado 1,5 s para saltar';
+  if (matchMedia('(pointer: coarse)').matches) $('span', skipEl).textContent = SZ.t('ix.skipTouch');
   /* se salta manteniendo la barra espaciadora 1,5 s (en pantallas táctiles, manteniendo el dedo) */
   const HOLD = 1500; let holdT0 = 0, holding = false;
   function holdTick(now){
