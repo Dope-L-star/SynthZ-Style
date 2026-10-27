@@ -30,7 +30,11 @@ if (matchMedia('(pointer: fine)').matches && CFG.cursor){
   function copyStyles(o, c, isRoot){
     const cs = getComputedStyle(o);
     PROPS.forEach(k => { c.style[k] = cs[k]; });
-    c.style.margin = '0'; c.style.position = 'static'; c.style.transform = 'none'; c.style.transition = 'none';
+    /* solo la raíz se pone en su sitio dentro del vidrio; las piezas de adentro guardan su posición y márgenes
+       (antes todo quedaba «static»: en las tarjetas de usos la SynthonIA se caía fuera de la escena y desaparecía) */
+    if (isRoot){ c.style.margin = '0'; c.style.position = 'static'; c.style.transform = 'none'; }
+    else ['position','top','right','bottom','left','zIndex','marginTop','marginRight','marginBottom','marginLeft','transform','transformOrigin'].forEach(k => { c.style[k] = cs[k]; });
+    c.style.transition = 'none';
     /* las piezas escondidas o puestas encima (p. ej. el numerito de comparar, en escala 0) se copian igual: si no, salía una «bolita blanca» debajo del icono */
     if (!isRoot){
       if ((cs.position === 'absolute' || cs.position === 'fixed') && (/^matrix\(0, 0, 0, 0/.test(cs.transform) || +cs.opacity === 0 || cs.display === 'none')) c.style.display = 'none';
