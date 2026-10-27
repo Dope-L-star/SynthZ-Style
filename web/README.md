@@ -18,5 +18,10 @@ npm run publicar   # arma y copia el resultado a ../nuevo
 - `POST /api/ai`: respuesta en vivo (el backend elige la IA y el respaldo).
 - `POST /api/auth` (`login`, `signup`, `reset`), `GET /api/me`, `DELETE /api/auth`.
 
+## Hecho en esta entrega
+- Chats guardados: en el navegador y, con cuenta, en la nube (`/api/chats`, mismas claves `openrouter::sz:auto::<id>` que la página de siempre).
+- Comparar: dos IA lado a lado (requiere cuenta).
+- Síntesis: tres IA de proveedores distintos responden en paralelo, una las une y da el «acuerdo» (0–100). Requiere cuenta.
+
 ## Pendiente
-Chats guardados, Comparar y Síntesis, herramientas (internet, imágenes), equipos, ayuda y Pulsem.
+Herramientas (internet, imágenes), equipos, ayuda y Pulsem.

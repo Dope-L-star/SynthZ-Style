@@ -92,11 +92,19 @@ export function turnoId(texto: string): string {
   return "t" + (h >>> 0).toString(36) + "-" + Math.floor(Date.now() / 600000).toString(36);
 }
 
-export async function* hablar(mensajes: { role: "user" | "assistant"; content: string }[], senal: AbortSignal): AsyncGenerator<Evento> {
+export interface ModeloIA { id: string; nombre: string; proveedor: string }
+
+export async function modelosIA(): Promise<ModeloIA[]> {
+  const d = await api<{ models?: { id: string; name: string; prov: string }[] }>("ai");
+  return (d.models ?? []).map((m) => ({ id: m.id, nombre: m.name, proveedor: m.prov }));
+}
+
+/* `modelo` es «sz:auto» (la mejor para la pregunta) o el id exacto de una IA. `turno` distingue llamadas del mismo envío. */
+export async function* hablar(mensajes: { role: "user" | "assistant"; content: string }[], senal: AbortSignal, modelo = "sz:auto", turno?: string): AsyncGenerator<Evento> {
   const ultimo = [...mensajes].reverse().find((m) => m.role === "user")?.content ?? "";
   let r: Response;
   try {
-    r = await fetch("/api/ai", { method: "POST", headers: cabeceras(), body: JSON.stringify({ messages: mensajes, model: "sz:auto", turn: turnoId(ultimo) }), signal: senal });
+    r = await fetch("/api/ai", { method: "POST", headers: cabeceras(), body: JSON.stringify({ messages: mensajes, model: modelo, turn: turno ?? turnoId(ultimo) }), signal: senal });
   } catch (e) {
     if (senal.aborted) throw e;
     throw new ErrorApi("No pude conectarme. Revisa tu internet e intenta de nuevo.", 0, "red", true);
@@ -126,4 +134,17 @@ export async function* hablar(mensajes: { role: "user" | "assistant"; content: s
   }
   const e = leerLinea(resto);
   if (e && e.t !== "error") yield e;
+}
+
+export interface Resultado { texto: string; ia: string; gasto: number; usado: number; limite: number }
+
+/* Pide una respuesta completa a una IA (para Comparar y Síntesis), avisando del texto según llega */
+export async function consultar(mensajes: { role: "user" | "assistant"; content: string }[], senal: AbortSignal, modelo: string, turno: string, alTexto?: (t: string) => void): Promise<Resultado> {
+  const r: Resultado = { texto: "", ia: "", gasto: 0, usado: 0, limite: 0 };
+  for await (const e of hablar(mensajes, senal, modelo, turno)) {
+    if (e.t === "meta") r.ia = e.ia;
+    else if (e.t === "texto") { r.texto += e.d; alTexto?.(r.texto); }
+    else { r.gasto += e.gasto; r.usado = e.usado; r.limite = e.limite; }
+  }
+  return r;
 }
