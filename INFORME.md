@@ -3,7 +3,7 @@
 **El nombre:** «Synth» viene del synthetism (un arte). Sammuel lo lleva a un arte nuevo de hacer páginas: SynthetismZ y SynthetismFlow → SynthZ y SynthFlow. SynthonIA: te sintoniza con la IA. Los nombres se quedan; el dominio de SynthFlow será **synthetismflow** (aún no se compra). Revisado el 20-oct-2026 en Vercel: synthetismflow.com libre (US$11,25 al año, igual al renovar), synthetismflow.app libre (US$9,99 y luego US$15), synthetismz.com libre (US$11,25).
 
 **Cuentas y equipo**
-- Rango por correo de Google verificado (variable `SYNTHZ_RESERVED_EMAILS` en Vercel; los correos ya no están en el repo).
+- Rango por correo de Google verificado (quitado en v2.9.1: los rangos ya quedaron guardados en cada cuenta y el correo ya no da rango).
 - Vincular en los dos sentidos (Tu cuenta › «Seguridad y acceso»): `mode:'link'` (Google → cuenta con usuario; por Supabase o con el botón de Google; clave `gl:<googleSub>` o `sbu:<uid>`) y `mode:'addpass'` (cuenta de Google → usuario y contraseña). Nunca junta dos cuentas distintas (409). Al vincular, si tu foto era la inicial, se pone la de Google.
 
 **Mantenimiento** (Pulsem › Ajustes, solo Prime/ZFlow): cubre toda la página con SynthonIA de verdad en el centro (caras, boca que habla, charla propia con tope de 30 al día, frases propias si la IA no responde). Pulsem nunca se cubre; «Entrar igual» solo Prime/ZFlow. Archivos: src/core/25e-mantenimiento-synthonia.js, src/core-css/08-mantenimiento.css; servidor: `cfg:maint`, api/help.js `ctx:'maint'`.

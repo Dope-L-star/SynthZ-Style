@@ -12,7 +12,7 @@
    DELETE /api/auth                         → cierra esta sesión · DELETE /api/auth?all=1 → en todos tus dispositivos */
 import { route, body, json, fail, verifyGoogle, getJ, setJ, redis, rid, newSession, endSession, endAllSessions, auth, limit, cleanEmail, str,
          hasGoogle, hashPass, checkPass, passNeedsUpgrade, cleanUser, okUser, recoveryCode, codeHash, sameHash, SEED_ROLES, setupOk,
-         sbAccount, sbUser, sbGoogleOn, sbFindByUid, ipOf, emailRole } from './_lib.js';
+         sbAccount, sbUser, sbGoogleOn, sbFindByUid, ipOf } from './_lib.js';
 
 const err = (s, m) => Object.assign(new Error(m), { status:s });
 const okPass = p => typeof p === 'string' && p.length >= 8 && p.length <= 200;
@@ -25,7 +25,7 @@ const ROLE_N = { user:0, staff:1, admin:2, owner:3 };
 const topRole = (a, b) => (ROLE_N[b] || 0) > (ROLE_N[a] || 0) ? b : (a || '');
 async function ownerOf(keys){ for (const k of keys){ if (!k) continue; const s = await redis('GET', k); if (s && await getJ('u:' + s)) return s; } return null; }
 async function claimEmail(email, sub, force){ if (!email) return; const cur = await redis('GET', 'e:' + email); if (force || !cur || cur === sub || !(await getJ('u:' + cur))) await redis('SET', 'e:' + email, sub); }
-/* apunta el correo a la cuenta, lo anota en su lista y le da el rango que le toque por ese correo */
+/* apunta el correo a la cuenta y lo anota en su lista (v2.9.1: el correo ya no da rango; los rangos del equipo quedaron guardados en cada cuenta) */
 function addLink(user, email, verified, picture, ids){
   if (!email) return;
   const L = Array.isArray(user.links) ? user.links : (user.links = []);
@@ -34,7 +34,6 @@ function addLink(user, email, verified, picture, ids){
   user.links = L.slice(-8);
   if (!user.email){ user.email = email; user.emailOk = !!verified; }
   if (!user.picture && picture) user.picture = picture;
-  const r = verified ? emailRole(email) : null; if (r) user.role = topRole(user.role, r);
 }
 async function signedIn(sub, isNew, extra){
   const token = await newSession(sub);
@@ -212,7 +211,7 @@ export default route({
       addLink(user, email, verified, str(g.picture, 400), { gl:String(g.sub) });
       await setJ('u:' + sub, user); await sbAccount(user);
       await redis('SET', 'gl:' + g.sub, sub);
-      if (verified) await claimEmail(email, sub, !!emailRole(email));
+      if (verified) await claimEmail(email, sub, false);
       return signedIn(sub, !prev);
     }
     /* entrar con Google a través de Supabase: Supabase confirma quién eres y aquí se crea (o se encuentra) tu cuenta de SynthZ */
@@ -235,7 +234,7 @@ export default route({
       addLink(user, email, verified, pic, { sbu:uid });
       await setJ('u:' + sub, user); await sbAccount(user);
       await redis('SET', 'sbu:' + uid, sub);
-      if (email && verified) await claimEmail(email, sub, !!emailRole(email));
+      if (email && verified) await claimEmail(email, sub, false);
       return signedIn(sub, !prev);
     }
     return fail(400, 'Acción desconocida.');

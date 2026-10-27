@@ -13,4 +13,4 @@ SynthZ (portada) y SynthFlow (el chat): chatea gratis con cientos de IA, compár
 - Nada se pasa a `main` sin revisar antes la vista previa de Vercel de la rama.
 
 ## Variables de Vercel (sin valores aquí: el repo es público)
-`KV_REST_API_URL`, `KV_REST_API_TOKEN` (obligatorias), `SYNTHZ_SECRET`, `SYNTHZ_SETUP_CODE`, `SYNTHZ_RESERVED_EMAILS`, `SYNTHZ_RESERVED`, `GOOGLE_CLIENT_ID`. Detalle en `GUIA.md`.
+`KV_REST_API_URL`, `KV_REST_API_TOKEN` (obligatorias), `SYNTHZ_SECRET`, `SYNTHZ_SETUP_CODE`, `SYNTHZ_RESERVED`, `GOOGLE_CLIENT_ID`. Detalle en `GUIA.md`.

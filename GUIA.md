@@ -86,7 +86,6 @@ Formato interno: lo nuevo se guarda como `v2.<id de la clave>.<datos>`, y así S
 |---|---|
 | `SYNTHZ_SECRET` / `SYNTHZ_SECRET_OLD` | La clave de cifrado y las anteriores (ver la sección de arriba). |
 | `SYNTHZ_SETUP_CODE` | El código de activación de las cuentas del equipo (20+ caracteres al azar). Sin ella no se pueden reclamar. |
-| `SYNTHZ_RESERVED_EMAILS` | Correos de Google del equipo y su rango. Formato: `correo:owner,correo:admin,correo:staff`. Quien ya tiene su rango lo conserva aunque falte. |
 | `SYNTHZ_USER_MB` | Espacio en la nube por persona, en MB. Por defecto 2: con 100 usuarios son ~200 MB, dentro de los 256 MB del plan gratis de Upstash. Cuando alguien lo llena, sus chats siguen en su dispositivo y se le avisa. |
 | `SYNTHZ_RESERVED` | Para cambiar las cuentas reservadas. Formato: `usuario:rango,usuario:rango`. Rangos: owner (Prime), admin (ZFlow), staff (Symmetrix). |
 | `GOOGLE_CLIENT_ID` | Agrega el botón «Continuar con Google» debajo del de usuario y contraseña. Necesita un ID de cliente de OAuth en Google Cloud con tu dominio en «Orígenes de JavaScript autorizados». Si cambias de dominio, hay que actualizar ese dato en Google. |

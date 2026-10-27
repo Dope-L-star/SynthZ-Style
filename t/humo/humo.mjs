@@ -22,10 +22,10 @@ const ko = (name, why) => { fails++; console.log('FALLO ' + name + ' — ' + Str
 const check = (name, cond, why) => cond ? ok(name) : ko(name, why || 'no se cumple');
 
 /* ---------- servidor (api/_lib.js), sin variables de entorno ---------- */
-for (const k of ['SYNTHZ_SETUP_CODE', 'SYNTHZ_RESERVED_EMAILS']) delete process.env[k];
+delete process.env.SYNTHZ_SETUP_CODE;
 const lib = await import(path.join(REPO, 'api/_lib.js'));
 check('sin SYNTHZ_SETUP_CODE no se acepta ningún código', !lib.setupOk('A'.repeat(24)) && !lib.setupOk(''));
-check('sin SYNTHZ_RESERVED_EMAILS ningún correo tiene rango', Object.keys(lib.EMAIL_ROLES).length === 0);
+check('ningún correo da rango (ya no existe EMAIL_ROLES)', !('EMAIL_ROLES' in lib) && !('emailRole' in lib));
 const libSrc = fs.readFileSync(path.join(REPO, 'api/_lib.js'), 'utf8');
 check('api/_lib.js no trae correos ni huellas escritas', !/@gmail\.com|SETUP_HASH/.test(libSrc));
 
