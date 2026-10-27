@@ -79,7 +79,7 @@ function cnvDownload(M){
 function siblingsOf(card){ const b = card.closest('.body') || card.parentElement; return $$('.fcard pre', b).map(cnvMeta); }
 const escRx = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 function previewDoc(M, sibs){
-  if (M.ext === 'svg') return '<!doctype html><meta charset="utf-8"><style>html,body{margin:0;height:100%;display:grid;place-items:center;background:#fff}svg{max-width:96vw;max-height:96vh}</style>' + M.text;
+  if (M.ext === 'svg') return '<!doctype html><meta charset="utf-8"><style>html,body{margin:0;height:100%;display:grid;place-items:center;background:#fff}svg{max-width:96vw;max-height:96vh}svg:not([width]){width:96vw;height:96vh}</style>' + M.text;
   let h = M.text;
   if (!/<html[\s>]|<body[\s>]|<!doctype/i.test(h)) h = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' + h + '</body></html>';
   (sibs || []).forEach(S => {
@@ -135,6 +135,14 @@ function openCanvas(M, sibs, tab){
     const b = e.target.closest('[data-cv]'); if (!b) return;
     if (b.dataset.cv === 'copy'){ await copyText(M.text); flash(b, '¡Copiado!'); } else cnvDownload(M);
   });
+}
+/* v3.0 · al terminar una respuesta con un archivo, su Sintético se abre solo al lado (como en Claude): el que se ve en vivo, si hay; si no, el último.
+   En el celular no se abre solo (taparía todo): queda la tarjeta para tocarla */
+function synAuto(el){
+  if (!el || !matchMedia('(min-width:900px)').matches) return;
+  const cards = $$('.fcard:not(.deck)', el); if (!cards.length) return;
+  const pv = cards.filter(c => canPreview(cnvMeta($('pre', c)))), c = (pv.length ? pv : cards).pop(), M = cnvMeta($('pre', c));
+  openCanvas(M, siblingsOf(c), canPreview(M) ? 'prev' : 'code');
 }
 function closeCanvas(now){ if (!cvEl) return; const o = cvEl; cvEl = null; document.body.classList.remove('canvasing'); if (now){ o.remove(); return; } o.classList.remove('on'); setTimeout(() => o.remove(), 380); }
 addEventListener('keydown', e => { if (e.key === 'Escape' && cvEl){ e.stopPropagation(); closeCanvas(); } }, true);

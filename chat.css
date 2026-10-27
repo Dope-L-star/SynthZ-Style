@@ -2351,6 +2351,37 @@ html.noanim .pjv,html.noanim .pjc,html.noanim .pj-menu{animation:none}
 /* v2.9.1 · «Sintéticos»: la etiquetita en el lienzo de lo que la IA crea y se puede ver en vivo */
 .cvp-syn{display:inline-block;padding:1px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:linear-gradient(120deg,rgba(141,76,255,.28),rgba(255,61,154,.22));color:#fff;font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;vertical-align:1px}
 
+/* v3.0 · el Sintético se abre AL LADO de la conversación, como en Claude: sin oscurecer ni tapar el chat, que sigue usable.
+   En pantallas medianas se esconde la lista de chats mientras está abierto (igual que Claude recoge su barra).
+   El modo compacto achica .shell con zoom:var(--ui-z); el margen se divide por ese zoom para que cuadre con el panel. */
+:root{--syn-w:clamp(420px,46vw,860px)}
+@media (min-width:900px){
+  .cvp{left:auto;width:var(--syn-w);background:none !important;pointer-events:none}
+  .cvp-in{width:100%;pointer-events:auto;zoom:var(--ui-z,1);background:color-mix(in srgb,var(--sb-bg,#0b0820) 34%,transparent);-webkit-backdrop-filter:blur(28px) saturate(150%);backdrop-filter:blur(28px) saturate(150%);border-left:1px solid color-mix(in srgb,var(--sb-light,#fff) 16%,rgba(255,255,255,.08));box-shadow:-24px 0 60px -30px rgba(0,0,0,.7)}
+  html.simple .cvp-in,html.rtr .cvp-in{background:var(--bg,#0b0c10);-webkit-backdrop-filter:none;backdrop-filter:none}
+  body.canvasing .shell .main{margin-right:calc(var(--syn-w) / var(--ui-z,1));transition:margin-right .35s cubic-bezier(.22,1,.36,1)}
+  html.noanim body.canvasing .shell .main{transition:none}
+}
+@media (min-width:900px) and (max-width:1499px){ body.canvasing .shell .chats{display:none} }
+
+/* Sintéticos en la barra lateral: la lista de todo lo que creó la IA */
+.synv{position:absolute;inset:0;z-index:30;overflow-y:auto;overscroll-behavior:contain;animation:pjIn .35s cubic-bezier(.22,1,.36,1)}
+html:not(.simple) .synv{background:radial-gradient(80% 55% at 85% -10%,color-mix(in srgb,var(--sb-primary) 30%,transparent),transparent 62%),radial-gradient(70% 55% at 0% 105%,color-mix(in srgb,var(--sb-secondary) 22%,transparent),transparent 62%),color-mix(in srgb,var(--sb-bg) 62%,transparent);-webkit-backdrop-filter:blur(26px) saturate(160%);backdrop-filter:blur(26px) saturate(160%)}
+html.simple .synv{background:var(--bg,#0b0c10)}
+.synv[hidden]{display:none}
+.syn-l{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.syn-w{position:relative;display:flex}
+.syn-w .syn-c{flex:1;min-width:0}
+.syn-go{position:absolute;right:10px;top:12px;padding:4px 10px;border-radius:999px;border:1px solid color-mix(in srgb,var(--sb-light,#fff) 22%,rgba(255,255,255,.1));background:rgba(255,255,255,.06);color:var(--soft,#ddd);font:inherit;font-size:11.5px;cursor:pointer}
+.syn-go:hover{background:rgba(255,255,255,.14);color:var(--text,#fff)}
+.syn-c{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-height:118px;padding:14px;border-radius:18px;border:1px solid color-mix(in srgb,var(--sb-light,#fff) 18%,rgba(255,255,255,.1));background:linear-gradient(160deg,color-mix(in srgb,var(--sb-primary,#7b3ff2) 12%,rgba(255,255,255,.05)),rgba(255,255,255,.02) 70%);color:inherit;font:inherit;text-align:left;cursor:pointer;transition:transform .2s,border-color .2s}
+.syn-c:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--sb-light,#fff) 45%,transparent)}
+.syn-c .fc-ic{width:36px;height:36px;border-radius:10px}
+.syn-c b{font-weight:600;font-size:14.5px;color:var(--text);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.syn-c small{color:var(--mute);font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.syn-c small+small{margin-top:auto}
+@media (max-width:620px){.syn-l{grid-template-columns:1fr 1fr}.syn-c{min-height:104px;padding:12px}}
+
 /* ===== v3.0 · Proyectos como en Claude, con el color de tu tema =====
    · El fondo es vidrio del tema (se ve el cielo de atrás, 60-75 % transparente) en vez de un panel casi negro.
    · Las tarjetas, la caja «¿Qué quieres hacer…?» y el panel de la derecha toman los colores del tema (Océano, Bosque, Lavanda…).
