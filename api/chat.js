@@ -26,7 +26,7 @@ export default route({
     if (b.reasoning && ['low', 'medium', 'high'].includes(b.reasoning.effort)) payload.reasoning = { effort:b.reasoning.effort };   /* esfuerzo de la IA */
     const up = await fetch((process.env.OPENROUTER_URL || 'https://openrouter.ai/api/v1') + '/chat/completions', {
       method:'POST', signal:req.signal,
-      headers:{ Authorization:'Bearer ' + key, 'content-type':'application/json', 'HTTP-Referer':new URL(req.url).origin, 'X-Title':'SynthZ' },
+      headers:{ Authorization:'Bearer ' + key, 'content-type':'application/json', 'HTTP-Referer':new URL(req.url).origin, 'X-Title':'SymphorIA' },
       body:JSON.stringify(payload)
     });
     const count = async n => { if (n > 0) await redis('INCRBY', ukey, String(Math.round(n))).then(() => redis('EXPIRE', ukey, '259200')).catch(() => {}); };

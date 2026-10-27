@@ -1,0 +1,7 @@
+/* ===== v3.0 · EnerX: el límite del día es una batería (antes un anillo y SynXCoin's) ===== */
+.lbatt{flex:none;overflow:visible}
+.lbatt .lb-f{transition:width 1s cubic-bezier(.22,1,.36,1)}
+.lbatt.ok{color:#5fe3c8}
+.lbatt.warn{color:#ffc857}
+.lbatt.full{color:#ff6b6b}
+html.noanim .lbatt .lb-f{transition:none}

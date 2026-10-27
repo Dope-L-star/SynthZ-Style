@@ -18,7 +18,7 @@ const err = (s, m) => Object.assign(new Error(m), { status:s });
 const okPass = p => typeof p === 'string' && p.length >= 8 && p.length <= 200;
 const PASS_MSG = 'La contraseña debe tener al menos 8 caracteres.';
 const RESERVED = new Set(['admin', 'synthz', 'synthflow', 'soporte', 'support', 'root', 'puter', 'openrouter', 'sistema', 'system', 'staff', 'owner', 'null', 'undefined']);
-const reservedErr = () => Object.assign(new Error('Ese usuario está reservado para el equipo de SynthZ. Si eres tú, escribe el código de configuración.'), { status:403, code:'reserved' });
+const reservedErr = () => Object.assign(new Error('Ese usuario está reservado para el equipo de SymphorIA. Si eres tú, escribe el código de configuración.'), { status:403, code:'reserved' });
 
 /* una persona = una cuenta: cada correo/identidad de Google que se vincula apunta a esa cuenta (e:<correo>, gl:<id de Google>, sbu:<id de Supabase>) */
 const ROLE_N = { user:0, staff:1, admin:2, owner:3 };
@@ -77,7 +77,7 @@ export default route({
       const ok = await checkPass(String(b.pass || ''), pw && pw.h);
       if (!ok || !sub) throw err(401, 'Usuario o contraseña incorrectos.');
       if (passNeedsUpgrade(pw.h)){ pw.h = await hashPass(String(b.pass)); await setJ('pw:' + sub, pw); }   /* sube a scrypt más fuerte sin pedir nada */
-      const user = await getJ('u:' + sub); if (user){ if (user.blocked) throw err(403, 'Esta cuenta está suspendida. Escríbele al equipo de SynthZ.'); user.seen = Date.now(); await setJ('u:' + sub, user); }
+      const user = await getJ('u:' + sub); if (user){ if (user.blocked) throw err(403, 'Esta cuenta está suspendida. Escríbele al equipo de SymphorIA.'); user.seen = Date.now(); await setJ('u:' + sub, user); }
       return signedIn(sub, false);
     }
 
@@ -100,7 +100,7 @@ export default route({
       const me = await auth(req);
       await limit('pwchg:' + me.sub, 10, 3600);
       const pw = await getJ('pw:' + me.sub);
-      if (!pw) throw err(400, 'Tu cuenta entra con Google: no tiene contraseña de SynthZ.');
+      if (!pw) throw err(400, 'Tu cuenta entra con Google: no tiene contraseña de SymphorIA.');
       if (!(await checkPass(String((mode === 'change' ? b.old : b.pass) || ''), pw.h))) throw err(401, 'Tu contraseña actual no es correcta.');
       if (mode === 'change'){
         if (!okPass(b.pass)) throw err(400, PASS_MSG);
@@ -137,7 +137,7 @@ export default route({
         if (!viaGoogle) throw err(403, 'Por aquí solo se puede vincular una cuenta de Google.');
         gi = { gsub:'', uid:String(g.id), email:cleanEmail(g.email), verified:!!g.email_confirmed_at && meta.email_verified !== false, picture:str(meta.avatar_url || meta.picture || '', 400), name:meta.full_name || meta.name || '' };
       } else if (b.credential){
-        if (!(await hasGoogle())) return fail(400, 'Entrar con Google no está activado en este SynthZ.');
+        if (!(await hasGoogle())) return fail(400, 'Entrar con Google no está activado en este SymphorIA.');
         const g = await verifyGoogle(b.credential);
         gi = { gsub:String(g.sub), uid:'', email:cleanEmail(g.email), verified:g.email_verified === true, picture:str(g.picture, 400), name:g.name || '' };
       } else return fail(400, 'Falta la confirmación de Google.');
@@ -148,7 +148,7 @@ export default route({
       if (otherSub && otherSub !== me.sub){
         const o = await getJ('u:' + otherSub) || {}, hasPw = !!(await getJ('pw:' + otherSub));
         if (hasPw || o.username) throw err(409, 'Ese Google ya está unido a la cuenta @' + (o.username || 'otra') + '. Entra a esa cuenta, o desvincúlalo allí primero.');
-        if (o.blocked) throw err(403, 'Esa cuenta de Google está suspendida. Escríbele al equipo de SynthZ.');
+        if (o.blocked) throw err(403, 'Esa cuenta de Google está suspendida. Escríbele al equipo de SymphorIA.');
         /* era una cuenta creada solo con Google (repetida): se une a esta y sus accesos pasan aquí */
         me.role = topRole(me.role, o.role);
         (Array.isArray(o.links) ? o.links : (o.email ? [{ email:o.email }] : [])).forEach(x => addLink(me, x.email, true, ''));
@@ -200,14 +200,14 @@ export default route({
     }
 
     if (mode === 'google'){
-      if (!(await hasGoogle())) return fail(400, 'Entrar con Google no está activado en este SynthZ.');
+      if (!(await hasGoogle())) return fail(400, 'Entrar con Google no está activado en este SymphorIA.');
       await limit('auth:' + ip, 20, 600);
       const g = await verifyGoogle(b.credential);
       const email = cleanEmail(g.email), verified = g.email_verified === true;
       /* si ese Google (o su correo confirmado) ya está vinculado a una cuenta, se entra a ESA cuenta: no se crea otra */
       const sub = (await ownerOf(['gl:' + g.sub, email && verified ? 'e:' + email : ''])) || 'g' + g.sub;
       const prev = await getJ('u:' + sub);
-      if (prev && prev.blocked) throw err(403, 'Esta cuenta está suspendida. Escríbele al equipo de SynthZ.');
+      if (prev && prev.blocked) throw err(403, 'Esta cuenta está suspendida. Escríbele al equipo de SymphorIA.');
       /* se conserva lo que ya tenía la cuenta (rango, suspensión, fecha); solo se actualiza lo que viene de Google */
       const user = Object.assign({}, prev || { sub, kind:'google', created:Date.now() }, { name:(prev && prev.name) || str(g.name || email.split('@')[0], 60), seen:Date.now() });
       if (!prev || prev.kind === 'google'){ user.email = prev && prev.email && prev.email !== email ? prev.email : email; user.emailOk = !!g.email_verified; user.picture = str(g.picture, 400); }
@@ -217,7 +217,7 @@ export default route({
       if (verified) await claimEmail(email, sub, false);
       return signedIn(sub, !prev);
     }
-    /* entrar con Google a través de Supabase: Supabase confirma quién eres y aquí se crea (o se encuentra) tu cuenta de SynthZ */
+    /* entrar con Google a través de Supabase: Supabase confirma quién eres y aquí se crea (o se encuentra) tu cuenta de SymphorIA */
     if (mode === 'supabase'){
       await limit('auth:' + ip, 20, 600);
       if (!(await sbGoogleOn())) return fail(400, 'Entrar con Google todavía no está activado.');
@@ -229,7 +229,7 @@ export default route({
       /* el correo solo junta tu cuenta con una que ya existía si Google confirmó que es tuyo (así nadie entra a una cuenta ajena) */
       let sub = (await ownerOf(['sbu:' + uid])) || (await sbFindByUid(uid)) || (email && verified ? await ownerOf(['e:' + email]) : null);
       const prev = sub ? await getJ('u:' + sub) : null;
-      if (prev && prev.blocked) throw err(403, 'Esta cuenta está suspendida. Escríbele al equipo de SynthZ.');
+      if (prev && prev.blocked) throw err(403, 'Esta cuenta está suspendida. Escríbele al equipo de SymphorIA.');
       if (!sub) sub = 's' + uid.replace(/-/g, '').slice(0, 20);
       const pic = str(meta.avatar_url || meta.picture || '', 400);
       const user = Object.assign({}, prev || { sub, kind:'google', created:Date.now() }, { name:(prev && prev.name) || str(meta.full_name || meta.name || (email ? email.split('@')[0] : 'Synther'), 60), sbUid:(prev && prev.sbUid) || uid, seen:Date.now() });

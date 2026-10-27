@@ -1,4 +1,4 @@
-/* IA de SynthZ para todos (beta 2)
+/* IA de SymphorIA para todos (beta 2)
    GET                       → { models, provs, limit, used } modelos gratis disponibles y lo que llevas hoy
    POST { messages, model?, maxTokens? } → respuesta en vivo (streaming), con el gasto al final
    Sin cuenta también funciona: se cuenta por dispositivo y por conexión. */

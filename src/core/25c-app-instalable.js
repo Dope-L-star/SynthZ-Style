@@ -38,7 +38,7 @@ function appPromo(force){
   if ($('#appPromo') || appStandalone()) return;
   if (!force){
     if (!appPhone()) return;
-    /* v2.6: no interrumpe la primera visita: se ofrece desde la tercera vez que abres SynthZ (y una vez por semana) */
+    /* v2.6: no interrumpe la primera visita: se ofrece desde la tercera vez que abres SymphorIA (y una vez por semana) */
     try{ if (localStorage.getItem('synthz:appok')) return; if ((+localStorage.getItem('synthz:loads') || 0) < 3) return; const t = +localStorage.getItem('synthz:apppromo') || 0; if (Date.now() - t < 7 * 864e5) return; }catch(e){ return; }
     if (document.querySelector('.szm.on, #ptour, #guide, #szMaint, .tcard[role="dialog"]')) return;   /* no interrumpe otra ventana */
   }

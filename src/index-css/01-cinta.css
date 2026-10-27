@@ -122,7 +122,7 @@ footer{text-align:center;color:var(--mute);font-size:13.5px;padding:70px 24px 90
 .flowbtn .fb-s{position:absolute;width:10px;height:10px;background:#fff6e0;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);filter:drop-shadow(0 0 4px #f2a6c8);opacity:0;pointer-events:none}
 .flowbtn.cool .fb-s{animation:flwsp 2.4s ease-in-out infinite}
 .flowbtn .s1{right:6px;top:-6px}.flowbtn .s2{right:44px;bottom:-5px;width:7px;height:7px;animation-delay:.7s !important}.flowbtn .s3{right:-4px;bottom:12px;width:6px;height:6px;animation-delay:1.4s !important}
-/* ===== v2.9 · intro: la Z de cinta del logo se dibuja con un cometa de luz, brilla, se escribe «SynthZ» y todo vuela a la barra.
+/* ===== v2.9 · intro: la Z de cinta del logo se dibuja con un cometa de luz, brilla, se escribe «SymphorIA» y todo vuela a la barra.
    Es la misma marca de la barra de arriba (antes era la Z vieja de vidrio y un video) ===== */
 #intro{position:fixed;inset:0;z-index:200;display:grid;place-items:center;cursor:default;overflow:hidden}
 #intro .bg{position:absolute;inset:0;background:radial-gradient(52% 42% at 50% 50%,color-mix(in srgb,var(--sb-deep) 62%,var(--sb-bg)),var(--sb-bg) 74%);transition:opacity .9s var(--ease)}
@@ -132,7 +132,7 @@ footer{text-align:center;color:var(--mute);font-size:13.5px;padding:70px 24px 90
 #intro.out .bg{opacity:0}
 .int-wrap{position:relative;display:flex;flex-direction:column;align-items:center}
 .int-row{position:relative;display:flex;align-items:center;font-size:clamp(44px,9vw,100px);line-height:1;will-change:transform;transform-origin:50% 50%}
-.iz-mk{position:relative;flex:none;height:1.55em;aspect-ratio:128/122}
+.iz-mk{position:relative;flex:none;height:1.55em;aspect-ratio:1}
 .iz-mk svg,.iz-mk img{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visible}
 .iz-mk svg{filter:drop-shadow(0 0 .12em rgba(176,92,255,.55)) drop-shadow(0 0 .36em rgba(255,61,154,.22));transition:opacity .4s ease}
 .iz-mk img{opacity:0;transition:opacity .4s ease}
@@ -155,13 +155,16 @@ footer{text-align:center;color:var(--mute);font-size:13.5px;padding:70px 24px 90
 .iz-burst i{position:absolute;left:-3px;top:-3px;width:6px;height:6px;border-radius:50%;background:var(--c,#fff);box-shadow:0 0 10px 2px var(--c,#fff);opacity:0}
 #intro.shine .iz-burst i{animation:izp .95s cubic-bezier(.15,.7,.3,1) var(--dl,0s) forwards}
 @keyframes izp{0%{opacity:1;transform:rotate(var(--a)) translateX(.2em) scale(1)}100%{opacity:0;transform:rotate(var(--a)) translateX(var(--d)) scale(.3)}}
-/* «SynthZ» con la letra de la barra: cada letra sube desde la bruma; la Z cae al final con rebote */
+/* «SymphorIA» con la letra de la barra: cada letra sube desde la bruma; la Z cae al final con rebote */
 /* mientras se dibuja, la Z está sola al centro; al escribirse el nombre, la fila crece y la Z se corre a su lugar */
 .iz-w{display:inline-flex;margin-left:0;white-space:pre;transition:margin-left .5s cubic-bezier(.22,1,.36,1)}
 #intro.lit .iz-w{margin-left:var(--izg,.43em)}
 .iz-w .izc{display:inline-block;max-width:0;opacity:0;transform:translateY(.34em);filter:blur(.1em);transition:max-width .45s cubic-bezier(.22,1,.36,1),opacity .45s ease,transform .7s cubic-bezier(.22,1,.36,1),filter .5s ease}
 .iz-w .izc.zt{transform:translateY(-.5em) scale(1.7) rotate(-10deg);transition:max-width .4s cubic-bezier(.22,1,.36,1),opacity .3s ease,transform .75s cubic-bezier(.34,1.56,.64,1),filter .4s ease}
 .iz-w .izc.on{max-width:1em;opacity:1;transform:none;filter:none}
+.iz-w .izc.zt.on{max-width:2em}
+.iz-or{opacity:0;transform-box:fill-box;transition:opacity .6s ease}
+#intro.shine .iz-or{opacity:1}
 html.noanim #intro *,html.pmode #intro .iz-burst{animation:none !important}
 .int-skip{position:absolute;bottom:34px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:10px;font-size:12.5px;color:var(--mute);opacity:0;transition:opacity .8s}
 .int-skip kbd{font-family:var(--mono);font-size:11.5px;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 7px;color:var(--soft)}

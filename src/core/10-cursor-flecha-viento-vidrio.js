@@ -101,7 +101,7 @@ if (matchMedia('(pointer: fine)').matches && CFG.cursor){
     if (down && !e.buttons) down = false;                 /* soltaste el botón donde la página no lo vio */
     if (!active){ active = true; ax = rx = lastX = e.clientX; ay = ry = lastY2 = e.clientY; root.classList.add('cursor-on'); }
     px = e.clientX; py = e.clientY;
-    /* sobre una barra de desplazamiento o un recuadro de otra página se ve el cursor normal, sin el de SynthZ encima */
+    /* sobre una barra de desplazamiento o un recuadro de otra página se ve el cursor normal, sin el de SymphorIA encima */
     const bar = overBar(e) || (e.target instanceof Element && e.target.tagName === 'IFRAME');
     if (bar !== onBar){ onBar = bar; root.classList.toggle('cursor-bar', bar); if (!bar) snap = true; }
     if (snap){ snap = false; ax = rx = lastX = px; ay = ry = lastY2 = py; vx = vy = angV = 0; }

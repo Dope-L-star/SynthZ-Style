@@ -28,7 +28,7 @@ html:not(.simple) .tcard :is(.lbar,.sxsave,.bl,.cfgsw,.cfg-row,.acc-box):not(.mp
 #sx .tcard h3{font-size:clamp(26px,4vw,34px)}
 .limbig{gap:14px;margin:12px 0 6px}
 .limbig svg{width:64px;height:64px;flex:none}
-.limbig b{font:700 clamp(26px,3.6vw,34px)/1.05 var(--sans,"Geist",system-ui,sans-serif);letter-spacing:-.03em;background:var(--grad-text);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.limbig b{font:700 clamp(26px,3.6vw,34px)/1.05 var(--sans,"Figtree",system-ui,sans-serif);letter-spacing:-.03em;background:var(--grad-text);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .limbig span{margin-top:3px}
 @media (max-width:520px){
   #sx{padding:10px !important;align-items:end}

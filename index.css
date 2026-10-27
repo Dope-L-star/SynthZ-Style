@@ -3,9 +3,10 @@
   --bg:#0b0c10; --card:rgba(255,255,255,.035); --line:rgba(255,255,255,.09);
   --text:#ecebe7; --soft:#c3c5ce; --mute:#8d909c; --accent:#b8c4ff;
   --ease:cubic-bezier(.22,1,.36,1);
-  --serif:'Instrument Serif',Georgia,'Times New Roman',serif;
-  --sans:'Geist',ui-sans-serif,system-ui,'Segoe UI',Roboto,sans-serif;
-  --mono:ui-monospace,'Cascadia Code','JetBrains Mono',Consolas,Menlo,monospace;
+  --serif:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --sans:'Figtree',ui-sans-serif,system-ui,'Segoe UI',Roboto,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,'Cascadia Code',Consolas,Menlo,monospace;
+  --brand:'Chakra Petch','Figtree',system-ui,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{background:var(--bg);scroll-behavior:smooth;-webkit-text-size-adjust:100%}
@@ -94,7 +95,7 @@ button{background:none;border:0;cursor:pointer}
 .cur-hov:not(select)>*{visibility:hidden}
 .rip{position:fixed;left:0;top:0;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;border:1.5px solid rgba(255,255,255,.55);pointer-events:none;z-index:9990}
 
-/* logotipo SynthZ */
+/* logotipo SymphorIA */
 .word{display:inline-flex;align-items:center;font-family:var(--serif);font-size:28px;line-height:1;letter-spacing:-.02em}
 .zb{width:.8em;height:.8em;margin-left:.08em;overflow:visible;flex:none}
 
@@ -257,7 +258,7 @@ footer{text-align:center;color:var(--mute);font-size:13.5px;padding:70px 24px 90
 .flowbtn .fb-s{position:absolute;width:10px;height:10px;background:#fff6e0;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);filter:drop-shadow(0 0 4px #f2a6c8);opacity:0;pointer-events:none}
 .flowbtn.cool .fb-s{animation:flwsp 2.4s ease-in-out infinite}
 .flowbtn .s1{right:6px;top:-6px}.flowbtn .s2{right:44px;bottom:-5px;width:7px;height:7px;animation-delay:.7s !important}.flowbtn .s3{right:-4px;bottom:12px;width:6px;height:6px;animation-delay:1.4s !important}
-/* ===== v2.9 · intro: la Z de cinta del logo se dibuja con un cometa de luz, brilla, se escribe «SynthZ» y todo vuela a la barra.
+/* ===== v2.9 · intro: la Z de cinta del logo se dibuja con un cometa de luz, brilla, se escribe «SymphorIA» y todo vuela a la barra.
    Es la misma marca de la barra de arriba (antes era la Z vieja de vidrio y un video) ===== */
 #intro{position:fixed;inset:0;z-index:200;display:grid;place-items:center;cursor:default;overflow:hidden}
 #intro .bg{position:absolute;inset:0;background:radial-gradient(52% 42% at 50% 50%,color-mix(in srgb,var(--sb-deep) 62%,var(--sb-bg)),var(--sb-bg) 74%);transition:opacity .9s var(--ease)}
@@ -267,7 +268,7 @@ footer{text-align:center;color:var(--mute);font-size:13.5px;padding:70px 24px 90
 #intro.out .bg{opacity:0}
 .int-wrap{position:relative;display:flex;flex-direction:column;align-items:center}
 .int-row{position:relative;display:flex;align-items:center;font-size:clamp(44px,9vw,100px);line-height:1;will-change:transform;transform-origin:50% 50%}
-.iz-mk{position:relative;flex:none;height:1.55em;aspect-ratio:128/122}
+.iz-mk{position:relative;flex:none;height:1.55em;aspect-ratio:1}
 .iz-mk svg,.iz-mk img{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visible}
 .iz-mk svg{filter:drop-shadow(0 0 .12em rgba(176,92,255,.55)) drop-shadow(0 0 .36em rgba(255,61,154,.22));transition:opacity .4s ease}
 .iz-mk img{opacity:0;transition:opacity .4s ease}
@@ -290,13 +291,16 @@ footer{text-align:center;color:var(--mute);font-size:13.5px;padding:70px 24px 90
 .iz-burst i{position:absolute;left:-3px;top:-3px;width:6px;height:6px;border-radius:50%;background:var(--c,#fff);box-shadow:0 0 10px 2px var(--c,#fff);opacity:0}
 #intro.shine .iz-burst i{animation:izp .95s cubic-bezier(.15,.7,.3,1) var(--dl,0s) forwards}
 @keyframes izp{0%{opacity:1;transform:rotate(var(--a)) translateX(.2em) scale(1)}100%{opacity:0;transform:rotate(var(--a)) translateX(var(--d)) scale(.3)}}
-/* «SynthZ» con la letra de la barra: cada letra sube desde la bruma; la Z cae al final con rebote */
+/* «SymphorIA» con la letra de la barra: cada letra sube desde la bruma; la Z cae al final con rebote */
 /* mientras se dibuja, la Z está sola al centro; al escribirse el nombre, la fila crece y la Z se corre a su lugar */
 .iz-w{display:inline-flex;margin-left:0;white-space:pre;transition:margin-left .5s cubic-bezier(.22,1,.36,1)}
 #intro.lit .iz-w{margin-left:var(--izg,.43em)}
 .iz-w .izc{display:inline-block;max-width:0;opacity:0;transform:translateY(.34em);filter:blur(.1em);transition:max-width .45s cubic-bezier(.22,1,.36,1),opacity .45s ease,transform .7s cubic-bezier(.22,1,.36,1),filter .5s ease}
 .iz-w .izc.zt{transform:translateY(-.5em) scale(1.7) rotate(-10deg);transition:max-width .4s cubic-bezier(.22,1,.36,1),opacity .3s ease,transform .75s cubic-bezier(.34,1.56,.64,1),filter .4s ease}
 .iz-w .izc.on{max-width:1em;opacity:1;transform:none;filter:none}
+.iz-w .izc.zt.on{max-width:2em}
+.iz-or{opacity:0;transform-box:fill-box;transition:opacity .6s ease}
+#intro.shine .iz-or{opacity:1}
 html.noanim #intro *,html.pmode #intro .iz-burst{animation:none !important}
 .int-skip{position:absolute;bottom:34px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:10px;font-size:12.5px;color:var(--mute);opacity:0;transition:opacity .8s}
 .int-skip kbd{font-family:var(--mono);font-size:11.5px;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 7px;color:var(--soft)}
@@ -647,9 +651,9 @@ html.js:not(.landed) .rail{opacity:0;translate:-20px 0}
 @media (max-width:480px){.pill-total .nt-l{display:none}.pill-total{padding-left:8px;padding-right:10px}}
 footer .legal{margin-top:8px;font-size:13px}footer .legal a{color:var(--mute,#8d8c88);text-decoration:underline;text-underline-offset:3px}
 /* v2.2 · una sola letra limpia (monoespaciada solo para código) */
-:root{--code:ui-monospace,'Cascadia Code','JetBrains Mono',Consolas,Menlo,monospace;--mono:var(--sans)}
+:root{--code:'IBM Plex Mono',ui-monospace,'Cascadia Code',Consolas,Menlo,monospace;--mono:'IBM Plex Mono',ui-monospace,Consolas,Menlo,monospace}
 pre,code,kbd,.rccode,.hk-code,.og code{font-family:var(--code)!important}
-/* ===== v2.4 · portada SynthZ según el boceto: vidrio líquido, degradados de neón y SynthonIA de cuerpo entero ===== */
+/* ===== v2.4 · portada SymphorIA según el boceto: vidrio líquido, degradados de neón y SynthonIA de cuerpo entero ===== */
 .lqg{position:relative;background:var(--lg-bg),rgba(20,12,44,.16);border:1px solid var(--lg-edge);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);box-shadow:var(--lg-shadow);border-radius:24px}
 html.noglass .lqg{background:rgba(24,16,50,.92);backdrop-filter:none;-webkit-backdrop-filter:none}
 .gt{background:var(--grad-text);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
@@ -830,7 +834,7 @@ div.ready .sbody .sb-arm.l{transform-origin:64px 34px;animation:sbwave 1.8s ease
 /* pie */
 .v24foot{display:grid;grid-template-columns:1.3fr repeat(3,auto);gap:clamp(20px,5vw,70px);align-items:start;max-width:1180px;margin:30px auto 40px;padding:24px 30px;text-align:left;color:var(--soft)}
 .vf-b{display:grid;gap:4px}
-.vf-l{font:700 30px var(--sans);color:#fff}.vf-l span{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.vf-l{font:700 30px var(--brand,var(--sans));color:#fff}.vf-l span{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .vf-c{display:grid;gap:4px;font-size:14px}.vf-c b{color:#fff;margin-bottom:2px}.vf-c a{color:var(--mute)}.vf-c a:hover{color:#fff}
 .v24foot .only-guest{grid-column:1/-1;font-size:13px;color:var(--mute)}
 

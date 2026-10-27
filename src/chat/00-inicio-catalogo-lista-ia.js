@@ -37,16 +37,16 @@ function stub(id){
   const v = id.split('/')[0] || 'otro', nm = (id.split('/').slice(1).join('/') || id).replace(/:free$/, '');
   return { id, name:nm, vendor:v, vlabel:vendorLabel(v), ctx:0, free:/:free$/.test(id), created:0, vision:false, reasoning:false, tools:false, desc:'', stub:true };
 }
-/* prueba guiada (modalidad C): un «modelo» propio que pasa por el servidor de SynthZ */
+/* prueba guiada (modalidad C): un «modelo» propio que pasa por el servidor de SymphorIA */
 const TRIAL_ID = 'tr:prueba';
-const TRIAL_INFO = { id:TRIAL_ID, name:'Prueba de SynthZ', vendor:'synthz', vlabel:'Prueba guiada', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'' };
+const TRIAL_INFO = { id:TRIAL_ID, name:'Prueba de SymphorIA', vendor:'synthz', vlabel:'Prueba guiada', ctx:0, free:true, created:0, vision:false, reasoning:false, tools:false, desc:'' };
 let trialOn = false;
 const info = id => id === TRIAL_ID ? TRIAL_INFO : idx.get(id) || stub(id);
 function fallbackList(){ return [...new Set(['sz:auto', ...(st().models.openrouter || []).filter(x => !orOn() ? /^(sz|pu):/.test(x) : true)])].map(stub); }
 const cached = SZ.loadCatalog();
 if (cached) setCatalog(cached.list, cached.t, 'cached'); else setCatalog([], 0, 'loading');
 
-const APODEX = 'sz:auto';   /* «SynthZ Auto»: las IAs conectadas elige sola el mejor modelo gratis que esté libre (beta 2) */
+const APODEX = 'sz:auto';   /* «SymphorIA Auto»: las IAs conectadas elige sola el mejor modelo gratis que esté libre (beta 2) */
 const selId = () => trialOn ? TRIAL_ID : (st().model.openrouter || APODEX);
 const kfmt = n => !n ? '' : n >= 1e6 ? (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : n >= 1000 ? Math.round(n / 1000) + 'k' : String(n);
 const isNew = m => newIds.has(m.id) || (m.created && Date.now() / 1000 - m.created < 14 * 86400);

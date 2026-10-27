@@ -17,7 +17,7 @@ function renderTop(animate){
   if (mode === 'solo' && document.body.classList.contains('fresh')){
     row.classList.remove('n3', 'n4');
     const ok0 = connected(selId()), [k1, long1] = payOf(selId()), k = ok0 ? k1 : 'off', long = ok0 ? long1 : /^pu:/.test(selId()) ? 'Puter · sin conectar (toca para conectarlo)' : long1, left = trialOn ? trialLeft() : 0;
-    row.innerHTML = '<button type="button" class="paypill ' + k + '" id="payPill" title="Quién paga lo que escribes">' + '<i aria-hidden="true"></i>' + (trialOn ? 'Prueba guiada · te quedan <b>' + left + ' de ' + ((SZ.trialGet() || {}).max || 5) + '</b> · la paga SynthZ' : esc(long)) + CARET + '</button>';
+    row.innerHTML = '<button type="button" class="paypill ' + k + '" id="payPill" title="Quién paga lo que escribes">' + '<i aria-hidden="true"></i>' + (trialOn ? 'Prueba guiada · te quedan <b>' + left + ' de ' + ((SZ.trialGet() || {}).max || 5) + '</b> · la paga SymphorIA' : esc(long)) + CARET + '</button>';
     return;
   }
   if (mode === 'solo'){
@@ -50,7 +50,7 @@ $('#pickRow').addEventListener('click', e => {
 });
 /* quién paga lo que escribes: siempre a la vista (regla 5) */
 function payOf(id){
-  if (id === TRIAL_ID) return ['tr', 'Prueba guiada · la paga SynthZ', 'Prueba · paga SynthZ'];
+  if (id === TRIAL_ID) return ['tr', 'Prueba guiada · la paga SymphorIA', 'Prueba · paga SymphorIA'];
   if (/^sz:/.test(id)) return ['sz', 'Gratis · ' + SZ.limTxt().replace(/^./, c => c.toLowerCase()), 'Gratis · ' + SZ.limShort().replace(/^[A-ZÁÉÍÓÚ]/, c => c.toLowerCase())];
   if (/^pu:/.test(id)) return ['pu', 'Con tu Puter · tu cuenta gratis', 'Con tu Puter'];
   return ['or off', 'Esta IA ya no está disponible: elige otra', 'Elige otra IA'];
@@ -58,15 +58,15 @@ function payOf(id){
 function paintPay(){
   let c, l, s, ex = false;
   if (mode === 'cmp'){ c = ''; l = 'Comparando · cada IA cuenta como un mensaje'; s = 'Cada IA cuenta como un mensaje'; }
-  else if (trialOn){ const left = trialLeft(), mx = (SZ.trialGet() || {}).max || 5; c = 'tr'; ex = true; l = left > 0 ? 'Prueba guiada · te quedan ' + left + ' de ' + mx + ' · la paga SynthZ' : 'Prueba guiada terminada'; s = left > 0 ? 'Prueba · ' + left + ' de ' + mx + ' · paga SynthZ' : 'Prueba terminada'; }
+  else if (trialOn){ const left = trialLeft(), mx = (SZ.trialGet() || {}).max || 5; c = 'tr'; ex = true; l = left > 0 ? 'Prueba guiada · te quedan ' + left + ' de ' + mx + ' · la paga SymphorIA' : 'Prueba guiada terminada'; s = left > 0 ? 'Prueba · ' + left + ' de ' + mx + ' · paga SymphorIA' : 'Prueba terminada'; }
   else { const id = selId(), p = payOf(id); c = p[0]; l = p[1]; s = p[2]; if (!connected(id)){ c = 'off'; l = /^pu:/.test(id) ? 'Puter · sin conectar' : l; s = /^pu:/.test(id) ? 'Puter sin conectar' : s; } }
   const P = $('#payL'), M = $('#payM');
   if (P){ P.className = 'payl ' + c; P.innerHTML = '<i aria-hidden="true"></i>' + esc(l) + (ex ? '<button type="button" class="lnk" data-tx="exit">Salir</button>' : ''); }
   if (M){
     const bar = !document.body.classList.contains('fresh') && mode !== 'cmp' && !trialOn && (c === 'sz' || agentOn());
     if (bar){ const k = Math.max(0, 1 - SZ.limPct()), pc = Math.round(k * 100), lv = SZ.limLvl();
-      M.className = 'paym tlim ' + lv; M.setAttribute('role', 'img'); M.setAttribute('aria-label', 'Tus SynXCoin\'s de hoy: te quedan ' + SZ.coinsFmt(SZ.coinsLeft()) + ' (1 SynXCoin = 1 palabra)');
-      M.innerHTML = '<span class="tl-l">Hoy</span><i class="tl-t"><b style="transform:scaleX(' + k.toFixed(3) + ')"></b></i><em>' + (SZ.isGuestQ() ? pc + ' %' : esc(SZ.coinsShort(SZ.coinsLeft())) + ' <small>SynXCoin\'s</small>') + '</em>'; }
+      M.className = 'paym tlim ' + lv; M.setAttribute('role', 'img'); M.setAttribute('aria-label', SZ.isGuestQ() ? SZ.limTxt() : 'Tu EnerX de hoy: ' + SZ.battPct() + ' %');
+      M.innerHTML = '<span class="tl-l">Hoy</span>' + SZ.limRing(16) + '<em>' + pc + ' %</em>'; }
     else { M.className = 'paym ' + c; M.removeAttribute('role'); M.removeAttribute('aria-label'); M.innerHTML = '<i aria-hidden="true"></i>' + esc(s); }
   }
 }
@@ -93,7 +93,7 @@ addEventListener('online', refreshIdle); addEventListener('offline', refreshIdle
 setInterval(refreshIdle, 2500);
 $('#now').addEventListener('click', e => { const b = e.target.closest('[data-now]'); if (!b) return; if (b.dataset.now === 'conn') openConnect(); else openSide(); });
 function renderNow(){
-  const ids = Object.keys(busy), box = $('#now'); SZ.S.busy(ids.some(id => busy[id] === 'think')); document.title = ids.some(id => busy[id] === 'think') ? 'Pensando… · SynthFlow' : 'SynthFlow · SynthZ';
+  const ids = Object.keys(busy), box = $('#now'); SZ.S.busy(ids.some(id => busy[id] === 'think')); document.title = ids.some(id => busy[id] === 'think') ? 'Pensando… · SynthFlow' : 'SynthFlow · SymphorIA';
   box.innerHTML = ''; box.classList.toggle('many', ids.length > 2);
   /* el letrero «conectado / sin conectar» ya no existe: si falta una IA, la caja de texto se bloquea y lo explica */
   if (!ids.length){ { const [k0, t0] = readyState(); idleK = k0 + t0; } box.classList.add('idle'); }
@@ -109,11 +109,10 @@ function renderNow(){
 }
 function renderFoot(){
   const left = SZ.msgsLeft(), lv = SZ.limLvl();
-  /* v2.4 · «Medidor del día» (boceto): un arco de vidrio que se vacía mientras chateas; con cuenta muestra tus SynXCoin's */
-  const k = Math.max(0, 1 - SZ.limPct()), g = SZ.isGuestQ(), big = g ? Math.max(0, (SZ.SZQ.guest.max || 5) - (SZ.SZQ.guest.used || 0)) + '' : SZ.coinsShort(SZ.coinsLeft()), of = g ? 'de ' + (SZ.SZQ.guest.max || 5) + ' mensajes de prueba' : 'de ' + SZ.coinsShort(SZ.coinsTotal()) + ' SynXCoin\'s';
-  $('#sideFoot').innerHTML = '<button class="sxfoot lim gauge ' + lv + '" id="sxBtn" type="button" title="Tu medidor del día: toca para ver el detalle">'
-    + '<span class="gz-t">Medidor del día</span><svg class="gz" viewBox="0 0 120 66" aria-hidden="true"><defs><linearGradient id="gzG" x1="0" x2="1"><stop offset="0" stop-color="#3de0ff"/><stop offset=".5" stop-color="#7b3ff2"/><stop offset="1" stop-color="#ff3d9a"/></linearGradient></defs>'
-    + '<path d="M10 60a50 50 0 0 1 100 0" pathLength="100" class="gz-bg"/><path d="M10 60a50 50 0 0 1 100 0" pathLength="100" class="gz-v" style="stroke-dasharray:' + (k * 100).toFixed(1) + ' 100"/></svg>'
+  /* v3.0 · «Medidor del día» como batería: la pila se descarga mientras chateas y se carga a medianoche */
+  const k = Math.max(0, 1 - SZ.limPct()), g = SZ.isGuestQ(), big = g ? Math.max(0, (SZ.SZQ.guest.max || 5) - (SZ.SZQ.guest.used || 0)) + '' : Math.round(k * 100) + ' %', of = g ? 'de ' + (SZ.SZQ.guest.max || 5) + ' mensajes de prueba' : k > 0 ? 'de EnerX · se carga a medianoche' : 'sin EnerX · se carga a medianoche';
+  $('#sideFoot').innerHTML = '<button class="sxfoot lim gauge gbatt ' + lv + '" id="sxBtn" type="button" title="Tu EnerX de hoy (tu batería): toca para ver el detalle">'
+    + '<span class="gz-t">EnerX de hoy</span>' + SZ.limRing(40)
     + '<span class="gz-n"><b>' + esc(big) + '</b><small>' + esc(of) + '</small></span><span class="sr">' + esc(SZ.limTxt()) + '</span></button>';
   const rc = $('#railCoin'); if (rc) rc.innerHTML = SZ.limRing(22) + '<span class="rl">' + esc(SZ.limTxt()) + '</span>';
   const tc = $('#tabCoin .tci'); if (tc) tc.innerHTML = SZ.limRing(22);

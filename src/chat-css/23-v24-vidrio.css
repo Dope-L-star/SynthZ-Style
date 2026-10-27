@@ -61,3 +61,7 @@ html:not(.simple) .composer .cpk3.on{border-color:rgba(255,122,69,.55);backgroun
 .cvp-h .fc-ic.img .fico{width:38px;height:38px}
 #tray .fc .ic.img{background:none;padding:0;display:grid;place-items:center}
 #tray .fc .ic.img .fico{width:30px;height:30px;object-fit:contain}
+/* v3.0 · EnerX: el medidor del día es una batería grande (en vez del arco) */
+#sideFoot .sxfoot.gauge.gbatt .lbatt{display:block;margin:8px 0 4px;width:72px;height:48px}
+#sideFoot .sxfoot.gauge.gbatt .gz-n{margin-top:0}
+.tlim .lbatt{width:26px;height:17px}

@@ -1,4 +1,4 @@
-/* ---------- icono de la pestaña: la Z de vidrio (SynthZ) o la esfera con la onda (SynthFlow) ---------- */
+/* ---------- icono de la pestaña: la Z de vidrio (SymphorIA) o la esfera con la onda (SynthFlow) ---------- */
 function cradleAngles(t, A){
   const u = (t % 1150) / 1150, out = x => 1 - Math.pow(1 - x, 2.4), inn = x => Math.pow(x, 2.4);
   const L = u < .25 ? out(u / .25) : u < .5 ? 1 - inn((u - .25) / .25) : 0;
@@ -21,12 +21,12 @@ function cradleAngles(t, A){
     g.stroke();
     try{ link.href = c.toDataURL('image/png'); }catch(e){}
   };
-  /* SynthZ: la Z de vidrio del boceto, quieta */
-  const draw = now => { if (isFlow()) return drawFlow(now); if (link.getAttribute('href') !== 'media/v24/fav-z.png') link.href = 'media/v24/fav-z.png'; };
+  /* SymphorIA: la Z de vidrio del boceto, quieta */
+  const draw = now => { if (isFlow()) return drawFlow(now); if (link.getAttribute('href') !== 'media/v30/fav-s.png') link.href = 'media/v30/fav-s.png'; };
   let last = 0;
   let on = false;
   /* v2.9: solo la esfera de SynthFlow se mueve, y a ~8 cuadros por segundo (cada cuadro es una imagen PNG nueva: a 20 por
-     segundo pesaba). La Z de SynthZ es quieta: se pone una vez y el ciclo no corre */
+     segundo pesaba). La Z de SymphorIA es quieta: se pone una vez y el ciclo no corre */
   const tick = now => { if (!CFG.favAnim || !isFlow()){ on = false; draw(0); return; } if (now - last > 120){ last = now; draw(now); } requestAnimationFrame(tick); };
   window.__favStart = () => { if (!on){ on = true; requestAnimationFrame(tick); } };
   window.__favStart();

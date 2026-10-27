@@ -3,9 +3,10 @@
   --bg:#0b0c10; --card:rgba(255,255,255,.035); --line:rgba(255,255,255,.09);
   --text:#ecebe7; --soft:#c3c5ce; --mute:#8d909c; --accent:#b8c4ff;
   --ease:cubic-bezier(.22,1,.36,1);
-  --serif:'Instrument Serif',Georgia,'Times New Roman',serif;
-  --sans:'Geist',ui-sans-serif,system-ui,'Segoe UI',Roboto,sans-serif;
-  --mono:ui-monospace,'Cascadia Code','JetBrains Mono',Consolas,Menlo,monospace;
+  --serif:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --sans:'Figtree',ui-sans-serif,system-ui,'Segoe UI',Roboto,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,'Cascadia Code',Consolas,Menlo,monospace;
+  --brand:'Chakra Petch','Figtree',system-ui,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{background:var(--bg);scroll-behavior:smooth;-webkit-text-size-adjust:100%}
@@ -95,7 +96,7 @@ button{background:none;border:0;cursor:pointer}
 .cur-hov:not(select)>*{visibility:hidden}
 .rip{position:fixed;left:0;top:0;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;border:1.5px solid rgba(255,255,255,.55);pointer-events:none;z-index:9990}
 
-/* logotipo SynthZ */
+/* logotipo SymphorIA */
 .word{display:inline-flex;align-items:center;font-family:var(--serif);font-size:28px;line-height:1;letter-spacing:-.02em}
 .zb{width:.8em;height:.8em;margin-left:.08em;overflow:visible;flex:none}
 
@@ -1741,7 +1742,7 @@ html.noglass #szgHud,html.noglass .szgp .gp-in{background:#16141a;backdrop-filte
 html.noanim .szgp .gp-in,html.noanim .gp-ia,html.noanim .gd-card,html.noanim .gd-wait>span{animation:none !important;transition-duration:.01s !important}
 @media (max-width:560px){#szgHud .gh-bar{display:none}.szgp{padding-top:64px}.szgp .gp-in{padding:18px}}
 /* ===== v2.2 · diseño claro, estilo Claude (se conservan el vidrio, el fondo y las animaciones) ===== */
-:root{--code:ui-monospace,'Cascadia Code','JetBrains Mono',Consolas,Menlo,monospace;--mono:var(--sans)}
+:root{--code:'IBM Plex Mono',ui-monospace,'Cascadia Code',Consolas,Menlo,monospace;--mono:'IBM Plex Mono',ui-monospace,Consolas,Menlo,monospace}
 pre,code,kbd,.cvp-code,.cnv pre,.rccode,.hk-code,.og code,.fc .ic{font-family:var(--code)!important}
 
 /* ---- la caja para escribir: todo adentro, como en Claude ---- */
@@ -1977,7 +1978,7 @@ html.simple .agsum .ag-row,html.simple .agkeep,html.simple .agrun{background:tra
 /* ventanas y menús, también planos */
 html.simple .tcard,html.simple .ctxm,html.simple .amenu{background:#2a2927 !important;border-color:var(--sline) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
 
-/* el cursor de SynthZ se queda en Simple, pero más liso: sin vidrio, sin brillo ni sombra grande */
+/* el cursor de SymphorIA se queda en Simple, pero más liso: sin vidrio, sin brillo ni sombra grande */
 html.simple #cr{backdrop-filter:none !important;-webkit-backdrop-filter:none !important;box-shadow:none !important;background:rgba(255,255,255,.08) !important}
 html.simple #ca{filter:none !important}
 /* v2.3.1 · botón y menú de «Esfuerzo» en la caja de escribir */
@@ -2111,6 +2112,10 @@ html:not(.simple) .composer .cpk3.on{border-color:rgba(255,122,69,.55);backgroun
 .cvp-h .fc-ic.img .fico{width:38px;height:38px}
 #tray .fc .ic.img{background:none;padding:0;display:grid;place-items:center}
 #tray .fc .ic.img .fico{width:30px;height:30px;object-fit:contain}
+/* v3.0 · EnerX: el medidor del día es una batería grande (en vez del arco) */
+#sideFoot .sxfoot.gauge.gbatt .lbatt{display:block;margin:8px 0 4px;width:72px;height:48px}
+#sideFoot .sxfoot.gauge.gbatt .gz-n{margin-top:0}
+.tlim .lbatt{width:26px;height:17px}
 /* ===== v2.4 · SynthCode: la revisión de cada página, la notita de arreglo y el lienzo con herramientas ===== */
 .ckbar{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;margin:4px 0 8px;padding:9px 10px 9px 12px;max-width:560px;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(255,255,255,.03);font-size:13px;color:var(--soft,#cfd0d6);animation:ckIn .35s cubic-bezier(.22,1,.36,1)}
 @keyframes ckIn{from{opacity:0;transform:translateY(4px)}}

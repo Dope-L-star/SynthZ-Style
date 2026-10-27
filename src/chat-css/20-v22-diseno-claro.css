@@ -1,5 +1,5 @@
 /* ===== v2.2 · diseño claro, estilo Claude (se conservan el vidrio, el fondo y las animaciones) ===== */
-:root{--code:ui-monospace,'Cascadia Code','JetBrains Mono',Consolas,Menlo,monospace;--mono:var(--sans)}
+:root{--code:'IBM Plex Mono',ui-monospace,'Cascadia Code',Consolas,Menlo,monospace;--mono:'IBM Plex Mono',ui-monospace,Consolas,Menlo,monospace}
 pre,code,kbd,.cvp-code,.cnv pre,.rccode,.hk-code,.og code,.fc .ic{font-family:var(--code)!important}
 
 /* ---- la caja para escribir: todo adentro, como en Claude ---- */

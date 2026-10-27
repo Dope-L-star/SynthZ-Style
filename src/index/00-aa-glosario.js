@@ -3,10 +3,10 @@
    Va antes que todo: la escritura letra por letra parte el texto en letras sueltas y ya no se podría encontrar la palabra. ===== */
 (() => {
 const DEF = {
-  'SynthFlow':     'El chat de SynthZ: ahí hablas con las IAs.',
+  'SynthFlow':     'El chat de SymphorIA: ahí hablas con las IAs.',
   'SuperiorSynth': 'El modo que piensa mejor tu pedido y elige la IA que más sabe.',
-  'SynthonIA':     'Tu ayudante: la robot que te guía por SynthZ.',
-  'SynXCoin':      'Tu límite diario gratis: 1 SynXCoin = 1 palabra. Se llena a medianoche.',
+  'SynthonIA':     'Tu ayudante: la robot que te guía por SymphorIA.',
+  'EnerX':         'Tu energía gratis del día, como una batería: baja un poco con cada mensaje y se carga al 100 % a medianoche.',
   'A.L.I.A.S.':    'Un agente que cumple un objetivo paso a paso, y tú apruebas cada paso.',
   'Puter':         'Un servicio gratis: con tu cuenta usas ChatGPT, Claude y Gemini.',
   'IAs conectadas':'IAs gratis que ya vienen listas, sin cuenta ni tarjeta.'

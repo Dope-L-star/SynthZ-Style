@@ -48,7 +48,7 @@ function finishIntro(){
   root.classList.add('ready', 'landed'); root.classList.remove('lock');
   update(); pulseThenHero();
 }
-/* ---------- v2.9 · intro: la Z de cinta del logo (la de la barra) se dibuja con un cometa de luz, brilla, se escribe «SynthZ»
+/* ---------- v3.0 · intro: la S de vidrio de SymphorIA (la de la barra) se dibuja con un cometa de luz, aparece su órbita, se escribe «SymphorIA»
    con la letra de la barra y todo vuela a su lugar arriba. Sin video. Quien ya vino la ve más rápida ---------- */
 async function intro(){
   SZ.S.busy(true);
@@ -79,7 +79,7 @@ async function intro(){
   const nf = parseFloat(getComputedStyle(navW).fontSize) || 23, nw = navW.getBoundingClientRect();
   const ni = navImg && navImg.offsetHeight ? (b => { const w = navImg.offsetWidth, h = navImg.offsetHeight, cx = b.left + b.width / 2, cy = b.top + b.height / 2; return { left:cx - w / 2, right:cx + w / 2, top:cy - h / 2, width:w, height:h }; })(navImg.getBoundingClientRect()) : null;
   if (ni){ mk.style.height = (ni.height / nf).toFixed(3) + 'em'; wd.style.setProperty('--izg', ((nw.left - ni.right) / nf).toFixed(3) + 'em'); }
-  wd.innerHTML = 'Synth'.split('').map(c => '<span class="izc">' + c + '</span>').join('') + '<span class="izc zt">Z</span>';
+  wd.innerHTML = 'Symphor'.split('').map(c => '<span class="izc">' + c + '</span>').join('') + '<span class="izc zt">IA</span>';
   const letters = $$('.izc', wd);
   /* chispas del destello: salen en círculo, cada una con su color del tema */
   const cols = ['var(--sb-light)', 'var(--sb-secondary)', 'var(--sb-warm)', '#fff', 'var(--sb-primary)', 'var(--sb-spark)'];
@@ -88,13 +88,13 @@ async function intro(){
   await Promise.race([document.fonts ? document.fonts.ready : sleepRaw(0), sleepRaw(1200)]);
   await sleep(200);
   setTimeout(() => { if (!skip && !FIRST) skipEl.style.opacity = '1'; }, 700);
-  /* 1. un cometa de luz dibuja la Z de un solo trazo y la cinta aparece detrás de él */
+  /* 1. un cometa de luz dibuja la S de un solo trazo y el vidrio aparece detrás de él */
   void ov.offsetWidth; ov.classList.add('draw');
   await sleep(1150);
-  /* 2. la Z brilla: un reflejo la cruza, salen dos anillos de luz y chispas, y el cielo se enciende */
+  /* 2. la S brilla y aparece su órbita: un reflejo la cruza, salen dos anillos de luz y chispas, y el cielo se enciende */
   ov.classList.add('shine', 'lit');
   await sleep(380);
-  /* 3. se escribe «Synth» letra por letra y la Z de color cae al final */
+  /* 3. se escribe «Symphor» letra por letra y el «IA» de color cae al final */
   for (const l of letters){ l.classList.add('on'); await sleep(l.classList.contains('zt') ? 0 : 70); }
   await sleep(900);
   /* 4. vuela hasta la barra de arriba: la marca dibujada se vuelve la imagen del logo mientras se achica */

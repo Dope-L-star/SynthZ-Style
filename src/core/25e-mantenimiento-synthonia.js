@@ -81,7 +81,7 @@ function mtOpen(m){
   MT.since = m.t || MT.since || Date.now();
   if (MT.el){ $('.mt-text', MT.el).textContent = m.text; mtAgo(); return; }
   const el = document.createElement('div');
-  el.id = 'szMaint'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'SynthZ está en mantenimiento');
+  el.id = 'szMaint'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'SymphorIA está en mantenimiento');
   el.innerHTML = '<div class="mt-bg" aria-hidden="true"><i></i><i></i><i></i></div>'
     + '<div class="mt-wrap"><div class="mt-face" title="¡Tócame!"></div>'
     + '<div class="mt-head"><span class="mt-chip"><i></i>Mantenimiento</span><h2>Volvemos en un momento</h2><p class="mt-text"></p><small class="mt-ago"></small></div>'

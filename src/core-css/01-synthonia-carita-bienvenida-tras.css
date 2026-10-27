@@ -68,11 +68,11 @@ html.noanim #szSay,html.noanim #szSpot{transition-duration:.01s}
 .gco.l em{color:#b8c4ff}
 @media (max-width:560px){.gch{grid-template-columns:1fr}.gco{flex-direction:row;flex-wrap:wrap;align-items:center}.gco small{flex-basis:100%}}
 
-/* ===== v1.0B: portal SynthZ ⇄ SynthFlow ===== */
+/* ===== v1.0B: portal SymphorIA ⇄ SynthFlow ===== */
 #portal.szportal{position:fixed;inset:0;z-index:9950;display:grid;place-items:center;overflow:hidden;background:#0b0c10;pointer-events:none;opacity:0}
 #portal.szportal.clear{opacity:1;background:transparent}
 #portal.szportal .pg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(255,226,168,.4),rgba(var(--gold-rgb),.14) 35%,transparent 70%);opacity:0}
-.szpw{position:relative;display:flex;align-items:flex-start;font-family:'Instrument Serif',Georgia,'Times New Roman',serif;font-weight:400;font-size:clamp(64px,12vw,180px);line-height:1;letter-spacing:-.02em;color:#ecebe7;white-space:nowrap;will-change:transform}
+.szpw{position:relative;display:flex;align-items:flex-start;font-family:var(--serif,'Bricolage Grotesque',system-ui,sans-serif);font-weight:400;font-size:clamp(64px,12vw,180px);line-height:1;letter-spacing:-.02em;color:#ecebe7;white-space:nowrap;will-change:transform}
 .szps{display:block;overflow:hidden;flex:none;height:1.12em;margin-bottom:-.12em}
 .szps>span{display:block;line-height:1}
 .szpslot{position:relative;display:block;flex:none;height:1em}

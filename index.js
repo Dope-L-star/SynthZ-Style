@@ -3,10 +3,10 @@
    Va antes que todo: la escritura letra por letra parte el texto en letras sueltas y ya no se podría encontrar la palabra. ===== */
 (() => {
 const DEF = {
-  'SynthFlow':     'El chat de SynthZ: ahí hablas con las IAs.',
+  'SynthFlow':     'El chat de SymphorIA: ahí hablas con las IAs.',
   'SuperiorSynth': 'El modo que piensa mejor tu pedido y elige la IA que más sabe.',
-  'SynthonIA':     'Tu ayudante: la robot que te guía por SynthZ.',
-  'SynXCoin':      'Tu límite diario gratis: 1 SynXCoin = 1 palabra. Se llena a medianoche.',
+  'SynthonIA':     'Tu ayudante: la robot que te guía por SymphorIA.',
+  'EnerX':         'Tu energía gratis del día, como una batería: baja un poco con cada mensaje y se carga al 100 % a medianoche.',
   'A.L.I.A.S.':    'Un agente que cumple un objetivo paso a paso, y tú apruebas cada paso.',
   'Puter':         'Un servicio gratis: con tu cuenta usas ChatGPT, Claude y Gemini.',
   'IAs conectadas':'IAs gratis que ya vienen listas, sin cuenta ni tarjeta.'
@@ -73,7 +73,7 @@ const eyeSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 function setStatus(card, text, cls){ const s = $('[data-st]', card); s.textContent = text; s.className = 'status ' + (cls || ''); }
 function szCard(){
   const q = SZ.SZQ, on = q.on !== false, left = Math.max(0, (q.limit || 20000) - (q.used || 0));
-  return '<article class="card" data-id="synthz" style="--c:#e6b65f"><div class="card-top">' + ico(byId('synthz')) + '<h3>IAs conectadas</h3><span class="status ' + (on ? 'ok' : '') + '" data-st>' + (on ? 'Listas' : 'Descansando') + '</span></div><p class="desc">Las IAs conectadas son IAs gratis que ya vienen listas en SynthZ. No tienes que configurar nada ni dar tarjeta: solo escribes. Sin cuenta pruebas con 5 mensajes al día; con tu cuenta gratis, mucho más. Si una está llena, pasa sola a otra.</p>'
+  return '<article class="card" data-id="synthz" style="--c:#e6b65f"><div class="card-top">' + ico(byId('synthz')) + '<h3>IAs conectadas</h3><span class="status ' + (on ? 'ok' : '') + '" data-st>' + (on ? 'Listas' : 'Descansando') + '</span></div><p class="desc">Las IAs conectadas son IAs gratis que ya vienen listas en SymphorIA. No tienes que configurar nada ni dar tarjeta: solo escribes. Sin cuenta pruebas con 5 mensajes al día; con tu cuenta gratis, mucho más. Si una está llena, pasa sola a otra.</p>'
     + SZ.limBar({ small:false }) + '<div class="actions"><button class="btn sm" data-szgo type="button">Abrir SynthFlow</button></div></article>';
 }
 function paintSzCard(){ const c = $('#cards [data-id="synthz"]'); if (!c) return; c.outerHTML = szCard(); const b = $('#cards [data-szgo]'); if (b) b.addEventListener('click', () => { launchAI = 'synthz'; openChat(); }); }
@@ -262,7 +262,7 @@ function renderUsage(){
   const req = id => ((U[id] || {}).reqDays || {});
   const SRC = [['synthz', 'IAs conectadas', '#e6b65f'], ['puter', 'Puter', '#6fd3d6']];
   const tot = id => (U[id] || {}).requests || 0, max = Math.max(1, ...SRC.map(([id]) => tot(id)));
-  $('#rows').innerHTML = SRC.map(([id, n, c], i) => '<div style="--c:' + c + '"><div class="row-h">' + SZ.glassIcon({ id, vendor:id }, 'sm') + '<b>' + n + '</b><small>' + fmt(req(id)[d] || 0) + ' hoy</small><em>' + fmt(tot(id)) + '</em></div><div class="bar"><i style="--i:' + i + ';--w:' + (tot(id) / max).toFixed(4) + '"></i></div></div>').join('') + '<p class="cnote" style="margin-top:6px">Mensajes en total desde que usas SynthZ.</p>';
+  $('#rows').innerHTML = SRC.map(([id, n, c], i) => '<div style="--c:' + c + '"><div class="row-h">' + SZ.glassIcon({ id, vendor:id }, 'sm') + '<b>' + n + '</b><small>' + fmt(req(id)[d] || 0) + ' hoy</small><em>' + fmt(tot(id)) + '</em></div><div class="bar"><i style="--i:' + i + ';--w:' + (tot(id) / max).toFixed(4) + '"></i></div></div>').join('') + '<p class="cnote" style="margin-top:6px">Mensajes en total desde que usas SymphorIA.</p>';
   const chart = $('#chart');
   if (!chart.children.length) chart.innerHTML = Array.from({ length:14 }, (_, i) => '<div class="col"><div class="tr"><div class="stack" style="--i:' + i + '"></div></div><span></span></div>').join('');
   const days = [];
@@ -308,7 +308,7 @@ $('#importFile').addEventListener('change', e => {
   r.readAsText(f); e.target.value = '';
 });
 false && $('#resetBtn').addEventListener('click', async () => { if (await SZ.szConfirm('¿Reiniciar tus contadores?', 'Tu historial de uso vuelve a cero.', 'Reiniciar', true)){ SZ.resetUsage(); renderUsage(); updateTotals(); toast('Contadores en cero.'); } });
-$('#wipeBtn').addEventListener('click', async () => { if (await SZ.szConfirm('¿Borrar todo de este navegador?', 'Se borran tus chats y ajustes de este equipo. Lo que está guardado en tu cuenta de SynthZ no se toca.', 'Borrar todo', true)){ SZ.state = { keys:{}, model:{}, models:{}, usage:{}, chats:{}, fav:[], cmp:[], ledger:{ ep:Date.now(), dev:{} } }; try{ localStorage.setItem('synthz:ledger', JSON.stringify(SZ.state.ledger)); }catch(_){} save(); renderCards(); observeAll(); renderLaunch(); renderUsage(); updateTotals(); toast('Todo borrado.'); } });
+$('#wipeBtn').addEventListener('click', async () => { if (await SZ.szConfirm('¿Borrar todo de este navegador?', 'Se borran tus chats y ajustes de este equipo. Lo que está guardado en tu cuenta de SymphorIA no se toca.', 'Borrar todo', true)){ SZ.state = { keys:{}, model:{}, models:{}, usage:{}, chats:{}, fav:[], cmp:[], ledger:{ ep:Date.now(), dev:{} } }; try{ localStorage.setItem('synthz:ledger', JSON.stringify(SZ.state.ledger)); }catch(_){} save(); renderCards(); observeAll(); renderLaunch(); renderUsage(); updateTotals(); toast('Todo borrado.'); } });
 
 /* ---------- scroll: solo lo esencial (barra, navegación y sección activa) ---------- */
 const bar = $('#progress'), nav = $('#nav');
@@ -382,7 +382,7 @@ function finishIntro(){
   root.classList.add('ready', 'landed'); root.classList.remove('lock');
   update(); pulseThenHero();
 }
-/* ---------- v2.9 · intro: la Z de cinta del logo (la de la barra) se dibuja con un cometa de luz, brilla, se escribe «SynthZ»
+/* ---------- v3.0 · intro: la S de vidrio de SymphorIA (la de la barra) se dibuja con un cometa de luz, aparece su órbita, se escribe «SymphorIA»
    con la letra de la barra y todo vuela a su lugar arriba. Sin video. Quien ya vino la ve más rápida ---------- */
 async function intro(){
   SZ.S.busy(true);
@@ -413,7 +413,7 @@ async function intro(){
   const nf = parseFloat(getComputedStyle(navW).fontSize) || 23, nw = navW.getBoundingClientRect();
   const ni = navImg && navImg.offsetHeight ? (b => { const w = navImg.offsetWidth, h = navImg.offsetHeight, cx = b.left + b.width / 2, cy = b.top + b.height / 2; return { left:cx - w / 2, right:cx + w / 2, top:cy - h / 2, width:w, height:h }; })(navImg.getBoundingClientRect()) : null;
   if (ni){ mk.style.height = (ni.height / nf).toFixed(3) + 'em'; wd.style.setProperty('--izg', ((nw.left - ni.right) / nf).toFixed(3) + 'em'); }
-  wd.innerHTML = 'Synth'.split('').map(c => '<span class="izc">' + c + '</span>').join('') + '<span class="izc zt">Z</span>';
+  wd.innerHTML = 'Symphor'.split('').map(c => '<span class="izc">' + c + '</span>').join('') + '<span class="izc zt">IA</span>';
   const letters = $$('.izc', wd);
   /* chispas del destello: salen en círculo, cada una con su color del tema */
   const cols = ['var(--sb-light)', 'var(--sb-secondary)', 'var(--sb-warm)', '#fff', 'var(--sb-primary)', 'var(--sb-spark)'];
@@ -422,13 +422,13 @@ async function intro(){
   await Promise.race([document.fonts ? document.fonts.ready : sleepRaw(0), sleepRaw(1200)]);
   await sleep(200);
   setTimeout(() => { if (!skip && !FIRST) skipEl.style.opacity = '1'; }, 700);
-  /* 1. un cometa de luz dibuja la Z de un solo trazo y la cinta aparece detrás de él */
+  /* 1. un cometa de luz dibuja la S de un solo trazo y el vidrio aparece detrás de él */
   void ov.offsetWidth; ov.classList.add('draw');
   await sleep(1150);
-  /* 2. la Z brilla: un reflejo la cruza, salen dos anillos de luz y chispas, y el cielo se enciende */
+  /* 2. la S brilla y aparece su órbita: un reflejo la cruza, salen dos anillos de luz y chispas, y el cielo se enciende */
   ov.classList.add('shine', 'lit');
   await sleep(380);
-  /* 3. se escribe «Synth» letra por letra y la Z de color cae al final */
+  /* 3. se escribe «Symphor» letra por letra y el «IA» de color cae al final */
   for (const l of letters){ l.classList.add('on'); await sleep(l.classList.contains('zt') ? 0 : 70); }
   await sleep(900);
   /* 4. vuela hasta la barra de arriba: la marca dibujada se vuelve la imagen del logo mientras se achica */
@@ -506,13 +506,13 @@ function authModal(first, next, opts){
   opts = opts || {};
   if ($('#authm')) return $('#authm');
   const o = document.createElement('div'); o.id = 'authm'; o.className = 'szm';
-  o.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="Entrar a SynthZ"><div class="word">' + zWord('Synth') + '</div><div class="tn">' + (first ? 'BIENVENIDO' : 'TU CUENTA') + '</div><div class="tb"><h3>' + (first ? 'Bienvenido a SynthZ' : 'Entra a SynthZ') + '</h3><p>Crea tu cuenta gratis con un usuario y una contraseña: tus chats y favoritos te siguen a cualquier dispositivo y personalizas tu perfil.</p><div id="authBox"></div></div><div class="tbtn" style="margin-top:14px"><button class="lnk" type="button" data-close>' + (first ? 'Continuar sin cuenta' : 'Cerrar') + '</button></div></div>';
+  o.innerHTML = '<div class="tcard" role="dialog" aria-modal="true" aria-label="Entrar a SymphorIA"><div class="word">' + zWord('Synth') + '</div><div class="tn">' + (first ? 'BIENVENIDO' : 'TU CUENTA') + '</div><div class="tb"><h3>' + (first ? 'Bienvenido a SymphorIA' : 'Entra a SymphorIA') + '</h3><p>Crea tu cuenta gratis con un usuario y una contraseña: tus chats y favoritos te siguen a cualquier dispositivo y personalizas tu perfil.</p><div id="authBox"></div></div><div class="tbtn" style="margin-top:14px"><button class="lnk" type="button" data-close>' + (first ? 'Continuar sin cuenta' : 'Cerrar') + '</button></div></div>';
   document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('on'));
   if (!opts.hold) $('.tcard', o).animate([{ transform:'scale(.92) translateY(20px)', opacity:0, filter:'blur(8px)' }, { transform:'none', opacity:1, filter:'blur(0)' }], { duration:650, easing:'cubic-bezier(.22,1,.36,1)' });
   let done = false;
   const out = ok => { o.classList.remove('on'); setTimeout(() => o.remove(), 450); if (!done){ done = true; if (next) next(ok); } };
   $('[data-close]', o).addEventListener('click', () => out(false));
-  SZ.authBox($('#authBox', o), m => { toast(m === 'tmp' ? '¡Listo! Estás en una cuenta temporal.' : '¡Bienvenido a tu cuenta de SynthZ!'); updateTotals(); out(true); }, k => showBlockHelp(k));
+  SZ.authBox($('#authBox', o), m => { toast(m === 'tmp' ? '¡Listo! Estás en una cuenta temporal.' : '¡Bienvenido a tu cuenta de SymphorIA!'); updateTotals(); out(true); }, k => showBlockHelp(k));
   return o;
 }
 function openHelp(){ SZ.helpGuide({ extra:[['Recorrido por la página', () => pageTour()], ['Abrir SynthFlow', () => openChat()]] }); }
@@ -536,19 +536,19 @@ function pageTour(onEnd){
   const vis = sel => { const e = sel && document.querySelector(sel); return !sel || !!(e && e.offsetWidth && e.getClientRects().length); };
   const first = (...L) => L.find(x => vis(x)) || L[L.length - 1];
   const steps = [
-    { s:'.logo', t:'Este es SynthZ', p:'El lugar para usar muchas IA gratis, desde un solo sitio. Toca el logo cuando quieras volver arriba.' },
+    { s:'.logo', t:'Este es SymphorIA', p:'El lugar para usar muchas IA gratis, desde un solo sitio. Toca el logo cuando quieras volver arriba.' },
     { s:'.navlinks', t:'El menú', p:'Desde aquí vas a tus IA, al chat (SynthFlow) o a ver cuánto has usado, en un toque.' },
     { s:'.pill-total', t:'Tu límite de hoy', p:'Cada día tienes un límite gratis para usar las IAs conectadas. Este anillo se va vaciando mientras chateas. A medianoche se vuelve a llenar.' },
-    { s:first('#railMe', '#accBtn', '#navMenu'), t:'Tu cuenta', p:'Entra a tu cuenta de SynthZ: tus chats quedan guardados y los ves en cualquier celular o computador, personalizas tu perfil y hablas con el equipo si necesitas ayuda.' },
+    { s:first('#railMe', '#accBtn', '#navMenu'), t:'Tu cuenta', p:'Entra a tu cuenta de SymphorIA: tus chats quedan guardados y los ves en cualquier celular o computador, personalizas tu perfil y hablas con el equipo si necesitas ayuda.' },
     { s:first('#railCfg', '#cfgBtn', '#navMenu'), t:'Configuración', p:'¿Lo quieres más bonito o más rápido? Elige y mira abajo cómo se verá. Puedes cambiarlo cuando quieras desde este botón.', x:'cfg' },
     { s:'#como', t:'Así de fácil', p:'Preguntas, comparas y SynthonIA te acompaña. Baja despacio y mira cómo se animan.' },
     { s:'#conectar', t:'Tu IA ya está lista', p:'Ya puedes chatear gratis. Con Puter usas la versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.' },
     { s:'#chat', t:'Pregunta desde aquí', p:'Escribe tu pregunta aquí y te llevo al chat (SynthFlow) con tu pregunta lista.' },
     { s:'#consumo', t:'Tu uso', p:'Cómo va tu límite de hoy y cuánto chateaste estos días.' },
-    { s:null, t:'¡Todo listo!', p:'Ya sabes qué es SynthZ y por dónde empezar: escribe tu pregunta o abre SynthFlow. Inicia sesión para que no tengas límites.' }
+    { s:null, t:'¡Todo listo!', p:'Ya sabes qué es SymphorIA y por dónde empezar: escribe tu pregunta o abre SynthFlow. Inicia sesión para que no tengas límites.' }
   ].filter(x => vis(x.s));
   const o = document.createElement('div'); o.id = 'ptour';
-  o.innerHTML = '<div class="catch"></div><div class="hole"></div><div class="pcard tcard" role="dialog" aria-modal="true" aria-label="Recorrido por SynthZ"><div class="tn"></div><div class="tb"><h3></h3><p></p><div class="tx"></div></div><div class="tdots">' + steps.map(() => '<i></i>').join('') + '</div><div class="tbtn"><button class="lnk" type="button" data-skip>Saltar</button><span style="flex:1"></span><button class="lnk" type="button" data-back>Atrás</button><button class="btn sm" type="button" data-next>Siguiente</button></div></div>';
+  o.innerHTML = '<div class="catch"></div><div class="hole"></div><div class="pcard tcard" role="dialog" aria-modal="true" aria-label="Recorrido por SymphorIA"><div class="tn"></div><div class="tb"><h3></h3><p></p><div class="tx"></div></div><div class="tdots">' + steps.map(() => '<i></i>').join('') + '</div><div class="tbtn"><button class="lnk" type="button" data-skip>Saltar</button><span style="flex:1"></span><button class="lnk" type="button" data-back>Atrás</button><button class="btn sm" type="button" data-next>Siguiente</button></div></div>';
   document.body.appendChild(o);
   const hole = $('.hole', o), card = $('.pcard', o);
   let i = 0, target = null, follow = 0;
@@ -603,7 +603,7 @@ function pageTour(onEnd){
   };
   $('[data-skip]', card).addEventListener('click', end);
   $('[data-back]', card).addEventListener('click', () => { if (i > 0){ i--; show(); } });
-  $('[data-next]', card).addEventListener('click', () => { if (i < steps.length - 1){ i++; show(); } else { end(); toast('¡A disfrutar SynthZ!'); } });
+  $('[data-next]', card).addEventListener('click', () => { if (i < steps.length - 1){ i++; show(); } else { end(); toast('¡A disfrutar SymphorIA!'); } });
   o.animate([{ opacity:0 }, { opacity:1 }], { duration:400 });
   show();
 }
@@ -660,7 +660,7 @@ boot();
 let seen = false, backIn = '';
 /* v2.4: la intro sale una vez por visita; si alguien la saltó, ya no se le vuelve a mostrar (salvo que pida «Siempre» en Ajustes) */
 try{ const im = SZ.CFG.intro || 'session', skipped = localStorage.getItem('synthz:introSkip') === '1'; seen = !FIRST && (!SZ.CFG.anim || im === 'never' || (im !== 'always' && skipped) || (im === 'session' && sessionStorage.getItem('synthz:intro') === '1')); }catch(e){}
-/* de vuelta desde SynthFlow: «SynthZ» ya llegó volando a su esquina; sin intro, la página aparece suave */
+/* de vuelta desde SynthFlow: «SymphorIA» ya llegó volando a su esquina; sin intro, la página aparece suave */
 try{ backIn = sessionStorage.getItem('synthz:back') || ''; sessionStorage.removeItem('synthz:back'); }catch(e){}
 if (backIn){ seen = !FIRST; requestAnimationFrame(() => requestAnimationFrame(() => { root.classList.add('backout'); setTimeout(() => root.classList.remove('backin', 'backout'), 950); })); }
 if (seen) finishIntro();

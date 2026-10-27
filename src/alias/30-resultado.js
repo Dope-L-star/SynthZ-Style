@@ -63,7 +63,7 @@ const loadPptx = () => pptxLib || (pptxLib = new Promise((ok, no) => {
 }));
 async function deckBlob(D){
   const P = await loadPptx(), pres = new P();
-  pres.layout = 'LAYOUT_WIDE'; pres.author = 'SynthZ'; pres.title = D.titulo || 'A.L.I.A.S.';
+  pres.layout = 'LAYOUT_WIDE'; pres.author = 'SymphorIA'; pres.title = D.titulo || 'A.L.I.A.S.';
   const BG = '0B0C10', TX = 'ECEBE7', SOFT = 'C9C8C3', GOLD = 'E6B65F', ROSE = 'C9566C';
   const c = pres.addSlide(); c.background = { color: BG };
   c.addShape(pres.ShapeType.rect, { x: 0, y: 0, w: 13.33, h: .12, fill: { color: ROSE } });

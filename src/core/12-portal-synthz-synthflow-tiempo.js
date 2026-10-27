@@ -1,8 +1,8 @@
 /* v2.8 · el portal nuevo, con los logos de ahora (pedido de Sammuel: «sorpréndeme»):
-   ida:    «SynthZ» sale de su esquina y llega al centro → la Z de vidrio gira y se vuelve el orbe de SynthFlow,
-           la «Z» se borra y aparece «Flow» letra por letra → la «o» de «Flow» late y la cámara entra por su hueco
+   ida:    «SymphorIA» sale de su esquina y llega al centro → la S de vidrio gira y se vuelve el orbe de SynthFlow,
+           «mphorIA» se borra y aparece «nthFlow» letra por letra (v3.0: Sy-mphorIA → Sy-nthFlow) → la «o» de «Flow» late y la cámara entra por su hueco
            (y en el chat se abre en círculo)
-   vuelta: sales por la «o», el orbe vuelve a ser la Z y «SynthZ» vuelve a su esquina.
+   vuelta: sales por la «o», el orbe vuelve a ser la S y «SymphorIA» vuelve a su esquina.
    v2.9: sin SynthonIA (Sammuel: el portal queda mejor solo con los logos).
    Todo es transform y opacidad (va fluido en celulares); mientras dura, la página no se puede tocar. */
 let lockOff = null;
@@ -21,8 +21,8 @@ const pAnim = (el, kf, o) => el.animate(kf, Object.assign({ fill:'forwards', eas
 function portalStage(){
   const o = document.createElement('div'); o.id = 'portal'; o.className = 'szportal p8';
   o.innerHTML = '<i class="p8-bg"></i><i class="p8-ring"></i><i class="p8-flash"></i>'
-    + '<div class="p8-w"><span class="p8-mk"><img class="p8-z" src="media/v24/logo-z.webp" alt="" draggable="false">' + flowOrb('p8-orb') + '</span>'
-    + '<span class="p8-t zw"><span class="p8-sy">Synth</span><span class="p8-zl zt">Z</span><span class="p8-fl">' + [...'Flow'].map((c, i) => '<i style="--i:' + i + '">' + c + '</i>').join('') + '</span></span></div>';
+    + '<div class="p8-w"><span class="p8-mk"><img class="p8-z" src="media/v30/symphoria.svg" alt="" draggable="false">' + flowOrb('p8-orb') + '</span>'
+    + '<span class="p8-t zw"><span class="p8-sy">Sy</span><span class="p8-zl">mphor<span class="zt">IA</span></span><span class="p8-fl">' + [...'nthFlow'].map((c, i) => '<i style="--i:' + i + '">' + c + '</i>').join('') + '</span></span></div>';
   document.body.appendChild(o);
   const q = c => o.querySelector(c);
   return { o, BG:q('.p8-bg'), RING:q('.p8-ring'), FL:q('.p8-flash'), W:q('.p8-w'), MK:q('.p8-mk'), Z:q('.p8-z'), ORB:q('.p8-orb'), T:q('.p8-t'), ZL:q('.p8-zl'), FW:q('.p8-fl') };
@@ -34,7 +34,7 @@ function fitBox(img){
   return { x:r.left + r.width / 2, y:r.top + r.height / 2, w:nw * k, h:nh * k };
 }
 /* dónde está el logo de la esquina y cómo es: tamaño de la Z, de la letra y el espacio entre ambas
-   (el portal copia esas medidas para que el «SynthZ» que viaja calce justo encima del de la esquina) */
+   (el portal copia esas medidas para que el «SymphorIA» que viaja calce justo encima del de la esquina) */
 function logoRect(){
   const n = document.querySelector('#nav .logo');
   if (n && n.getClientRects().length){
@@ -51,7 +51,7 @@ function logoRect(){
   try{ const s = JSON.parse(sessionStorage.getItem('synthz:logo') || 'null'); if (s && s.h) return s; }catch(e){}
   return { x:innerWidth < 600 ? 30 : 70, y:innerWidth < 600 ? 22 : 26, w:150, h:40 };
 }
-/* el «SynthZ» del portal toma las proporciones del logo de la esquina (Z, letra, espacio, grosor) */
+/* el «SymphorIA» del portal toma las proporciones del logo de la esquina (Z, letra, espacio, grosor) */
 function fitPortal(P, R){
   if (!R.fs) return;
   const tf = parseFloat(getComputedStyle(P.T).fontSize), k = tf / R.fs;
@@ -84,7 +84,7 @@ const pSleep = ms => new Promise(r => setTimeout(r, ms));
 /* el hueco de la «o» de «Flow»: centro y ancho reales del agujero (con las medidas de la letra, no de su cajita) */
 let pMeas = null;
 function oSpot(P){
-  const o = P.FW.children[2], r = o.getBoundingClientRect(), cs = getComputedStyle(o);
+  const o = [...P.FW.children].find(x => x.textContent === 'o'), r = o.getBoundingClientRect(), cs = getComputedStyle(o);
   const x = (pMeas = pMeas || document.createElement('canvas').getContext('2d'));
   x.font = cs.fontStyle + ' ' + cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
   const m = x.measureText('o'), fa = m.fontBoundingBoxAscent || parseFloat(cs.fontSize) * .9, fd = m.fontBoundingBoxDescent || parseFloat(cs.fontSize) * .22;
@@ -132,7 +132,7 @@ async function portalOut(href){
   try{
     const P = portalStage(), nav = document.querySelector('#nav .logo');
     await pReady(P); fitPortal(P, logoRect()); await new Promise(r => requestAnimationFrame(r));
-    /* 1 · «SynthZ» sale de su esquina y llega al centro, mientras cae la noche */
+    /* 1 · «SymphorIA» sale de su esquina y llega al centro, mientras cae la noche */
     if (nav) nav.style.visibility = 'hidden';
     pAnim(P.BG, [{ opacity:0 }, { opacity:1 }], { duration:800, easing:'ease-out' });
     await flyWord(P, false, 950);
@@ -155,7 +155,7 @@ async function portalOut(href){
     setTimeout(go, 200);
   }
 }
-/* de vuelta a SynthZ: la misma película al revés */
+/* de vuelta a SymphorIA: la misma película al revés */
 async function portalBack(href){
   if (document.getElementById('portal')) return;
   if (reduce) return quickGo(href, true);
@@ -178,7 +178,7 @@ async function portalBack(href){
     try{ SND.shimmer(); }catch(e){}
     await morph(P, false, 900);
     await pSleep(150);
-    /* 4 · «SynthZ» vuelve a su esquina */
+    /* 4 · «SymphorIA» vuelve a su esquina */
     pAnim(P.BG, [{ opacity:1 }, { opacity:.92 }], { duration:800 });
     await flyWord(P, true, 900);
     go();

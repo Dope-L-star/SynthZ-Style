@@ -86,7 +86,7 @@ const WHATSNEW = { v:'2.9.1', items:[
   ['ajustes', 'Las ventanas (Ajustes, Tu límite de hoy, Conectar IA) ahora son de vidrio: ves el cielo a través de ellas.'],
   ['proyectos', 'Proyectos: junta chats, instrucciones y archivos de un mismo tema. Ahora se pintan con los colores de tu tema.'],
   ['app', 'La app SynthFlow tiene ventana nueva: instálala gratis con «Instalar la app», sin tiendas.'],
-  ['portada', 'Al entrar, la Z de SynthZ se dibuja con un cometa de luz; y al abrir el chat, entras por la «o» de Flow.']
+  ['portada', 'Al entrar, la S de SymphorIA se dibuja con un cometa de luz y aparece su órbita; y al abrir el chat, entras por la «o» de Flow.']
 ] };
 function newsBang(onShow){
   const b = $('#szBot'); if (!b){ setTimeout(() => newsBang(onShow), 600); return; }

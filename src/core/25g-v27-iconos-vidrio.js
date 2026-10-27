@@ -89,7 +89,7 @@ function gIcon(name, tile){
       + '<g transform="matrix(.78 0 0 .78 7 7)">' + body + '</g>')
     + '</svg>';
 }
-/* ---------- íconos de archivo («SynthZ · Archivos» del boceto): hoja de vidrio con la esquina doblada, color por tipo ---------- */
+/* ---------- íconos de archivo («SymphorIA · Archivos» del boceto): hoja de vidrio con la esquina doblada, color por tipo ---------- */
 const FK_IMG = 'png jpg jpeg webp gif svg bmp heic', FK_SHEET = 'csv tsv xls xlsx ods', FK_DOC = 'doc docx odt rtf pages', FK_TEXT = 'txt log md';
 const FK_CODE = { py:'C', js:'Y', mjs:'Y', cjs:'Y', ts:'B', tsx:'B', jsx:'Y', html:'O', htm:'O', css:'V', scss:'P', sass:'P', less:'V', java:'O', cpp:'B', cc:'B', c:'B', h:'B', hpp:'B', cs:'V',
   php:'V', go:'C', rb:'R', rs:'O', swift:'O', kt:'V', json:'Y', yml:'G', yaml:'G', ini:'W', toml:'W', cfg:'W', env:'G', sql:'C', sh:'G', xml:'O' };

@@ -1,4 +1,4 @@
-/* Salud de SynthZ (sin datos personales ni chats):
+/* Salud de SymphorIA (sin datos personales ni chats):
    GET                          → { bad:[{ id, t }] }  modelos escondidos (máx. 12 h)
    GET ?panel=1                 → (equipo) Pulsem: en línea, dificultades, errores, carga, llaves y ayuda
    POST { id, ok }              → «este modelo falló / volvió a responder» (se esconde con 2 conexiones distintas o 1 del equipo)
@@ -23,7 +23,7 @@ export default route({
   async GET(req){
     const u = new URL(req.url);
     if (u.searchParams.get('panel')){
-      const me = await auth(req); if (roleOf(me) === 'user') return fail(403, 'Solo el equipo de SynthZ puede ver Pulsem.');
+      const me = await auth(req); if (roleOf(me) === 'user') return fail(403, 'Solo el equipo de SymphorIA puede ver Pulsem.');
       const now = Date.now(), d = today();
       /* los que ya se fueron salen de la lista y de sus datos (así «pri» no crece para siempre) */
       const gone = (await redis('ZRANGEBYSCORE', 'pr', '0', String(now - ONLINE_MS), 'LIMIT', '0', '300').catch(() => [])) || [];

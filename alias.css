@@ -7,9 +7,10 @@
   --ok:#7fd19a; --bad:#ff9a85; --focus:#f4d38f;
   --btn-bg:linear-gradient(135deg,#e6b65f,#d98a6a); --btn-fg:#1a1305;
   --ease:cubic-bezier(.22,1,.36,1);
-  --serif:'Instrument Serif',Georgia,'Times New Roman',serif;
-  --sans:'Geist',ui-sans-serif,system-ui,'Segoe UI',Roboto,sans-serif;
-  --mono:ui-monospace,'Cascadia Code','JetBrains Mono',Consolas,Menlo,monospace;
+  --serif:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --sans:'Figtree',ui-sans-serif,system-ui,'Segoe UI',Roboto,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,'Cascadia Code',Consolas,Menlo,monospace;
+  --brand:'Chakra Petch','Figtree',system-ui,sans-serif;
   color-scheme:dark;
 }
 html[data-scheme="light"]{
