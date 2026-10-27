@@ -8,5 +8,7 @@
   "pulsem.js": "src/pulsem",
   "pulsem.css": "src/pulsem-css",
   "alias-tools.js": "src/alias/tools",
-  "alias.js": "src/alias"
+  "alias.js": "src/alias",
+  "movimiento.js": "src/movimiento",
+  "movimiento.css": "src/movimiento-css"
 }
