@@ -524,7 +524,7 @@ $('#helpBtn').addEventListener('click', openGuide);
   const nb = $('#navMenu'), nd = $('#navDrop');
   const setOpen = on => { nb.setAttribute('aria-expanded', String(on)); if (on){ nd.hidden = false; requestAnimationFrame(() => nd.classList.add('on')); } else { nd.classList.remove('on'); setTimeout(() => { if (!nd.classList.contains('on')) nd.hidden = true; }, 380); } };
   nb.addEventListener('click', e => { e.stopPropagation(); setOpen(nb.getAttribute('aria-expanded') !== 'true'); });
-  nd.addEventListener('click', e => { const b = e.target.closest('[data-nd]'); setOpen(false); if (b){ if (b.dataset.nd === 'help') openGuide(); else if (b.dataset.nd === 'acc') $('#accBtn').click(); else $('#cfgBtn').click(); } });
+  nd.addEventListener('click', e => { const b = e.target.closest('[data-nd]'); setOpen(false); if (b){ if (b.dataset.nd === 'help') openGuide(); else if (b.dataset.nd === 'acc') $('#accBtn').click(); else if (b.dataset.nd !== 'lang') $('#cfgBtn').click(); } });
   document.addEventListener('click', e => { if (!nd.hidden && !e.target.closest('#navDrop')) setOpen(false); });
   addEventListener('keydown', e => { if (e.key === 'Escape' && !nd.hidden){ setOpen(false); nb.focus(); } });
 }
@@ -1134,6 +1134,9 @@ if ('IntersectionObserver' in window){
    y los puntos sueltos (el caos del ábaco) se ordenan en una onda (la sintonía). Quieto cuando no se ve. ===== */
 (() => {
 const { $ } = SZ;
+/* ES / EN: el botón de la barra cambia el idioma de toda la página (lo guarda 00b-idioma) */
+const lb = $('#langBtn'); if (lb && SZ.setLang) lb.addEventListener('click', () => SZ.setLang(SZ.lang() === 'es' ? 'en' : 'es'));
+const nd = $('#navDrop'); if (nd && SZ.setLang) nd.addEventListener('click', e => { if (e.target.closest('[data-nd="lang"]')) SZ.setLang(SZ.lang() === 'es' ? 'en' : 'es'); });
 const sec = $('#nombre'), flow = $('#syFlow'), svg = $('.sy-svg', sec || document);
 if (!sec || !flow) return;
 const COLS = ['#3de0ff', '#7b3ff2', '#ff3d9a', '#ff7a45', '#ffc857'];

@@ -123,6 +123,69 @@ function setLang(l){
 const onLang = f => langHooks.push(f);
 addEventListener('storage', e => { if (e.key === 'synthz:lang' && e.newValue && e.newValue !== LANG) setLang(e.newValue); });
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => i18nApply()); else setTimeout(() => i18nApply(), 0);
+/* ===== v3.0 · textos de la landing SymphorIA y de EnerX (español / inglés). Formato en 00b-idioma.js ===== */
+Object.assign(I18N.es, {
+  'landing.nombre.eyebrow': 'Por qué se llama así',
+  'landing.nombre.t1': 'SymphorIA:',
+  'landing.nombre.t2': 'el portador de la armonía',
+  'landing.nombre.lead': 'Un nombre hecho con dos raíces griegas. Juntas dicen lo que hace la página: tomar muchas IAs y muchos datos y llevarlos a una sola respuesta clara.',
+  'landing.nombre.sym': 'Junto, con, en sintonía. La misma raíz de <b>sinfonía</b>, <b>sinergia</b> y <b>simbiosis</b>.',
+  'landing.nombre.phora': 'Llevar, ser portador. La misma raíz de <b>metáfora</b>, <b>semáforo</b> y <b>anáfora</b>.',
+  'landing.nombre.abacoT': 'Del ábaco a la sintonía',
+  'landing.nombre.abaco': 'El ábaco cuenta a mano, cuenta por cuenta. SymphorIA toma el caos de datos y respuestas y lo lleva a un flujo ordenado y automático.',
+  'landing.nombre.caos': 'Caos',
+  'landing.nombre.sinto': 'Sintonía',
+  'landing.lang': 'EN',
+  'landing.langAria': 'Cambiar el idioma a inglés',
+  'landing.langMenu': 'English',
+  'enerx.name': 'EnerX',
+  'enerx.today': 'EnerX de hoy',
+  'enerx.left': 'Te queda {n} % de EnerX',
+  'enerx.empty': 'Sin EnerX por hoy',
+  'enerx.emptyShort': 'Sin EnerX',
+  'enerx.of': 'de EnerX · se carga a medianoche',
+  'enerx.ofEmpty': 'sin EnerX · se carga a medianoche',
+  'enerx.used': ' · usó {u} % de tu EnerX · te queda {n} %',
+  'enerx.small': 'Gratis. Tu EnerX (tu batería) baja un poco con cada mensaje (lo que escribes y lo que te responde). A medianoche se carga al 100 %.',
+  'enerx.hint': 'Tu EnerX de hoy (tu batería): toca para ver el detalle',
+  'enerx.guestLeft': 'Te quedan {n} mensajes de prueba',
+  'enerx.guestShort': '{n} de prueba',
+  'enerx.rest': 'Las IAs gratis están descansando',
+  'enerx.restShort': 'Descansando',
+  'enerx.signin': 'Entra a tu cuenta para seguir FlowIAndo',
+  'enerx.signinShort': 'Entra para seguir'
+});
+Object.assign(I18N.en, {
+  'landing.nombre.eyebrow': 'Why the name',
+  'landing.nombre.t1': 'SymphorIA:',
+  'landing.nombre.t2': 'the bearer of harmony',
+  'landing.nombre.lead': 'A name built from two Greek roots. Together they say what the site does: take many AIs and lots of data and carry them into one clear answer.',
+  'landing.nombre.sym': 'Together, with, in tune. The same root as <b>symphony</b>, <b>synergy</b> and <b>symbiosis</b>.',
+  'landing.nombre.phora': 'To carry, to bear. The same root as <b>metaphor</b>, <b>semaphore</b> and <b>anaphora</b>.',
+  'landing.nombre.abacoT': 'From the abacus to harmony',
+  'landing.nombre.abaco': 'The abacus counts by hand, one bead at a time. SymphorIA takes the chaos of data and answers and carries it into an orderly, automatic flow.',
+  'landing.nombre.caos': 'Chaos',
+  'landing.nombre.sinto': 'Harmony',
+  'landing.lang': 'ES',
+  'landing.langAria': 'Switch the language to Spanish',
+  'landing.langMenu': 'Español',
+  'enerx.name': 'EnerX',
+  'enerx.today': "Today's EnerX",
+  'enerx.left': '{n} % EnerX left',
+  'enerx.empty': 'Out of EnerX for today',
+  'enerx.emptyShort': 'No EnerX',
+  'enerx.of': 'EnerX · recharges at midnight',
+  'enerx.ofEmpty': 'no EnerX · recharges at midnight',
+  'enerx.used': ' · used {u} % of your EnerX · {n} % left',
+  'enerx.small': 'Free. Your EnerX (your battery) drops a little with each message (what you write and what you get back). At midnight it recharges to 100 %.',
+  'enerx.hint': "Today's EnerX (your battery): tap for details",
+  'enerx.guestLeft': '{n} trial messages left',
+  'enerx.guestShort': '{n} trial',
+  'enerx.rest': 'The free AIs are resting',
+  'enerx.restShort': 'Resting',
+  'enerx.signin': 'Sign in to keep going',
+  'enerx.signinShort': 'Sign in to continue'
+});
 /* ---------- estado guardado (con limpieza por si el archivo viene dañado) ---------- */
 const KEY = 'synthz:v1', OLD = 'coro:v1';
 let memState = null;
@@ -1078,9 +1141,10 @@ const coinsFmt = n => Math.round(n).toLocaleString('es');
 const coinsShort = n => n >= 10000 ? (Math.floor(n / 100) / 10).toLocaleString('es') + ' mil' : coinsFmt(n);
 /* v3.0 · batería en vez de palabras (Sammuel, 27 oct): el límite del día se ve como una pila que se descarga y se carga a medianoche */
 const battPct = () => Math.round((1 - limPct()) * 100);
-const coinNote = (mid, r) => /^sz:/.test(String(mid)) && r && !r.cached && ((r.prompt || 0) + (r.completion || 0)) > 0 ? ' · usó ' + Math.max(1, Math.round(((r.prompt || 0) + (r.completion || 0)) / (SZQ.limit || 25000) * 100)) + ' % de tu EnerX · te queda ' + battPct() + ' %' : '';
-const limTxt = () => SZQ.on === false ? 'Las IAs gratis están descansando' : guestFull() ? 'Entra a tu cuenta para seguir FlowIAndo' : isGuestQ() ? 'Te quedan ' + Math.max(0, (SZQ.guest.max || 5) - (SZQ.guest.used || 0)) + ' mensajes de prueba' : limPct() >= 1 ? 'Sin EnerX por hoy' : 'Te queda ' + battPct() + ' % de EnerX';
-const limShort = () => SZQ.on === false ? 'Descansando' : guestFull() ? 'Entra para seguir' : isGuestQ() ? Math.max(0, (SZQ.guest.max || 5) - (SZQ.guest.used || 0)) + ' de prueba' : limPct() >= 1 ? 'Sin EnerX' : battPct() + ' %';
+const coinNote = (mid, r) => /^sz:/.test(String(mid)) && r && !r.cached && ((r.prompt || 0) + (r.completion || 0)) > 0 ? t('enerx.used', { u:Math.max(1, Math.round(((r.prompt || 0) + (r.completion || 0)) / (SZQ.limit || 25000) * 100)), n:battPct() }) : '';
+const guestLeft = () => Math.max(0, (SZQ.guest.max || 5) - (SZQ.guest.used || 0));
+const limTxt = () => SZQ.on === false ? t('enerx.rest') : guestFull() ? t('enerx.signin') : isGuestQ() ? t('enerx.guestLeft', { n:guestLeft() }) : limPct() >= 1 ? t('enerx.empty') : t('enerx.left', { n:battPct() });
+const limShort = () => SZQ.on === false ? t('enerx.restShort') : guestFull() ? t('enerx.signinShort') : isGuestQ() ? t('enerx.guestShort', { n:guestLeft() }) : limPct() >= 1 ? t('enerx.emptyShort') : battPct() + ' %';
 const limLvl = () => { const k = limPct(); return k >= 1 ? 'full' : k >= .8 ? 'warn' : 'ok'; };
 /* la pila: cuerpo de vidrio, polo y carga que baja; con poca carga se pone ámbar y vacía, coral. size = alto de referencia (antes era el anillo) */
 function limRing(size){
@@ -1089,7 +1153,7 @@ function limRing(size){
 }
 function limBar(o = {}){
   const k = 1 - limPct();
-  return '<div class="lbar ' + limLvl() + '"><div class="lb-h"><b>' + (o.title || 'Tu EnerX de hoy') + '</b><span>' + limTxt() + '</span></div><div class="lb-t"><i style="transform:scaleX(' + k.toFixed(3) + ')"></i></div>' + (o.small === false ? '' : '<small>' + (isGuestQ() ? 'Sin cuenta tienes ' + (SZQ.guest.max || 5) + ' mensajes de prueba al día. Con tu cuenta gratis tienes mucho más. ' : '') + 'Gratis. Tu EnerX (tu batería) baja un poco con cada mensaje (lo que escribes y lo que te responde). A medianoche se carga al 100 %.' + (o.puter ? ' Si se acaba, puedes seguir con Puter, que te da la versión pro de las IAs más usadas.' : '') + '</small>') + '</div>';
+  return '<div class="lbar ' + limLvl() + '"><div class="lb-h"><b>' + (o.title || t('enerx.today')) + '</b><span>' + limTxt() + '</span></div><div class="lb-t"><i style="transform:scaleX(' + k.toFixed(3) + ')"></i></div>' + (o.small === false ? '' : '<small>' + (isGuestQ() ? 'Sin cuenta tienes ' + (SZQ.guest.max || 5) + ' mensajes de prueba al día. Con tu cuenta gratis tienes mucho más. ' : '') + t('enerx.small') + (o.puter ? ' Si se acaba, puedes seguir con Puter, que te da la versión pro de las IAs más usadas.' : '') + '</small>') + '</div>';
 }
 async function szCatalog(){
   let r; try{ r = await fetch('/api/ai', { headers:szHeaders() }); }catch(e){ throw Object.assign(new Error('net'), { net:true }); }

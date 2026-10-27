@@ -2,6 +2,9 @@
    y los puntos sueltos (el caos del ábaco) se ordenan en una onda (la sintonía). Quieto cuando no se ve. ===== */
 (() => {
 const { $ } = SZ;
+/* ES / EN: el botón de la barra cambia el idioma de toda la página (lo guarda 00b-idioma) */
+const lb = $('#langBtn'); if (lb && SZ.setLang) lb.addEventListener('click', () => SZ.setLang(SZ.lang() === 'es' ? 'en' : 'es'));
+const nd = $('#navDrop'); if (nd && SZ.setLang) nd.addEventListener('click', e => { if (e.target.closest('[data-nd="lang"]')) SZ.setLang(SZ.lang() === 'es' ? 'en' : 'es'); });
 const sec = $('#nombre'), flow = $('#syFlow'), svg = $('.sy-svg', sec || document);
 if (!sec || !flow) return;
 const COLS = ['#3de0ff', '#7b3ff2', '#ff3d9a', '#ff7a45', '#ffc857'];
