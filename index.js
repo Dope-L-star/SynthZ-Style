@@ -542,7 +542,7 @@ function pageTour(onEnd){
     { s:first('#railMe', '#accBtn', '#navMenu'), t:'Tu cuenta', p:'Entra a tu cuenta de SynthZ: tus chats quedan guardados y los ves en cualquier celular o computador, personalizas tu perfil y hablas con el equipo si necesitas ayuda.' },
     { s:first('#railCfg', '#cfgBtn', '#navMenu'), t:'Configuración', p:'¿Lo quieres más bonito o más rápido? Elige y mira abajo cómo se verá. Puedes cambiarlo cuando quieras desde este botón.', x:'cfg' },
     { s:'#como', t:'Así de fácil', p:'Preguntas, comparas y SynthonIA te acompaña. Baja despacio y mira cómo se animan.' },
-    { s:'#conectar', t:'Tu IA ya está lista', p:'Ya puedes chatear gratis. Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.' },
+    { s:'#conectar', t:'Tu IA ya está lista', p:'Ya puedes chatear gratis. Con Puter usas la versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.' },
     { s:'#chat', t:'Pregunta desde aquí', p:'Escribe tu pregunta aquí y te llevo al chat (SynthFlow) con tu pregunta lista.' },
     { s:'#consumo', t:'Tu uso', p:'Cómo va tu límite de hoy y cuánto chateaste estos días.' },
     { s:null, t:'¡Todo listo!', p:'Ya sabes qué es SynthZ y por dónde empezar: escribe tu pregunta o abre SynthFlow. Inicia sesión para que no tengas límites.' }
@@ -615,7 +615,7 @@ function boot(){
 /* tarjeta de Puter + botón de cuenta */
 function puterCard(){
   const wrap = $('#cards'); if (!wrap || $('[data-id="puter"]', wrap)) return;
-  wrap.insertAdjacentHTML('beforeend', '<article class="card" data-id="puter" style="--c:#6fd3d6"><div class="card-top">' + SZ.puterLogo('lg') + '<h3>Puter</h3><span class="status" data-st>Sin conectar</span></div><p class="desc">Opcional. Puter: conecta tu versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.</p><div class="actions"><button class="btn sm" data-pu type="button">Conectar con Puter</button></div></article>');
+  wrap.insertAdjacentHTML('beforeend', '<article class="card" data-id="puter" style="--c:#6fd3d6"><div class="card-top">' + SZ.puterLogo('lg') + '<h3>Puter</h3><span class="status" data-st>Sin conectar</span></div><p class="desc">Opcional. Con Puter usas la versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.</p><div class="actions"><button class="btn sm" data-pu type="button">Conectar con Puter</button></div></article>');
   const card = $('[data-id="puter"]', wrap), b = $('[data-pu]', card);
   const paint = () => { const on = !!(window.puter && puter.auth && puter.auth.isSignedIn()); setStatus(card, on ? 'Conectada' : 'Sin conectar', on ? 'ok' : ''); b.textContent = on ? 'Abrir SynthFlow' : 'Conectar con Puter'; };
   paint(); addEventListener('puter-ready', paint);
@@ -820,7 +820,7 @@ const nearOf = h => [...document.querySelectorAll('main h2,main h3,main h4,main 
 const hitsIn = (near, x0, y0, ww, hh) => near.some(e => { const r = e.getBoundingClientRect(); return r.width && r.height && Math.min(x0 + ww, r.right) - Math.max(x0, r.left) > 4 && Math.min(y0 + hh, r.bottom) - Math.max(y0, r.top) > 4; });
 /* celular: ya no flota fija tapando tarjetas; se para en el espacio libre encima del título de cada sección */
 function standSmall(t, w, H){
-  const near = nearOf(document.createElement('i')), x = innerWidth - w - 28, top = t.top - H + 4;   /* 28 px: deja espacio a su brazo cuando lo levanta */
+  const near = nearOf(document.createElement('i')), x = innerWidth - w - 28, top = t.top - H * .9;   /* 28 px: deja espacio a su brazo cuando lo levanta */
   el.hidden = hitsIn(near, x + w * .15, top + H * .04, w * .7, H * .92) || top + scrollY < 90; if (el.hidden) return;
   el._mute = true; el.classList.add('abs'); el.classList.remove('bside'); el.dataset.side = 'r';
   el._x = Math.round(x + scrollX); el._top = Math.round(top + scrollY); stick();
@@ -841,7 +841,7 @@ function standAt(S, sec, h){
   /* primero el lado donde caben ella y su frase; si no, donde quepa ella sola */
   const need = w + bw + 12, pr = S.side === 'r' ? roomR : roomL, ot = S.side === 'r' ? roomL : roomR, other = S.side === 'r' ? 'l' : 'r';
   const pick = pr >= need ? S.side : ot >= need ? other : pr >= w ? S.side : ot >= w ? other : S.side;
-  const top = t.top + t.height - H + 14;
+  const top = t.top + t.height - H + 14 + H * .08;   /* v2.9: sin cuerpo, lo de abajo de su caja es solo sombra: baja un poco */
   const xOf = sd => Math.max(8, Math.min(innerWidth - w - 8, sd === 'r' ? t.right + gap : t.left - gap - w));
   /* v2.6: nunca encima de nada: si de un lado pisa un texto, una tarjeta o una etiqueta, prueba el otro; si pisa en los dos, esa sección no la muestra */
   const near = nearOf(h);

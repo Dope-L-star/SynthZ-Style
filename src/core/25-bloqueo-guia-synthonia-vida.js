@@ -146,7 +146,7 @@ addEventListener('pointerdown', e => {
     const M = {
       slow:['pensando', 'Esta IA se está tomando su tiempo… ⏳ Si se demora mucho, prueba la «Automática».'],
       done:['feliz', ['¡Listo! ¿Te sirvió?', '¡Eso tiene mucho Flow! ✨', 'Si quieres otra versión, toca «Otra vez».'][Math.floor(Math.random() * 3)]],
-      limit:['preocupada', 'Te queda poco de tu límite de hoy. Si se acaba, puedes seguir con Puter: tu versión pro de las IAs más usadas.'],
+      limit:['preocupada', 'Te queda poco de tu límite de hoy. Si se acaba, puedes seguir con Puter, que te da la versión pro de las IAs más usadas.'],
       lost:['confundida', '¿Te ayudo a encontrar algo? Tócame y pregúntame. 🙂']
     };
     if (kind === 'lost'){ BOT.lostN = (BOT.lostN || 0) + 1; BOT.el.classList.toggle('g1', BOT.lostN === 1); BOT.el.classList.toggle('g2', BOT.lostN >= 2); clearTimeout(BOT.gT); BOT.gT = setTimeout(() => BOT.el && BOT.el.classList.remove('g1', 'g2'), 25000); BOTAPI.problem('lost'); }

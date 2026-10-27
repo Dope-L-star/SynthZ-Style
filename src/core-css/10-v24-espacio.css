@@ -3,7 +3,7 @@
   --sb-bg:#0b0820;--sb-deep:#2a1458;--sb-primary:#7b3ff2;--sb-secondary:#ff3d9a;--sb-warm:#ff7a45;--sb-spark:#ffc857;--sb-light:#3de0ff;--sb-text:#f6f3ff;
   /* los dos colores de siempre ahora salen del tema nuevo: el «dorado» es el naranja cálido y el «vino» es el rosa */
   --gold:#ff9a52;--gold-rgb:255,154,82;--wine:#ff3d9a;--wine-rgb:255,61,154;--accent:#3de0ff;
-  --bg:#0b0820;--text:#f6f3ff;--soft:#cfc8e6;--mute:#9a92b8;--line:rgba(255,255,255,.12);--card:rgba(255,255,255,.05);
+  --bg:#0b0820;--text:#f6f3ff;--soft:#ddd7ef;--mute:#b4adcf;--line:rgba(255,255,255,.12);--card:rgba(255,255,255,.05);
   --grad:linear-gradient(100deg,var(--sb-primary),var(--sb-secondary) 55%,var(--sb-warm));
   --grad-text:linear-gradient(95deg,var(--sb-light),var(--sb-primary) 38%,var(--sb-secondary) 70%,var(--sb-warm));
   /* vidrio líquido: casi transparente (se ve 60-75 % de lo de atrás), con desenfoque suave, borde de luz y un brillo en la esquina */

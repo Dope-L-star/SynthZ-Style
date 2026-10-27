@@ -41,7 +41,7 @@ const nearOf = h => [...document.querySelectorAll('main h2,main h3,main h4,main 
 const hitsIn = (near, x0, y0, ww, hh) => near.some(e => { const r = e.getBoundingClientRect(); return r.width && r.height && Math.min(x0 + ww, r.right) - Math.max(x0, r.left) > 4 && Math.min(y0 + hh, r.bottom) - Math.max(y0, r.top) > 4; });
 /* celular: ya no flota fija tapando tarjetas; se para en el espacio libre encima del título de cada sección */
 function standSmall(t, w, H){
-  const near = nearOf(document.createElement('i')), x = innerWidth - w - 28, top = t.top - H + 4;   /* 28 px: deja espacio a su brazo cuando lo levanta */
+  const near = nearOf(document.createElement('i')), x = innerWidth - w - 28, top = t.top - H * .9;   /* 28 px: deja espacio a su brazo cuando lo levanta */
   el.hidden = hitsIn(near, x + w * .15, top + H * .04, w * .7, H * .92) || top + scrollY < 90; if (el.hidden) return;
   el._mute = true; el.classList.add('abs'); el.classList.remove('bside'); el.dataset.side = 'r';
   el._x = Math.round(x + scrollX); el._top = Math.round(top + scrollY); stick();
@@ -62,7 +62,7 @@ function standAt(S, sec, h){
   /* primero el lado donde caben ella y su frase; si no, donde quepa ella sola */
   const need = w + bw + 12, pr = S.side === 'r' ? roomR : roomL, ot = S.side === 'r' ? roomL : roomR, other = S.side === 'r' ? 'l' : 'r';
   const pick = pr >= need ? S.side : ot >= need ? other : pr >= w ? S.side : ot >= w ? other : S.side;
-  const top = t.top + t.height - H + 14;
+  const top = t.top + t.height - H + 14 + H * .08;   /* v2.9: sin cuerpo, lo de abajo de su caja es solo sombra: baja un poco */
   const xOf = sd => Math.max(8, Math.min(innerWidth - w - 8, sd === 'r' ? t.right + gap : t.left - gap - w));
   /* v2.6: nunca encima de nada: si de un lado pisa un texto, una tarjeta o una etiqueta, prueba el otro; si pisa en los dos, esa sección no la muestra */
   const near = nearOf(h);

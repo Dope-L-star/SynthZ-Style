@@ -6,7 +6,8 @@
 .cnew svg{width:16px;height:16px}
 .cnew[hidden]{display:none}
 .cfavh{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 4px 2px}
-.cfavh b{font-family:var(--serif);font-weight:400;font-size:20px;color:#f2c46b}
+.cfavh b{font-family:var(--serif);font-weight:400;font-size:18px;color:#f2c46b;white-space:nowrap}
+.cfavh .lnk{flex:none;white-space:nowrap;font-size:13px}
 .cfavh[hidden]{display:none}
 .chats .thg{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);padding:12px 10px 4px}
 .chats .thi{gap:10px;padding:10px 8px 10px 10px;border-radius:12px}

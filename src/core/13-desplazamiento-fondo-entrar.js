@@ -120,7 +120,7 @@ function authBox(box, done, onBlocked, start){
   const say = h => { box.innerHTML = '<p class="gmsg">' + h + '</p>'; };
   box.innerHTML = '<div class="gbox"><span class="gload">Preparando…</span></div>';
   accConfig().then(ok => {
-    if (!ok){ say(location.protocol === 'file:' ? 'Las cuentas funcionan cuando la página está publicada (por ejemplo en Vercel).' : 'Las cuentas de ' + BRAND() + ' aún no están activadas: falta conectar la base de datos en Vercel.' + (ACC.missing.length ? '<br><small>Faltan: ' + ACC.missing.map(esc).join(', ') + '</small>' : '')); return; }
+    if (!ok){ say(location.protocol === 'file:' ? 'Las cuentas funcionan cuando la página está publicada (por ejemplo en Vercel).' : 'Las cuentas de ' + BRAND() + ' abren muy pronto. Mientras tanto, tus chats se guardan en este equipo y puedes usar todo sin cuenta.'); return; }
     paint();
   });
   function paint(){
