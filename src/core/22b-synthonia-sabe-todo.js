@@ -101,6 +101,12 @@ BOT_FAQ.push(
   { k:'portada inicio volver symphoria home back main page',
     a:'El logo de SymphorIA, arriba en la barrita, te lleva de vuelta a la portada.',
     en:'The SymphorIA logo, at the top of the bar, takes you back to the home page.', go:['#backLink', '#sideZ', '#mLogo'] },
+  { k:'alias sintesis juez acuerdo coinciden tres ias mision synthesis judge agreement',
+    a:'En A.L.I.A.S., con Síntesis encendida, 3 IAs responden lo mismo y una cuarta hace de juez: te da una sola respuesta, cuánto coinciden (en %) y en qué no están de acuerdo. Puedes ver cada voz.',
+    en:'In A.L.I.A.S., with Synthesis on, 3 AIs answer the same thing and a fourth one acts as judge: it gives you one answer, how much they agree (in %) and where they don\'t. You can see each voice.', go:['a[href*="alias"]'] },
+  { k:'pulsem quitar llave borrar key remove delete team',
+    a:'En Pulsem (solo para el equipo), en las llaves de las IAs conectadas, cada quien puede quitar la suya con «Quitar». Las de los demás siguen funcionando.',
+    en:'In Pulsem (team only), under the connected AIs\' keys, each person can remove theirs with «Remove». The others keep working.', go:['#railPulse'] },
   { k:'groq rapida llave propia fast own key',
     a:'Groq es una opción muy rápida que usa tu propia llave (gratis con límites). Se conecta en Ajustes › IAs y memoria › «Conectar Puter u otra IA».',
     en:'Groq is a very fast option that uses your own key (free with limits). Connect it in Settings › AIs and memory › «Connect Puter or another AI».', pre:openCfg('ia'), go:['[data-pane="ia"]', '#cfgBtn'] }
