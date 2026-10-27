@@ -1,0 +1,71 @@
+/* SynthZ · sistema de diseño: Atlas (claro) y Consola (oscuro). El acento viene del color del perfil. */
+:root {
+  --f-titulo: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-texto: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --f-dato: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+
+  --fondo: #eef2f3;
+  --superficie: #ffffff;
+  --superficie-2: #f7f9fa;
+  --tinta: #172026;
+  --tenue: #5b6b75;
+  --linea: #dbe3e6;
+  --ok: #2e8b57;
+  --aviso: #b7791f;
+  --error: #c2411b;
+  --acento: #0e7c86;
+  --acento-fuerte: #0a5f67;
+  --acento-suave: #e1f1f2;
+  --sobre-acento: #ffffff;
+  --radio: 12px;
+  --sombra: 0 18px 40px -24px rgba(20, 40, 50, 0.45);
+}
+
+/* data-tema siempre es "claro" o "oscuro" (lo resuelve el script del <head> si la persona eligió Auto) */
+/* Consola: grafito cálido con luces tipo LED */
+:root[data-tema="oscuro"] {
+  --fondo: #15171a;
+  --superficie: #1e2125;
+  --superficie-2: #191c1f;
+  --tinta: #ece8df;
+  --tenue: #8d929a;
+  --linea: #2c3036;
+  --ok: #7fd6a2;
+  --aviso: #ffb547;
+  --error: #ff7a59;
+  --sombra: 0 18px 40px -20px rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}
+
+/* Los 8 colores de perfil que ya guarda el backend (aurora, azul, violeta, coral, menta, oro, rosa, noche) */
+:root[data-color="aurora"]  { --acento:#0e7c86; --acento-fuerte:#0a5f67; --acento-suave:#e1f1f2; }
+:root[data-color="azul"]    { --acento:#2563eb; --acento-fuerte:#1d4ed8; --acento-suave:#e3ecfd; }
+:root[data-color="violeta"] { --acento:#7c3aed; --acento-fuerte:#6d28d9; --acento-suave:#ece3fd; }
+:root[data-color="coral"]   { --acento:#e0573a; --acento-fuerte:#c24427; --acento-suave:#fde7e1; }
+:root[data-color="menta"]   { --acento:#12936f; --acento-fuerte:#0d7557; --acento-suave:#dcf3ec; }
+:root[data-color="oro"]     { --acento:#b8830b; --acento-fuerte:#946a07; --acento-suave:#f8ecce; --sobre-acento:#1d1500; }
+:root[data-color="rosa"]    { --acento:#d63384; --acento-fuerte:#b82a70; --acento-suave:#fbe3ef; }
+:root[data-color="noche"]   { --acento:#3b4a5a; --acento-fuerte:#2b3743; --acento-suave:#e2e7ec; }
+:root[data-tema="oscuro"][data-color="aurora"]  { --acento:#4fc3cc; --acento-fuerte:#7fd8df; --acento-suave:#16343a; --sobre-acento:#04181a; }
+:root[data-tema="oscuro"][data-color="azul"]    { --acento:#6b9bff; --acento-fuerte:#93b5ff; --acento-suave:#182640; --sobre-acento:#04122e; }
+:root[data-tema="oscuro"][data-color="violeta"] { --acento:#a98bff; --acento-fuerte:#c2adff; --acento-suave:#271e45; --sobre-acento:#150a33; }
+:root[data-tema="oscuro"][data-color="coral"]   { --acento:#ff8b6d; --acento-fuerte:#ffa68d; --acento-suave:#3a2019; --sobre-acento:#2a0d04; }
+:root[data-tema="oscuro"][data-color="menta"]   { --acento:#4fd1a8; --acento-fuerte:#7fe0c0; --acento-suave:#16322a; --sobre-acento:#03201a; }
+:root[data-tema="oscuro"][data-color="oro"]     { --acento:#ffb547; --acento-fuerte:#ffc977; --acento-suave:#3a2c12; --sobre-acento:#1a1300; }
+:root[data-tema="oscuro"][data-color="rosa"]    { --acento:#ff7fb8; --acento-fuerte:#ff9cc8; --acento-suave:#3a1a2b; --sobre-acento:#2a0618; }
+:root[data-tema="oscuro"][data-color="noche"]   { --acento:#9fb2c6; --acento-fuerte:#bccbdb; --acento-suave:#222b34; --sobre-acento:#0d141b; }
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--fondo); color: var(--tinta);
+  font-family: var(--f-texto); font-size: 16px; line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { font-family: var(--f-titulo); letter-spacing: -0.01em; text-wrap: balance; margin: 0; }
+:root[data-tema="oscuro"] h1, :root[data-tema="oscuro"] h2, :root[data-tema="oscuro"] h3,
+:root[data-tema="oscuro"] .marca { font-family: "Chakra Petch", var(--f-titulo); }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+.solo-lectores { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
