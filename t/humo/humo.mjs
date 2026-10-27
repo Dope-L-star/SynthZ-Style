@@ -114,6 +114,18 @@ try{
   await page.close();
 }catch(e){ ko('Sintéticos', e.message); }
 
+/* idioma: SynthFlow en inglés (idioma-en.json) y de vuelta a español, sin errores */
+try{
+  const { page, errors } = await open('chat.html', 1280);
+  await page.evaluate(() => SZ.setLang('en')); await page.waitForTimeout(1500);
+  const en = await page.evaluate(() => ({ nc:document.getElementById('cNew').textContent.trim(), ph:document.getElementById('inp').placeholder, lang:document.documentElement.lang }));
+  check('SynthFlow se pasa a inglés (botones y caja de escribir)', en.nc === 'New chat' && !/[áéíóúñ]|Escribe|Conecta/.test(en.ph) && en.lang === 'en', JSON.stringify(en) + ' ' + errors.join(' | '));
+  await page.evaluate(() => SZ.setLang('es')); await page.waitForTimeout(800);
+  const es = await page.evaluate(() => document.getElementById('cNew').textContent.trim());
+  check('y vuelve a español igual que antes', es === 'Nuevo chat' && !errors.length, es + ' ' + errors.join(' | '));
+  await page.close();
+}catch(e){ ko('idioma', e.message); }
+
 /* accesibilidad: las preferencias del sistema y el teclado */
 try{
   const { page, errors } = await open('chat.html', 1280, { reducedMotion:'reduce' });

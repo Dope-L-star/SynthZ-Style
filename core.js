@@ -670,6 +670,66 @@ Object.assign(I18N.en, {
  "tour.signin": "Sign in",
  "tour.enjoy": "Enjoy SymphorIA!"
 });
+/* ===== v3.0 · SynthFlow y las ventanas de core en inglés =====
+   SynthFlow arma sus textos en JS (miles de trozos). En vez de cambiar cada uno por t(), cuando el idioma es inglés
+   se trae idioma-en.json (español → inglés, solo si hace falta) y se traduce lo que aparece en pantalla:
+   · un texto igual a una entrada se cambia entero; un trozo largo (6+ letras, con espacio) se cambia dentro del texto;
+   · también title, placeholder, aria-label, data-tip y alt;
+   · nunca toca lo que escriben las personas ni las IA (mensajes, títulos de chats, código), ni lo que ya usa data-i18n.
+   Al volver a español, cada texto vuelve a como estaba. Para un texto nuevo: agrégalo a idioma-en.json. */
+const TR_ATTRS = ['placeholder', 'title', 'aria-label', 'data-tip', 'alt'];
+const TR_SKIP = 'script,style,pre,code,textarea,iframe,svg,[contenteditable],.notr,[data-i18n],[data-i18n-html],.m .body,.m .bub,.cmp-card .body,.fvi p,.thi .tt,.snip,.greet';
+const TR = { map:null, rx:null, done:new Map(), mo:null, load:null };
+function trLoad(){
+  if (!TR.load) TR.load = fetch('/idioma-en.json', { cache:'force-cache' }).then(r => r.json()).then(m => {
+    TR.map = m;
+    const long = Object.keys(m).filter(k => k.length >= 6 && /[\s«»:·]/.test(k)).sort((a, b) => b.length - a.length).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    TR.rx = long.length ? new RegExp('(?<![\\p{L}\\d])(?:' + long.join('|') + ')(?![\\p{L}])', 'gu') : null;
+  }).catch(() => { TR.load = null; });
+  return TR.load;
+}
+function trStr(s){
+  const m = TR.map; if (!m || !s || !/\p{L}{2}/u.test(s)) return s;
+  const k = s.replace(/\s+/g, ' ').trim(); if (!k) return s;
+  if (m[k] != null) return s.match(/^\s*/)[0] + m[k] + s.match(/\s*$/)[0];
+  return TR.rx ? s.replace(TR.rx, x => m[x] ?? x) : s;
+}
+const trSkip = el => !el || !!el.closest(TR_SKIP);
+/* TR.done guarda por nodo [original, lo que pusimos]; si la página cambia el texto después, el nuevo pasa a ser el original */
+function trSet(n, key, cur, put){
+  const d = TR.done.get(n) || {}, o = d[key];
+  if (cur === put){ if (o && cur !== o[1]) delete d[key]; return; }
+  d[key] = [cur, put]; TR.done.set(n, d);
+  if (TR.done.size > 5000) TR.done.forEach((v, k) => { if (!k.isConnected) TR.done.delete(k); });
+  if (key === '#') n.nodeValue = put; else n.setAttribute(key, put);
+}
+function trAttrs(el){ TR_ATTRS.forEach(a => { const o = el.getAttribute(a); if (o) trSet(el, a, o, trStr(o)); }); }
+function trNode(n){
+  if (n.nodeType === 3){ if (!trSkip(n.parentElement)) trSet(n, '#', n.nodeValue, trStr(n.nodeValue)); return; }
+  if (n.nodeType !== 1) return;
+  if (trSkip(n)){ if (n.matches('textarea,input') && !trSkip(n.parentElement)) trAttrs(n); return; }
+  trAttrs(n);
+  const w = document.createTreeWalker(n, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, { acceptNode:x => { if (x.nodeType === 1 && x.matches(TR_SKIP)){ if (x.matches('textarea,input')) trAttrs(x); return NodeFilter.FILTER_REJECT; } return NodeFilter.FILTER_ACCEPT; } });
+  let x; while ((x = w.nextNode())){ if (x.nodeType === 3) trSet(x, '#', x.nodeValue, trStr(x.nodeValue)); else trAttrs(x); }
+}
+async function trOn(){
+  await trLoad(); if (!TR.map || LANG !== 'en') return;
+  trNode(document.body); document.title = trStr(document.title);
+  if (TR.mo) return;
+  TR.mo = new MutationObserver(list => { if (LANG !== 'en') return; list.forEach(r => {
+    if (r.type === 'childList') r.addedNodes.forEach(trNode);
+    else if (r.type === 'characterData') trNode(r.target);
+    else if (!trSkip(r.target) || (r.target.matches('textarea,input') && !trSkip(r.target.parentElement))){ const o = r.target.getAttribute(r.attributeName); if (o) trSet(r.target, r.attributeName, o, trStr(o)); }
+  }); });
+  TR.mo.observe(document.body, { childList:true, subtree:true, characterData:true, attributes:true, attributeFilter:TR_ATTRS });
+}
+function trOff(){
+  if (TR.mo){ TR.mo.disconnect(); TR.mo = null; }
+  TR.done.forEach((d, n) => { if (n.isConnected) Object.keys(d).forEach(k => { if (k === '#'){ if (n.nodeValue === d[k][1]) n.nodeValue = d[k][0]; } else if (n.getAttribute(k) === d[k][1]) n.setAttribute(k, d[k][0]); }); });
+  TR.done.clear();
+}
+onLang(l => l === 'en' ? trOn() : trOff());
+if (LANG === 'en'){ trLoad(); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', trOn); else setTimeout(trOn, 0); }
 /* ---------- estado guardado (con limpieza por si el archivo viene dañado) ---------- */
 const KEY = 'synthz:v1', OLD = 'coro:v1';
 let memState = null;
@@ -2303,6 +2363,7 @@ const MI = (d) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const MICO = {
   copy:MI('<rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>'),
   new:MI('<path d="M12 20h8"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'),
+  globe:MI('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/>'),
   search:MI('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'),
   cog:MI('<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>'),
   help:MI('<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/>'),
@@ -2738,6 +2799,7 @@ function cfgModal(tab){
     + '<section class="cfgpane" data-pane="page"' + (ia ? ' hidden' : '') + '>'
     + '<div class="cfglbl">Cómo se ve</div><div id="cfgCh"></div>'
     + '<div class="cfglbl">Estilo de SynthFlow</div><div class="cfgseg" id="cfgUi"><button type="button" data-ui="full" aria-pressed="' + (draft.ui !== 'simple') + '">SynthFlow</button><button type="button" data-ui="simple" aria-pressed="' + (draft.ui === 'simple') + '">Simple</button></div><p class="cnote">Simple: solo tus chats, la caja de escribir y las respuestas, con un diseño tranquilo y sin efectos.</p>'
+    + '<div class="cfglbl">Idioma · Language</div><div class="cfgseg notr" id="cfgLang">' + LANGS.map(([id, nm]) => '<button type="button" data-lang="' + id + '" lang="' + id + '" aria-pressed="' + (lang() === id) + '">' + nm + '</button>').join('') + '</div>'
     + '<div class="cfglbl">Tamaño de SynthFlow</div><div class="cfgseg" id="cfgSz"><button type="button" data-sz="compact" aria-pressed="' + (draft.size !== 'normal') + '">Compacto</button><button type="button" data-sz="normal" aria-pressed="' + (draft.size === 'normal') + '">Normal</button></div><p class="cnote">Compacto: todo un poco más pequeño, para ver más chat en la pantalla. Normal: el tamaño grande de antes.</p>'
     + '<div class="cfglbl">Color de SynthFlow</div><div class="cfgth" id="cfgTh">' + THEMES.map(([id, nm, c1, lock, c2]) => '<button type="button" data-th="' + id + '" aria-pressed="' + ((draft.theme || 'synthz') === id) + '"' + (lock ? ' disabled aria-disabled="true"' : '') + ' style="--t1:' + c1 + ';--t2:' + c2 + '"><i></i><span>' + esc(nm) + '</span>' + (lock ? '<em>Pronto</em>' : '') + '</button>').join('') + '</div><p class="cnote" id="cfgThN"></p>'
     + (matchMedia('(pointer:coarse), (max-width:820px)').matches ? '<div class="cfglbl">Barra del celular</div><div class="cfgseg" id="cfgNav"><button type="button" data-nav="bottom" aria-pressed="' + (draft.nav !== 'left') + '">Abajo</button><button type="button" data-nav="left" aria-pressed="' + (draft.nav === 'left') + '">A la izquierda</button></div><p class="cnote">A la izquierda: la barra se esconde y la abres con el botón ☰ de arriba.</p>' : '')
@@ -2760,6 +2822,7 @@ function cfgModal(tab){
   const thNote = () => { const n = $('#cfgThN', o); if (n) n.textContent = draft.ui === 'simple' ? 'El estilo Simple usa sus propios colores: el color se ve en el estilo SynthFlow.' : 'Cambia el dorado y el rosado de SynthFlow. Aurora y Oro negro llegan con Syntonia.'; };
   thNote();
   $$('[data-ui]', o).forEach(b => b.addEventListener('click', () => { draft.ui = b.dataset.ui; $$('[data-ui]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); thNote(); }));
+  $$('[data-lang]', o).forEach(b => b.addEventListener('click', () => { setLang(b.dataset.lang); $$('[data-lang]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));   /* el idioma cambia al instante, sin «Guardar» */
   $$('[data-sz]', o).forEach(b => b.addEventListener('click', () => { draft.size = b.dataset.sz; $$('[data-sz]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
   $$('[data-th]', o).forEach(b => b.addEventListener('click', () => { if (b.disabled) return; draft.theme = b.dataset.th; $$('[data-th]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
   $$('[data-nav]', o).forEach(b => b.addEventListener('click', () => { draft.nav = b.dataset.nav; $$('[data-nav]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));

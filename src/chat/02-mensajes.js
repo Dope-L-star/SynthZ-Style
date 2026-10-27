@@ -180,6 +180,20 @@ const GREET = [
   ['¿En qué te ', 'ayudo', ' hoy?'],
   ['Cuéntame, ¿qué tienes ', 'en mente', '?']
 ];
+/* v3.0 · los mismos saludos en inglés (mismo orden) */
+const GREET_EN = {
+  '¿Qué quieres FlowIA’r hoy?':['What do you want to ', 'FlowIA', ' today?'],
+  '¿Qué quieres FlowIA’r?':['What do you want to ', 'FlowIA', '?'],
+  'Suelta la idea, la FlowIAmos.':['Drop the idea, we\'ll ', 'FlowIA it', '.'],
+  '¿A qué problema le ponemos Flow hoy?':['Which problem gets some ', 'Flow', ' today?'],
+  'Una idea, mucho Flow, cero límites.':['One idea, lots of ', 'Flow', ', zero limits.'],
+  'Tú pones la idea, yo el Flow.':['You bring the idea, ', 'I bring the Flow', '.'],
+  '¿Qué creamos juntos hoy?':['What shall we ', 'create', ' together today?'],
+  '¿Escribimos, programamos o soñamos?':['Shall we write, code ', 'or dream', '?'],
+  'Modo Flow: activado. ¿Qué sigue?':['Flow mode: ', 'on', '. What\'s next?'],
+  '¿En qué te ayudo hoy?':['How can I ', 'help', ' today?'],
+  'Cuéntame, ¿qué tienes en mente?':['Tell me, what do you have ', 'in mind', '?']
+};
 const GKEY = 'synthz:greet';
 let greetI = 0;
 try{ const g = JSON.parse(localStorage.getItem(GKEY) || 'null'); greetI = g && Date.now() - (g.seen || 0) < 12 * 3600e3 && GREET[g.i] ? g.i : 0; }catch(e){}
@@ -187,6 +201,7 @@ function saveGreet(){ try{ localStorage.setItem(GKEY, JSON.stringify({ i:greetI,
 saveGreet();
 function nextGreet(){ let n = greetI; while (n === greetI) n = 1 + Math.floor(Math.random() * (GREET.length - 1)); greetI = n; saveGreet(); }
 function greetHtml(g){
+  if (SZ.lang() === 'en') g = GREET_EN[g.join('')] || g;
   let i = 0;
   const w = s => s.split(/(\s+)/).filter(Boolean).map(x => /^\s+$/.test(x) ? ' ' : '<span class="w" style="--i:' + (i++) + '">' + esc(x) + '</span>').join('');
   const tail = g[2].match(/^[.,!?;:]+/), rest = tail ? g[2].slice(tail[0].length) : g[2];
