@@ -41,8 +41,8 @@ const eyeSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 function setStatus(card, text, cls){ const s = $('[data-st]', card); s.textContent = text; s.className = 'status ' + (cls || ''); }
 function szCard(){
   const q = SZ.SZQ, on = q.on !== false, left = Math.max(0, (q.limit || 20000) - (q.used || 0));
-  return '<article class="card" data-id="synthz" style="--c:#e6b65f"><div class="card-top">' + ico(byId('synthz')) + '<h3>IAs conectadas</h3><span class="status ' + (on ? 'ok' : '') + '" data-st>' + (on ? 'Listas' : 'Descansando') + '</span></div><p class="desc">Las IAs conectadas son IAs gratis que ya vienen listas en SymphorIA. No tienes que configurar nada ni dar tarjeta: solo escribes. Sin cuenta pruebas con 5 mensajes al día; con tu cuenta gratis, mucho más. Si una está llena, pasa sola a otra.</p>'
-    + SZ.limBar({ small:false }) + '<div class="actions"><button class="btn sm" data-szgo type="button">Abrir SynthFlow</button></div></article>';
+  return '<article class="card" data-id="synthz" style="--c:#e6b65f"><div class="card-top">' + ico(byId('synthz')) + '<h3>' + SZ.t('ix.conn') + '</h3><span class="status ' + (on ? 'ok' : '') + '" data-st>' + SZ.t(on ? 'ix.stOn' : 'ix.stOff') + '</span></div><p class="desc">' + SZ.t('ix.connDesc') + '</p>'
+    + SZ.limBar({ small:false }) + '<div class="actions"><button class="btn sm" data-szgo type="button">' + SZ.t('ixa.abrirsynthflow') + '</button></div></article>';
 }
 function paintSzCard(){ const c = $('#cards [data-id="synthz"]'); if (!c) return; c.outerHTML = szCard(); const b = $('#cards [data-szgo]'); if (b) b.addEventListener('click', () => { launchAI = 'synthz'; openChat(); }); }
 addEventListener('synthz-szq', () => { paintSzCard(); updateTotals(); renderLaunch(); try{ renderUsage(); }catch(e){} });

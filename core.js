@@ -128,6 +128,8 @@ const onLang = f => langHooks.push(f);
 addEventListener('storage', e => { if (e.key === 'synthz:lang' && e.newValue && e.newValue !== LANG) setLang(e.newValue); });
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => i18nApply()); else setTimeout(() => i18nApply(), 0);
 /* ===== v3.0 · textos de la landing SymphorIA y de EnerX (español / inglés). Formato en 00b-idioma.js ===== */
+/* EnerX: el nombre de la batería vive solo aquí. Cambia ENERX y cambia en toda la página (landing, SynthFlow, Pulsem, SynthonIA), en español y en inglés */
+const ENERX = 'EnerX';
 Object.assign(I18N.es, {
   'landing.nombre.eyebrow': 'Por qué se llama así',
   'landing.nombre.t1': 'SymphorIA:',
@@ -135,25 +137,21 @@ Object.assign(I18N.es, {
   'landing.nombre.lead': 'Un nombre hecho con dos raíces griegas. Juntas dicen lo que hace la página: tomar muchas IAs y muchos datos y llevarlos a una sola respuesta clara.',
   'landing.nombre.sym': 'Junto, con, en sintonía. La misma raíz de <b>sinfonía</b>, <b>sinergia</b> y <b>simbiosis</b>.',
   'landing.nombre.phora': 'Llevar, ser portador. La misma raíz de <b>metáfora</b>, <b>semáforo</b> y <b>anáfora</b>.',
-  'landing.nombre.abacoT': 'Del ábaco a la sintonía',
-  'landing.nombre.abaco': 'El ábaco cuenta a mano, cuenta por cuenta. SymphorIA toma el caos de datos y respuestas y lo lleva a un flujo ordenado y automático.',
-  'landing.nombre.caos': 'Caos',
-  'landing.nombre.sinto': 'Sintonía',
   'landing.lang': 'EN',
   'landing.langAria': 'Cambiar el idioma a inglés',
   'landing.langMenu': 'English',
   'ix.hold': 'Pregúntale lo que sea…',
   'ix.meet': 'Conoce a SynthonIA',
-  'enerx.name': 'EnerX',
-  'enerx.today': 'EnerX de hoy',
-  'enerx.left': 'Te queda {n} % de EnerX',
-  'enerx.empty': 'Sin EnerX por hoy',
-  'enerx.emptyShort': 'Sin EnerX',
-  'enerx.of': 'de EnerX · se carga a medianoche',
-  'enerx.ofEmpty': 'sin EnerX · se carga a medianoche',
-  'enerx.used': ' · usó {u} % de tu EnerX · te queda {n} %',
-  'enerx.small': 'Gratis. Tu EnerX (tu batería) baja un poco con cada mensaje (lo que escribes y lo que te responde). A medianoche se carga al 100 %.',
-  'enerx.hint': 'Tu EnerX de hoy (tu batería): toca para ver el detalle',
+  'enerx.name': '{enerx}',
+  'enerx.today': '{enerx} de hoy',
+  'enerx.left': 'Te queda {n} % de {enerx}',
+  'enerx.empty': 'Sin {enerx} por hoy',
+  'enerx.emptyShort': 'Sin {enerx}',
+  'enerx.of': 'de {enerx} · se carga a medianoche',
+  'enerx.ofEmpty': 'sin {enerx} · se carga a medianoche',
+  'enerx.used': ' · usó {u} % de tu {enerx} · te queda {n} %',
+  'enerx.small': 'Gratis. Tu {enerx} (tu batería) baja un poco con cada mensaje (lo que escribes y lo que te responde). A medianoche se carga al 100 %.',
+  'enerx.hint': 'Tu {enerx} de hoy (tu batería): toca para ver el detalle',
   'enerx.guestLeft': 'Te quedan {n} mensajes de prueba',
   'enerx.guestShort': '{n} de prueba',
   'enerx.rest': 'Las IAs gratis están descansando',
@@ -168,25 +166,21 @@ Object.assign(I18N.en, {
   'landing.nombre.lead': 'A name built from two Greek roots. Together they say what the site does: take many AIs and lots of data and carry them into one clear answer.',
   'landing.nombre.sym': 'Together, with, in tune. The same root as <b>symphony</b>, <b>synergy</b> and <b>symbiosis</b>.',
   'landing.nombre.phora': 'To carry, to bear. The same root as <b>metaphor</b>, <b>semaphore</b> and <b>anaphora</b>.',
-  'landing.nombre.abacoT': 'From the abacus to harmony',
-  'landing.nombre.abaco': 'The abacus counts by hand, one bead at a time. SymphorIA takes the chaos of data and answers and carries it into an orderly, automatic flow.',
-  'landing.nombre.caos': 'Chaos',
-  'landing.nombre.sinto': 'Harmony',
   'landing.lang': 'ES',
   'landing.langAria': 'Switch the language to Spanish',
   'landing.langMenu': 'Español',
   'ix.hold': 'Ask it anything…',
   'ix.meet': 'Meet SynthonIA',
-  'enerx.name': 'EnerX',
-  'enerx.today': "Today's EnerX",
-  'enerx.left': '{n} % EnerX left',
-  'enerx.empty': 'Out of EnerX for today',
-  'enerx.emptyShort': 'No EnerX',
-  'enerx.of': 'EnerX · recharges at midnight',
-  'enerx.ofEmpty': 'no EnerX · recharges at midnight',
-  'enerx.used': ' · used {u} % of your EnerX · {n} % left',
-  'enerx.small': 'Free. Your EnerX (your battery) drops a little with each message (what you write and what you get back). At midnight it recharges to 100 %.',
-  'enerx.hint': "Today's EnerX (your battery): tap for details",
+  'enerx.name': '{enerx}',
+  'enerx.today': "Today's {enerx}",
+  'enerx.left': '{n} % {enerx} left',
+  'enerx.empty': 'Out of {enerx} for today',
+  'enerx.emptyShort': 'No {enerx}',
+  'enerx.of': '{enerx} · recharges at midnight',
+  'enerx.ofEmpty': 'no {enerx} · recharges at midnight',
+  'enerx.used': ' · used {u} % of your {enerx} · {n} % left',
+  'enerx.small': 'Free. Your {enerx} (your battery) drops a little with each message (what you write and what you get back). At midnight it recharges to 100 %.',
+  'enerx.hint': "Today's {enerx} (your battery): tap for details",
   'enerx.guestLeft': '{n} trial messages left',
   'enerx.guestShort': '{n} trial',
   'enerx.rest': 'The free AIs are resting',
@@ -293,13 +287,13 @@ Object.assign(I18N.es, {
  "ix.094": "Pregunta en SynthFlow",
  "ix.095": "SynthFlow es donde conversas con la IA. Elige con quién hablar, escribe tu pregunta y SynthFlow se abre en grande para que sigas ahí.",
  "ix.096": "Si no escribes nada, SynthFlow se abre vacío para que empieces allí.",
- "ix.097": "Siempre sabes cuánta EnerX tienes",
- "ix.098": "EnerX es tu batería del día: baja con cada mensaje y se carga a medianoche. Aquí ves cuánta te queda, lo que llevas chateado y tu día más activo.",
- "ix.099": "de EnerX hoy · se carga a medianoche",
+ "ix.097": "Siempre sabes cuánta {enerx} tienes",
+ "ix.098": "{enerx} es tu batería del día: baja con cada mensaje y se carga a medianoche. Aquí ves cuánta te queda, lo que llevas chateado y tu día más activo.",
+ "ix.099": "de {enerx} hoy · se carga a medianoche",
  "ix.100": "Dónde chateas",
  "ix.101": "¿Cuánto gasta cada cosa?",
- "ix.102": "<b>Pregunta normal</b> · un poquito de EnerX, según lo largo de la respuesta",
- "ix.103": "<b>Comparar IAs</b> · cada IA gasta su parte de EnerX",
+ "ix.102": "<b>Pregunta normal</b> · un poquito de {enerx}, según lo largo de la respuesta",
+ "ix.103": "<b>Comparar IAs</b> · cada IA gasta su parte de {enerx}",
  "ix.104": "<b>SuperiorSynth</b> · su plan y la respuesta",
  "ix.105": "<b>Crear una imagen</b> · 1 imagen de las de hoy",
  "ix.106": "<b>Buscar en internet</b> · 1 búsqueda (30 al día con tu cuenta)",
@@ -443,13 +437,13 @@ Object.assign(I18N.en, {
  "ix.094": "Ask in SynthFlow",
  "ix.095": "SynthFlow is where you talk with the AI. Choose who to talk to, type your question and SynthFlow opens full size so you can keep going there.",
  "ix.096": "If you don't type anything, SynthFlow opens empty so you can start there.",
- "ix.097": "You always know how much EnerX you have",
- "ix.098": "EnerX is your daily battery: it drops with each message and recharges at midnight. Here you see how much is left, how much you've chatted and your busiest day.",
- "ix.099": "EnerX today · recharges at midnight",
+ "ix.097": "You always know how much {enerx} you have",
+ "ix.098": "{enerx} is your daily battery: it drops with each message and recharges at midnight. Here you see how much is left, how much you've chatted and your busiest day.",
+ "ix.099": "{enerx} today · recharges at midnight",
  "ix.100": "Where you chat",
  "ix.101": "How much does each thing use?",
- "ix.102": "<b>Regular question</b> · a little EnerX, depending on the answer's length",
- "ix.103": "<b>Compare AIs</b> · each AI uses its share of EnerX",
+ "ix.102": "<b>Regular question</b> · a little {enerx}, depending on the answer's length",
+ "ix.103": "<b>Compare AIs</b> · each AI uses its share of {enerx}",
  "ix.104": "<b>SuperiorSynth</b> · its plan and the answer",
  "ix.105": "<b>Create an image</b> · 1 of today's images",
  "ix.106": "<b>Search the web</b> · 1 search (30 a day with your account)",
@@ -560,8 +554,8 @@ Object.assign(I18N.es, {
  "tour.logo.p": "El lugar para usar muchas IA gratis, desde un solo sitio. Toca el logo cuando quieras volver arriba.",
  "tour.menu.t": "El menú",
  "tour.menu.p": "Desde aquí vas a tus IA, al chat (SynthFlow) o a ver cuánto has usado, en un toque.",
- "tour.lim.t": "Tu EnerX de hoy",
- "tour.lim.p": "Cada día tienes EnerX, una batería gratis para usar las IAs conectadas. Baja mientras chateas y a medianoche se carga al 100 %.",
+ "tour.lim.t": "Tu {enerx} de hoy",
+ "tour.lim.p": "Cada día tienes {enerx}, una batería gratis para usar las IAs conectadas. Baja mientras chateas y a medianoche se carga al 100 %.",
  "tour.acc.t": "Tu cuenta",
  "tour.acc.p": "Entra a tu cuenta de SymphorIA: tus chats quedan guardados y los ves en cualquier celular o computador, personalizas tu perfil y hablas con el equipo si necesitas ayuda.",
  "tour.cfg.t": "Configuración",
@@ -573,9 +567,9 @@ Object.assign(I18N.es, {
  "tour.chat.t": "Pregunta desde aquí",
  "tour.chat.p": "Escribe tu pregunta aquí y te llevo al chat (SynthFlow) con tu pregunta lista.",
  "tour.uso.t": "Tu uso",
- "tour.uso.p": "Cómo va tu EnerX de hoy y cuánto chateaste estos días.",
+ "tour.uso.p": "Cómo va tu {enerx} de hoy y cuánto chateaste estos días.",
  "tour.fin.t": "¡Todo listo!",
- "tour.fin.p": "Ya sabes qué es SymphorIA y por dónde empezar: escribe tu pregunta o abre SynthFlow. Inicia sesión para tener más EnerX.",
+ "tour.fin.p": "Ya sabes qué es SymphorIA y por dónde empezar: escribe tu pregunta o abre SynthFlow. Inicia sesión para tener más {enerx}.",
  "tour.aria": "Recorrido por SymphorIA",
  "tour.skip": "Saltar",
  "tour.back": "Atrás",
@@ -591,7 +585,7 @@ Object.assign(I18N.en, {
  "rb.comparar": "Which one has more Flow? You decide.",
  "rb.conectar": "Your AI is ready, no setup needed.",
  "rb.chat": "Type here and I'll take you to SynthFlow.",
- "rb.consumo": "Here you see how much EnerX you have left today.",
+ "rb.consumo": "Here you see how much {enerx} you have left today.",
  "rb.faq": "Questions? Tap me and ask.",
  "rb.aria": "SynthonIA: tap her to talk",
  "ix.blindPick": "You picked example AI {n}! In SynthFlow you do it with real AIs.",
@@ -646,8 +640,8 @@ Object.assign(I18N.en, {
  "tour.logo.p": "The place to use many AIs for free, from one site. Tap the logo whenever you want to go back to the top.",
  "tour.menu.t": "The menu",
  "tour.menu.p": "From here you go to your AIs, to the chat (SynthFlow) or to see how much you've used, in one tap.",
- "tour.lim.t": "Today's EnerX",
- "tour.lim.p": "Every day you get EnerX, a free battery to use the connected AIs. It drops as you chat and recharges to 100 % at midnight.",
+ "tour.lim.t": "Today's {enerx}",
+ "tour.lim.p": "Every day you get {enerx}, a free battery to use the connected AIs. It drops as you chat and recharges to 100 % at midnight.",
  "tour.acc.t": "Your account",
  "tour.acc.p": "Sign in to your SymphorIA account: your chats are saved and you see them on any phone or computer, you personalize your profile and you can talk to the team if you need help.",
  "tour.cfg.t": "Settings",
@@ -659,9 +653,9 @@ Object.assign(I18N.en, {
  "tour.chat.t": "Ask from here",
  "tour.chat.p": "Type your question here and I'll take you to the chat (SynthFlow) with your question ready.",
  "tour.uso.t": "Your usage",
- "tour.uso.p": "How your EnerX is doing today and how much you've chatted these days.",
+ "tour.uso.p": "How your {enerx} is doing today and how much you've chatted these days.",
  "tour.fin.t": "All set!",
- "tour.fin.p": "Now you know what SymphorIA is and where to start: type your question or open SynthFlow. Sign in so you get more EnerX.",
+ "tour.fin.p": "Now you know what SymphorIA is and where to start: type your question or open SynthFlow. Sign in so you get more {enerx}.",
  "tour.aria": "SymphorIA tour",
  "tour.skip": "Skip",
  "tour.back": "Back",
@@ -670,6 +664,170 @@ Object.assign(I18N.en, {
  "tour.signin": "Sign in",
  "tour.enjoy": "Enjoy SymphorIA!"
 });
+/* v3.0: textos y atributos que quedaban en español en la landing */
+Object.assign(I18N.es,{
+ "ix.fromFlow":"De SynthFlow",
+ "ix.fromSup":"De SuperiorSynth",
+ "ix.fromAlias":"De A.L.I.A.S.",
+ "ix.sdb":"¿Te muestro dónde están tus chats?",
+ "ix.ft0":"Internet con fuentes",
+ "ix.ft1":"Archivos con vista previa",
+ "ix.ft2":"Presentaciones en PowerPoint",
+ "ix.ft3":"Imágenes a partir de tus palabras",
+ "ix.ft4":"Escucha las respuestas en voz alta",
+ "ix.ft5":"Memoria con tu permiso",
+ "ix.ft6":"Copia de tus chats en tu Google Drive",
+ "ix.ft7":"Funciona en el celular",
+ "ix.blSay":"Después te digo quién respondió",
+ "ix.wipe":"Borrar mis datos de este equipo",
+ "ix.app1":"Sí, gratis y sin tiendas. Toca",
+ "ix.app2":": en Android y computador se instala con un toque; en iPhone te mostramos los 3 pasos (Compartir › Agregar a inicio).",
+ "ixa.symphoriainicio":"SymphorIA, inicio",
+ "ixa.tulmitedehoy":"Tu límite de hoy",
+ "ixa.ayudaguarpida":"Ayuda: guía rápida",
+ "ixa.guarpida":"Guía rápida",
+ "ixa.configuracin":"Configuración",
+ "ixa.tucuenta":"Tu cuenta",
+ "ixa.abrirelmen":"Abrir el menú",
+ "ixa.pregntalealaia":"Pregúntale a la IA",
+ "ixa.preguntarensynthfl":"Preguntar en SynthFlow",
+ "ixa.cmofunciona":"Cómo funciona",
+ "ixa.modos":"Modos",
+ "ixa.paraqusirvesymphor":"Para qué sirve SymphorIA",
+ "ixa.compralasaciegas":"Compáralas a ciegas",
+ "ixa.conquinhablar":"Con quién hablar",
+ "ixa.escribetuprimermen":"Escribe tu primer mensaje (opcional) y pulsa Enter…",
+ "ixa.abrirsynthflow":"Abrir SynthFlow",
+ "ixa.preguntasfrecuente":"Preguntas frecuentes",
+ "ixa.producto":"Producto",
+ "ixa.ayuda":"Ayuda"
+});
+
+Object.assign(I18N.en,{
+ "ix.fromFlow":"From SynthFlow",
+ "ix.fromSup":"From SuperiorSynth",
+ "ix.fromAlias":"From A.L.I.A.S.",
+ "ix.sdb":"Want me to show you where your chats are?",
+ "ix.ft0":"The web, with sources",
+ "ix.ft1":"Files with preview",
+ "ix.ft2":"PowerPoint presentations",
+ "ix.ft3":"Images from your words",
+ "ix.ft4":"Listen to answers out loud",
+ "ix.ft5":"Memory, with your permission",
+ "ix.ft6":"A copy of your chats in your Google Drive",
+ "ix.ft7":"Works on your phone",
+ "ix.blSay":"I'll tell you who answered afterwards",
+ "ix.wipe":"Delete my data from this device",
+ "ix.app1":"Yes, free and with no app stores. Tap",
+ "ix.app2":": on Android and computers it installs with one tap; on iPhone we show you the 3 steps (Share › Add to Home Screen).",
+ "ixa.symphoriainicio":"SymphorIA, home",
+ "ixa.tulmitedehoy":"Today's {enerx}",
+ "ixa.ayudaguarpida":"Help: quick guide",
+ "ixa.guarpida":"Quick guide",
+ "ixa.configuracin":"Settings",
+ "ixa.tucuenta":"Your account",
+ "ixa.abrirelmen":"Open the menu",
+ "ixa.pregntalealaia":"Ask the AI",
+ "ixa.preguntarensynthfl":"Ask in SynthFlow",
+ "ixa.cmofunciona":"How it works",
+ "ixa.modos":"Modes",
+ "ixa.paraqusirvesymphor":"What SymphorIA is for",
+ "ixa.compralasaciegas":"Compare them blind",
+ "ixa.conquinhablar":"Who to talk to",
+ "ixa.escribetuprimermen":"Type your first message (optional) and press Enter…",
+ "ixa.abrirsynthflow":"Open SynthFlow",
+ "ixa.preguntasfrecuente":"Frequently asked questions",
+ "ixa.producto":"Product",
+ "ixa.ayuda":"Help"
+});
+/* v3.0: consumo, tarjetas, Ajustes, BETA, saldo y guardado */
+Object.assign(I18N.es,{
+ "ix.stOn":"Listas",
+ "ix.stOff":"Descansando",
+ "ix.connDesc":"Las IAs conectadas son IAs gratis que ya vienen listas en SymphorIA. No tienes que configurar nada ni dar tarjeta: solo escribes. Sin cuenta pruebas con 5 mensajes al día; con tu cuenta gratis, mucho más. Si una está llena, pasa sola a otra.",
+ "ix.today":"hoy",
+ "ix.in14":"en 14 días",
+ "ix.topDay":"tu día más activo",
+ "ix.noTop":"Aún sin día más activo",
+ "ix.msg1":"mensaje",
+ "ix.msgN":"mensajes",
+ "ix.totalNote":"Mensajes en total desde que usas SymphorIA.",
+ "ix.chEmpty":"Aún no has chateado. Cuando escribas tu primer mensaje, aquí verás cuántos mandas cada día.",
+ "ix.wipeQ":"¿Borrar todo de este navegador?",
+ "ix.wipeP":"Se borran tus chats y ajustes de este equipo. Lo que está guardado en tu cuenta de SymphorIA no se toca.",
+ "ix.wipeOk":"Borrar todo",
+ "ix.wiped":"Todo borrado.",
+ "ix.instFlow":"Instalar la app SynthFlow",
+ "ix.lk1":"Elegir mis IA ideales",
+ "ix.lk1d":"3 preguntas y te digo cuáles te sirven más",
+ "ix.lk2":"Conectar Puter u otra IA",
+ "ix.lk2d":"Tu versión pro de las IAs más usadas, gratis",
+ "ix.lk3d":"El chat con todas las IAs",
+ "ix.lk4":"Descargar la app SynthFlow",
+ "ix.lk4d":"Se instala desde aquí: pantalla completa y a un toque",
+ "ix.title":"SymphorIA · tu IA gratuita en una mesa",
+ "ix.metaDesc":"SymphorIA: tu espacio para explorar la IA. Pregunta, crea, programa y compara modelos desde un solo lugar. Totalmente gratis.",
+ "beta.title":"Estamos en beta: cuéntanos qué mejorar",
+ "beta.tip":"Cuéntanos qué mejorar",
+ "bal.puLeft":"Te queda {p} de tu crédito gratis de este mes",
+ "bal.puErr":"Puter no respondió con tu saldo. Intenta más tarde.",
+ "bal.puWait":"Puter todavía no nos dice cuánto saldo te queda.",
+ "bal.puOpt":"Puter es opcional. Conecta tu versión pro de las IAs más usadas.",
+ "bal.puSub":"Saldo de Puter · se llena otra vez cada mes",
+ "sync.opening":"Abriendo tu cuenta…",
+ "sync.local":"Tus chats se guardan en este equipo. Entra a tu cuenta para verlos también en tu celular o en otro computador.",
+ "sync.err":"No pude guardar en tu cuenta ({e}). Todo sigue aquí y se sube solo cuando vuelva la conexión.",
+ "sync.saved":"Guardado en tu cuenta",
+ "sync.ago":"guardado hace {s} s"
+});
+
+Object.assign(I18N.en,{
+ "ix.stOn":"Ready",
+ "ix.stOff":"Resting",
+ "ix.connDesc":"Connected AIs are free AIs that come ready in SymphorIA. Nothing to set up and no card needed: just type. Without an account you get 5 messages a day to try it; with your free account, much more. If one is full, it switches to another on its own.",
+ "ix.today":"today",
+ "ix.in14":"in 14 days",
+ "ix.topDay":"your most active day",
+ "ix.noTop":"No most active day yet",
+ "ix.msg1":"message",
+ "ix.msgN":"messages",
+ "ix.totalNote":"Total messages since you started using SymphorIA.",
+ "ix.chEmpty":"You haven't chatted yet. Once you send your first message, you'll see how many you send each day here.",
+ "ix.wipeQ":"Delete everything from this browser?",
+ "ix.wipeP":"Your chats and settings on this device are deleted. What's saved in your SymphorIA account stays untouched.",
+ "ix.wipeOk":"Delete everything",
+ "ix.wiped":"Everything deleted.",
+ "ix.instFlow":"Install the SynthFlow app",
+ "ix.lk1":"Pick my ideal AIs",
+ "ix.lk1d":"3 questions and I'll tell you which ones suit you best",
+ "ix.lk2":"Connect Puter or another AI",
+ "ix.lk2d":"The pro version of the most popular AIs, free",
+ "ix.lk3d":"The chat with every AI",
+ "ix.lk4":"Download the SynthFlow app",
+ "ix.lk4d":"Installs from here: full screen, one tap away",
+ "ix.title":"SymphorIA · your free AI, all at one table",
+ "ix.metaDesc":"SymphorIA: your space to explore AI. Ask, create, code and compare models from one place. Completely free.",
+ "beta.title":"We're in beta: tell us what to improve",
+ "beta.tip":"Tell us what to improve",
+ "bal.puLeft":"You have {p} of this month's free credit left",
+ "bal.puErr":"Puter didn't send your balance. Try again later.",
+ "bal.puWait":"Puter hasn't told us your balance yet.",
+ "bal.puOpt":"Puter is optional. Connect the pro version of the most popular AIs.",
+ "bal.puSub":"Puter balance · refills every month",
+ "sync.opening":"Opening your account…",
+ "sync.local":"Your chats are saved on this device. Sign in to see them on your phone or another computer too.",
+ "sync.err":"I couldn't save to your account ({e}). Everything is still here and uploads on its own when the connection is back.",
+ "sync.saved":"Saved to your account",
+ "sync.ago":"saved {s} s ago"
+});
+/* pone el nombre de la batería en todos los textos que dicen {enerx} */
+for (const L of Object.keys(I18N)) for (const k in I18N[L]) if (typeof I18N[L][k] === 'string') I18N[L][k] = I18N[L][k].replace(/\{enerx\}/g, ENERX);
+Object.assign(I18N.es, { 'pm.spent':'palabras de '+ENERX+' gastadas hoy · IAs conectadas', 'pm.capP':'Cuánto puede usar cada persona al día con las IAs conectadas (Puter no cuenta). Se guarda en tokens: {tok} tokens ≈ {w} palabras de '+ENERX+' (una palabra ≈ 4/3 de token). Entre 1.000 y 500.000.' });
+Object.assign(I18N.en, { 'pm.spent':ENERX+' words spent today · connected AIs', 'pm.capP':'How much each person can use per day with the connected AIs (Puter does not count). Stored in tokens: {tok} tokens ≈ {w} '+ENERX+' words (one word ≈ 4/3 of a token). Between 1,000 and 500,000.' });
+Object.assign(I18N.es, { 'pm.test':'Probar', 'pm.del':'Quitar', 'pm.deling':'Quitando…', 'pm.delQ':'¿Quitar la llave de {n}?', 'pm.delP':'Se borra del servidor y deja de usarse para las IAs conectadas. Las llaves de los demás siguen funcionando.', 'pm.delPo':'Es la llave de otra persona del equipo. Se borra del servidor y deja de usarse para las IAs conectadas.', 'pm.deled':'Llave de {n} quitada.' });
+Object.assign(I18N.en, { 'pm.test':'Test', 'pm.del':'Remove', 'pm.deling':'Removing…', 'pm.delQ':'Remove the {n} key?', 'pm.delP':'It is deleted from the server and stops being used for the connected AIs. Everyone else\'s keys keep working.', 'pm.delPo':'This key belongs to someone else on the team. It is deleted from the server and stops being used for the connected AIs.', 'pm.deled':'{n} key removed.' });
+Object.assign(I18N.es, { 'enerx.guest':'Sin cuenta tienes {n} mensajes de prueba al día. Con tu cuenta gratis tienes mucho más.', 'enerx.puter':'Si se acaba, puedes seguir con Puter, que te da la versión pro de las IAs más usadas.' });
+Object.assign(I18N.en, { 'enerx.guest':'Without an account you get {n} trial messages a day. With your free account you get much more.', 'enerx.puter':'If it runs out, you can keep going with Puter, which gives you the pro version of the most popular AIs.' });
 /* ===== v3.0 · SynthFlow y las ventanas de core en inglés =====
    SynthFlow arma sus textos en JS (miles de trozos). En vez de cambiar cada uno por t(), cuando el idioma es inglés
    se trae idioma-en.json (español → inglés, solo si hace falta) y se traduce lo que aparece en pantalla:
@@ -678,7 +836,7 @@ Object.assign(I18N.en, {
    · nunca toca lo que escriben las personas ni las IA (mensajes, títulos de chats, código), ni lo que ya usa data-i18n.
    Al volver a español, cada texto vuelve a como estaba. Para un texto nuevo: agrégalo a idioma-en.json. */
 const TR_ATTRS = ['placeholder', 'title', 'aria-label', 'data-tip', 'alt'];
-const TR_SKIP = 'script,style,pre,code,textarea,iframe,svg,[contenteditable],.notr,[data-i18n],[data-i18n-html],.m .body,.m .bub,.cmp-card .body,.fvi p,.thi .tt,.snip,.greet';
+const TR_SKIP = 'script,style,pre,code,textarea,iframe,svg,[contenteditable],.notr,[data-i18n],[data-i18n-html],.m .body,.m .bub,.cmp-card .body,.fvi p,.thi .tt,.snip,.greet,#szBotP .bl .bm';
 const TR = { map:null, rx:null, done:new Map(), mo:null, load:null };
 function trLoad(){
   if (!TR.load) TR.load = fetch('/idioma-en.json', { cache:'force-cache' }).then(r => r.json()).then(m => {
@@ -692,8 +850,15 @@ function trStr(s){
   const m = TR.map; if (!m || !s || !/\p{L}{2}/u.test(s)) return s;
   const k = s.replace(/\s+/g, ' ').trim(); if (!k) return s;
   if (m[k] != null) return s.match(/^\s*/)[0] + m[k] + s.match(/\s*$/)[0];
-  return TR.rx ? s.replace(TR.rx, x => m[x] ?? x) : s;
+  let r = TR.rx ? s.replace(TR.rx, x => m[x] ?? x) : s;
+  TR_RULES.forEach(([rx, to]) => { r = r.replace(rx, to); });
+  return r;
 }
+/* números con su palabra («7 líneas», «hace 5 min»…), que el diccionario no puede tener uno por uno */
+const TR_RULES = [[/\b1 línea\b/g, '1 line'], [/(\d[\d.,]*) líneas\b/g, '$1 lines'], [/(\d[\d.,]*) palabras\b/g, '$1 words'], [/\b1 palabra\b/g, '1 word'],
+  [/\bhace (\d+) (min|h|d)\b/g, '$1 $2 ago'], [/\bhace (\d+) días\b/g, '$1 days ago'], [/(\d[\d.,]*) mensajes\b/g, '$1 messages'], [/\b1 mensaje\b/g, '1 message'],
+  [/(\d[\d.,]*) archivos\b/g, '$1 files'], [/(\d[\d.,]*) chats\b/g, '$1 chats'], [/(\d[\d.,]*) respuestas\b/g, '$1 answers'], [/(\d[\d.,]*) votos\b/g, '$1 votes'], [/(\d[\d.,]*) diapositivas\b/g, '$1 slides'],
+  [/\bescribiendo\b/g, 'typing'], [/\bahora\b(?=$|[ ·])/g, 'now']];
 const trSkip = el => !el || !!el.closest(TR_SKIP);
 /* TR.done guarda por nodo [original, lo que pusimos]; si la página cambia el texto después, el nuevo pasa a ser el original */
 function trSet(n, key, cur, put){
@@ -1429,10 +1594,14 @@ function countTo(el, val){
   })(t0);
 }
 
+/* la etiqueta para lectores de pantalla sigue al idioma (si el texto tiene clave, se lee la traducción) */
+function ariaSync(el){ const k = el.dataset.i18n || el.dataset.i18nHtml, v = k && t(k); el.setAttribute('aria-label', (v && v !== k ? v : el.textContent).replace(/<[^>]+>/g, '').trim().replace(/\s+/g, ' ')); }
+onLang(() => document.querySelectorAll('[data-aa]').forEach(ariaSync));
+
 /* ===== escritura suave: cada letra aparece con un resplandor y un cursor la acompaña ===== */
 function charify(el){
   if (el._chars) return el._chars;
-  if (!el.getAttribute('aria-label') && el.textContent.trim()) el.setAttribute('aria-label', el.textContent.trim().replace(/\s+/g, ' '));
+  if (!el.getAttribute('aria-label') && el.textContent.trim()){ el.dataset.aa = '1'; ariaSync(el); }
   const chars = [];
   const walk = node => {
     [...node.childNodes].forEach(n => {
@@ -1697,7 +1866,7 @@ function limRing(size){
 }
 function limBar(o = {}){
   const k = 1 - limPct();
-  return '<div class="lbar ' + limLvl() + '"><div class="lb-h"><b>' + (o.title || t('enerx.today')) + '</b><span>' + limTxt() + '</span></div><div class="lb-t"><i style="transform:scaleX(' + k.toFixed(3) + ')"></i></div>' + (o.small === false ? '' : '<small>' + (isGuestQ() ? 'Sin cuenta tienes ' + (SZQ.guest.max || 5) + ' mensajes de prueba al día. Con tu cuenta gratis tienes mucho más. ' : '') + t('enerx.small') + (o.puter ? ' Si se acaba, puedes seguir con Puter, que te da la versión pro de las IAs más usadas.' : '') + '</small>') + '</div>';
+  return '<div class="lbar ' + limLvl() + '"><div class="lb-h"><b>' + (o.title || t('enerx.today')) + '</b><span>' + limTxt() + '</span></div><div class="lb-t"><i style="transform:scaleX(' + k.toFixed(3) + ')"></i></div>' + (o.small === false ? '' : '<small>' + (isGuestQ() ? t('enerx.guest', { n:SZQ.guest.max || 5 }) + ' ' : '') + t('enerx.small') + (o.puter ? ' ' + t('enerx.puter') : '') + '</small>') + '</div>';
 }
 async function szCatalog(){
   let r; try{ r = await fetch('/api/ai', { headers:szHeaders() }); }catch(e){ throw Object.assign(new Error('net'), { net:true }); }
@@ -3099,7 +3268,7 @@ function balanceHtml(b, extra){
   const row = (ico, name, main, sub) => '<div class="bl-row">' + ico + '<div><b>' + name + '</b><span>' + main + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</div></div>';
   let h = '';
   const pu = b.puter;
-  h += row(puterLogo(), 'Puter', pu && pu.pct != null ? 'Te queda <em>' + Math.round(pu.pct * 100) + '%</em> de tu crédito gratis de este mes' : pu && pu.err ? 'Puter no respondió con tu saldo. Intenta más tarde.' : window.puter && puter.auth && puter.auth.isSignedIn && puter.auth.isSignedIn() ? 'Puter todavía no nos dice cuánto saldo te queda.' : 'Puter es opcional. Conecta tu versión pro de las IAs más usadas.', 'Saldo de Puter · se llena otra vez cada mes');
+  h += row(puterLogo(), 'Puter', pu && pu.pct != null ? t('bal.puLeft', { p:'<em>' + Math.round(pu.pct * 100) + '%</em>' }) : pu && pu.err ? t('bal.puErr') : window.puter && puter.auth && puter.auth.isSignedIn && puter.auth.isSignedIn() ? t('bal.puWait') : t('bal.puOpt'), t('bal.puSub'));
   const or = b.openrouter, fr = todayReq('openrouter', true);
   const orMain = or && !or.err
     ? 'Modelos gratis: <em>' + fmt(fr) + '</em> de ' + (or.freeTier ? '50' : '50 (o 1.000 si compraste 10 créditos o más)') + ' mensajes hoy'
@@ -3112,10 +3281,10 @@ function balanceHtml(b, extra){
 /* desglose: confirmado (lo reportó el proveedor) vs estimado (≈, SymphorIA lo calculó por el largo del texto) */
 function splitHtml(){ return limBar({ puter:true }); }
 function syncNote(){
-  if (!ACC.ready) return signedish() ? '<p class="cnote">Abriendo tu cuenta…</p>' : '<p class="cnote">Tus chats se guardan en este equipo. Entra a tu cuenta para verlos también en tu celular o en otro computador.</p>';
+  if (!ACC.ready) return signedish() ? '<p class="cnote">' + t('sync.opening') + '</p>' : '<p class="cnote">' + t('sync.local') + '</p>';
   if (ACC.full) return '<p class="sxerr">⚠ ' + esc(ACC.err) + '</p>';
-  if (ACC.err) return '<p class="sxerr">⚠ No pude guardar en tu cuenta (' + esc(ACC.err) + '). Todo sigue aquí y se sube solo cuando vuelva la conexión.</p>';
-  return '<p class="cnote">Guardado en tu cuenta' + (ACC.t ? ' · guardado hace ' + Math.max(1, Math.round((Date.now() - ACC.t) / 1000)) + ' s' : '') + '.</p>';
+  if (ACC.err) return '<p class="sxerr">⚠ ' + t('sync.err', { e:esc(ACC.err) }) + '</p>';
+  return '<p class="cnote">' + t('sync.saved') + (ACC.t ? ' · ' + t('sync.ago', { s:Math.max(1, Math.round((Date.now() - ACC.t) / 1000)) }) : '') + '.</p>';
 }
 
 /* secciones que se abren y cierran suave (alto + desenfoque), SynthZ Style */
@@ -3955,14 +4124,17 @@ const BOT_FAQ = [
   { k:'gracias genial perfecto listo vale chevere bacano', a:'¡Con gusto! Aquí estoy cuando me necesites. ✨', mood:'encantada' },
   { k:'adios chao nos vemos hasta luego', a:'¡Chao! Que tengas un día con mucho Flow. 👋', wave:true }
 ];
-const BOT_QUICK = [['ias conectadas que', '¿Qué son las IAs conectadas?'], ['puter que es', '¿Qué es Puter?'], ['puter conectar', '¿Cómo conecto Puter?'], ['cambiar elegir', '¿Cómo cambio de IA?'], ['limite cuanto', '¿Qué son las SynXCoin\'s?'], ['chiste', 'Cuéntame un chiste']].map(([k, t]) => [BOT_FAQ.findIndex(f => f.k.startsWith(k)), t]);
+const BOT_QUICK = [['ias conectadas que', '¿Qué son las IAs conectadas?'], ['puter que es', '¿Qué es Puter?'], ['puter conectar', '¿Cómo conecto Puter?'], ['cambiar elegir', '¿Cómo cambio de IA?'], ['limite cuanto', '¿Qué es la ' + ENERX + '?'], ['chiste', 'Cuéntame un chiste']].map(([k, t]) => [BOT_FAQ.findIndex(f => f.k.startsWith(k)), t]);
 const fold = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9ñ\s]/g, ' ');
 function botMatch(q){
-  const STOP = /^(que|como|donde|cual|para|por|con|una|uno|los|las|del|mis|tus|sus|esta|este|esto|eso|hay|hago|hacer|puedo|quiero|tengo|necesito|sobre|algo|the|and|how|can|what|where|synthflow|synthz|pagina|favor|porfa|ayuda|ayudame)$/;
+  const STOP = /^(que|como|donde|cual|son|estan|esta|esto|es|para|por|con|una|uno|los|las|del|mis|tus|sus|esta|este|esto|eso|hay|hago|hacer|puedo|quiero|tengo|necesito|sobre|algo|the|and|how|can|what|where|does|you|are|there|this|that|with|for|from|have|want|need|page|please|help|synthflow|synthz|pagina|favor|porfa|ayuda|ayudame)$/;
   const w = fold(q).split(/\s+/).filter(x => (x.length > 2 || /^(ia|ai)$/.test(x)) && !STOP.test(x)); if (!w.length) return /ayuda|help/i.test(q) ? BOT_FAQ.find(f => f.k.startsWith('guia')) : null;
-  let best = null, bs = 0;
-  BOT_FAQ.forEach(f => { if (f.need && !w.includes(f.need)) return; const K = fold(f.k).split(/\s+/); let sc = 0; w.forEach(x => { if (K.includes(x)) sc += 1; else if (K.some(k => k.length > 4 && (k.startsWith(x) || x.startsWith(k)))) sc += .6; }); if (sc > bs){ bs = sc; best = f; } });
-  return bs >= Math.max(.6, w.length * .45) ? best : null;
+  /* v3.0 · cada palabra pesa según qué tan rara es (una palabra que solo está en «Proyectos» decide más que «están») */
+  const hit = (K, x) => K.includes(x) ? 1 : K.some(k => k.length > 4 && (k.startsWith(x) || x.startsWith(k))) ? .6 : 0;
+  const KS = BOT_FAQ.map(f => fold(f.k).split(/\s+/)), df = w.map(x => KS.filter(K => hit(K, x)).length || 1);
+  let best = null, bs = 0, br = 0;
+  BOT_FAQ.forEach((f, i) => { if (f.need && !w.includes(f.need)) return; let sc = 0, rk = 0; w.forEach((x, j) => { const h = hit(KS[i], x); sc += h; rk += h / df[j]; }); if (rk > br){ br = rk; bs = sc; best = f; } });
+  return bs >= Math.max(.6, w.length * .32) ? best : null;
 }
 const BOT = { el:null, panel:null, open:false, hist:[], help:null, poll:0, seen:0, team:null, inbox:[], cur:null, mode:'chat', teamSeen:{} };
 /* v2.6: en la portada no hay bolita; la ventanita y las frases salen de donde esté parada SynthonIA */
@@ -4131,6 +4303,7 @@ function botRender(){
 const SZ_RANK = () => { const r = ACC.user && ACC.user.role; return { owner:'Prime', admin:'ZFlow', staff:'Symmetrix' }[r] || ''; };
 const agoS = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'ahora' : m < 60 ? 'hace ' + m + ' min' : m < 1440 ? 'hace ' + Math.round(m / 60) + ' h' : 'hace ' + Math.round(m / 1440) + ' d'; };
 function botSay(text, mood, btn){
+  if (LANG === 'en') text = trStr(text);   /* v3.0 · en inglés, lo suyo sale traducido (lo de las personas nunca se toca) */
   const D = demoji(text); mood = mood || D.mood || 'feliz';
   BOT.hist.push({ role:'assistant', content:D.text, mood, btn }); BOT.hist = BOT.hist.slice(-30); botFace(mood); SND.blip(mood); botRender();
   /* en la ventanita, su último mensaje se escribe mientras mueve la boca */
@@ -4142,9 +4315,10 @@ function botSay(text, mood, btn){
 async function botAnswer(f){
   if (f.joke || f.fact){ const t = await botThink(() => f.joke ? BOTAPI.joke() : BOTAPI.fact()); return botSay((f.fact ? '¿Sabías que…? ' : '') + t, f.joke ? 'riendo' : 'sorprendida'); }
   await botThink();
-  botSay(f.a, f.mood || (f.go ? 'senalando' : 'feliz'), f.act ? [f.act, f.lbl] : null);
+  botSay(LANG === 'en' && f.en ? f.en : f.a, f.mood || (f.go ? 'senalando' : 'feliz'), f.act ? [f.act, f.lbl] : null);
   if (f.wave && HAND && BOT.el){ const r0 = BOT.el.getBoundingClientRect(); HAND.show({ x:r0.left + r0.width / 2, y:r0.top - 10 }); await HAND.moveTo({ x:clamp(r0.left - 40, 40, innerWidth - 40), y:clamp(r0.top - 50, 40, innerHeight - 40) }, { shape:'palm' }); await HAND.wave(2); HAND.hide(); return; }
   if (f.tour === 'coins' && HAND && $('#railTog') && $('#railCoin') && !matchMedia('(max-width:760px)').matches) return coinsTour();
+  if (f.pre && f.go){ await sleepRaw(400); try{ f.pre(); }catch(e){} await sleepRaw(650); }   /* v3.0 · abre Ajustes (u otra cosa) para señalar lo de adentro */
   const t = f.go && vis(f.go);
   if (t && HAND){
     await sleepRaw(500);
@@ -4185,11 +4359,14 @@ async function botAsk(q){
   /* SynthonIA no hace tareas, código ni trabajos: eso es para las IAs del chat */
   if (TASKY.test(fold(q)) || q.length > 220){ BOT.pendingQ = q; await botThink(); return botSay('Eso es trabajo para las IAs de SynthFlow 💪 Yo te ayudo con la página, y con chistes o datos curiosos. ¿Te lo dejo listo en la caja del chat?', 'guino', ['tochat', 'Sí, llévalo al chat']); }
   try{
-    const res = await botThink(async () => { const r = await fetch('/api/help', { method:'POST', headers:Object.assign({ 'content-type':'application/json' }, SESS ? { authorization:'Bearer ' + SESS } : {}), body:JSON.stringify({ action:'ask', q, hist:BOT.hist.slice(-7, -1).filter(m => m.role === 'user' || m.role === 'assistant').map(m => ({ role:m.role, content:m.content })) }) });
+    const res = await botThink(async () => { const r = await fetch('/api/help', { method:'POST', headers:Object.assign({ 'content-type':'application/json' }, SESS ? { authorization:'Bearer ' + SESS } : {}), body:JSON.stringify({ action:'ask', q, lang:LANG, hist:BOT.hist.slice(-7, -1).filter(m => m.role === 'user' || m.role === 'assistant').map(m => ({ role:m.role, content:m.content })) }) });
     const d = await r.json().catch(() => ({})); return { r, d }; });
     const { r, d } = res;
     if (!r.ok) return botSay(d.error || 'No pude pensar una respuesta ahora. Mira la Guía o habla con el equipo.', 'disculpa', ['team', 'Hablar con el equipo']);
-    botSay(d.text + (d.left <= 3 ? '\n\n(Te quedan ' + d.left + ' preguntas nuevas hoy.)' : ''), 'feliz');
+    /* v3.0 · si la IA dice [ver:lugar], la manita lo señala */
+    const pm = String(d.text || '').match(/\[ver:(\w+)\]/), place = pm && BOT_PLACES[pm[1]];
+    botSay(String(d.text || '').replace(/\s*\[ver:\w+\]/g, '').trim() + (d.left <= 3 ? '\n\n' + (LANG === 'en' ? '(You have ' + d.left + ' new questions left today.)' : '(Te quedan ' + d.left + ' preguntas nuevas hoy.)') : ''), place ? 'senalando' : 'feliz');
+    if (place) botAnswer({ a:'', go:place, point:true });
   }catch(e){ botSay('No pude conectarme. Revisa tu internet e intenta otra vez.', 'disculpa'); }
 }
 function botAct(a){
@@ -4201,6 +4378,132 @@ function botAct(a){
   else if (a === 'team') botTeam();
   else if (a === 'login'){ botClose(); const b = $('#accBtn') || $('[data-tab="me"]'); if (b) b.click(); }
 }
+/* ===== v3.0 · SynthonIA se sabe toda la página (en español y en inglés) y te señala cada cosa =====
+   Cada entrada: k = palabras que la activan (es + en, sin tildes), a = respuesta, en = respuesta en inglés,
+   go = dónde señala (el primero que se vea), pre = qué abre antes de señalar (por ejemplo Ajustes).
+   Cuando agregues algo a la página, agrégalo aquí también: así SynthonIA nunca queda desactualizada. */
+const openCfg = tab => () => { if (!$('.szm.cfg, #cfgPane, .cfgtabs')) cfgModal(tab); };
+const inFlow = () => isFlow();
+BOT_FAQ.push(
+  { k:'proyecto proyectos carpeta tesis negocio instrucciones conocimiento project projects folder knowledge',
+    a:'En «Proyectos» juntas chats, instrucciones y archivos de un mismo tema (tu tesis, tu negocio…). Le das las instrucciones y los archivos una vez y la IA los tiene en cuenta en cada chat del proyecto. Está en la barrita, debajo de «Nuevo chat».',
+    en:'In «Projects» you bring together chats, instructions and files on one topic (your thesis, your business…). You give it the instructions and files once and the AI keeps them in mind in every chat of the project. It\'s in the bar, under «New chat».', go:['#railProj', '#cProj'] },
+  { k:'sintetico sinteticos artefacto artefactos pagina juego dibujo vista previa lado synthetic synthetics artifact artifacts preview',
+    a:'Los Sintéticos son lo que la IA crea para ti: páginas, juegos, dibujos o documentos. Cuando la respuesta termina, se abren solos al lado del chat (como en Claude) y corren aparte, seguros. Todos quedan juntos en «Sintéticos», en la barrita.',
+    en:'Synthetics are what the AI creates for you: pages, games, drawings or documents. When the answer finishes, they open by themselves next to the chat (like in Claude) and run separately, safely. They\'re all together in «Synthetics», in the bar.', go:['#railSyn', '#cSyn'] },
+  { k:'idioma ingles espanol english spanish language languages change traducir traduccion idioma',
+    a:'Puedes poner toda la página en inglés o en español: Ajustes › Página › «Idioma · Language», o en el menú «⋯» de arriba. Cambia al instante.',
+    en:'You can switch the whole page to English or Spanish: Settings › Page › «Language · Idioma», or in the «⋯» menu at the top. It changes instantly.', pre:openCfg(), go:['#cfgLang', '#cfgBtn', '[data-tab="cfg"]'] },
+  { k:'tamano tamaño compacto normal grande pequeno pequena pequeña achicar reducir agrandar zoom letra size compact bigger smaller',
+    a:'En Ajustes › Página › «Tamaño de SynthFlow» eliges Compacto (todo un poco más pequeño, ves más chat) o Normal (el tamaño grande).',
+    en:'In Settings › Page › «SynthFlow size» you pick Compact (everything a bit smaller, you see more chat) or Normal (the big size).', pre:openCfg(), go:['#cfgSz', '#cfgBtn', '[data-tab="cfg"]'] },
+  { k:'color tema temas oceano bosque lavanda atardecer theme colors ocean forest lavender',
+    a:'En Ajustes › Página › «Color de SynthFlow» eliges el color: SymphorIA, Océano, Bosque, Atardecer o Lavanda.',
+    en:'In Settings › Page › «SynthFlow color» you choose the color: SymphorIA, Ocean, Forest, Sunset or Lavender.', pre:openCfg(), go:['#cfgTh', '#cfgBtn', '[data-tab="cfg"]'] },
+  { k:'simple estilo tranquilo sin efectos style calm plain',
+    a:'El estilo «Simple» deja solo tus chats, la caja de escribir y las respuestas, tranquilo y sin efectos. Está en Ajustes › Página › «Estilo de SynthFlow».',
+    en:'The «Simple» style leaves just your chats, the text box and the answers, calm and with no effects. It\'s in Settings › Page › «SynthFlow style».', pre:openCfg(), go:['#cfgUi', '#cfgBtn', '[data-tab="cfg"]'] },
+  { k:'nuevo chat empezar otro conversacion nueva limpiar new chat start fresh',
+    a:'Para empezar de cero toca «Nuevo chat», arriba en la barrita. El chat anterior queda guardado en «Mis chats».',
+    en:'To start fresh tap «New chat», at the top of the bar. The previous chat stays saved in «My chats».', go:['#cNew', '[data-r="new"]'] },
+  { k:'buscar busqueda encontrar chat viejo search find old chat',
+    a:'Con la lupa de la barrita buscas en todos tus chats: en los títulos y dentro de cada mensaje.',
+    en:'With the magnifying glass in the bar you search all your chats: in the titles and inside every message.', go:['[data-r="search"]', '#thQ', '#cSearch'] },
+  { k:'escribir enviar mensaje caja preguntar enter write send message box ask type',
+    a:'Escribes abajo, en la caja, y envías con la flecha (o con Enter en el computador). Entre más detalles le des, mejor te responde.',
+    en:'You write below, in the box, and send with the arrow (or Enter on a computer). The more details you give, the better it answers.', go:['#inp', '#composer'] },
+  { k:'imagen crear dibujar generar foto ilustracion image create draw generate picture',
+    a:'En el «+» de la caja de escribir está «Crear una imagen»: describes lo que quieres ver y la IA la dibuja (necesitas tu cuenta gratis).',
+    en:'In the «+» of the text box there\'s «Create an image»: describe what you want to see and the AI draws it (you need your free account).', go:['#attachBtn'] },
+  { k:'internet buscar web noticias hoy fuentes actual web search news sources today',
+    a:'En el «+» está «Buscar en internet»: la IA busca datos de hoy y te muestra de dónde los sacó. Si preguntas por algo de hoy, busca sola.',
+    en:'In «+» there\'s «Search the web»: the AI looks up today\'s data and shows you where it got it. If you ask about something current, it searches by itself.', go:['#attachBtn'] },
+  { k:'cortas cortos breve resumido ahorro ahorrar short brief saver save',
+    a:'«Respuestas cortas» (la hojita 🍃 junto a la caja) hace que la IA responda más corto y gastes menos de tu EnerX de hoy.',
+    en:'«Short answers» (the little leaf 🍃 next to the box) makes the AI answer shorter so you use less of your EnerX today.', go:['#saverBtn', '#attachBtn'] },
+  { k:'esfuerzo pensar piensa razonar rapido alto medio bajo effort think reasoning',
+    a:'El botón de esfuerzo, junto a la caja, dice cuánto piensa la IA antes de responder: Auto, Bajo (rápido), Medio o Alto (piensa con calma; Alto es con cuenta).',
+    en:'The effort button, next to the box, sets how much the AI thinks before answering: Auto, Low (fast), Medium or High (thinks carefully; High needs an account).', go:['#cEffort'] },
+  { k:'modo automatica automatico chat superiorsynth mode automatic',
+    a:'El botón de modo, junto a la caja, tiene 3: «Automática» (elige sola la mejor IA libre), «Chat» (tú eliges la IA) y «SuperiorSynth» (mejora tu pedido y elige la IA que más sabe).',
+    en:'The mode button, next to the box, has 3: «Automatic» (picks the best free AI by itself), «Chat» (you pick the AI) and «SuperiorSynth» (improves your request and picks the AI that knows the most).', go:['#cMode'] },
+  { k:'memoria recordar recuerdas olvidar datos mios memory remember forget',
+    a:'Si escribes «recuerda que…», te pregunto si lo guardo. Lo que recuerdo de ti lo ves y lo borras en Ajustes › IAs y memoria.',
+    en:'If you write «remember that…», I ask whether to save it. You see and delete what I remember about you in Settings › AIs and memory.', pre:openCfg('mem'), go:['[data-pane="ia"]', '#cfgBtn', '[data-tab="cfg"]'] },
+  { k:'presentacion diapositivas powerpoint pptx slides presentation deck',
+    a:'Escribe «hazme una presentación de…» y la IA te la entrega con vista previa, lista para descargar en PowerPoint.',
+    en:'Write «make me a presentation about…» and the AI hands it to you with a preview, ready to download as PowerPoint.', go:['#inp'] },
+  { k:'escuchar voz leer audio hablar en voz alta listen voice read aloud',
+    a:'Debajo de cada respuesta está «Escuchar»: te la lee en voz alta.',
+    en:'Under every answer there\'s «Listen»: it reads it aloud to you.', go:['.m.bot .acts [data-a="voice"]', '#msgs'] },
+  { k:'otra vez regenerar otra respuesta repetir again regenerate another answer',
+    a:'Con «Otra vez», debajo de la respuesta, la IA vuelve a responder con otras palabras (cuenta como un mensaje).',
+    en:'With «Again», under the answer, the AI answers again with other words (it counts as one message).', go:['.m.bot.last .acts', '#msgs'] },
+  { k:'copiar descargar exportar conversacion texto copy download export conversation',
+    a:'En el menú «⋯» de arriba copias la conversación o la descargas como texto. Cada respuesta también tiene «Copiar».',
+    en:'In the «⋯» menu at the top you copy the conversation or download it as text. Each answer also has «Copy».', go:['#moreBtn'] },
+  { k:'borrar eliminar chat conversacion delete remove chat',
+    a:'Para borrar el chat abierto: menú «⋯» › «Borrar este chat». En «Mis chats» también puedes borrar cualquiera con su papelera.',
+    en:'To delete the open chat: «⋯» menu › «Delete this chat». In «My chats» you can also delete any of them with its trash can.', go:['#moreBtn'] },
+  { k:'codigo revisar arreglar errores probar consola celular computador code review fix errors test console',
+    a:'Cuando la IA te da una página, SynthFlow la prueba sola en computador y celular, busca errores y, si encuentra, toca «Arreglar con la IA». En la vista previa tienes Computador, Tablet, Celular y Consola.',
+    en:'When the AI gives you a page, SynthFlow tests it by itself on desktop and phone, looks for errors and, if it finds some, tap «Fix with the AI». In the preview you have Desktop, Tablet, Phone and Console.' },
+  { k:'ranking ciegas batalla votar votos blind battle vote',
+    a:'En Comparar puedes poner «A ciegas»: no ves qué IA es hasta que votas. Tu ranking está en el menú «⋯» › «Tu ranking».',
+    en:'In Compare you can turn on «Blind»: you don\'t see which AI it is until you vote. Your ranking is in the «⋯» menu › «Your ranking».', go:['#moreBtn'] },
+  { k:'equipo equipos compartir openrouter amigos team teams share friends',
+    a:'En Tu cuenta › Equipos creas un equipo, invitas a tus amigos por su @usuario y, si quieres, compartes tu OpenRouter sin que vean la llave.',
+    en:'In Your account › Teams you create a team, invite your friends by their @username and, if you want, share your OpenRouter without them seeing the key.', go:['#accBtn', '[data-tab="me"]'] },
+  { k:'olvide contrasena recuperar codigo recuperacion forgot password recover recovery code',
+    a:'Si olvidaste tu contraseña: en «Entrar» toca «¿Olvidaste tu contraseña?» y usa el código de recuperación que guardaste al crear tu cuenta.',
+    en:'If you forgot your password: in «Sign in» tap «Forgot your password?» and use the recovery code you saved when you created your account.', go:['#accBtn', '[data-tab="me"]'] },
+  { k:'cerrar sesion salir logout sign out',
+    a:'Para cerrar sesión abre Tu cuenta (tu foto en la barrita) y toca «Cerrar sesión». También puedes cerrarla en todos tus dispositivos.',
+    en:'To sign out open Your account (your photo in the bar) and tap «Sign out». You can also sign out on all your devices.', go:['#accBtn', '[data-tab="me"]'] },
+  { k:'opinion sugerencia beta mejorar reportar problema bug feedback suggestion report',
+    a:'Toca «BETA», junto a mí, y cuéntanos qué mejorar o qué falló. Lo lee el equipo de SymphorIA.',
+    en:'Tap «BETA», next to me, and tell us what to improve or what failed. The SymphorIA team reads it.', go:['.szbeta', '#szBeta', '[data-beta]'] },
+  { k:'persona humano equipo soporte contacto hablar alguien human support contact person',
+    a:'En mi ventanita está «Hablar con el equipo»: un Prime, ZFlow o Symmetrix te responde aquí mismo, aunque cierres la página (necesitas tu cuenta gratis).',
+    en:'In my little window there\'s «Talk to the team»: a Prime, ZFlow or Symmetrix answers you right here, even if you close the page (you need your free account).', act:'team', lbl:'Hablar con el equipo' },
+  { k:'novedades nuevo nuevas que hay de nuevo cambios whats new news updates',
+    a:'Cuando hay novedades sale un «!» sobre mi cabeza. Tócame y te las cuento.',
+    en:'When there\'s news a «!» shows up over my head. Tap me and I\'ll tell you.' },
+  { k:'terminos privacidad datos legal politica terms privacy data policy',
+    a:'Los Términos y la Privacidad están al pie de la portada. Tus chats son tuyos: se guardan en tu dispositivo y en tu cuenta si entras.',
+    en:'The Terms and Privacy are at the bottom of the home page. Your chats are yours: they\'re saved on your device and in your account if you sign in.' },
+  { k:'barra lateral abrir cerrar esconder sidebar open close hide',
+    a:'El botón de arriba a la izquierda abre o cierra la barra lateral con tus chats.',
+    en:'The button at the top left opens or closes the sidebar with your chats.', go:['#railTog', '#navBtn'] },
+  { k:'mis chats where chats history my chats saved',
+    a:'Tus chats están en «Mis chats», en la barrita (en el celular, la pestaña Chats).',
+    en:'Your chats are in «My chats», in the bar (on phones, the Chats tab).', go:['[data-r="chats"]', '[data-tab="chats"]'] },
+  { k:'portada inicio volver symphoria home back main page',
+    a:'El logo de SymphorIA, arriba en la barrita, te lleva de vuelta a la portada.',
+    en:'The SymphorIA logo, at the top of the bar, takes you back to the home page.', go:['#backLink', '#sideZ', '#mLogo'] },
+  { k:'alias sintesis juez acuerdo coinciden tres ias mision synthesis judge agreement',
+    a:'En A.L.I.A.S., con Síntesis encendida, 3 IAs responden lo mismo y una cuarta hace de juez: te da una sola respuesta, cuánto coinciden (en %) y en qué no están de acuerdo. Puedes ver cada voz.',
+    en:'In A.L.I.A.S., with Synthesis on, 3 AIs answer the same thing and a fourth one acts as judge: it gives you one answer, how much they agree (in %) and where they don\'t. You can see each voice.', go:['a[href*="alias"]'] },
+  { k:'pulsem quitar llave borrar key remove delete team',
+    a:'En Pulsem (solo para el equipo), en las llaves de las IAs conectadas, cada quien puede quitar la suya con «Quitar». Las de los demás siguen funcionando.',
+    en:'In Pulsem (team only), under the connected AIs\' keys, each person can remove theirs with «Remove». The others keep working.', go:['#railPulse'] },
+  { k:'groq rapida llave propia fast own key',
+    a:'Groq es una opción muy rápida que usa tu propia llave (gratis con límites). Se conecta en Ajustes › IAs y memoria › «Conectar Puter u otra IA».',
+    en:'Groq is a very fast option that uses your own key (free with limits). Connect it in Settings › AIs and memory › «Connect Puter or another AI».', pre:openCfg('ia'), go:['[data-pane="ia"]', '#cfgBtn'] }
+);
+/* las respuestas de antes también entienden preguntas en inglés */
+[['conectar', 'connect connection setup key unlock works'], ['ias conectadas', 'connected ais free ready what are'], ['puter que', 'puter what is credits'], ['puter conectar', 'puter connect link'],
+ ['cambiar elegir', 'change pick choose ai model other select switch'], ['comparar', 'compare comparison several two side same time'], ['guia', 'guide tutorial learn teach how works'],
+ ['limite', 'limit left remaining messages usage battery energy enerx coins'], ['pagar', 'pay charge free price money cost card'], ['chats historial', 'chats history conversations previous saved'],
+ ['drive', 'drive google space backup copy'], ['adjuntar', 'attach file pdf image photo upload document'], ['cuenta registrar', 'account register signup sign login profile user password'],
+ ['ajustes', 'settings performance slow animations sound sounds cursor beginner'], ['favorito', 'favorite favorites star save message'], ['error', 'error not answering fails slow'],
+ ['agente', 'agent superiorsynth improve prompt'], ['app instalar', 'app install download phone home screen'], ['vincular google', 'link google email merge accounts'],
+ ['symphoria', 'symphoria name meaning means why called'], ['synth ', 'synth synthetism synthflow synthonia'], ['hola', 'hello hi hey greetings good morning evening'],
+ ['como estas', 'how are you doing'], ['como te llamas', 'who are you your name'], ['chiste', 'joke funny laugh'], ['dato curioso', 'fun fact interesting know'],
+ ['gracias', 'thanks thank great perfect cool'], ['adios', 'bye goodbye see you later']].forEach(([s, en]) => { const f = BOT_FAQ.find(x => x.k.startsWith(s)); if (f) f.k += ' ' + en; });
+/* lo que sí existe en la página, para que la IA de SynthonIA (cuando no hay respuesta guardada) diga dónde está y la manita lo señale */
+const BOT_PLACES = { chats:['[data-r="chats"]', '[data-tab="chats"]'], nuevo:['#cNew', '[data-r="new"]'], buscar:['[data-r="search"]'], favoritos:['#railFav', '[data-r="favs"]'], proyectos:['#railProj', '#cProj'], sinteticos:['#railSyn', '#cSyn'],
+  ajustes:['#cfgBtn', '[data-tab="cfg"]'], cuenta:['#accBtn', '[data-tab="me"]'], mas:['#attachBtn'], menu:['#moreBtn'], ia:['#cPick'], comparar:['#cCmp'], modo:['#cMode'], esfuerzo:['#cEffort'], cortas:['#saverBtn'], caja:['#inp'], enerx:['#railCoin', '#tabCoin'], guia:['#guideTop', '#helpBtn'] };
 /* ---- ayuda de personas ---- */
 async function helpApi(o){ return api('help' + (o && o.q ? o.q : ''), o && o.body ? { method:'POST', body:o.body, keep:true } : { keep:true }); }
 async function botTeam(){
@@ -4332,8 +4635,10 @@ function feedbackModal(){
     catch(er){ e.currentTarget.disabled = false; toast(er.message || 'No pude enviarlo. Intenta de nuevo.'); }
   });
 }
+const betaTx = k => t(k);   /* fuera de betaMk: adentro «t» es el botón */
+onLang(() => document.querySelectorAll('.beta-tag').forEach(b => { b.title = betaTx('beta.title'); b.dataset.tip = betaTx('beta.tip'); }));
 function betaMk(){
-  const t = document.createElement('button'); t.type = 'button'; t.className = 'beta-tag'; t.textContent = 'BETA'; t.title = 'Estamos en beta: cuéntanos qué mejorar'; t.dataset.tip = 'Cuéntanos qué mejorar';
+  const t = document.createElement('button'); t.type = 'button'; t.className = 'beta-tag'; t.textContent = 'BETA'; t.title = betaTx('beta.title'); t.dataset.tip = betaTx('beta.tip');
   t.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); feedbackModal(); });
   return t;
 }
@@ -4689,14 +4994,17 @@ document.addEventListener('click', e => {
 }, true);
 
 /* «Qué hay de nuevo»: SynthonIA te lo cuenta una vez por versión (y está en el menú cuando quieras) */
-const WHATSNEW = { v:'2.9.1', items:[
-  ['chat', 'Sintéticos (en inglés, Synthetics): las páginas, juegos y dibujos que crea la IA corren en su propio espacio aparte, como en Claude. Más seguros y con todo funcionando.'],
-  ['synthonia', '¡Me renové! Ahora soy mi carita con mis manitas flotando cerca: saludo, señalo, aplaudo y celebro contigo. Tócame y verás.'],
-  ['chat', 'El cielo de SynthFlow es en vivo: cuando ya estás conversando, se calma y se oscurece para que leas mejor.'],
-  ['ajustes', 'Las ventanas (Ajustes, Tu límite de hoy, Conectar IA) ahora son de vidrio: ves el cielo a través de ellas.'],
+const WHATSNEW = { v:'3.0', items:[
+  ['portada', 'La página ahora se llama SymphorIA, «el portador de la armonía», y estrena icono.'],
+  ['chat', ENERX + ': tu batería del día para usar las IAs conectadas. Baja con cada mensaje y se carga a medianoche.'],
+  ['chat', 'A.L.I.A.S. con Síntesis: 3 IAs responden y una cuarta hace de juez; ves cuánto coinciden (en %) y en qué no.'],
+  ['chat', 'Sintéticos como en Claude: cuando la IA te crea una página, un juego o un dibujo, se abre solo al lado del chat. Y en la barrita, «Sintéticos» los junta todos.'],
+  ['ajustes', 'Toda la página en español o en inglés: botón ES/EN en la portada, y en SynthFlow, Ajustes › «Idioma · Language» o el menú «⋯».'],
+  ['synthonia', 'Ahora me sé toda la página: pregúntame dónde está cualquier cosa (también en inglés) y te la señalo con mi manita.'],
   ['proyectos', 'Proyectos: junta chats, instrucciones y archivos de un mismo tema. Ahora se pintan con los colores de tu tema.'],
-  ['app', 'La app SynthFlow tiene ventana nueva: instálala gratis con «Instalar la app», sin tiendas.'],
-  ['portada', 'Al entrar, la S de SymphorIA se dibuja con un cometa de luz y aparece su órbita; y al abrir el chat, entras por la «o» de Flow.']
+  ['ajustes', 'Modo compacto: SynthFlow ahora se ve un poco más pequeño. Si prefieres el tamaño de antes, Ajustes → Tamaño → Normal.'],
+  ['chat', 'Más seguro: lo que crea la IA corre aparte, en su propio espacio, y tu sesión queda protegida.'],
+  ['ajustes', 'Pulsem (equipo): ahora cada quien puede quitar su llave con «Quitar».']
 ] };
 function newsBang(onShow){
   const b = $('#szBot'); if (!b){ setTimeout(() => newsBang(onShow), 600); return; }

@@ -1,6 +1,7 @@
 /* Llaves del equipo, ajustes de la IA de SymphorIA y la prueba de la guía (beta 2)
    GET                                         → (equipo) estado de cada llave, tope diario, Google y Drive
    POST { action:'keys', groq?, mistral?, cloudflare?, cfAccount?, openrouter? } → tus llaves (Prime, ZFlow y Symmetrix: cada uno las suyas)
+   POST { action:'delkey', id }              → quitar una llave de la lista (la tuya; Prime/ZFlow cualquiera menos las de Vercel)
    POST { action:'check' }                     → probar llaves (Prime/ZFlow todas; Symmetrix solo las suyas)
    POST { action:'limit', dayLimit }           → tope de SynXCoin's al día por persona (Prime/ZFlow)
    POST { action:'google', clientId }          → «ID de cliente» de Google para entrar con Google y Drive (Prime/ZFlow)
@@ -9,7 +10,7 @@
    Reglas: cero cobros (solo modelos gratis y topes propios), las llaves nunca salen del servidor. */
 import { route, body, json, fail, auth, redis, pipe, getJ, setJ, rid, limit, today, str, roleOf, sha, sbOn, sbAccount, sbProfile, sbPrefs, sbChats, ipOf } from './_lib.js';
 import { CID_RX } from './config.js';
-import { loadKeys, saveOwnerKeys, status, checkKey, settings, saveSettings, chat, models, ownersRaw, mask, ORDER, PROV, KEY_PROVS, provName } from './_pool.js';
+import { loadKeys, saveOwnerKeys, removeKey, status, checkKey, settings, saveSettings, chat, models, ownersRaw, mask, ORDER, PROV, KEY_PROVS, provName } from './_pool.js';
 
 export const TRIAL_MAX = 5;
 const RANK = { owner:'Prime', admin:'ZFlow', staff:'Symmetrix' };
@@ -42,6 +43,13 @@ export default route({
   async POST(req){
     const ip = ipOf(req), b = await body(req, 600_000), a = b.action;
 
+    if (a === 'delkey'){
+      const me = await auth(req);
+      if (!team(me)) return fail(403, 'Solo el equipo de SymphorIA puede quitar llaves.');
+      await limit('trial-admin:' + me.sub, 30, 600);
+      const r = await removeKey(str(b.id, 24), me, boss(me));
+      return r.ok ? json({ ok:true, prov:r.prov }) : fail(r.status, r.error);
+    }
     if (a === 'keys' || a === 'check'){
       const me = await auth(req);
       if (!team(me)) return fail(403, 'Solo el equipo de SymphorIA puede agregar llaves.');

@@ -36,14 +36,17 @@ const BOT_FAQ = [
   { k:'gracias genial perfecto listo vale chevere bacano', a:'¡Con gusto! Aquí estoy cuando me necesites. ✨', mood:'encantada' },
   { k:'adios chao nos vemos hasta luego', a:'¡Chao! Que tengas un día con mucho Flow. 👋', wave:true }
 ];
-const BOT_QUICK = [['ias conectadas que', '¿Qué son las IAs conectadas?'], ['puter que es', '¿Qué es Puter?'], ['puter conectar', '¿Cómo conecto Puter?'], ['cambiar elegir', '¿Cómo cambio de IA?'], ['limite cuanto', '¿Qué son las SynXCoin\'s?'], ['chiste', 'Cuéntame un chiste']].map(([k, t]) => [BOT_FAQ.findIndex(f => f.k.startsWith(k)), t]);
+const BOT_QUICK = [['ias conectadas que', '¿Qué son las IAs conectadas?'], ['puter que es', '¿Qué es Puter?'], ['puter conectar', '¿Cómo conecto Puter?'], ['cambiar elegir', '¿Cómo cambio de IA?'], ['limite cuanto', '¿Qué es la ' + ENERX + '?'], ['chiste', 'Cuéntame un chiste']].map(([k, t]) => [BOT_FAQ.findIndex(f => f.k.startsWith(k)), t]);
 const fold = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9ñ\s]/g, ' ');
 function botMatch(q){
-  const STOP = /^(que|como|donde|cual|para|por|con|una|uno|los|las|del|mis|tus|sus|esta|este|esto|eso|hay|hago|hacer|puedo|quiero|tengo|necesito|sobre|algo|the|and|how|can|what|where|synthflow|synthz|pagina|favor|porfa|ayuda|ayudame)$/;
+  const STOP = /^(que|como|donde|cual|son|estan|esta|esto|es|para|por|con|una|uno|los|las|del|mis|tus|sus|esta|este|esto|eso|hay|hago|hacer|puedo|quiero|tengo|necesito|sobre|algo|the|and|how|can|what|where|does|you|are|there|this|that|with|for|from|have|want|need|page|please|help|synthflow|synthz|pagina|favor|porfa|ayuda|ayudame)$/;
   const w = fold(q).split(/\s+/).filter(x => (x.length > 2 || /^(ia|ai)$/.test(x)) && !STOP.test(x)); if (!w.length) return /ayuda|help/i.test(q) ? BOT_FAQ.find(f => f.k.startsWith('guia')) : null;
-  let best = null, bs = 0;
-  BOT_FAQ.forEach(f => { if (f.need && !w.includes(f.need)) return; const K = fold(f.k).split(/\s+/); let sc = 0; w.forEach(x => { if (K.includes(x)) sc += 1; else if (K.some(k => k.length > 4 && (k.startsWith(x) || x.startsWith(k)))) sc += .6; }); if (sc > bs){ bs = sc; best = f; } });
-  return bs >= Math.max(.6, w.length * .45) ? best : null;
+  /* v3.0 · cada palabra pesa según qué tan rara es (una palabra que solo está en «Proyectos» decide más que «están») */
+  const hit = (K, x) => K.includes(x) ? 1 : K.some(k => k.length > 4 && (k.startsWith(x) || x.startsWith(k))) ? .6 : 0;
+  const KS = BOT_FAQ.map(f => fold(f.k).split(/\s+/)), df = w.map(x => KS.filter(K => hit(K, x)).length || 1);
+  let best = null, bs = 0, br = 0;
+  BOT_FAQ.forEach((f, i) => { if (f.need && !w.includes(f.need)) return; let sc = 0, rk = 0; w.forEach((x, j) => { const h = hit(KS[i], x); sc += h; rk += h / df[j]; }); if (rk > br){ br = rk; bs = sc; best = f; } });
+  return bs >= Math.max(.6, w.length * .32) ? best : null;
 }
 const BOT = { el:null, panel:null, open:false, hist:[], help:null, poll:0, seen:0, team:null, inbox:[], cur:null, mode:'chat', teamSeen:{} };
 /* v2.6: en la portada no hay bolita; la ventanita y las frases salen de donde esté parada SynthonIA */
@@ -212,6 +215,7 @@ function botRender(){
 const SZ_RANK = () => { const r = ACC.user && ACC.user.role; return { owner:'Prime', admin:'ZFlow', staff:'Symmetrix' }[r] || ''; };
 const agoS = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'ahora' : m < 60 ? 'hace ' + m + ' min' : m < 1440 ? 'hace ' + Math.round(m / 60) + ' h' : 'hace ' + Math.round(m / 1440) + ' d'; };
 function botSay(text, mood, btn){
+  if (LANG === 'en') text = trStr(text);   /* v3.0 · en inglés, lo suyo sale traducido (lo de las personas nunca se toca) */
   const D = demoji(text); mood = mood || D.mood || 'feliz';
   BOT.hist.push({ role:'assistant', content:D.text, mood, btn }); BOT.hist = BOT.hist.slice(-30); botFace(mood); SND.blip(mood); botRender();
   /* en la ventanita, su último mensaje se escribe mientras mueve la boca */
@@ -223,9 +227,10 @@ function botSay(text, mood, btn){
 async function botAnswer(f){
   if (f.joke || f.fact){ const t = await botThink(() => f.joke ? BOTAPI.joke() : BOTAPI.fact()); return botSay((f.fact ? '¿Sabías que…? ' : '') + t, f.joke ? 'riendo' : 'sorprendida'); }
   await botThink();
-  botSay(f.a, f.mood || (f.go ? 'senalando' : 'feliz'), f.act ? [f.act, f.lbl] : null);
+  botSay(LANG === 'en' && f.en ? f.en : f.a, f.mood || (f.go ? 'senalando' : 'feliz'), f.act ? [f.act, f.lbl] : null);
   if (f.wave && HAND && BOT.el){ const r0 = BOT.el.getBoundingClientRect(); HAND.show({ x:r0.left + r0.width / 2, y:r0.top - 10 }); await HAND.moveTo({ x:clamp(r0.left - 40, 40, innerWidth - 40), y:clamp(r0.top - 50, 40, innerHeight - 40) }, { shape:'palm' }); await HAND.wave(2); HAND.hide(); return; }
   if (f.tour === 'coins' && HAND && $('#railTog') && $('#railCoin') && !matchMedia('(max-width:760px)').matches) return coinsTour();
+  if (f.pre && f.go){ await sleepRaw(400); try{ f.pre(); }catch(e){} await sleepRaw(650); }   /* v3.0 · abre Ajustes (u otra cosa) para señalar lo de adentro */
   const t = f.go && vis(f.go);
   if (t && HAND){
     await sleepRaw(500);
@@ -266,11 +271,14 @@ async function botAsk(q){
   /* SynthonIA no hace tareas, código ni trabajos: eso es para las IAs del chat */
   if (TASKY.test(fold(q)) || q.length > 220){ BOT.pendingQ = q; await botThink(); return botSay('Eso es trabajo para las IAs de SynthFlow 💪 Yo te ayudo con la página, y con chistes o datos curiosos. ¿Te lo dejo listo en la caja del chat?', 'guino', ['tochat', 'Sí, llévalo al chat']); }
   try{
-    const res = await botThink(async () => { const r = await fetch('/api/help', { method:'POST', headers:Object.assign({ 'content-type':'application/json' }, SESS ? { authorization:'Bearer ' + SESS } : {}), body:JSON.stringify({ action:'ask', q, hist:BOT.hist.slice(-7, -1).filter(m => m.role === 'user' || m.role === 'assistant').map(m => ({ role:m.role, content:m.content })) }) });
+    const res = await botThink(async () => { const r = await fetch('/api/help', { method:'POST', headers:Object.assign({ 'content-type':'application/json' }, SESS ? { authorization:'Bearer ' + SESS } : {}), body:JSON.stringify({ action:'ask', q, lang:LANG, hist:BOT.hist.slice(-7, -1).filter(m => m.role === 'user' || m.role === 'assistant').map(m => ({ role:m.role, content:m.content })) }) });
     const d = await r.json().catch(() => ({})); return { r, d }; });
     const { r, d } = res;
     if (!r.ok) return botSay(d.error || 'No pude pensar una respuesta ahora. Mira la Guía o habla con el equipo.', 'disculpa', ['team', 'Hablar con el equipo']);
-    botSay(d.text + (d.left <= 3 ? '\n\n(Te quedan ' + d.left + ' preguntas nuevas hoy.)' : ''), 'feliz');
+    /* v3.0 · si la IA dice [ver:lugar], la manita lo señala */
+    const pm = String(d.text || '').match(/\[ver:(\w+)\]/), place = pm && BOT_PLACES[pm[1]];
+    botSay(String(d.text || '').replace(/\s*\[ver:\w+\]/g, '').trim() + (d.left <= 3 ? '\n\n' + (LANG === 'en' ? '(You have ' + d.left + ' new questions left today.)' : '(Te quedan ' + d.left + ' preguntas nuevas hoy.)') : ''), place ? 'senalando' : 'feliz');
+    if (place) botAnswer({ a:'', go:place, point:true });
   }catch(e){ botSay('No pude conectarme. Revisa tu internet e intenta otra vez.', 'disculpa'); }
 }
 function botAct(a){

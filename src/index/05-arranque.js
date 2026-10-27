@@ -61,11 +61,13 @@ else {
 
 /* v2.5 · ya no hay barrita lateral en la portada: todo está en el menú de arriba */
 /* v3.0 · al cambiar de idioma, lo que pinta el JS se vuelve a pintar */
-if (SZ.onLang) SZ.onLang(() => { try{ updateTotals(); renderLaunch(); }catch(e){} });
+if (SZ.onLang) SZ.onLang(() => { try{ paintSzCard(); updateTotals(); renderLaunch(); renderUsage._b = 0; renderUsage(); }catch(e){} });
 $('#limPill').addEventListener('click', () => { const u = $('#consumo'); if (u) u.scrollIntoView({ behavior:SZ.reduce ? 'auto' : 'smooth' }); });
 })();
 
 /* v2.2 · Ajustes › IAs y memoria en la portada, y el «!» de novedades sobre SynthonIA */
-SZ.cfgLinks.push(['Elegir mis IA ideales', () => SZ.surveyModal(), '3 preguntas y te digo cuáles te sirven más'], ['Conectar Puter u otra IA', () => SZ.portalOut('chat.html?conn=1'), 'Tu versión pro de las IAs más usadas, gratis'], ['Abrir SynthFlow', () => { location.href = 'chat.html'; }, 'El chat con todas las IAs']);
-if (!SZ.appStandalone()) SZ.cfgLinks.push(['Descargar la app SynthFlow', () => SZ.appPromo(true), 'Se instala desde aquí: pantalla completa y a un toque']);
+/* el texto se lee al abrir Ajustes, así sigue al idioma */
+const lk = (l, fn, d) => { const a = [, fn]; Object.defineProperties(a, { 0:{ get:() => SZ.t(l) }, 2:{ get:() => SZ.t(d) } }); return a; };
+SZ.cfgLinks.push(lk('ix.lk1', () => SZ.surveyModal(), 'ix.lk1d'), lk('ix.lk2', () => SZ.portalOut('chat.html?conn=1'), 'ix.lk2d'), lk('ixa.abrirsynthflow', () => { location.href = 'chat.html'; }, 'ix.lk3d'));
+if (!SZ.appStandalone()) SZ.cfgLinks.push(lk('ix.lk4', () => SZ.appPromo(true), 'ix.lk4d'));
 setTimeout(() => { if (!document.querySelector('.szm, #vintro, #intro')) SZ.whatsNew(false); }, 4000);

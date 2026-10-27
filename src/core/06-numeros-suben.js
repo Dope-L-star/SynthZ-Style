@@ -10,10 +10,14 @@ function countTo(el, val){
   })(t0);
 }
 
+/* la etiqueta para lectores de pantalla sigue al idioma (si el texto tiene clave, se lee la traducción) */
+function ariaSync(el){ const k = el.dataset.i18n || el.dataset.i18nHtml, v = k && t(k); el.setAttribute('aria-label', (v && v !== k ? v : el.textContent).replace(/<[^>]+>/g, '').trim().replace(/\s+/g, ' ')); }
+onLang(() => document.querySelectorAll('[data-aa]').forEach(ariaSync));
+
 /* ===== escritura suave: cada letra aparece con un resplandor y un cursor la acompaña ===== */
 function charify(el){
   if (el._chars) return el._chars;
-  if (!el.getAttribute('aria-label') && el.textContent.trim()) el.setAttribute('aria-label', el.textContent.trim().replace(/\s+/g, ' '));
+  if (!el.getAttribute('aria-label') && el.textContent.trim()){ el.dataset.aa = '1'; ariaSync(el); }
   const chars = [];
   const walk = node => {
     [...node.childNodes].forEach(n => {

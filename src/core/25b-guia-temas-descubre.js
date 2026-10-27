@@ -79,14 +79,17 @@ document.addEventListener('click', e => {
 }, true);
 
 /* «Qué hay de nuevo»: SynthonIA te lo cuenta una vez por versión (y está en el menú cuando quieras) */
-const WHATSNEW = { v:'2.9.1', items:[
-  ['chat', 'Sintéticos (en inglés, Synthetics): las páginas, juegos y dibujos que crea la IA corren en su propio espacio aparte, como en Claude. Más seguros y con todo funcionando.'],
-  ['synthonia', '¡Me renové! Ahora soy mi carita con mis manitas flotando cerca: saludo, señalo, aplaudo y celebro contigo. Tócame y verás.'],
-  ['chat', 'El cielo de SynthFlow es en vivo: cuando ya estás conversando, se calma y se oscurece para que leas mejor.'],
-  ['ajustes', 'Las ventanas (Ajustes, Tu límite de hoy, Conectar IA) ahora son de vidrio: ves el cielo a través de ellas.'],
+const WHATSNEW = { v:'3.0', items:[
+  ['portada', 'La página ahora se llama SymphorIA, «el portador de la armonía», y estrena icono.'],
+  ['chat', ENERX + ': tu batería del día para usar las IAs conectadas. Baja con cada mensaje y se carga a medianoche.'],
+  ['chat', 'A.L.I.A.S. con Síntesis: 3 IAs responden y una cuarta hace de juez; ves cuánto coinciden (en %) y en qué no.'],
+  ['chat', 'Sintéticos como en Claude: cuando la IA te crea una página, un juego o un dibujo, se abre solo al lado del chat. Y en la barrita, «Sintéticos» los junta todos.'],
+  ['ajustes', 'Toda la página en español o en inglés: botón ES/EN en la portada, y en SynthFlow, Ajustes › «Idioma · Language» o el menú «⋯».'],
+  ['synthonia', 'Ahora me sé toda la página: pregúntame dónde está cualquier cosa (también en inglés) y te la señalo con mi manita.'],
   ['proyectos', 'Proyectos: junta chats, instrucciones y archivos de un mismo tema. Ahora se pintan con los colores de tu tema.'],
-  ['app', 'La app SynthFlow tiene ventana nueva: instálala gratis con «Instalar la app», sin tiendas.'],
-  ['portada', 'Al entrar, la S de SymphorIA se dibuja con un cometa de luz y aparece su órbita; y al abrir el chat, entras por la «o» de Flow.']
+  ['ajustes', 'Modo compacto: SynthFlow ahora se ve un poco más pequeño. Si prefieres el tamaño de antes, Ajustes → Tamaño → Normal.'],
+  ['chat', 'Más seguro: lo que crea la IA corre aparte, en su propio espacio, y tu sesión queda protegida.'],
+  ['ajustes', 'Pulsem (equipo): ahora cada quien puede quitar su llave con «Quitar».']
 ] };
 function newsBang(onShow){
   const b = $('#szBot'); if (!b){ setTimeout(() => newsBang(onShow), 600); return; }

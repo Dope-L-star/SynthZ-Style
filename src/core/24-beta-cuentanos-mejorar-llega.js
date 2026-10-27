@@ -20,8 +20,10 @@ function feedbackModal(){
     catch(er){ e.currentTarget.disabled = false; toast(er.message || 'No pude enviarlo. Intenta de nuevo.'); }
   });
 }
+const betaTx = k => t(k);   /* fuera de betaMk: adentro «t» es el botón */
+onLang(() => document.querySelectorAll('.beta-tag').forEach(b => { b.title = betaTx('beta.title'); b.dataset.tip = betaTx('beta.tip'); }));
 function betaMk(){
-  const t = document.createElement('button'); t.type = 'button'; t.className = 'beta-tag'; t.textContent = 'BETA'; t.title = 'Estamos en beta: cuéntanos qué mejorar'; t.dataset.tip = 'Cuéntanos qué mejorar';
+  const t = document.createElement('button'); t.type = 'button'; t.className = 'beta-tag'; t.textContent = 'BETA'; t.title = betaTx('beta.title'); t.dataset.tip = betaTx('beta.tip');
   t.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); feedbackModal(); });
   return t;
 }
