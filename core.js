@@ -62,9 +62,11 @@ const isFlow = () => document.documentElement.dataset.brand === 'flow';
 const BRAND = () => isFlow() ? 'SynthFlow' : 'SynthZ';
 const SPARKS = '<i class="sp s1" aria-hidden="true"></i><i class="sp s2" aria-hidden="true"></i><i class="sp s3" aria-hidden="true"></i>';
 const GS = '<span class="gS">S</span>ynth';
+/* v2.8: el degradado de la onda del orbe vive en los íconos (core 25g), siempre visible: antes cada orbe traía uno con el mismo id
+   y, si el primero de la página estaba escondido, las ondas de todos los logos de SynthFlow desaparecían */
 /* v2.5 · logos del boceto: SynthZ = Z de vidrio + «Synth» blanco con la Z en degradado; SynthFlow = la esfera de vidrio con la onda */
 const LOGO_Z = '<img class="lgz" src="media/v24/logo-z.webp" alt="" draggable="false">';
-const flowOrb = cls => '<span class="sforb' + (cls ? ' ' + cls : '') + '" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><defs><linearGradient id="sfOrbG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3de0ff"/><stop offset=".45" stop-color="#7b3ff2"/><stop offset=".75" stop-color="#ff3d9a"/><stop offset="1" stop-color="#ff7a45"/></linearGradient></defs><path d="M8 32c5-14 10-14 14 0s9 14 14 0 9-14 14 0 5 8 6 4" stroke="url(#sfOrbG)" stroke-width="5" stroke-linecap="round"/></svg></span>';
+const flowOrb = cls => '<span class="sforb' + (cls ? ' ' + cls : '') + '" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><path d="M8 32c5-14 10-14 14 0s9 14 14 0 9-14 14 0 5 8 6 4" stroke="url(#sfOrbG)" stroke-width="5" stroke-linecap="round"/></svg></span>';
 /* íconos de archivo: se dibujan en código (giFile, en core 25g); si no hay uno para esa extensión, null */
 const fileIco = ext => giFile(ext);
 const flowWord = () => '<span class="flw-w">' + flowOrb() + '<span class="fw-t">SynthFlow</span></span>';
@@ -1468,45 +1470,12 @@ function portalReveal(p){
   if (!p) return; const K = zoomK(), t0 = performance.now(), D = 950;
   (function f(now){ const e = Math.min(1, (now - t0) / D); portalPaint(p, K * Math.pow(2.4, e)); if (e < 1) requestAnimationFrame(f); })(t0);
 }
-/* ---------- portal SynthZ ⇄ SynthFlow (v1.3: en tiempo real, con los logos de vidrio) ----------
-   ida:   «SynthZ» sale de su esquina y llega al centro → la Z de vidrio se derrite en vivo y se vuelve «Flow»
-          (queda «SynthFlow») → la barrita de luz se come «Synth» → la cámara entra en la «o»
-   vuelta: lo mismo al revés y «SynthZ» vuelve a su esquina
-   mientras dura, la página no se puede tocar (ni con el ratón ni con el teclado) */
-const FO = { x:.517, y:.62, w:.085 };      /* el hueco de la «o» dentro de la imagen «Flow» */
-const glassS = t => t === 'Synth' ? '<span class="gS">S</span>ynth' : esc(t);
-const MELT_SVG = '<svg class="szpdefs" width="0" height="0" aria-hidden="true"><filter id="szMelt" x="-20%" y="-30%" width="140%" height="160%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="0.012 0.03" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="0" xChannelSelector="R" yChannelSelector="G"/></filter></svg>';
-function portalStage(){
-  const o = document.createElement('div'); o.id = 'portal'; o.className = 'szportal';
-  o.innerHTML = MELT_SVG + '<i class="pg"></i><div class="szpw"><span class="szps"><span>' + glassS('Synth') + '</span></span><span class="szpslot">'
-    + '<span class="szpm"><img class="szpz" src="media/z-glass.webp" alt="" draggable="false"><img class="szpfl" src="media/flow-glass.webp" alt="" draggable="false"></span><i class="szpbar"></i></span></div>';
-  document.body.appendChild(o);
-  const q = c => o.querySelector(c), W = q('.szpw'), SY = q('.szps'), SL = q('.szpslot'), M = q('.szpm'), ZZ = q('.szpz'), FL = q('.szpfl'), BAR = q('.szpbar'), PG = q('.pg');
-  const DM = q('feDisplacementMap'), TB = q('feTurbulence');
-  const fs = parseFloat(getComputedStyle(W).fontSize) || 120;
-  const wS = SY.firstChild.getBoundingClientRect().width;
-  const wZ = fs * .84 * (284 / 256) + fs * .1, wF = fs * .8 * (412 / 200) + fs * .12;
-  SY.style.width = wS + 'px'; SL.style.width = wZ + 'px';
-  return { o, W, SY, SL, M, ZZ, FL, BAR, PG, DM, TB, fs, wS, wZ, wF };
-}
-/* la Z se derrite y se vuelve «Flow» (o al revés), en vivo: el vidrio se ondula, cambia de forma y se aquieta */
-function melt(P, toFlow, D){
-  P.M.style.filter = 'url(#szMelt)';
-  P.SL.style.transition = 'width ' + (D * .55 / 1000).toFixed(2) + 's ' + PE; P.SL.style.width = (toFlow ? P.wF : P.wZ) + 'px';
-  const a = toFlow ? P.ZZ : P.FL, b = toFlow ? P.FL : P.ZZ, s0 = Math.random() * 50;
-  return tween(D, (e, k) => {
-    const w = Math.sin(Math.PI * k);                                  /* sube y baja la ola */
-    P.DM.setAttribute('scale', (w * P.fs * .42).toFixed(1));
-    P.TB.setAttribute('baseFrequency', (0.010 + w * .006).toFixed(4) + ' ' + (0.028 + w * .02).toFixed(4));
-    P.TB.setAttribute('seed', String(Math.round(s0 + k * 14)));
-    const m = Math.min(1, Math.max(0, (k - .32) / .36));             /* el cambio de forma, en el medio */
-    a.style.opacity = (1 - m).toFixed(3); b.style.opacity = m.toFixed(3);
-    a.style.transform = 'scale(' + (1 + w * .06).toFixed(3) + ',' + (1 - w * .1).toFixed(3) + ')';
-    b.style.transform = 'scale(' + (1 + w * .04).toFixed(3) + ',' + (1 - w * .06).toFixed(3) + ')';
-    P.M.style.setProperty('--glow', w.toFixed(3));
-  }).then(() => { P.M.style.filter = 'none'; P.DM.setAttribute('scale', '0'); a.style.transform = b.style.transform = 'none'; });
-}
-/* bloquea ratón, toque y teclado mientras se ve la transición */
+/* v2.8 · el portal nuevo, con los logos de ahora (pedido de Sammuel: «sorpréndeme»):
+   ida:    «SynthZ» sale de su esquina y llega al centro → la Z de vidrio gira y se vuelve el orbe de SynthFlow,
+           la «Z» se borra y aparece «Flow» letra por letra → SynthonIA sale, saluda y salta adentro del orbe
+           → el orbe late y la cámara se zambulle en él (y en el chat se abre en círculo)
+   vuelta: sales del orbe, SynthonIA salta afuera y se despide, el orbe vuelve a ser la Z y «SynthZ» vuelve a su esquina.
+   Todo es transform y opacidad (va fluido en celulares); mientras dura, la página no se puede tocar. */
 let lockOff = null;
 function portalLock(on){
   if (lockOff){ lockOff(); lockOff = null; }
@@ -1516,47 +1485,113 @@ function portalLock(on){
   ev.forEach(t => addEventListener(t, stop, { capture:true, passive:false }));
   lockOff = () => ev.forEach(t => removeEventListener(t, stop, { capture:true }));
 }
-const PE = 'cubic-bezier(.65,0,.35,1)', PEO = 'cubic-bezier(.22,1,.36,1)';
-const tween = (D, fn, ease) => new Promise(res => { const t0 = performance.now(); (function f(now){ const k = Math.min(1, (now - t0) / D); fn(ease ? ease(k) : k, k); if (k < 1) requestAnimationFrame(f); else res(); })(t0); });
-const eio = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2, eout = k => 1 - Math.pow(1 - k, 3);
-/* entra (o sale) por el hueco de la «o» de «Flow» */
-function zoomO(P, into, D){
-  P.W.style.transform = 'none'; P.W.style.transformOrigin = '0 0';
-  const r = P.FL.getBoundingClientRect(), wr = P.W.getBoundingClientRect();
-  const cx = r.left + r.width * FO.x, cy = r.top + r.height * FO.y, d = Math.max(6, r.width * FO.w);
-  P.W.style.transformOrigin = (cx - wr.left).toFixed(1) + 'px ' + (cy - wr.top).toFixed(1) + 'px';
-  const K = Math.min(60, Math.hypot(innerWidth, innerHeight) / d * 2.2), tx = innerWidth / 2 - cx, ty = innerHeight / 2 - cy;
-  P.o.classList.add('zooming');      /* sin sombras ni brillos mientras se agranda: así no se traba en celulares */
-  const at = q => { const z = Math.exp(Math.log(K) * q), m = Math.min(1, q * 1.6); P.W.style.transform = 'translate(' + (tx * m).toFixed(1) + 'px,' + (ty * m).toFixed(1) + 'px) scale(' + z.toFixed(4) + ')'; P.W.style.opacity = q > .82 ? Math.max(0, 1 - (q - .82) / .18).toFixed(3) : '1'; };
-  return tween(D, e => at(into ? e : 1 - e), eio).then(() => { if (!into) P.o.classList.remove('zooming'); });
+const PE = 'cubic-bezier(.65,0,.35,1)', PEO = 'cubic-bezier(.22,1,.36,1)', PSPR = 'cubic-bezier(.34,1.56,.64,1)';
+/* los mismos cuadros al revés (para la vuelta) */
+const pRev = K => [...K].reverse().map(k => k.offset == null ? k : Object.assign({}, k, { offset:1 - k.offset }));
+const pAnim = (el, kf, o) => el.animate(kf, Object.assign({ fill:'forwards', easing:PE }, o)).finished.catch(() => {});
+function portalStage(){
+  const o = document.createElement('div'); o.id = 'portal'; o.className = 'szportal p8';
+  o.innerHTML = '<i class="p8-bg"></i><i class="p8-ring"></i><i class="p8-flash"></i>'
+    + '<div class="p8-w"><span class="p8-mk"><img class="p8-z" src="media/v24/logo-z.webp" alt="" draggable="false">' + flowOrb('p8-orb') + '</span>'
+    + '<span class="p8-t zw"><span class="p8-sy">Synth</span><span class="p8-zl zt">Z</span><span class="p8-fl">' + [...'Flow'].map((c, i) => '<i style="--i:' + i + '">' + c + '</i>').join('') + '</span></span></div>'
+    + '<div class="p8-bot">' + (typeof synBody === 'function' ? synBody('celebrando', 'saluda', 150) : '') + '</div>';
+  document.body.appendChild(o);
+  const q = c => o.querySelector(c);
+  return { o, BG:q('.p8-bg'), RING:q('.p8-ring'), FL:q('.p8-flash'), W:q('.p8-w'), MK:q('.p8-mk'), Z:q('.p8-z'), ORB:q('.p8-orb'), T:q('.p8-t'), ZL:q('.p8-zl'), FW:q('.p8-fl'), BOT:q('.p8-bot') };
 }
+/* dónde está el logo de la esquina (para salir de ahí y volver ahí) */
+/* el rectángulo donde de verdad se ve una imagen con object-fit:contain (sin el aire de los lados) */
+function fitBox(img){
+  const r = img.getBoundingClientRect(), nw = img.naturalWidth || 1, nh = img.naturalHeight || 1, k = Math.min(r.width / nw, r.height / nh);
+  return { x:r.left + r.width / 2, y:r.top + r.height / 2, w:nw * k, h:nh * k };
+}
+/* dónde está el logo de la esquina y cómo es: tamaño de la Z, de la letra y el espacio entre ambas
+   (el portal copia esas medidas para que el «SynthZ» que viaja calce justo encima del de la esquina) */
 function logoRect(){
-  const n = document.querySelector('#navWord');
-  if (n && n.getClientRects().length){ const r = n.getBoundingClientRect(); if (r.width) return { x:r.left, y:r.top, w:r.width, h:r.height }; }
+  const n = document.querySelector('#nav .logo');
+  if (n && n.getClientRects().length){
+    const r = n.getBoundingClientRect(), m = n.querySelector('.mark'), wd = n.querySelector('.word');
+    if (r.width){
+      const o = { x:r.left, y:r.top, w:r.width, h:r.height };
+      if (m && wd && m.naturalWidth){
+        const tx = wd.querySelector('.zw') || wd, a = fitBox(m), b = tx.getBoundingClientRect(), cs = getComputedStyle(tx);
+        Object.assign(o, { mx:a.x, my:a.y, mw:a.w, mh:a.h, gap:b.left - (a.x + a.w / 2), fs:parseFloat(cs.fontSize) || 0, fw:cs.fontWeight, ls:parseFloat(cs.letterSpacing) || 0 });
+      }
+      return o;
+    }
+  }
   try{ const s = JSON.parse(sessionStorage.getItem('synthz:logo') || 'null'); if (s && s.h) return s; }catch(e){}
-  return { x:innerWidth < 600 ? 62 : 78, y:innerWidth < 600 ? 16 : 22, w:112, h:28 };
+  return { x:innerWidth < 600 ? 30 : 70, y:innerWidth < 600 ? 22 : 26, w:150, h:40 };
 }
-/* FLIP: la palabra completa (Synth + Z) desde/hacia el logo de la esquina */
+/* el «SynthZ» del portal toma las proporciones del logo de la esquina (Z, letra, espacio, grosor) */
+function fitPortal(P, R){
+  if (!R.fs) return;
+  const tf = parseFloat(getComputedStyle(P.T).fontSize), k = tf / R.fs;
+  P.MK.style.width = (R.mw * k).toFixed(1) + 'px'; P.MK.style.height = (R.mh * k).toFixed(1) + 'px';
+  P.W.style.gap = Math.max(0, R.gap * k).toFixed(1) + 'px';
+  P.T.style.fontWeight = R.fw; P.T.style.letterSpacing = (R.ls / R.fs).toFixed(3) + 'em';
+}
+/* la palabra entera viaja entre la esquina y el centro (FLIP): la Z del portal cae justo sobre la Z de la esquina */
 function flyWord(P, toCorner, D){
-  const R = logoRect(), W = P.W;
-  W.style.transform = 'none'; W.style.transformOrigin = '0 0';
-  const r = W.getBoundingClientRect(), s = R.h / (P.fs * 1.0);
-  const dx = R.x - r.left, dy = R.y + R.h / 2 - (r.top + r.height / 2 * s);
-  const at = q => { const k = toCorner ? q : 1 - q, sc = 1 + (s - 1) * k; W.style.transform = 'translate(' + (dx * k).toFixed(1) + 'px,' + (dy * k).toFixed(1) + 'px) scale(' + sc.toFixed(4) + ')'; W.style.filter = k > .02 && k < .98 ? 'blur(' + (Math.sin(Math.PI * k) * 1.2).toFixed(2) + 'px)' : 'none'; };
-  at(0);
-  return tween(D, e => at(e), eio).then(() => { W.style.filter = 'none'; });
+  const R = logoRect(), r = P.W.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  let s = R.h / r.height, dx = R.x + R.w / 2 - cx, dy = R.y + R.h / 2 - cy;
+  if (R.fs){
+    const m = fitBox(P.Z), tf = parseFloat(getComputedStyle(P.T).fontSize);
+    s = R.fs / tf; dx = R.mx - cx - (m.x - cx) * s; dy = R.my - cy - (m.y - cy) * s;
+  }
+  const corner = 'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px) scale(' + s.toFixed(4) + ')';
+  return pAnim(P.W, toCorner ? [{ transform:'none' }, { transform:corner }] : [{ transform:corner }, { transform:'none' }], { duration:D, easing:PE });
 }
-const imgsReady = P => Promise.race([Promise.all([P.ZZ, P.FL].map(i => i.decode ? i.decode().catch(() => {}) : Promise.resolve())), sleepRaw(1500)]);
-/* el portal es la animación del logo: se ve siempre, también en modo Rendimiento */
-const PCALM = false;
+/* la Z de vidrio gira y se vuelve el orbe; la «Z» se borra y «Flow» se escribe (o al revés) */
+function morph(P, toFlow, D){
+  P.o.classList.toggle('flow', toFlow);
+  const zOut = [{ transform:'none', opacity:1 }, { transform:'rotate(-200deg) scale(.15)', opacity:0 }];
+  const oIn = [{ transform:'rotate(160deg) scale(.1)', opacity:0 }, { transform:'none', opacity:1 }];
+  return Promise.all([
+    pAnim(P.Z, toFlow ? zOut : pRev(zOut), { duration:D * .7, easing:toFlow ? 'cubic-bezier(.5,0,.75,0)' : PSPR, delay:toFlow ? 0 : D * .3 }),
+    pAnim(P.ORB, toFlow ? oIn : pRev(oIn), { duration:D * .75, easing:toFlow ? PSPR : 'cubic-bezier(.5,0,.75,0)', delay:toFlow ? D * .25 : 0 })
+  ]);
+}
+const pSleep = ms => new Promise(r => setTimeout(r, ms));
+/* SynthonIA salta adentro del orbe (o sale de él) */
+function botJump(P, into, D){
+  const b = P.BOT.getBoundingClientRect(), c = P.ORB.getBoundingClientRect();
+  const dx = c.left + c.width / 2 - (b.left + b.width / 2), dy = c.top + c.height / 2 - (b.top + b.height * .32);
+  const K = [
+    { transform:'none', opacity:1, offset:0 },
+    { transform:'translate(' + (dx * .45).toFixed(1) + 'px,' + (dy * .45 - 90).toFixed(1) + 'px) rotate(-20deg) scale(.8)', opacity:1, offset:.5 },
+    { transform:'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px) rotate(-340deg) scale(.04)', opacity:0, offset:1 }
+  ];
+  return pAnim(P.BOT, into ? K : pRev(K), { duration:D, easing:into ? 'cubic-bezier(.45,0,.55,1)' : 'cubic-bezier(.3,0,.3,1)' });
+}
+/* el orbe late y suelta un anillo de luz */
+function orbPulse(P){
+  P.ORB.animate([{ transform:'scale(1)' }, { transform:'scale(1.28)' }, { transform:'scale(1)' }], { duration:520, easing:PSPR });
+  const r = P.ORB.getBoundingClientRect(); P.RING.style.left = (r.left + r.width / 2) + 'px'; P.RING.style.top = (r.top + r.height / 2) + 'px';
+  P.RING.animate([{ transform:'translate(-50%,-50%) scale(.3)', opacity:.9 }, { transform:'translate(-50%,-50%) scale(9)', opacity:0 }], { duration:900, easing:'cubic-bezier(.2,.8,.2,1)' });
+}
+/* la cámara entra (o sale) del orbe: crece hasta tapar la pantalla */
+function dive(P, into, D){
+  const r = P.ORB.getBoundingClientRect(), K = Math.hypot(innerWidth, innerHeight) / Math.max(10, r.width) * 1.25;
+  const tx = innerWidth / 2 - (r.left + r.width / 2), ty = innerHeight / 2 - (r.top + r.height / 2);
+  P.o.classList.add('diving');
+  const kw = [{ transform:'none' }, { transform:'translate(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px) scale(' + K.toFixed(2) + ')' }];
+  const ft = [{ opacity:1 }, { opacity:0 }];
+  return Promise.all([
+    pAnim(P.W, into ? kw : pRev(kw), { duration:D, easing:into ? 'cubic-bezier(.7,0,.84,0)' : 'cubic-bezier(.16,1,.3,1)' }),
+    pAnim(P.T, into ? ft : pRev(ft), { duration:D * .45, easing:'ease-out', delay:into ? 0 : D * .55 }),
+    pAnim(P.FL, into ? [{ opacity:0 }, { opacity:0, offset:.6 }, { opacity:1 }] : [{ opacity:1 }, { opacity:0, offset:.4 }, { opacity:0 }], { duration:D, easing:'linear' })
+  ]);
+}
 /* v1.8: con «Animaciones» apagado no hay película: un fundido corto y listo (los logos siempre se ven) */
 function quickGo(href, back){
   if (document.getElementById('portal')) return;
   try{ sessionStorage.setItem(back ? 'synthz:back' : 'synthz:portal', 'fade'); }catch(e){}
-  const v = document.createElement('div'); v.id = 'portal'; v.style.cssText = 'position:fixed;inset:0;z-index:2147483000;background:#0b0c10;opacity:0;transition:opacity .18s ease';
+  const v = document.createElement('div'); v.id = 'portal'; v.style.cssText = 'position:fixed;inset:0;z-index:2147483000;background:#0b0820;opacity:0;transition:opacity .18s ease';
   document.body.appendChild(v); requestAnimationFrame(() => { v.style.opacity = '1'; });
   setTimeout(() => { location.href = href; }, 200);
 }
+const pReady = P => Promise.race([Promise.all([P.Z.decode ? P.Z.decode().catch(() => {}) : 0, document.fonts ? document.fonts.ready : 0]), pSleep(1200)]);
 async function portalOut(href){
   if (document.getElementById('portal')) return;
   if (reduce && !(typeof EV !== 'undefined' && EV.pending())) return quickGo(href, false);
@@ -1566,32 +1601,29 @@ async function portalOut(href){
   try{ sessionStorage.setItem('synthz:portal', 'o'); }catch(e){}
   try{
     const P = portalStage(), nav = document.querySelector('#nav .logo');
-    P.o.classList.add('clear'); await imgsReady(P);
-    await new Promise(r => requestAnimationFrame(r));
-    /* 1 · «SynthZ» sale de su esquina, crece y llega al centro */
+    await pReady(P); fitPortal(P, logoRect()); await new Promise(r => requestAnimationFrame(r));
+    /* 1 · «SynthZ» sale de su esquina y llega al centro, mientras cae la noche */
     if (nav) nav.style.visibility = 'hidden';
-    P.o.animate([{ backgroundColor:'rgba(11,12,16,0)' }, { backgroundColor:'rgba(11,12,16,1)' }], { duration:900, easing:'ease-out', fill:'forwards' });
-    await flyWord(P, false, 1100);
+    pAnim(P.BG, [{ opacity:0 }, { opacity:1 }], { duration:800, easing:'ease-out' });
+    await flyWord(P, false, 950);
     /* evento especial: en vez del portal normal, la página «se reprograma» y luego carga el chat */
     const evn = typeof EV !== 'undefined' && EV.pending();
     if (evn){ await EV.play(evn); portalLock(true); go(); return; }
-    P.W.style.transition = 'transform .5s ' + PEO; P.W.style.transform = 'none';
-    await sleepRaw(200); P.W.style.transition = '';
-    /* 2 · la Z de vidrio se derrite y se vuelve «Flow»: queda «SynthFlow» */
-    SND.shimmer(); await melt(P, true, 1500);
-    P.M.classList.add('shine'); await sleepRaw(520);
-    /* 3 · la barrita de luz se come «Synth» */
-    P.BAR.classList.add('on'); await sleepRaw(160);
-    P.SY.style.transition = 'width .85s ' + PE; P.SY.style.width = '0px';
-    await sleepRaw(880); P.BAR.classList.remove('on');
-    await sleepRaw(180);
-    /* 4 · la cámara entra en la «o» */
-    P.PG.animate([{ opacity:0 }, { opacity:.5 }, { opacity:0 }], { duration:1200, easing:'ease-out' }); SND.warp();
-    await zoomO(P, true, 1300);
+    /* 2 · la Z gira y se vuelve el orbe de SynthFlow; «Flow» se escribe */
+    try{ SND.shimmer(); }catch(e){}
+    await morph(P, true, 900);
+    /* 3 · SynthonIA sale, saluda… y salta adentro del orbe */
+    P.o.classList.add('bot');
+    await pSleep(950);
+    await botJump(P, true, 760); orbPulse(P);
+    await pSleep(380);
+    /* 4 · la cámara se zambulle en el orbe */
+    try{ SND.warp(); }catch(e){}
+    await dive(P, true, 1000);
     go();
   }catch(e){
     console.error('[synthz] portal', e && e.message);
-    const p = document.getElementById('portal'); if (p){ p.style.background = '#0b0c10'; p.style.opacity = '1'; }
+    const p = document.getElementById('portal'); if (p){ p.style.background = '#0b0820'; p.style.opacity = '1'; }
     setTimeout(go, 200);
   }
 }
@@ -1604,24 +1636,26 @@ async function portalBack(href){
   try{ sessionStorage.setItem('synthz:back', 'o'); }catch(e){}
   try{
     const P = portalStage();
-    /* empieza como terminó la ida: «Flow» sin «Synth», dentro de la «o» */
-    P.SY.style.width = '0px'; P.SL.style.width = P.wF + 'px'; P.ZZ.style.opacity = '0'; P.FL.style.opacity = '1';
-    await imgsReady(P);
-    await new Promise(r => requestAnimationFrame(r));
-    await zoomO(P, true, 1);
-    P.o.animate([{ opacity:0 }, { opacity:1 }], { duration:380, easing:'ease-out', fill:'forwards' }); await sleepRaw(380);
-    await zoomO(P, false, 1200);
-    P.W.style.transform = 'none';
-    await sleepRaw(140);
-    /* la barrita devuelve «Synth» */
-    P.BAR.classList.add('on'); await sleepRaw(140);
-    P.SY.style.transition = 'width .8s ' + PE; P.SY.style.width = P.wS + 'px';
-    await sleepRaw(840); P.BAR.classList.remove('on'); await sleepRaw(200);
-    /* «Flow» se derrite y vuelve a ser la Z */
-    SND.shimmer(); await melt(P, false, 1400);
-    await sleepRaw(260);
-    /* «SynthZ» vuelve a su esquina */
-    await flyWord(P, true, 1000);
+    P.o.classList.add('flow', 'start'); P.Z.style.opacity = '0'; P.ORB.style.opacity = '1'; P.BOT.style.opacity = '0';
+    await pReady(P); fitPortal(P, logoRect()); await new Promise(r => requestAnimationFrame(r));
+    P.BG.style.opacity = '1';
+    /* 1 · sales del orbe */
+    try{ SND.warp(); }catch(e){}
+    pAnim(P.o, [{ opacity:0 }, { opacity:1 }], { duration:280, easing:'ease-out' });
+    await dive(P, false, 950);
+    P.o.classList.remove('diving');
+    /* 2 · SynthonIA salta afuera y se despide */
+    P.BOT.style.opacity = ''; P.o.classList.add('bot'); orbPulse(P);
+    await botJump(P, false, 700);
+    await pSleep(700);
+    pAnim(P.BOT, [{ transform:'none', opacity:1 }, { transform:'translateY(40px) scale(.6)', opacity:0 }], { duration:420, easing:'ease-in' });
+    /* 3 · el orbe vuelve a ser la Z; se borra «Flow» y vuelve la «Z» */
+    try{ SND.shimmer(); }catch(e){}
+    await morph(P, false, 900);
+    await pSleep(150);
+    /* 4 · «SynthZ» vuelve a su esquina */
+    pAnim(P.BG, [{ opacity:1 }, { opacity:.92 }], { duration:800 });
+    await flyWord(P, true, 900);
     go();
   }catch(e){
     console.error('[synthz] portal', e && e.message);
@@ -1634,7 +1668,7 @@ function portalArrive(veil){
   if (!veil) return;
   const R = Math.hypot(innerWidth, innerHeight) / 2 + 60, t0 = performance.now(), D = 1100;
   const ring = document.createElement('i'); ring.className = 'szpring'; document.body.appendChild(ring);
-  veil.style.transition = 'none'; veil.style.opacity = '1'; veil.style.background = '#0b0c10';
+  veil.style.transition = 'none'; veil.style.opacity = '1'; veil.style.background = '#0b0820';
   (function f(now){
     const k = Math.min(1, (now - t0) / D), e = 1 - Math.pow(1 - k, 3), rr = (R * e).toFixed(1);
     const m = 'radial-gradient(circle at 50% 50%, transparent ' + rr + 'px, #000 ' + (R * e + 34).toFixed(1) + 'px)';
@@ -2740,127 +2774,99 @@ const FACE_EYE = '#3de0ff';
     + '<radialGradient id="szCore" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#f2ffff"/><stop offset=".35" stop-color="#7befff"/><stop offset=".7" stop-color="#3de0ff" stop-opacity=".55"/><stop offset="1" stop-color="#3de0ff" stop-opacity="0"/></radialGradient>'
     + '<linearGradient id="szRingG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff7ad0"/><stop offset=".5" stop-color="#bfe9ff"/><stop offset="1" stop-color="#3de0ff"/></linearGradient>'
     /* v2.7 · cuerpo de cristal líquido: vidrio casi transparente, filo de luz cian, borde iridiscente con los colores de la marca */
-    + '<radialGradient id="sgGlass" cx=".42" cy=".36" r=".75"><stop offset="0" stop-color="#5a44d0" stop-opacity=".34"/><stop offset=".6" stop-color="#2f2190" stop-opacity=".42"/><stop offset=".86" stop-color="#76d4ff" stop-opacity=".55"/><stop offset="1" stop-color="#eafdff" stop-opacity=".9"/></radialGradient>'
-    + '<radialGradient id="sgCaus" cx=".5" cy=".96" r=".62"><stop offset="0" stop-color="#9af7ff" stop-opacity=".85"/><stop offset=".5" stop-color="#3de0ff" stop-opacity=".22"/><stop offset="1" stop-color="#3de0ff" stop-opacity="0"/></radialGradient>'
-    + '<linearGradient id="sgIri" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3de0ff"/><stop offset=".38" stop-color="#9b7bff"/><stop offset=".7" stop-color="#ff3d9a"/><stop offset="1" stop-color="#ff7a45"/></linearGradient>'
-    + '<linearGradient id="sgArm" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e4fbff" stop-opacity=".9"/><stop offset=".22" stop-color="#7d6be8" stop-opacity=".5"/><stop offset=".55" stop-color="#2f2190" stop-opacity=".45"/><stop offset=".82" stop-color="#7fe6ff" stop-opacity=".6"/><stop offset="1" stop-color="#ffffff" stop-opacity=".85"/></linearGradient>'
+    + '<radialGradient id="sgGlass" cx=".42" cy=".34" r=".78"><stop offset="0" stop-color="#3a2340" stop-opacity=".38"/><stop offset=".6" stop-color="#1d1518" stop-opacity=".55"/><stop offset=".86" stop-color="#c98a6a" stop-opacity=".45"/><stop offset="1" stop-color="#fff1d6" stop-opacity=".9"/></radialGradient>'
+    + '<radialGradient id="sgCaus" cx=".5" cy=".96" r=".62"><stop offset="0" stop-color="#ffd9a0" stop-opacity=".7"/><stop offset=".5" stop-color="#c9566c" stop-opacity=".22"/><stop offset="1" stop-color="#c9566c" stop-opacity="0"/></radialGradient>'
+    + '<linearGradient id="sgIri" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1d6"/><stop offset=".3" stop-color="#e6b65f"/><stop offset=".68" stop-color="#e0607e"/><stop offset="1" stop-color="#9b7bff"/></linearGradient>'
+    + '<linearGradient id="sgArm" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff1d6" stop-opacity=".9"/><stop offset=".22" stop-color="#8a5a4a" stop-opacity=".55"/><stop offset=".55" stop-color="#1d1518" stop-opacity=".6"/><stop offset=".82" stop-color="#e6b65f" stop-opacity=".55"/><stop offset="1" stop-color="#ffffff" stop-opacity=".85"/></linearGradient>'
     + '<linearGradient id="sgSpec" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'
     + '<linearGradient id="sgWave" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3de0ff"/><stop offset=".35" stop-color="#7b3ff2"/><stop offset=".7" stop-color="#ff3d9a"/><stop offset="1" stop-color="#ff7a45"/></linearGradient>'
-    + '<linearGradient id="sgBeam" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#3de0ff" stop-opacity=".55"/><stop offset=".6" stop-color="#7b3ff2" stop-opacity=".16"/><stop offset="1" stop-color="#7b3ff2" stop-opacity="0"/></linearGradient>'
+    + '<linearGradient id="sgBeam" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ffd9a0" stop-opacity=".5"/><stop offset=".6" stop-color="#c9566c" stop-opacity=".14"/><stop offset="1" stop-color="#c9566c" stop-opacity="0"/></linearGradient>'
     + '<radialGradient id="sgCoreIn" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#1b1048"/><stop offset=".7" stop-color="#0a0620"/><stop offset="1" stop-color="#05030f"/></radialGradient>'
-    + '<radialGradient id="sgHalo" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#3de0ff" stop-opacity=".55"/><stop offset=".55" stop-color="#7b3ff2" stop-opacity=".18"/><stop offset="1" stop-color="#7b3ff2" stop-opacity="0"/></radialGradient>'
+    + '<radialGradient id="sgHalo" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffc857" stop-opacity=".5"/><stop offset=".55" stop-color="#ff3d9a" stop-opacity=".16"/><stop offset="1" stop-color="#ff3d9a" stop-opacity="0"/></radialGradient>'
     + '<clipPath id="sgCoreClip"><circle cx="150" cy="256" r="19"/></clipPath>'
     + '<clipPath id="sgTorsoClip"><path d="M150 206C198 206 216 228 214 258C212 290 190 312 150 312C110 312 88 290 86 258C84 228 102 206 150 206Z"/></clipPath>'
-    + '<radialGradient id="sgBlobA" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#9b7bff" stop-opacity=".75"/><stop offset="1" stop-color="#9b7bff" stop-opacity="0"/></radialGradient>'
-    + '<radialGradient id="sgBlobB" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ff3d9a" stop-opacity=".55"/><stop offset=".5" stop-color="#3de0ff" stop-opacity=".25"/><stop offset="1" stop-color="#3de0ff" stop-opacity="0"/></radialGradient>'
+    + '<radialGradient id="sgBlobA" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#e6b65f" stop-opacity=".55"/><stop offset="1" stop-color="#e6b65f" stop-opacity="0"/></radialGradient>'
+    + '<radialGradient id="sgBlobB" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#c9566c" stop-opacity=".6"/><stop offset=".5" stop-color="#9b7bff" stop-opacity=".22"/><stop offset="1" stop-color="#9b7bff" stop-opacity="0"/></radialGradient>'
     + '<filter id="szBlur3" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2"/></filter>'
     + '<filter id="szBlur1" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1"/></filter>'
     + '</defs></svg>';
   (document.body || document.documentElement).appendChild(d);
 })();
-/* ojos del boceto («Piezas de la cara»): alargado, sonriente, estrella, corazón, cerrado, barra, mirando arriba */
-const FEYE = {
-  cap:(x, y, s) => '<rect x="' + (x - 3.7 * s) + '" y="' + (y - 9.5 * s) + '" width="' + 7.4 * s + '" height="' + 19 * s + '" rx="' + 3.7 * s + '"/>',
-  big:(x, y) => '<rect x="' + (x - 5) + '" y="' + (y - 11.5) + '" width="10" height="23" rx="5"/>',
-  smile:(x, y) => '<path d="M' + (x - 7) + ' ' + (y + 3) + 'q7-11 14 0" fill="none" stroke-width="4.6" stroke-linecap="round"/>',
-  talk:(x, y, d) => '<path d="M' + (x - 7) + ' ' + (y + 1 + d) + 'q7-6 14 ' + (-2 * d) + '" fill="none" stroke-width="4.4" stroke-linecap="round"/>',
-  closed:(x, y) => '<path d="M' + (x - 7) + ' ' + y + 'q7 5 14 0" fill="none" stroke-width="3.8" stroke-linecap="round"/>',
-  bar:(x, y) => '<rect x="' + (x - 8) + '" y="' + (y - 2.8) + '" width="16" height="5.6" rx="2.8"/>',
-  tilt:(x, y, a) => '<rect x="' + (x - 7) + '" y="' + (y - 2.8) + '" width="14" height="5.6" rx="2.8" transform="rotate(' + a + ' ' + x + ' ' + y + ')"/>',
-  up:(x, y) => '<circle cx="' + x + '" cy="' + (y - 6) + '" r="3.6"/>',
-  star:(x, y) => '<path d="M' + x + ' ' + (y - 8.5) + 'l2.5 5.4 5.9.7-4.4 4 1.2 5.8-5.2-2.9-5.2 2.9 1.2-5.8-4.4-4 5.9-.7z"/>',
-  heart:(x, y) => '<path d="M' + x + ' ' + (y + 7) + 'l-7-6.6a4.2 4.2 0 0 1 7-4.6a4.2 4.2 0 0 1 7 4.6z"/>',
-  sad:(x, y, k) => '<path d="M' + (x - 7) + ' ' + (y + (k < 0 ? 3 : -1)) + 'q7-7 14 ' + (k < 0 ? -4 : 4) + '" fill="none" stroke-width="4.2" stroke-linecap="round"/>',
-  glitch:(x, y) => '<path d="M' + (x - 2) + ' ' + (y - 8) + 'h4v6h6v4h-6v6h-4v-6h-6v-4h6z"/>',
-  cross:(x, y, k) => '<path d="M' + (x - 6) + ' ' + (y - 5) + 'l' + (k < 0 ? '12 5-12 5' : '0 0') + '" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>'
-};
-const FL0 = 39, FR0 = 61, FY0 = 56;
+/* ---------- v2.8 · SynthonIA vuelve a ser la de main (pedido de Sammuel, 27 oct) ----------
+   Cabeza cuadradita oscura con filo dorado, antena y orejas rosadas, pantalla negra con ojos, boca y cachetes dorados.
+   Todas las caras de main siguen igual; las nuevas (escuchando, analizando, creando, hablando, error) usan el mismo dibujo.
+   Lo nuevo es el cuerpo de cristal (más abajo) y los detalles que se mueven (engranes, foco, escáner, ondas de voz). */
+const FFX_C = '#f6d9a0';
 const FFX = {
-  gears:'<g class="fx" fill="#f6c25c" opacity=".95"><circle cx="86" cy="12" r="5"/><circle cx="95" cy="19" r="3.4"/><circle cx="86" cy="12" r="1.8" fill="#0b0820"/><circle cx="95" cy="19" r="1.2" fill="#0b0820"/><circle cx="83" cy="25" r="1.1"/><circle cx="87" cy="25" r="1.1"/><circle cx="91" cy="25" r="1.1"/></g>',
-  bulb:'<g class="fx"><circle cx="90" cy="12" r="6.5" fill="#ffd36a"/><rect x="87.5" y="18" width="5" height="4" rx="1" fill="#e9b04a"/><path d="M78 6l2 4M98 4l-2 4M100 14h-3" stroke="#ffd36a" stroke-width="1.6" stroke-linecap="round"/></g><path class="fx" d="M14 10l1.4 3.2 3.2 1.4-3.2 1.4L14 19.2l-1.4-3.2L9.4 14.6l3.2-1.4z" fill="#ffd36a"/>',
-  q:'<text class="fx" x="84" y="20" font-size="22" font-weight="800" fill="' + FACE_EYE + '" font-family="system-ui,sans-serif">?</text>',
-  zz:'<text class="fx" x="74" y="22" font-size="10" font-weight="800" fill="' + FACE_EYE + '" font-family="system-ui,sans-serif">z<tspan dy="-6" font-size="13">z</tspan><tspan dy="-7" font-size="17">Z</tspan></text>',
-  tear:'<path class="fx ftear" d="M61 70q-4 6-1 8.6q4 2 5-2.6q0-2-4-6z" fill="#7fe3ff"/>',
-  drop:'<path class="fx" d="M86 24q-5 8-1 11q5 2.2 6-3q0-2.6-5-8z" fill="#8fd3e8" opacity=".9"/>',
-  spark:'<g class="fx" fill="#ffd36a"><path d="M10 14l1.6 3.6 3.6 1.6-3.6 1.6L10 24.4l-1.6-3.6L4.8 19.2l3.6-1.6z"/><path d="M90 8l1.2 2.6 2.6 1.2-2.6 1.2L90 15.6l-1.2-2.6-2.6-1.2 2.6-1.2z"/></g>',
-  confetti:'<g class="fx"><rect x="6" y="10" width="4" height="2" rx="1" fill="#ff5fb4" transform="rotate(-30 8 11)"/><rect x="88" y="6" width="4" height="2" rx="1" fill="#3de0ff" transform="rotate(25 90 7)"/><rect x="94" y="22" width="4" height="2" rx="1" fill="#ffc857"/><rect x="2" y="26" width="4" height="2" rx="1" fill="#b06bff"/><circle cx="18" cy="4" r="1.3" fill="#ffc857"/><circle cx="80" cy="2" r="1.3" fill="#ff5fb4"/></g>',
-  lines:'<g class="fx" stroke="#ff5fb4" stroke-width="2.2" stroke-linecap="round"><path d="M10 14l5 4M50 2v5M90 14l-5 4M24 5l2.5 4.5M76 5l-2.5 4.5"/></g>',
-  scan:'<g class="fx" stroke="' + FACE_EYE + '" stroke-width="1.8" fill="none" opacity=".9"><path d="M4 14V4h10M86 4h10v10M96 86v10H86M14 96H4V86"/></g><g class="fx fscan" stroke="' + FACE_EYE + '" stroke-opacity=".22" stroke-width=".8"><path d="M14 30h72M12 40h76M11 50h78M11 60h78M12 70h76M15 80h70"/></g>',
-  clock:'<g class="fx" stroke="' + FACE_EYE + '" stroke-width="1.8" fill="none" stroke-linecap="round"><circle cx="89" cy="12" r="6.5"/><path d="M89 8.5V12l2.4 1.6"/></g>',
-  glitch:'<g class="fx fglitch"><rect x="8" y="40" width="14" height="3" fill="#ff5fb4" opacity=".7"/><rect x="78" y="62" width="16" height="3" fill="' + FACE_EYE + '" opacity=".7"/><rect x="70" y="30" width="8" height="2" fill="#fff" opacity=".5"/></g>',
-  shades:''
+  bulb:'<g class="fx"><circle cx="90" cy="12" r="6.5" fill="#ffd36a"/><rect x="87.5" y="18" width="5" height="4" rx="1" fill="#e9b04a"/><path d="M78 6l2 4M98 4l-2 4M100 14h-3" stroke="#ffd36a" stroke-width="1.6" stroke-linecap="round"/></g>',
+  scan:'<g class="fx fscan" stroke="' + FFX_C + '" stroke-opacity=".28" stroke-width=".8"><path d="M24 40h52M23 48h54M23 56h54M23 64h54M24 72h52"/></g><g class="fx" stroke="' + FFX_C + '" stroke-width="1.8" fill="none" opacity=".9"><path d="M4 18V8h10M86 8h10v10M96 86v10H86M14 96H4V86"/></g>',
+  glitch:'<g class="fx fglitch"><rect x="8" y="40" width="14" height="3" fill="#ff5fb4" opacity=".7"/><rect x="78" y="62" width="16" height="3" fill="#3de0ff" opacity=".7"/><rect x="70" y="30" width="8" height="2" fill="#fff" opacity=".5"/></g>'
 };
-/* cada expresión: ojos (izquierdo, derecho), extras y si lleva ondas */
-const FACE = {
-  neutral:{ e:[['cap'], ['cap']] },
-  feliz:{ e:[['smile'], ['smile']] },
-  riendo:{ e:[['smile'], ['smile']], x:'spark' },
-  encantada:{ e:[['heart'], ['heart']], c:'#ff6fae' },
-  guino:{ e:[['cap'], ['smile']] },
-  escuchando:{ e:[['cap', 1, -2], ['cap', 1, -2]], dx:-3, w:'l' },
-  pensando:{ e:[['tilt', 1, -14], ['tilt', 1, -14]], dx:3, dy:-4, x:'gears' },
-  analizando:{ e:[['bar'], ['bar']], x:'scan' },
-  creando:{ e:[['cap'], ['cap']], dy:-2, x:'bulb' },
-  hablando:{ e:[['talk', 1, 0], ['talk', 1, 0]], w:'r' },
-  senalando:{ e:[['cap'], ['cap']], dx:4 },
-  celebrando:{ e:[['star'], ['star']], x:'confetti' },
-  sorprendida:{ e:[['big'], ['big']], x:'lines' },
-  confundida:{ e:[['tilt', 1, 72], ['cap', .55]], x:'q' },
-  disculpa:{ e:[['sad', 1, -1], ['sad', 1, 1]] },
-  preocupada:{ e:[['sad', 1, -1], ['sad', 1, 1]], x:'drop' },
-  triste:{ e:[['sad', 1, -1], ['sad', 1, 1]], dy:2, x:'tear' },
-  dormida:{ e:[['closed'], ['closed']], dy:2, x:'zz' },
-  esperando:{ e:[['up'], ['up']], x:'clock' },
-  flow:{ e:[['bar'], ['bar']], dy:-2, x:'spark' },
-  auch:{ e:[['cross', 1, -1], ['smile']] },
-  error:{ e:[['glitch'], ['glitch']], x:'glitch' }
-};
-/* nombres del boceto que también se pueden pedir */
+const FACE = (() => {
+  const open = (dx, dy) => ['M' + (40 + dx) + ' ' + (48 + dy) + 'v8', 'M' + (60 + dx) + ' ' + (48 + dy) + 'v8'];
+  const happy = ['M35 54q5-7 10 0', 'M55 54q5-7 10 0'];
+  const heart = x => 'M' + x + ' 58l-5.5-5.5a3.2 3.2 0 0 1 5.5-4a3.2 3.2 0 0 1 5.5 4z';
+  const star = x => 'M' + x + ' 45l1.8 3.8 4 .5-3 2.8.8 4-3.6-2-3.6 2 .8-4-3-2.8 4-.5z';
+  const ring = x => 'M' + (x - 4.5) + ' 52a4.5 4.5 0 1 0 9 0a4.5 4.5 0 1 0-9 0';
+  return {
+    feliz:{ e:open(0, 0), m:'M42 64q8 7 16 0', ck:1 },
+    neutral:{ e:open(0, 0), m:'M45 66h10' },
+    encantada:{ e:[heart(40), heart(60)], ec:'#ef7f93', ew:1.6, ef:'#ef7f93', m:'M41 63q9 10 18 0z', mf:1, ck:1 },
+    riendo:{ e:happy, m:'M41 62q9 11 18 0z', mf:1, ck:1 },
+    guino:{ e:['M40 48v8', 'M55 54q5-7 10 0'], m:'M42 64q8 7 16 0', ck:1 },
+    pensando:{ e:open(3, -3), m:'M45 67q5-3 10-1', x:'M84 26h.1M91 16h.1', xw:5 },
+    sorprendida:{ e:[ring(40), ring(60)], ew:3, ef:FACE_G, m:'M47 68a3 3 0 1 0 6 0a3 3 0 1 0-6 0', b:'M34 41l10-1M56 40l10 1' },
+    senalando:{ e:open(4, 0), m:'M46 65q6 4 12 0' },
+    disculpa:{ e:['M40 51v6', 'M60 51v6'], b:'M34 46l10-4M66 46l-10-4', m:'M43 69q7-6 14 0' },
+    confundida:{ e:['M40 48v8', 'M60 51v3'], b:'M54 42l12-3', m:'M41 67q3-3 6 0t6 0t6 0' },
+    dormida:{ e:['M35 52q5 4 10 0', 'M55 52q5 4 10 0'], ew:3.4, m:'M47 67h6', x:'M73 15h8l-8 9h8' },
+    celebrando:{ e:[star(40), star(60)], ew:1.5, ef:FACE_G, m:'M41 62q9 11 18 0z', mf:1, ck:1, x:'M10 16l4 4M90 14l-4 5M6 32h5M94 30h-5', xw:2.6 },
+    esperando:{ e:open(-3, -2), m:'M45 66h10', x:'M84 14a6 6 0 1 0 .01 0M84 11v3.5l2.5 2', xw:2 },
+    flow:{ glasses:1, m:'M43 65q8 6 16-1', ck:1 },
+    preocupada:{ e:open(0, 2), b:'M33 45l11-5M67 45l-11-5', m:'M42 70q4-4 8-1t8-1', drop:1 },
+    triste:{ e:['M40 53v4', 'M60 53v4'], ew:6, b:'M32 47l11-5M68 47l-11-5', m:'M41 72q9-8 18 0' },
+    auch:{ e:['M34 49l10 4-10 4', 'M55 53q5-4 10 0'], ew:3.4, b:'M32 43l12 5M57 45l10-3', m:'M41 70q4.5-4 9 0q4.5 4 9 0', x:'M78 30l4-6M84 36l6-2' },
+    /* las de la v2.4 en adelante, con el dibujo de main: escucha mirando a un lado (ondas azules), analiza con ojos de barra
+       y su escáner, crea con el foco encendido, habla con la boca abierta (ondas naranjas), y se «cuelga» cuando hay un error */
+    escuchando:{ e:open(-4, -1), m:'M46 66h8', w:'l' },
+    analizando:{ e:['M34 52h12', 'M54 52h12'], ew:5, m:'M45 66h10', fx:'scan' },
+    creando:{ e:open(0, -2), m:'M42 64q8 7 16 0', ck:1, fx:'bulb' },
+    hablando:{ e:open(0, 0), m:'M42 61.5q8-2 16 0q-1 9-8 9q-7 0-8-9z', mf:1, ck:1, w:'r' },
+    error:{ e:['M35 47l10 10M45 47l-10 10', 'M55 47l10 10M65 47l-10 10'], ew:3.6, m:'M41 68q4.5-4 9 0q4.5 4 9 0', fx:'glitch' }
+  };
+})();
 FACE.descansando = FACE.dormida;
 const FACE_GOOD = ['feliz', 'riendo', 'guino', 'encantada', 'celebrando', 'flow'];
-function eyesOf(f){
-  const dx = f.dx || 0, dy = f.dy || 0;
-  return f.e.map((s, i) => {
-    const x = (i ? FR0 : FL0) + dx, y = FY0 + dy, k = s[0];
-    if (k === 'cap') return FEYE.cap(x, y + (s[1] && s[1] < 1 ? 3 : 0), s[1] || 1);
-    if (k === 'tilt') return FEYE.tilt(x, y, s[2] || 0);
-    if (k === 'talk') return FEYE.talk(x, y, i ? -1 : 1);
-    if (k === 'sad') return FEYE.sad(x, y, i ? 1 : -1);
-    if (k === 'cross') return i ? FEYE.smile(x, y) : FEYE.cross(x, y, -1);
-    return FEYE[k](x, y);
-  }).join('');
+/* la cabeza de main (lo mismo en la bolita, los botones y el cuerpo entero) */
+function headSvg(f){
+  const G = FACE_G, P = (d, st) => d ? '<path d="' + d + '" ' + st + '/>' : '';
+  const eyes = f.glasses
+    ? '<path d="M27 45h20v6.5a7 7 0 0 1-7 7h-6a7 7 0 0 1-7-7z" fill="#07070a" stroke="#e6b65f" stroke-width="2.2"/><path d="M53 45h20v6.5a7 7 0 0 1-7 7h-6a7 7 0 0 1-7-7z" fill="#07070a" stroke="#e6b65f" stroke-width="2.2"/><path d="M47 47.5q3-2.5 6 0" stroke="#e6b65f" stroke-width="2.2" fill="none"/><path d="M31 49l5-3M57 49l5-3" stroke="rgba(255,255,255,.55)" stroke-width="1.6" stroke-linecap="round"/>'
+    : f.e.map(d => P(d, 'stroke="' + (f.ec || G) + '" stroke-width="' + (f.ew || 7) + '" stroke-linecap="round" stroke-linejoin="round" fill="' + (f.ef || 'none') + '"')).join('');
+  return '<path class="fa" d="M50 20V10" stroke="#e6b65f" stroke-width="2.5" stroke-linecap="round"/><circle class="fb" cx="50" cy="8" r="4.5" fill="#c9566c"/>'
+    + '<rect x="6" y="46" width="8" height="18" rx="4" fill="#c9566c"/><rect x="86" y="46" width="8" height="18" rx="4" fill="#c9566c"/>'
+    + '<rect x="12" y="20" width="76" height="70" rx="30" fill="#1d1518" stroke="#e6b65f" stroke-opacity=".55" stroke-width="2"/><rect x="21" y="31" width="58" height="49" rx="21" fill="#110c0e"/>'
+    + (f.ck ? '<circle cx="31" cy="64" r="4.5" fill="#c9566c" fill-opacity=".55"/><circle cx="69" cy="64" r="4.5" fill="#c9566c" fill-opacity=".55"/>' : '')
+    + P(f.b, 'stroke="' + G + '" stroke-width="2.6" stroke-linecap="round" fill="none"')
+    + '<g class="fe">' + eyes + '</g>'
+    + P(f.m, 'class="fm" stroke="' + G + '" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" fill="' + (f.mf ? G : 'none') + '"')
+    + P(f.x, 'class="fx" stroke="#e6b65f" stroke-width="' + (f.xw || 2.4) + '" stroke-linecap="round" stroke-linejoin="round" fill="none"')
+    + (f.drop ? '<path class="fdrop" d="M83 28q-6 9-1 12.5q6 2.5 7-3.5q0-3-6-9z" fill="#8fd3e8" fill-opacity=".9"/>' : '')
+    + (f.fx ? FFX[f.fx] : '');
 }
-/* la cabeza (lo mismo en la bolita, el logo y el cuerpo entero) */
-function headSvg(f, big){
-  const G = f.c || FACE_EYE;
-  return '<ellipse class="fear" cx="11.5" cy="57" rx="4.6" ry="9" fill="url(#szCylV)"/><ellipse class="fear" cx="88.5" cy="57" rx="4.6" ry="9" fill="url(#szCylV)"/>'
-    + '<g class="fhead"><ellipse cx="50" cy="53" rx="39.5" ry="37.5" fill="url(#szPearl)"/>'
-    + '<ellipse cx="50" cy="53" rx="39.5" ry="37.5" fill="url(#szSub)"/>'
-    + '<ellipse cx="50" cy="53" rx="39.5" ry="37.5" fill="url(#szRimL)"/>'
-    + '<ellipse cx="50" cy="53" rx="39" ry="37" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width=".7"/><ellipse cx="50" cy="53" rx="39.5" ry="37.5" fill="none" stroke="url(#sgIri)" stroke-width="1.1" stroke-opacity=".75"/></g>'
-    + (big ? '<ellipse cx="34" cy="26" rx="14" ry="6" transform="rotate(-26 34 26)" fill="#fff" opacity=".8" filter="url(#szBlur3)"/>' : '<ellipse cx="34" cy="27" rx="11" ry="4.6" transform="rotate(-26 34 27)" fill="#fff" opacity=".6"/>')
-    + '<path d="M24.5 37q4-11 15.5-15.5" stroke="#fff" stroke-opacity=".95" stroke-width="2.2" stroke-linecap="round" fill="none"/>'
-    + '<ellipse class="frim" cx="50" cy="56" rx="31.4" ry="28.2" fill="none" stroke="#8b5cff" stroke-width="' + (big ? 6 : 4) + '" opacity="' + (big ? .85 : .6) + '"' + (big ? ' filter="url(#szBlur3)"' : '') + '/>'
-    + '<ellipse cx="50" cy="56" rx="30.6" ry="27.4" fill="url(#szVisor)" stroke="url(#sgIri)" stroke-width="2.2"/>'
-    + (big ? '<ellipse cx="50" cy="56" rx="28.6" ry="25.4" fill="none" stroke="#3de0ff" stroke-width="3" opacity=".3" filter="url(#szBlur3)"/>' : '') + ''
-    + '<path d="M28.5 49q5-15 21.5-18" stroke="#fff" stroke-opacity=".13" stroke-width="3.2" stroke-linecap="round" fill="none"/>'
-    + '<g class="fe" fill="' + G + '" stroke="' + G + '" stroke-width="0">' + eyesOf(f) + '</g>';
-}
+/* ondas de voz: naranja a la DERECHA cuando habla, azul a la IZQUIERDA cuando escucha (por fuera de las orejas) */
 function wavesSvg(){
   const W = (x, dir, c, k) => '<g class="' + k + '" stroke="' + c + '" stroke-width="3" stroke-linecap="round" fill="none">'
-    + [4.5, 9.5, 14.5].map((r, i) => '<path style="--i:' + i + '" d="M' + x + ' ' + (56 - r) + 'a' + r + ' ' + r + ' 0 0 ' + (dir > 0 ? 1 : 0) + ' 0 ' + (2 * r) + '"/>').join('') + '</g>';
-  return W(93, 1, '#ff8a3d', 'fwr') + W(7, -1, FACE_EYE, 'fwl');
+    + [4.5, 9.5, 14.5].map((r, i) => '<path style="--i:' + i + '" d="M' + x + ' ' + (55 - r) + 'a' + r + ' ' + r + ' 0 0 ' + (dir > 0 ? 1 : 0) + ' 0 ' + (2 * r) + '"/>').join('') + '</g>';
+  return W(97, 1, '#ff8a3d', 'fwr') + W(3, -1, '#3de0ff', 'fwl');
 }
 function face(mood, size, cls){
   const m = FACE[mood] ? mood : 'feliz', f = FACE[m], z = size || 40;
   return '<svg class="szface' + (cls ? ' ' + cls : '') + (f.w ? ' w' + f.w : '') + '" data-mood="' + m + '" viewBox="0 0 100 100" width="' + z + '" height="' + z + '" aria-hidden="true">'
-    + wavesSvg() + headSvg(f, z >= 64)
-    + '<path class="fm" d="M45 66h10" style="display:none"/>'
-    + (f.x ? FFX[f.x] : '')
-    + '</svg>';
+    + wavesSvg() + headSvg(f) + '</svg>';
 }
 /* ---------- cuerpo entero · v2.7: SynthonIA de cristal líquido, toda en código (SVG) ----------
-   La cabeza es la de siempre (casco, visor y ojos cian de la carita); el cuerpo es nuevo:
+   v2.8: la cabeza es la de main (cuadradita, dorada y rosada); el cuerpo es de cristal ahumado que combina con ella:
    cuello de anillos, torso de vidrio con el corazón de SynthFlow (la onda de la marca), brazos por partes
    que giran en el hombro, y un pedestal flotante con su luz. Nada es imagen: se dibuja y se anima en vivo,
    y se pausa solo cuando no se ve. Escenario 300 × 400 (3:4). */
@@ -2883,7 +2889,8 @@ const sgPiece = (d, rim) => '<path d="' + d + '" fill="url(#sgGlass)"/><path d="
 const sgOval = (cx, cy, rx, ry) => 'M' + (cx - rx) + ' ' + cy + 'a' + rx + ' ' + ry + ' 0 1 0 ' + 2 * rx + ' 0a' + rx + ' ' + ry + ' 0 1 0 ' + -2 * rx + ' 0z';
 /* el brazo izquierdo, colgando desde el hombro (0,0): brazo, codo, antebrazo y mano con pulgar. El derecho es su espejo */
 const SG_ARM = '<g transform="rotate(10)"><rect x="-12" y="-6" width="24" height="44" rx="12" fill="url(#sgArm)"/><rect x="-12" y="-6" width="24" height="44" rx="12" fill="none" stroke="url(#sgIri)" stroke-width="1.3" stroke-opacity=".85"/>'
-  + '<circle cx="0" cy="38" r="10.5" fill="url(#sgGlass)" stroke="#bff6ff" stroke-opacity=".6" stroke-width="1"/>'
+  + '<circle cx="0" cy="-2" r="11" fill="#c9566c" stroke="#e6b65f" stroke-opacity=".7" stroke-width="1.3"/><circle cx="-3.5" cy="-5.5" r="3" fill="#fff" opacity=".35"/>'
+  + '<circle cx="0" cy="38" r="9.5" fill="#c9566c" stroke="#e6b65f" stroke-opacity=".7" stroke-width="1.2"/><circle cx="-3" cy="35" r="2.6" fill="#fff" opacity=".35"/>'
   + '<g transform="translate(0 38) rotate(-14)"><rect x="-11" y="0" width="22" height="32" rx="11" fill="url(#sgArm)"/><rect x="-11" y="0" width="22" height="32" rx="11" fill="none" stroke="url(#sgIri)" stroke-width="1.2" stroke-opacity=".85"/>'
   +   '<g class="syb-hand" transform="translate(0 41) scale(1.18)">' + sgPiece('M-12 -6q0-8 12-8t12 8v8q0 12-12 12t-12-12z', 1.2)
   +     '<path d="M9 -2q9-3 10 4t-7 7" fill="url(#sgArm)" stroke="url(#sgIri)" stroke-width="1"/><path d="M-6 -9q4-3 9-1" stroke="#fff" stroke-opacity=".8" stroke-width="1.6" stroke-linecap="round" fill="none"/></g>'
@@ -2892,7 +2899,7 @@ const SG_TORSO = 'M150 206C198 206 216 228 214 258C212 290 190 312 150 312C110 3
 function synHead(mood){
   const m = FACE[mood] ? mood : 'feliz', f = FACE[m];
   return '<svg class="szface syb-hsvg' + (f.w ? ' w' + f.w : '') + '" data-mood="' + m + '" x="50" y="14" width="200" height="200" viewBox="0 0 100 100" overflow="visible">'
-    + wavesSvg() + headSvg(f, true) + '<path class="fm" d="M45 66h10" style="display:none"/>' + (f.x ? FFX[f.x] : '') + '</svg>';
+    + wavesSvg() + headSvg(f) + '</svg>';
 }
 function synBody(mood, pose, size){
   const m = FACE[mood] ? mood : 'feliz', p = SPOSE[pose] ? pose : 'idle', P = SPOSE[p];
@@ -2903,10 +2910,10 @@ function synBody(mood, pose, size){
     /* piso: anillo que late y la luz del pedestal */
     + '<g class="syb-floor"><ellipse class="syb-ring" cx="150" cy="380" rx="86" ry="13" fill="none" stroke="url(#sgIri)" stroke-width="2.2"/><ellipse cx="150" cy="380" rx="62" ry="8" fill="url(#sgHalo)"/></g>'
     + '<path class="syb-beam" d="M112 340L128 300H172L188 340Z" fill="url(#sgBeam)"/>'
-    + '<g class="syb-dots" fill="#bff6ff"><circle cx="136" cy="330" r="1.6"/><circle cx="150" cy="336" r="1.2"/><circle cx="163" cy="328" r="1.8"/><circle cx="144" cy="322" r="1"/><circle cx="158" cy="340" r="1.3"/></g>'
+    + '<g class="syb-dots" fill="#ffe2a8"><circle cx="136" cy="330" r="1.6"/><circle cx="150" cy="336" r="1.2"/><circle cx="163" cy="328" r="1.8"/><circle cx="144" cy="322" r="1"/><circle cx="158" cy="340" r="1.3"/></g>'
     /* pedestal flotante de vidrio */
     + '<g class="syb-base">' + sgPiece('M96 340a54 12 0 0 1 108 0v14a54 12 0 0 1 -108 0z', 1.4)
-    +   '<ellipse cx="150" cy="340" rx="54" ry="12" fill="url(#sgGlass)" stroke="url(#sgIri)" stroke-width="1.6"/><ellipse cx="150" cy="340" rx="34" ry="6.5" fill="none" stroke="#9ff0ff" stroke-opacity=".8" stroke-width="1.4"/>'
+    +   '<ellipse cx="150" cy="340" rx="54" ry="12" fill="url(#sgGlass)" stroke="url(#sgIri)" stroke-width="1.6"/><ellipse cx="150" cy="340" rx="34" ry="6.5" fill="none" stroke="#e6b65f" stroke-opacity=".85" stroke-width="1.4"/>'
     +   '<path d="M104 350q46 10 92 0" stroke="#fff" stroke-opacity=".35" stroke-width="1.2" fill="none"/></g>'
     /* todo lo de arriba flota sobre el pedestal */
     + '<g class="syb-up">'
@@ -2915,7 +2922,7 @@ function synBody(mood, pose, size){
     +   '<g class="syb-torso">' + sgPiece(torso, 1.8)
     +     '<g clip-path="url(#sgTorsoClip)" opacity=".75"><circle class="syb-liq a" cx="120" cy="240" r="46" fill="url(#sgBlobA)"/><circle class="syb-liq b" cx="182" cy="284" r="42" fill="url(#sgBlobB)"/></g>'
     +     '<path d="M108 236q10-20 38-24" stroke="url(#sgSpec)" stroke-width="5" stroke-linecap="round" fill="none" opacity=".7"/>'
-    +     '<path d="M118 304q32 11 64 0" stroke="#9ff0ff" stroke-opacity=".5" stroke-width="2" stroke-linecap="round" fill="none"/>'
+    +     '<path d="M118 304q32 11 64 0" stroke="#ffd9a0" stroke-opacity=".5" stroke-width="2" stroke-linecap="round" fill="none"/>'
     /*    el corazón: la esfera de SynthFlow con su onda de colores */
     +     '<circle cx="150" cy="256" r="30" fill="url(#sgHalo)" class="syb-halo"/>'
     +     '<circle cx="150" cy="256" r="19" fill="url(#sgCoreIn)" stroke="url(#sgIri)" stroke-width="1.6"/>'
@@ -2969,7 +2976,12 @@ function syllables(text){
 }
 function talkEls(svg){
   if (svg._talk) return svg._talk;
-  return (svg._talk = { g:svg.querySelector('.fwr') });
+  const NS = 'http://www.w3.org/2000/svg', g = document.createElementNS(NS, 'g'); g.setAttribute('class', 'ftalk');
+  const mo = document.createElementNS(NS, 'ellipse'), tg = document.createElementNS(NS, 'ellipse');
+  mo.setAttribute('cx', '50'); mo.setAttribute('cy', '65'); mo.setAttribute('fill', '#2a0d18'); mo.setAttribute('stroke', FACE_G); mo.setAttribute('stroke-width', '3');
+  tg.setAttribute('cx', '50'); tg.setAttribute('fill', '#e07a93');
+  g.appendChild(mo); g.appendChild(tg); svg.appendChild(g);
+  return (svg._talk = { g, mo, tg, w:svg.querySelector('.fwr') });
 }
 function lipSync(svgs, text){
   svgs = (svgs || []).filter(Boolean); if (!svgs.length || reduce) return undefined;
@@ -2978,9 +2990,13 @@ function lipSync(svgs, text){
   const fm = svg => svg.querySelector('.fm');
   const L = svgs.map(el => ({ el, ball:!!(el.closest && el.closest('#szBot')) }));
   const live = () => L.map(o => { if (!o.el.isConnected && o.ball) o.el = ballFace() || o.el; return o.el; }).filter(e => e.isConnected);
-  const paint = () => live().forEach(svg => { const T = talkEls(svg); if (!T.g) return;
-    svg.classList.add('talking'); T.g.style.setProperty('--amp', Math.min(1, ry / 6).toFixed(2)); });
-  const stop = () => { cancelAnimationFrame(raf); raf = 0; L.map(o => o.el).forEach(svg => { svg.classList.remove('talking'); const T = svg._talk; if (T && T.g) T.g.style.removeProperty('--amp'); }); };
+  /* la boca de main dice cada sílaba; las ondas naranjas laten con ella */
+  const paint = () => live().forEach(svg => { const T = talkEls(svg), m = fm(svg);
+    if (m) m.style.opacity = '0';
+    T.mo.setAttribute('rx', rx.toFixed(2)); T.mo.setAttribute('ry', Math.max(.4, ry).toFixed(2));
+    T.tg.setAttribute('rx', (rx * .55).toFixed(2)); T.tg.setAttribute('ry', Math.max(0, ry * .32).toFixed(2)); T.tg.setAttribute('cy', (65 + ry * .55).toFixed(2));
+    T.g.style.opacity = '1'; svg.classList.add('talking'); if (T.w) T.w.style.setProperty('--amp', Math.min(1, ry / 6).toFixed(2)); });
+  const stop = () => { cancelAnimationFrame(raf); raf = 0; L.map(o => o.el).forEach(svg => { const T = svg._talk, m = fm(svg); svg.classList.remove('talking'); if (T){ T.g.style.opacity = '0'; if (T.w) T.w.style.removeProperty('--amp'); } if (m) m.style.opacity = ''; }); };
   const SYL = 140;                                    /* ms por sílaba: ritmo de voz */
   function loop(now){
     if (!t0) t0 = now;
@@ -4374,6 +4390,8 @@ const GI_GLOW = { C:'rgba(61,224,255,.8)', V:'rgba(155,123,255,.8)', O:'rgba(255
     /* la ficha: vidrio que deja ver el fondo, más claro arriba; el filo con los colores de la marca */
     + '<linearGradient id="giTile" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".2"/><stop offset=".45" stop-color="#fff" stop-opacity=".06"/><stop offset="1" stop-color="#fff" stop-opacity=".1"/></linearGradient>'
     + '<linearGradient id="giEdge" gradientUnits="userSpaceOnUse" x1="4" y1="4" x2="60" y2="60"><stop offset="0" stop-color="#e6fdff" stop-opacity=".9"/><stop offset=".35" stop-color="#9b7bff" stop-opacity=".45"/><stop offset=".7" stop-color="#ff3d9a" stop-opacity=".35"/><stop offset="1" stop-color="#ffc857" stop-opacity=".7"/></linearGradient>'
+    /* la onda del orbe de SynthFlow (flowOrb, core 00) */
+    + '<linearGradient id="sfOrbG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3de0ff"/><stop offset=".45" stop-color="#7b3ff2"/><stop offset=".75" stop-color="#ff3d9a"/><stop offset="1" stop-color="#ff7a45"/></linearGradient>'
     + '<radialGradient id="giLow" cx=".5" cy="1" r=".7"><stop offset="0" stop-color="#bff6ff" stop-opacity=".35"/><stop offset="1" stop-color="#bff6ff" stop-opacity="0"/></radialGradient>'
     + '</defs></svg>';
   (document.body || document.documentElement).appendChild(d);
@@ -4471,6 +4489,315 @@ function giFill(root){
   (root || document).querySelectorAll('[data-gi]:not(.gi-on)').forEach(i => { const s = gIcon(i.dataset.gi, i.dataset.gt !== '0'); if (s){ i.innerHTML = s; i.classList.add('gi-on'); } });
 }
 giFill();
+/* ===== v2.8 · cielo en vivo: los fondos que mandó Sammuel, hechos en código (ninguno es una imagen) =====
+   Cinco escenas que se dibujan y se mueven en tiempo real:
+   · «fondo»     aurora rosa y cian arriba a la derecha, «V» violeta a la izquierda, brillo turquesa abajo (la portada).
+   · «seda»      una cinta ancha en diagonal: rosa arriba, lavanda al medio, verde agua abajo (SynthFlow sin mensajes).
+   · «nebulosa»  nube violeta y magenta cruzando el cielo con hilos cian, una galaxia y cúmulos de estrellas.
+   · «planeta»   nube de colores arriba a la izquierda, velos lavanda abajo, la galaxia y un planeta con anillos.
+   · «calma»     un arco tenue y oscuro (SynthFlow con mensajes: se lee mejor).
+   En la portada el cielo pasa de una escena a la otra mientras bajas. En SynthFlow, apenas hay mensajes, la «seda»
+   se apaga en «calma» y sube una ola de noche desde la caja de escribir.
+   Cómo es tan liviano: las nubes se pintan en un lienzo chiquito (~36 000 píxeles) y la pantalla lo estira; ese estirado
+   ES el desenfoque. Estrellas, galaxia y planeta se dibujan una sola vez y solo se mueven con la tarjeta gráfica.
+   Con «Fondo animado» apagado (o en el celular en modo rápido) el cielo se pinta una vez y queda quieto. */
+const AURORA = (() => {
+  if (!SPACE) return null;
+  const kind = SPACE.root.dataset.kind;
+  if (kind !== 'home' && kind !== 'chat') return null;
+  const H = document.documentElement, home = kind === 'home';
+  /* el planeta con anillos (SVG): la mitad de atrás de los anillos va detrás de la esfera y la de adelante encima */
+  const rings = half => '<g clip-path="url(#au8' + half + ')" fill="none" stroke-linecap="round">' + [[104, .5, .9], [96, .35, .6], [88, .55, 1.4], [79, .3, .6], [71, .45, .9]]
+    .map(([r, o, w]) => '<ellipse rx="' + r + '" ry="' + (r * .2).toFixed(1) + '" stroke="rgba(214,220,240,' + o + ')" stroke-width="' + w + '"/>').join('') + '</g>';
+  const PLANET = '<svg viewBox="-120 -70 240 140" aria-hidden="true"><defs>'
+    + '<radialGradient id="au8pg" cx=".7" cy=".3" r=".9"><stop offset="0" stop-color="#c9cee0"/><stop offset=".28" stop-color="#5b6078"/><stop offset=".62" stop-color="#191a2a"/><stop offset="1" stop-color="#06060c"/></radialGradient>'
+    + '<clipPath id="au8b"><rect x="-130" y="-80" width="260" height="80"/></clipPath><clipPath id="au8f"><rect x="-130" y="0" width="260" height="80"/></clipPath></defs>'
+    + '<g transform="rotate(-14)">' + rings('b') + '<circle r="40" fill="url(#au8pg)"/><circle r="40" fill="none" stroke="rgba(220,230,255,.35)" stroke-width=".8"/>' + rings('f') + '</g>'
+    + '<circle cx="-92" cy="-8" r="2.4" fill="#aeb4c8"/><circle cx="58" cy="-44" r="1.6" fill="#9aa0b6"/><circle cx="74" cy="30" r="2" fill="#8a90a8"/></svg>';
+  const el = document.createElement('div');
+  el.className = 'au8'; el.dataset.kind = kind; el.setAttribute('aria-hidden', 'true');
+  el.innerHTML = '<canvas class="au8-c"></canvas><canvas class="au8-d"></canvas><canvas class="au8-d au8-tw"></canvas>'
+    + (home ? '<canvas class="au8-d au8-cl"></canvas><div class="au8-gx"><canvas></canvas></div><div class="au8-pl">' + PLANET + '</div><div class="au8-sw"><i class="au8-ss"></i><i class="au8-ss s2"></i></div>' : '')
+    + '<i class="au8-wash"></i><i class="au8-edge"></i>';
+  document.body.prepend(el); H.classList.add('au8on');
+  const cv = el.querySelector('.au8-c'), ctx = cv.getContext('2d', { alpha:false });
+  const [dc, tc, cc] = el.querySelectorAll('.au8-d');
+  const gx = el.querySelector('.au8-gx'), pl = el.querySelector('.au8-pl'), sw = el.querySelector('.au8-sw');
+
+  /* colores del tema (si cambias de tema, el cielo cambia con él) */
+  const nc = c => { ctx.fillStyle = '#000'; ctx.fillStyle = c || '#000'; return ctx.fillStyle; };
+  const rgb = c => { const s = nc(c); if (s[0] === '#') return [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16)); const m = s.match(/[\d.]+/g); return m ? m.slice(0, 3).map(Number) : [255, 255, 255]; };
+  const mix = (a, b, k) => a.map((v, i) => Math.round(v + (b[i] - v) * k));
+  const rgba = (c, a) => 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + (a > 0 ? a : 0).toFixed(3) + ')';
+  const WH = [255, 255, 255];
+  let C = {};
+  const recolor = () => {
+    const cs = getComputedStyle(H), v = n => rgb(cs.getPropertyValue('--sb-' + n).trim());
+    const bg = v('bg'), P = v('primary'), S = v('secondary'), L = v('light'), W = v('warm'), deep = v('deep');
+    const teal = mix(L, [24, 226, 186], .5);
+    C = { bg, P, S, L, W, teal,
+      top: mix(bg, mix(deep, [18, 24, 92], .55), .42), bot: mix(bg, [6, 8, 30], .35), dark: mix(bg, [4, 6, 20], .5),
+      navy: mix(mix(P, L, .3), [20, 30, 120], .55), mag: mix(S, P, .42), hot: mix(S, [255, 236, 248], .45), vio: mix(P, S, .18),
+      ice: mix(L, WH, .3), lav: mix(P, WH, .42), rose: mix(S, WH, .28), mint: mix(L, [70, 230, 170], .6) };
+  };
+
+  /* tamaño: el lienzo de las nubes mide ~36 000 píxeles sin importar la pantalla */
+  let w = 0, h = 0, cw = 0, ch = 0, D = 1;
+  const U = u => u * cw, V = v => v * ch;
+  const size = () => {
+    w = innerWidth; h = innerHeight;
+    cw = Math.max(80, Math.round(Math.sqrt(36000 * w / h))); ch = Math.max(80, Math.round(cw * h / w));
+    cv.width = cw; cv.height = ch; D = Math.sqrt(cw * ch) * 1.2;
+    stars();
+  };
+  /* azar con semilla: el mismo cielo cada vez */
+  const seeded = s => () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const hr = (i, s) => { const x = Math.sin(i * 12.9898 + s * 78.233) * 43758.5453; return x - Math.floor(x); };
+  /* estrellas: el polvo se dibuja una vez; el segundo lienzo titila entero; el tercero son los cúmulos y destellos de la nebulosa */
+  const flare = (x, cx, cy, r, col) => {
+    const g = x.createRadialGradient(cx, cy, 0, cx, cy, r * 3); g.addColorStop(0, 'rgba(' + col + ',.95)'); g.addColorStop(.25, 'rgba(' + col + ',.35)'); g.addColorStop(1, 'rgba(' + col + ',0)');
+    x.fillStyle = g; x.fillRect(cx - r * 3, cy - r * 3, r * 6, r * 6);
+    x.fillStyle = 'rgba(' + col + ',.5)'; x.fillRect(cx - r * 6, cy - .5, r * 12, 1); x.fillRect(cx - .5, cy - r * 6, 1, r * 12);
+  };
+  const stars = () => {
+    const tones = ['255,255,255', '200,240,255', '255,214,240', '214,206,255'];
+    [[dc, w * h / 2400, .5, .9, 11], [tc, w * h / 16000, 1, 1.5, 23]].forEach(([c, n, a, r, s]) => {
+      const rnd = seeded(s); c.width = w; c.height = h; const x = c.getContext('2d');
+      for (let i = 0; i < n; i++){
+        x.fillStyle = 'rgba(' + tones[i % 4] + ',' + (a * (.18 + rnd() * .7)).toFixed(2) + ')';
+        x.beginPath(); x.arc(rnd() * w, rnd() * h, .35 + rnd() * r * (rnd() < .08 ? 1.8 : 1), 0, 6.283); x.fill();
+      }
+    });
+    if (!cc) return;
+    const rnd = seeded(37); cc.width = w; cc.height = h; const x = cc.getContext('2d');
+    /* un río de estrellas en diagonal, más denso al medio */
+    for (let i = 0; i < w * h / 900; i++){
+      const s = rnd(), off = (rnd() + rnd() + rnd() - 1.5) * .12;
+      const px = (.12 + s * .55 + off * .5) * w, py = (.14 + s * .36 - off) * h;
+      x.fillStyle = 'rgba(' + tones[i % 4] + ',' + (.15 + rnd() * .6).toFixed(2) + ')'; x.fillRect(px, py, rnd() < .1 ? 1.6 : 1, rnd() < .1 ? 1.6 : 1);
+    }
+    [[.15, .18, 2.2, '255,236,214'], [.21, .31, 1.6, '255,236,214'], [.58, .27, 1.8, '255,255,255'], [.36, .46, 1.4, '255,220,200'], [.61, .52, 2.2, '190,250,255'], [.9, .79, 2.4, '255,236,214'], [.84, .96, 1.4, '255,255,255'], [.58, .36, 1.2, '255,214,240']]
+      .forEach(([u, v, r, col]) => flare(x, u * w, v * h, r, col));
+  };
+  /* la galaxia espiral: miles de puntitos en dos brazos, dibujada una vez; gira despacio con la tarjeta gráfica */
+  if (gx){
+    const g = gx.querySelector('canvas'), G = 520, x = g.getContext('2d'), rnd = seeded(5), R = G * .46;
+    g.width = g.height = G; x.translate(G / 2, G / 2);
+    const core = x.createRadialGradient(0, 0, 0, 0, 0, R * .34); core.addColorStop(0, 'rgba(255,246,228,1)'); core.addColorStop(.18, 'rgba(252,232,206,.6)'); core.addColorStop(.5, 'rgba(225,210,220,.18)'); core.addColorStop(1, 'rgba(200,190,230,0)');
+    x.fillStyle = core; x.fillRect(-R, -R, 2 * R, 2 * R);
+    /* el disco: una luz pareja que se va apagando hacia la orilla */
+    const disk = x.createRadialGradient(0, 0, 0, 0, 0, R); disk.addColorStop(0, 'rgba(214,214,236,.22)'); disk.addColorStop(.5, 'rgba(200,200,232,.08)'); disk.addColorStop(1, 'rgba(200,200,232,0)');
+    x.fillStyle = disk; x.fillRect(-R, -R, 2 * R, 2 * R);
+    /* luz suave a lo largo de los dos brazos */
+    for (let i = 0; i < 420; i++){
+      const arm = i % 2, d = .12 + (i / 420) * .85, th = arm * Math.PI + d * 3.3 + (rnd() - .5) * .5, r = d * R;
+      const x0 = Math.cos(th) * r, y0 = Math.sin(th) * r, rr = 10 + 22 * (1 - d), gg = x.createRadialGradient(x0, y0, 0, x0, y0, rr);
+      gg.addColorStop(0, 'rgba(206,210,240,' + (.08 * (1 - d * .6)).toFixed(3) + ')'); gg.addColorStop(1, 'rgba(206,210,240,0)');
+      x.fillStyle = gg; x.fillRect(x0 - rr, y0 - rr, 2 * rr, 2 * rr);
+    }
+    /* miles de estrellas: más juntas cerca del centro y siguiendo los brazos, con muchas sueltas en el disco */
+    for (let i = 0; i < 9000; i++){
+      const arm = i % 2, d = Math.pow(rnd(), 1.1), loose = rnd() < .45;
+      const th = loose ? rnd() * 6.283 : arm * Math.PI + d * 3.3 + (rnd() - .5) * (1.1 - d * .4), r = d * R + (rnd() - .5) * 10;
+      const warm = d < .28 || rnd() < .12;
+      x.fillStyle = (warm ? 'rgba(255,236,214,' : rnd() < .6 ? 'rgba(222,228,255,' : 'rgba(255,214,240,') + ((1 - d * .65) * (loose ? .2 : .3) + rnd() * .5).toFixed(2) + ')';
+      const z = rnd() < .03 ? 2.4 : rnd() < .25 ? 1.6 : 1.1; x.fillRect(Math.cos(th) * r, Math.sin(th) * r, z, z);
+    }
+  }
+  /* una mancha de luz suave (la base de todo): x, y, radio, color, fuerza, estirado y giro */
+  const blob = (x, y, r, c, a, sx, ang) => {
+    if (a < .004 || r < .4) return;
+    ctx.setTransform(1, 0, 0, 1, x, y); if (ang) ctx.rotate(ang); if (sx) ctx.scale(sx, 1);
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+    g.addColorStop(0, rgba(c, a)); g.addColorStop(.35, rgba(c, a * .5)); g.addColorStop(.7, rgba(c, a * .13)); g.addColorStop(1, rgba(c, 0));
+    ctx.fillStyle = g; ctx.fillRect(-r, -r, 2 * r, 2 * r);
+  };
+  /* sombra: tapa un poco de luz (los huecos oscuros de las nebulosas) */
+  const shade = (x, y, r, a, sx, ang) => { ctx.globalCompositeOperation = 'source-over'; blob(x, y, r, C.dark, a, sx, ang); ctx.globalCompositeOperation = 'lighter'; };
+  /* una curva suave que pasa por los puntos (posición y dirección en s, de 0 a 1) */
+  const curve = (P, s) => {
+    const n = P.length - 1, f = Math.min(n - 1e-6, s * n), i = Math.floor(f), u = f - i;
+    const p0 = P[Math.max(0, i - 1)], p1 = P[i], p2 = P[i + 1], p3 = P[Math.min(n, i + 2)];
+    const cr = (a, b, c, d) => .5 * (2 * b + (c - a) * u + (2 * a - 5 * b + 4 * c - d) * u * u + (3 * b - a - 3 * c + d) * u * u * u);
+    const dr = (a, b, c, d) => .5 * ((c - a) + 2 * (2 * a - 5 * b + 4 * c - d) * u + 3 * (3 * b - a - 3 * c + d) * u * u);
+    return [cr(p0[0], p1[0], p2[0], p3[0]), cr(p0[1], p1[1], p2[1], p3[1]), dr(p0[0], p1[0], p2[0], p3[0]), dr(p0[1], p1[1], p2[1], p3[1])];
+  };
+  const colAt = (cols, s) => { const f = s * (cols.length - 1), i = Math.min(cols.length - 2, Math.floor(f)); return mix(cols[i], cols[i + 1], f - i); };
+  /* un velo: manchas estiradas a lo largo de la curva que ondula; el color cambia de punta a punta.
+     off = corrido hacia un lado (para cintas de varios colores), ramp = más brillante hacia el final */
+  const veil = (P, t, o) => {
+    const n = o.n || 14, [r0, r1] = o.r, ramp = o.ramp || 0, ph = o.ph || 0;
+    for (let i = 0; i < n; i++){
+      const s = i / (n - 1), [x, y, dx, dy] = curve(P, s), l = Math.hypot(dx, dy) || 1;
+      const q = ((o.off || 0) + Math.sin(s * 8.5 - t * .5 + ph) * (o.wav || 0)) * D, b = Math.sin(Math.PI * s);
+      blob(x - dy / l * q, y + dx / l * q, (r0 + (r1 - r0) * b) * D, colAt(o.cols, s), o.a * (.5 + .5 * b) * (1 - ramp + ramp * s) * (.86 + .14 * Math.sin(t * .7 + s * 5 + ph)), o.sx || 1.8, Math.atan2(dy, dx));
+    }
+  };
+  /* bocanadas de nube regadas a lo largo de una curva: le dan textura a las nebulosas */
+  const puffs = (P, t, n, r, cols, a, sd, spread) => {
+    for (let i = 0; i < n; i++){
+      const [x, y, dx, dy] = curve(P, hr(i, sd)), l = Math.hypot(dx, dy) || 1, q = (hr(i, sd + 1) - .5) * (spread || .12) * D;
+      blob(x - dy / l * q + Math.sin(t * .2 + i) * .006 * D, y + dx / l * q + Math.cos(t * .17 + i) * .006 * D, r * D * (.5 + hr(i, sd + 2)), cols[i % cols.length], a * (.5 + .5 * hr(i, sd + 3)), 1.3, hr(i, sd + 4) * 3);
+    }
+  };
+  /* los puntos de cada curva se mecen despacio, cada uno a su ritmo */
+  const pts = (arr, t, amp, ph) => arr.map(([u, v], i) => [U(u + Math.sin(t * .16 + i * 1.7 + ph) * amp), V(v + Math.cos(t * .13 + i * 2.3 + ph) * amp * .8)]);
+
+  const SC = {
+    fondo(t, a){
+      const s1 = Math.sin(t * .23), s2 = Math.cos(t * .19);
+      blob(U(.74), V(.4), .4 * D, C.navy, .3 * a, 1.4, -.4);
+      blob(U(.46), V(.62), .42 * D, C.navy, .14 * a, 1.3, .2);
+      blob(U(.79), V(.25), .11 * D, C.vio, .3 * a, 1.4, -.3);
+      /* el rosa de arriba, con su centro casi blanco */
+      blob(U(.6 + .01 * s1), V(.07), .13 * D, C.mag, .36 * a, 1.7, -.3);
+      blob(U(.69 + .012 * s2), V(.15), .15 * D, C.S, .52 * a, 1.8, -.5);
+      blob(U(.71), V(.16), .07 * D, C.hot, .46 * a, 1.6, -.4);
+      /* el cian que baja por la derecha */
+      blob(U(.88 + .01 * s1), V(.1), .15 * D, C.L, .5 * a, 1.5, .6);
+      blob(U(.97), V(.3 + .015 * s2), .15 * D, mix(C.L, C.teal, .4), .42 * a, 1.2, 1.3);
+      blob(U(.84), V(.2), .06 * D, C.ice, .3 * a, 1.4, .8);
+      blob(U(.9), V(.42), .09 * D, C.ice, .16 * a, 1.2, 1.2);
+      const A = pts([[.5, -.06], [.62, .08], [.74, .14], [.86, .07], [1, .16], [.98, .42], [.93, .58]], t, .02, 0);
+      veil(A, t, { n:18, r:[.05, .1], cols:[C.vio, C.mag, C.S, C.hot, C.S, C.L, C.ice, C.L, C.teal], a:.32 * a, sx:1.9, wav:.014 });
+      puffs(A, t, 16, .035, [C.S, C.L, C.vio, C.ice], .16 * a, 11, .16);
+      /* la «V» violeta y la estela rosa de la izquierda */
+      veil(pts([[-.04, .4], [.06, .5], [.13, .58], [.19, .5], [.27, .41]], t, .018, 2.1), t, { n:12, r:[.05, .08], cols:[C.P, C.vio, C.mag, C.vio, C.P], a:.42 * a, sx:1.6, wav:.008, ph:1.3 });
+      veil(pts([[-.06, .6], [.04, .67], [.13, .73]], t, .016, 4.4), t, { n:8, r:[.05, .07], cols:[C.mag, C.S, C.vio], a:.32 * a, wav:.006, ph:2.7 });
+      /* turquesa abajo */
+      blob(U(.2), V(1.04), .32 * D, C.teal, .55 * a, 1.6, -.15);
+      blob(U(.36 + .02 * Math.sin(t * .2)), V(.98), .14 * D, mix(C.teal, C.L, .5), .28 * a, 1.6, -.3);
+      blob(U(.04), V(.86), .12 * D, C.vio, .22 * a, 1.2, 0);
+      /* estelas finas (como cometas) y luces desenfocadas */
+      veil(pts([[.41, .33], [.48, .29], [.56, .24]], t, .01, 5.2), t, { n:6, r:[.014, .02], cols:[C.navy, C.teal, C.ice], a:.3 * a, sx:2.6, wav:.002, ph:3.3 });
+      veil(pts([[.32, .86], [.38, .83], [.44, .79]], t, .01, 6.1), t, { n:6, r:[.012, .018], cols:[C.navy, C.P, C.vio], a:.34 * a, sx:2.6, wav:.002, ph:4.1 });
+      [[.18, .77, C.W, .007], [.27, .81, C.teal, .006], [.32, .85, C.teal, .008], [.555, .245, C.teal, .009], [.6, .52, C.W, .005], [.69, .89, C.vio, .011], [.86, .62, C.L, .006]]
+        .forEach(([u, v, col, r], i) => blob(U(u + Math.sin(t * .11 + i) * .006), V(v + Math.cos(t * .09 + i * 2) * .008), r * D, col, (.55 + .3 * Math.sin(t * .8 + i * 1.9)) * a, 1, 0));
+    },
+    seda(t, a){
+      blob(U(.86), V(.14), .34 * D, C.vio, .3 * a, 1.6, -.6);
+      blob(U(.9), V(.08), .16 * D, C.rose, .3 * a, 1.6, -.6);
+      /* en SynthFlow la cinta va más a la derecha, para no pasar por detrás del saludo */
+      const du = home ? 0 : .14, R = pts([[.3, .86], [.46, .7], [.62, .52], [.76, .34], [.9, .17], [1.04, 0]].map(([u, v]) => [u + du, v + du * .4]), t, .016, .7);
+      veil(R, t, { n:18, r:[.05, .1], cols:[C.vio, C.rose, C.rose, C.hot], a:.42 * a, sx:2, wav:.012, off:-.05, ramp:.6 });
+      veil(R, t, { n:18, r:[.05, .095], cols:[C.P, C.lav, C.lav, C.lav], a:.34 * a, sx:2, wav:.012, ph:1, ramp:.5 });
+      veil(R, t, { n:18, r:[.045, .09], cols:[C.navy, C.teal, C.mint, C.mint], a:.36 * a, sx:2, wav:.012, off:.06, ph:2, ramp:.4 });
+      puffs(R, t, 14, .04, [C.rose, C.lav, C.mint], .12 * a, 5, .14);
+      blob(U(0), V(.7), .24 * D, C.mint, .36 * a, 1.4, .5);
+      blob(U(.06), V(1.02), .2 * D, C.rose, .32 * a, 1.5, -.2);
+      blob(U(.02), V(.9), .14 * D, C.lav, .25 * a, 1.2, 0);
+    },
+    nebulosa(t, a){
+      blob(U(.5), V(.45), .45 * D, C.navy, .22 * a, 2, -.35);
+      const R = pts([[-.06, .64], [.12, .56], [.3, .48], [.5, .43], [.68, .37], [.84, .26], [1.04, .12]], t, .014, 2.4);
+      veil(R, t, { n:22, r:[.09, .14], cols:[C.vio, C.P, C.mag, C.P, C.mag, C.vio], a:.3 * a, wav:.012 });
+      veil(R, t, { n:18, r:[.04, .07], cols:[C.P, C.mag, C.S, C.mag, C.S, C.mag], a:.3 * a, sx:2, wav:.01, off:-.06, ph:1.4 });
+      puffs(R, t, 40, .04, [C.P, C.mag, C.vio, C.S, C.L], .22 * a, 3, .2);
+      /* hilos cian por debajo, a la derecha */
+      const Q = pts([[.42, .58], [.56, .53], [.7, .55], [.84, .45], [1.02, .36]], t, .014, 3.3);
+      veil(Q, t, { n:16, r:[.03, .06], cols:[C.navy, C.L, C.ice, C.L, C.teal], a:.4 * a, sx:2.2, wav:.012, ph:2 });
+      puffs(Q, t, 18, .03, [C.L, C.teal, C.ice], .2 * a, 9, .1);
+      veil(pts([[.66, .7], [.8, .62], [.9, .52], [1.04, .5]], t, .012, 1.1), t, { n:12, r:[.025, .045], cols:[C.navy, C.teal, C.L, C.ice], a:.34 * a, sx:2.2, wav:.01, ph:3 });
+      /* a la izquierda: humo turquesa alrededor de un hueco oscuro */
+      veil(pts([[-.02, .7], [.06, .62], [.15, .6], [.24, .66]], t, .012, 5), t, { n:12, r:[.035, .06], cols:[C.teal, C.mint, C.teal, C.vio], a:.3 * a, sx:2, wav:.008, ph:.8 });
+      veil(pts([[0, .86], [.1, .9], [.22, .86], [.32, .8]], t, .012, 6.3), t, { n:12, r:[.03, .05], cols:[C.navy, C.teal, C.vio, C.P], a:.3 * a, sx:2.2, wav:.008, ph:1.6 });
+      shade(U(.13), V(.76), .08 * D, .5 * a, 1.4, .3);
+      shade(U(.26), V(.52), .06 * D, .3 * a, 2.2, -.4);
+    },
+    planeta(t, a){
+      blob(U(.3), V(.35), .4 * D, C.navy, .2 * a, 1.8, .4);
+      const R = pts([[-.04, .2], [.1, .27], [.24, .33], [.36, .4], [.5, .48], [.66, .57], [.82, .66], [1.04, .74]], t, .014, 4.1);
+      veil(R, t, { n:22, r:[.08, .12], cols:[C.P, C.vio, C.S, C.L, C.vio, C.lav, C.lav, C.P], a:.3 * a, sx:1.7, wav:.014, ph:.3 });
+      veil(R, t, { n:16, r:[.035, .06], cols:[C.vio, C.S, C.hot, C.ice, C.lav, C.lav], a:.28 * a, sx:2, wav:.01, off:-.05, ph:2.2 });
+      puffs(R, t, 36, .038, [C.S, C.L, C.P, C.lav, C.teal], .2 * a, 7, .2);
+      blob(U(.13), V(.18), .12 * D, C.P, .3 * a, 1.3, -1.2);
+      blob(U(.2), V(.24), .07 * D, C.S, .26 * a, 1.4, -1.1);
+      blob(U(.05), V(.46), .14 * D, C.teal, .3 * a, 1.6, .3);
+      /* velos lavanda abajo a la derecha */
+      const Q = pts([[.52, .76], [.68, .7], [.84, .62], [1.04, .58]], t, .012, 1.7);
+      veil(Q, t, { n:14, r:[.03, .055], cols:[C.navy, C.lav, C.rose, C.lav], a:.3 * a, sx:2.4, wav:.014, ph:1.2 });
+      puffs(Q, t, 14, .03, [C.lav, C.rose, C.L], .14 * a, 13, .12);
+      veil(pts([[.58, .92], [.74, .84], [.9, .8], [1.04, .86]], t, .012, 2.9), t, { n:12, r:[.03, .05], cols:[C.navy, C.lav, C.L], a:.26 * a, sx:2.4, wav:.012, ph:4 });
+      shade(U(.2), V(.78), .1 * D, .4 * a, 1.6, 0);
+    },
+    calma(t, a){
+      blob(U(.82), V(.08), .26 * D, mix(C.teal, C.navy, .5), .14 * a, 1.6, .3);
+      const R = pts([[.27, .31], [.43, .19], [.59, .2], [.71, .32], [.8, .48], [.87, .66], [.9, .88]], t, .012, 1.9);
+      veil(R, t, { n:16, r:[.03, .055], cols:[C.navy, C.vio, C.vio, C.rose, mix(C.rose, C.teal, .5), C.teal, C.teal], a:.2 * a, sx:2.4, wav:.006, ph:.4 });
+      veil(R, t, { n:12, r:[.018, .032], cols:[C.navy, C.P, C.rose, C.vio, C.mint], a:.12 * a, sx:2.6, wav:.005, off:-.022, ph:1.8 });
+    }
+  };
+  /* portada: qué escena se ve según cuánto bajaste (se funden entre sí) */
+  const SEQ = [['fondo', 0], ['seda', .3], ['nebulosa', .62], ['planeta', .95]];
+  /* más abajo hay más texto encima: las escenas de abajo brillan un poco menos para que todo se lea */
+  const HOME_K = { fondo:1, seda:.85, nebulosa:.7, planeta:.74 };
+  let calm = 0, cFrom = 0, cTo = 0, cAt = -1e9, sp = 0, Wt = {};
+  const weights = () => {
+    if (!home) return { seda:1 - calm, calma:calm };
+    const o = {}; const p = Math.min(1, sp);
+    for (let i = 0; i < SEQ.length; i++){
+      const [n, a] = SEQ[i], prev = SEQ[i - 1], next = SEQ[i + 1];
+      o[n] = p <= a ? (prev ? Math.max(0, (p - prev[1]) / (a - prev[1])) : 1) : (next ? Math.max(0, (next[1] - p) / (next[1] - a)) : 1);
+    }
+    return o;
+  };
+  const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  /* lo que se dibuja una vez (galaxia, planeta, cúmulos, estrellas fugaces, textura) solo cambia de opacidad */
+  const op = (e, v) => { if (!e) return; v = Math.round(v * 50) / 50; if (e._o === v) return; e._o = v; e.style.opacity = v; e.classList.toggle('off', v < .02); };
+  const paint = now => {
+    const t = now / 1000, dim = (home ? 1 : .8) * (w < h ? .68 : 1); Wt = weights();
+    ctx.globalCompositeOperation = 'source-over'; ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const k = (Wt.calma || 0) * .6, g0 = ctx.createLinearGradient(0, 0, cw * .3, ch);
+    g0.addColorStop(0, rgba(mix(C.top, C.dark, k), 1)); g0.addColorStop(1, rgba(mix(C.bot, C.dark, k), 1));
+    ctx.fillStyle = g0; ctx.fillRect(0, 0, cw, ch);
+    ctx.globalCompositeOperation = 'lighter';
+    for (const n in Wt) if (Wt[n] > .01) SC[n](t, Wt[n] * dim * (home ? HOME_K[n] : 1));
+    /* viñeta: las orillas se van a la noche */
+    ctx.globalCompositeOperation = 'source-over'; ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const vg = ctx.createRadialGradient(cw * .52, ch * .42, 0, cw * .52, ch * .42, Math.hypot(cw, ch) * .64);
+    vg.addColorStop(.5, rgba(C.bg, 0)); vg.addColorStop(1, rgba(C.bg, .5 + .2 * (Wt.calma || 0)));
+    ctx.fillStyle = vg; ctx.fillRect(0, 0, cw, ch);
+    const neb = (Wt.nebulosa || 0) + (Wt.planeta || 0);
+    op(gx, neb); op(pl, Wt.planeta || 0); op(cc, (Wt.nebulosa || 0) + .55 * (Wt.planeta || 0)); op(sw, neb);
+  };
+
+  /* el ciclo: ~24 cuadros por segundo (12 en el celular y mientras se conversa); a 30 solo durante la ola */
+  const coarse = matchMedia('(pointer:coarse)').matches;
+  const live = () => CFG.bg && !reduce && !PERF && !document.hidden && !H.classList.contains('noanim') && !H.classList.contains('simple');
+  let raf = 0, last = -1e9, dirty = true;
+  const frame = now => {
+    raf = 0;
+    const moving = now - cAt < 1800, on = live();
+    calm = moving ? cFrom + (cTo - cFrom) * ease(Math.min(1, (now - cAt) / 1700)) : cTo;
+    const fps = moving ? 30 : coarse || cTo ? 12 : 24;
+    /* quieto: siempre el mismo instante, y solo se repinta si algo cambió */
+    if (dirty || moving || (on && now - last >= 1000 / fps - 3)){ last = now; dirty = false; paint(on ? now : 0); }
+    if (moving || on) raf = requestAnimationFrame(frame);
+  };
+  const go = () => { dirty = true; if (!raf) raf = requestAnimationFrame(frame); };
+  recolor(); size(); paint(0); go();
+  addEventListener('resize', () => { size(); go(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) go(); });
+  if (home){
+    const scr = () => { const m = Math.max(1, H.scrollHeight - innerHeight); sp = Math.min(1, scrollY / m); if (!live()) go(); };
+    addEventListener('scroll', scr, { passive:true }); addEventListener('load', scr); scr();
+  }
+  /* si cambian los ajustes o el tema, se vuelve a pintar (el tema tarda ~1 s en pasar de color) */
+  let rc = 0;
+  new MutationObserver(() => { clearTimeout(rc); recolor(); go(); rc = setTimeout(() => { recolor(); go(); }, 950); }).observe(H, { attributes:true, attributeFilter:['class', 'data-theme'] });
+
+  /* conversación: true = la seda se apaga en calma y sube la ola; false = la ola baja y vuelve la seda */
+  const setCalm = (on, now) => {
+    on = !!on; if (on === (cTo === 1)) return;
+    H.classList.toggle('szconv', on);
+    if (now){ cFrom = cTo = calm = on ? 1 : 0; cAt = -1e9; H.classList.add('au8-now'); requestAnimationFrame(() => requestAnimationFrame(() => H.classList.remove('au8-now'))); go(); return; }
+    cFrom = calm; cTo = on ? 1 : 0; cAt = performance.now();
+    el.classList.remove('sweep'); void el.offsetWidth; el.classList.add('sweep');
+    clearTimeout(el._sw); el._sw = setTimeout(() => el.classList.remove('sweep'), 1900);
+    go();
+  };
+  return { el, setCalm, repaint:() => { recolor(); go(); } };
+})();
 /* ===== v1.4 · eventos especiales: a las 50, 100 y 500 visitas la página «se hackea» y das un logro ===== */
 const EV = (() => {
   const K = 'synthz:visits', A = 'synthz:ach';
@@ -4565,5 +4892,5 @@ const EV = (() => {
 window.SZ = { root, $, $$, clamp, fmt, reduce, today, sleepRaw, esc, est, Z_PATH, ICONS, ico, zWord, API, MANUAL, ALL, byId,
   get state(){ return state; }, set state(v){ state = v; normalize(); },
   normalize, cleanUsage, cleanChats, cleanStrMap, save, total, addUsage, resetUsage, estAll, todayEst, todayReq, providerBalance, balanceHtml, splitHtml, syncNote, helpGuide, smoothDetails, szPrompt, swapDir, swapDir, face, FACE_GOOD, randomGoodFace, welcomeBack, wasAway, accSignOutAll, accClaim, ROLE_NAME, trialGet, trialSet, trialStart, legacyRow, cleanLedger, mergeLedger, DEV, hooks, toast, hydrateIcons, md, countTo,
-  BRAND, SPACE, isFlow, flowWord, flowOrb, LOGO_Z, fileIco, gIcon, giFill, giFile, zMark, synBody, synSet, SPOSE, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, BRANDS, brandOf, glassIcon, PIXART, pixelRun, pixelGrid, workView, workSaved, mdLoad, MDLIB, SZ_P, SZQ, SZ_AUTO, szqSet, msgsLeft, msgsTotal, coinsOf, coinsLeft, coinsTotal, coinsFmt, coinsShort, coinNote, limTxt, limShort, limLvl, limPct, limRing, limBar, szCatalog, szHeaders, guestGate, guestFull, isGuestQ, setTurn, puterOut, puterOutNote, TEL, telEv, telBeat, DEVH, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, feedbackModal, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI, EV, lipSync, ballFace, guideAsk, GTOPICS, whatsNew, signedish, cfgLinks, memAddCore, memPanel, menuOpen, menuClose, MICO, appInstall, appPromo, appStandalone, appPhone };
+  BRAND, SPACE, AURORA, isFlow, flowWord, flowOrb, LOGO_Z, fileIco, gIcon, giFill, giFile, zMark, synBody, synSet, SPOSE, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, BRANDS, brandOf, glassIcon, PIXART, pixelRun, pixelGrid, workView, workSaved, mdLoad, MDLIB, SZ_P, SZQ, SZ_AUTO, szqSet, msgsLeft, msgsTotal, coinsOf, coinsLeft, coinsTotal, coinsFmt, coinsShort, coinNote, limTxt, limShort, limLvl, limPct, limRing, limBar, szCatalog, szHeaders, guestGate, guestFull, isGuestQ, setTurn, puterOut, puterOutNote, TEL, telEv, telBeat, DEVH, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, feedbackModal, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI, EV, lipSync, ballFace, guideAsk, GTOPICS, whatsNew, signedish, cfgLinks, memAddCore, memPanel, menuOpen, menuClose, MICO, appInstall, appPromo, appStandalone, appPhone };
 })();

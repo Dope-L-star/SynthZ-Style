@@ -1,5 +1,5 @@
 /* ===== v2.4 · SynthonIA nueva: ojos cian que brillan, ondas de voz a la derecha (habla) y a la izquierda (escucha) ===== */
-.szface .fe{filter:drop-shadow(0 0 2.5px rgba(61,224,255,.95)) drop-shadow(0 0 6px rgba(61,224,255,.55))}
+.szface .fe{filter:drop-shadow(0 0 2px rgba(246,217,160,.55))}
 .szface .fhead{filter:drop-shadow(0 0 5px rgba(196,120,255,.4))}
 .szface .fwr,.szface .fwl,.szbody .fwr,.szbody .fwl{opacity:0;transition:opacity .25s}
 .szface .fwr path,.szface .fwl path,.szbody .fwr path,.szbody .fwl path{transform-box:fill-box;opacity:calc(1 - var(--i)*.25)}
@@ -61,7 +61,7 @@ html.noanim .szface .fwr path,html.noanim .szface .fwl path{animation:none}
 .szbody.talking .syb-halo{animation-duration:.6s}
 .szbody .syb-head{transform-origin:150px 206px;animation:sybhead 7s ease-in-out infinite}
 .szbody .syb-hd{transform-origin:150px 206px;transform:rotate(var(--tilt,0deg));transition:transform .5s ease-out}
-.szbody .syb-hsvg .fe{filter:drop-shadow(0 0 2px rgba(61,224,255,.95))}
+.szbody .syb-hsvg .fe{filter:drop-shadow(0 0 2px rgba(246,217,160,.6))}
 .szbody .syb-hsvg .fhead{filter:none}
 .szbody.syb-off *{animation-play-state:paused !important}
 @keyframes sybring{50%{opacity:.5;transform:scale(1.05)}}
