@@ -166,7 +166,7 @@ function pjPageHtml(p){
     + '<h2 class="pj-sh">Chats del proyecto</h2>'
     + (L.length ? '<div class="pj-chats">' + L.map(x => '<button type="button" class="pj-chat" data-k="' + esc(x.k) + '"><b>' + esc(x.title) + '</b><small>' + esc(info(x.model).name || 'Automático') + ' · ' + pjAgo(x.t) + '</small></button>').join('') + '</div>'
       : '<p class="pj-none sm">Los chats que empieces aquí se guardan en este proyecto. También puedes mover un chat desde tu lista con el ícono de carpeta.</p>')
-    + '</div><aside class="pj-side">'
+    + '</div><aside class="pj-side" aria-label="Conocimiento del proyecto"><div class="pj-kh"><h2>Conocimiento del proyecto</h2><small>Lo que la IA sabe en cada chat de «' + esc(p.name) + '»</small></div>'
     + '<section class="pj-card" id="pjInstr"><div class="pj-ch"><h3>Instrucciones</h3><button type="button" class="lnk" data-pa="instr">' + (p.instr ? 'Editar' : 'Agregar') + '</button></div>'
     + (p.instr ? '<p class="pj-it"></p>' : '<p class="pj-muted">Dile a la IA cómo responder en este proyecto: el tono, el formato, lo que debe saber de ti.</p>') + '</section>'
     + '<section class="pj-card" id="pjFiles"><div class="pj-ch"><h3>Archivos</h3><span class="pj-fb"><button type="button" class="lnk" data-pa="paste">Pegar texto</button><button type="button" class="btn sm ghost" data-pa="upload">' + PJ_PLUS + 'Subir</button></span></div>'
