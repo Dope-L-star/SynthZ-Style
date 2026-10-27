@@ -60,6 +60,7 @@ document.addEventListener('click', e => { const a = e.target.closest && e.target
 addEventListener('pageshow', e => { if (e.persisted){ root.classList.remove('bye'); const pp = document.getElementById('portal'); if (pp) pp.remove(); SZ.S.busy(false); } });
 SZ.hooks.usage = () => { renderFoot(); coinWatch(); };
 SZ.hooks.md = () => { if (!Object.keys(busy).length && mode === 'solo' && chatArr().length) renderMsgs(); };
+SZ.onLang(() => { if (!Object.keys(busy).length && mode === 'solo') renderMsgs(); });   /* v3.0 · el saludo cambia de idioma al momento */
 
 /* ---------- tutorial, mejor IA gratis y menú contextual ---------- */
 const APODEX_NAME = 'Automática';
