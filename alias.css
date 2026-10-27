@@ -320,3 +320,24 @@ html[data-scheme="light"] .result h2{background:linear-gradient(95deg,#1b1233,#6
 @media (prefers-reduced-motion:reduce){.trav,.al-star{display:none}.bg .rib{animation:none}}
 html[data-scheme="light"] .brand-mark .nd,html[data-scheme="light"] .emb .nd circle{fill:#6b2fd6}
 @media (max-width:520px){.eyebrow b{display:block;margin:0 0 2px}}
+
+/* ===== v3.0 · Síntesis: el paso final lo hacen varias IAs y una las une ===== */
+.syn-tog{display:flex;gap:10px;align-items:flex-start;margin:12px 0 4px;padding:12px 14px;border-radius:16px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);cursor:pointer}
+.syn-tog input{margin-top:3px;accent-color:#7b3ff2;width:18px;height:18px;flex:none}
+.syn-tog b{display:block;font-weight:600}
+.syn-tog small{display:block;color:var(--mute);font-size:13px;line-height:1.4}
+.syn{margin:0 0 16px;padding:14px 16px;border-radius:18px;border:1px solid rgba(255,255,255,.14);background:rgba(123,63,242,.08);display:grid;gap:10px}
+.syn-h{display:flex;align-items:center;gap:10px}
+.syn-dots{display:inline-flex}
+.syn-dots i{width:14px;height:14px;border-radius:50%;margin-left:-4px;border:2px solid rgba(11,8,32,.9);background:linear-gradient(140deg,#3de0ff,#7b3ff2)}
+.syn-dots i:nth-child(2){background:linear-gradient(140deg,#7b3ff2,#ff3d9a)}
+.syn-dots i:nth-child(3){background:linear-gradient(140deg,#ff3d9a,#ff7a45)}
+.syn-ac{display:flex;align-items:center;gap:12px;font-size:14px}
+.syn-bar{flex:1;max-width:220px;height:8px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}
+.syn-bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#3de0ff,#7b3ff2,#ff3d9a)}
+.syn-ac.medio .syn-bar i{background:#ffc857}.syn-ac.bajo .syn-bar i{background:#ff8f7a}
+.syn-dif{margin:0;font-size:14px;color:var(--soft)}
+.syn-v summary{cursor:pointer;color:var(--mute);font-weight:600;font-size:14px}
+.syn-voz{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1)}
+.syn-ia{display:block;margin-bottom:4px;font:500 11px/1.2 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+html[data-scheme="light"] .syn,html[data-scheme="light"] .syn-tog{border-color:rgba(27,16,53,.14);background:rgba(123,63,242,.06)}
