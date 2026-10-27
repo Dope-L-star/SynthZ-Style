@@ -1,8 +1,8 @@
 /* v2.8 · el portal nuevo, con los logos de ahora (pedido de Sammuel: «sorpréndeme»):
    ida:    «SynthZ» sale de su esquina y llega al centro → la Z de vidrio gira y se vuelve el orbe de SynthFlow,
-           la «Z» se borra y aparece «Flow» letra por letra → el orbe late y la cámara se zambulle en él
+           la «Z» se borra y aparece «Flow» letra por letra → la «o» de «Flow» late y la cámara entra por su hueco
            (y en el chat se abre en círculo)
-   vuelta: sales del orbe, el orbe vuelve a ser la Z y «SynthZ» vuelve a su esquina.
+   vuelta: sales por la «o», el orbe vuelve a ser la Z y «SynthZ» vuelve a su esquina.
    v2.9: sin SynthonIA (Sammuel: el portal queda mejor solo con los logos).
    Todo es transform y opacidad (va fluido en celulares); mientras dura, la página no se puede tocar. */
 let lockOff = null;
@@ -81,23 +81,36 @@ function morph(P, toFlow, D){
   ]);
 }
 const pSleep = ms => new Promise(r => setTimeout(r, ms));
-/* el orbe late y suelta un anillo de luz */
+/* el hueco de la «o» de «Flow»: centro y ancho reales del agujero (con las medidas de la letra, no de su cajita) */
+let pMeas = null;
+function oSpot(P){
+  const o = P.FW.children[2], r = o.getBoundingClientRect(), cs = getComputedStyle(o);
+  const x = (pMeas = pMeas || document.createElement('canvas').getContext('2d'));
+  x.font = cs.fontStyle + ' ' + cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+  const m = x.measureText('o'), fa = m.fontBoundingBoxAscent || parseFloat(cs.fontSize) * .9, fd = m.fontBoundingBoxDescent || parseFloat(cs.fontSize) * .22;
+  const base = r.top + (r.height - (fa + fd)) / 2 + fa, asc = m.actualBoundingBoxAscent || parseFloat(cs.fontSize) * .52;
+  const ls = parseFloat(cs.letterSpacing) || 0, gw = m.width || r.width;
+  return { x:r.left + (r.width - ls) / 2, y:base - asc / 2 + (m.actualBoundingBoxDescent || 0) / 2, hole:Math.max(4, gw * .4), el:o };
+}
+/* v2.9: la «o» de «Flow» late y suelta un anillo de luz (por ahí entra la cámara, como antes) */
 function orbPulse(P){
-  P.ORB.animate([{ transform:'scale(1)' }, { transform:'scale(1.28)' }, { transform:'scale(1)' }], { duration:520, easing:PSPR });
-  const r = P.ORB.getBoundingClientRect(); P.RING.style.left = (r.left + r.width / 2) + 'px'; P.RING.style.top = (r.top + r.height / 2) + 'px';
+  P.FW.style.overflow = 'visible';      /* «Flow» ya está escrito: el latido y el brillo de la «o» no se recortan */
+  const s = oSpot(P);
+  s.el.animate([{ transform:'none', filter:'none' }, { transform:'scale(1.22)', filter:'drop-shadow(0 0 10px rgba(255,255,255,.85))' }, { transform:'none', filter:'none' }], { duration:560, easing:PSPR });
+  P.RING.style.left = s.x + 'px'; P.RING.style.top = s.y + 'px';
   P.RING.animate([{ transform:'translate(-50%,-50%) scale(.3)', opacity:.9 }, { transform:'translate(-50%,-50%) scale(9)', opacity:0 }], { duration:900, easing:'cubic-bezier(.2,.8,.2,1)' });
 }
-/* la cámara entra (o sale) del orbe: crece hasta tapar la pantalla */
+/* la cámara entra (o sale) por el hueco de la «o» de «Flow»: la letra crece hasta que su agujero tapa la pantalla */
 function dive(P, into, D){
-  const r = P.ORB.getBoundingClientRect(), K = Math.hypot(innerWidth, innerHeight) / Math.max(10, r.width) * 1.25;
-  const tx = innerWidth / 2 - (r.left + r.width / 2), ty = innerHeight / 2 - (r.top + r.height / 2);
+  P.FW.style.overflow = 'visible';
+  const s = oSpot(P), K = Math.hypot(innerWidth, innerHeight) / s.hole * 1.15;
+  const tx = innerWidth / 2 - s.x, ty = innerHeight / 2 - s.y;
+  P.W.style.transformOrigin = (s.x - P.W.getBoundingClientRect().left).toFixed(1) + 'px ' + (s.y - P.W.getBoundingClientRect().top).toFixed(1) + 'px';
   P.o.classList.add('diving');
   const kw = [{ transform:'none' }, { transform:'translate(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px) scale(' + K.toFixed(2) + ')' }];
-  const ft = [{ opacity:1 }, { opacity:0 }];
   return Promise.all([
     pAnim(P.W, into ? kw : pRev(kw), { duration:D, easing:into ? 'cubic-bezier(.7,0,.84,0)' : 'cubic-bezier(.16,1,.3,1)' }),
-    pAnim(P.T, into ? ft : pRev(ft), { duration:D * .45, easing:'ease-out', delay:into ? 0 : D * .55 }),
-    pAnim(P.FL, into ? [{ opacity:0 }, { opacity:0, offset:.6 }, { opacity:1 }] : [{ opacity:1 }, { opacity:0, offset:.4 }, { opacity:0 }], { duration:D, easing:'linear' })
+    pAnim(P.FL, into ? [{ opacity:0 }, { opacity:0, offset:.7 }, { opacity:1 }] : [{ opacity:1 }, { opacity:0, offset:.3 }, { opacity:0 }], { duration:D, easing:'linear' })
   ]);
 }
 /* v1.8: con «Animaciones» apagado no hay película: un fundido corto y listo (los logos siempre se ven) */
@@ -129,10 +142,10 @@ async function portalOut(href){
     /* 2 · la Z gira y se vuelve el orbe de SynthFlow; «Flow» se escribe */
     try{ SND.shimmer(); }catch(e){}
     await morph(P, true, 900);
-    /* 3 · el orbe late una vez y suelta su anillo de luz */
+    /* 3 · la «o» de «Flow» late una vez y suelta su anillo de luz */
     await pSleep(260); orbPulse(P);
     await pSleep(440);
-    /* 4 · la cámara se zambulle en el orbe */
+    /* 4 · la cámara entra por el hueco de la «o» (Sammuel: el zoom va en la O, como siempre) */
     try{ SND.warp(); }catch(e){}
     await dive(P, true, 1000);
     go();
@@ -154,12 +167,12 @@ async function portalBack(href){
     P.o.classList.add('flow', 'start'); P.Z.style.opacity = '0'; P.ORB.style.opacity = '1';
     await pReady(P); fitPortal(P, logoRect()); await new Promise(r => requestAnimationFrame(r));
     P.BG.style.opacity = '1';
-    /* 1 · sales del orbe */
+    /* 1 · sales por el hueco de la «o» */
     try{ SND.warp(); }catch(e){}
     pAnim(P.o, [{ opacity:0 }, { opacity:1 }], { duration:280, easing:'ease-out' });
     await dive(P, false, 950);
-    P.o.classList.remove('diving');
-    /* 2 · el orbe late al salir */
+    P.o.classList.remove('diving'); P.W.style.transformOrigin = '';
+    /* 2 · la «o» late al salir */
     orbPulse(P); await pSleep(420);
     /* 3 · el orbe vuelve a ser la Z; se borra «Flow» y vuelve la «Z» */
     try{ SND.shimmer(); }catch(e){}

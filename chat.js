@@ -3519,7 +3519,7 @@ function thOpen(){ showChats('chats', true); }
    · Los chats que empiezas dentro de un proyecto quedan guardados en él, y la IA recibe sus
      instrucciones y lo que más se relaciona de sus archivos en cada mensaje.
    · Se guardan en este equipo y, si entraste a tu cuenta, viajan con ella (core 02). */
-const PJ_MAX = 200000, PJ_SEND = 8000, PJ_SEND_SAVER = 4000, PJ_COLORS = ['#7b3ff2', '#ff3d9a', '#ff7a45', '#ffc857', '#3de0ff', '#7fd6b8'];
+const PJ_MAX = 200000, PJ_SEND = 8000, PJ_SEND_SAVER = 4000, PJ_COLORS = ['var(--sb-primary)', 'var(--sb-secondary)', 'var(--sb-warm)', 'var(--sb-spark)', 'var(--sb-light)', 'color-mix(in srgb,var(--sb-light) 55%,var(--sb-primary))'];   /* v2.9: los colores del tema, no fijos */
 const PJ_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><path d="M3.5 10.5h17"/></svg>';
 const PJ_STAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9 6.8 19.7l1-5.9L3.5 9.7l5.9-.8z"/></svg>';
 const PJ_DOTS = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>';

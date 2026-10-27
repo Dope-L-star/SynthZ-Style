@@ -293,7 +293,7 @@ html.szlive #szBot,html.szlive #betaBot{opacity:0 !important;pointer-events:none
 main div.ready.lqg{background:linear-gradient(90deg,rgba(12,7,30,.62),rgba(12,7,30,.34) 55%,rgba(12,7,30,.08)),var(--lg-bg),rgba(20,12,44,.16)}
 @media (max-width:620px){main div.ready.lqg{background:linear-gradient(180deg,rgba(12,7,30,.6),rgba(12,7,30,.3) 60%,rgba(12,7,30,.1)),var(--lg-bg),rgba(20,12,44,.16)}}
 /* celular: la caja va en columna; SynthonIA quedaba subida encima del botón «Empezar gratis». Va debajo, sin pisarlo */
-@media (max-width:620px){div.ready .rd-f{margin:14px 0 -6px}div.ready .rd-f .szbody{width:min(190px,52vw)}}
+@media (max-width:620px){div.ready .rd-f{margin:14px 0 -44px}div.ready .rd-f .szbody{width:min(190px,52vw)}}
 /* el campo no empuja el ancho de la portada en celulares chicos (antes la estiraba a 347 px en una pantalla de 320) */
 .hask{width:100%;max-width:520px;box-sizing:border-box}
 .hask input{width:0}

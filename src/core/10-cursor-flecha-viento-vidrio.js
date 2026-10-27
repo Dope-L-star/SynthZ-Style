@@ -1,6 +1,6 @@
 /* ===== cursor: flecha con viento, vidrio y etiqueta nítida, ahora con movimiento más suave ===== */
-let busyOn = false, extraY = 0;
-const S = { retarget: () => {}, busy: on => { busyOn = !!on; root.classList.toggle('cursor-busy', busyOn); } };
+let busyOn = false, extraY = 0, curWake = null;
+const S = { retarget: () => {}, busy: on => { busyOn = !!on; root.classList.toggle('cursor-busy', busyOn); if (curWake) curWake(); } };
 if (matchMedia('(pointer: fine)').matches && CFG.cursor){
   document.body.insertAdjacentHTML('beforeend',
     '<div id="cd"><svg id="ca" viewBox="0 0 22 30" fill="none"><path d="M2.5 2.2V23L8 18.1L11.6 26.4L15.2 24.9L11.7 16.9L19 16.6Z" fill="#0d0e12" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg><svg id="chd" viewBox="0 0 24 28" fill="none" aria-hidden="true"><path d="M9 2.6c1.1 0 2 .9 2 2V12h.6V9.9c0-1 .8-1.8 1.8-1.8s1.8.8 1.8 1.8V12h.5v-1.2c0-1 .8-1.8 1.8-1.8s1.8.8 1.8 1.8V13h.2c.9 0 1.7.8 1.7 1.7v4.4c0 4.5-3.3 7.8-7.6 7.8h-1.5c-2.4 0-4.4-1.2-5.6-3.2l-4.4-7.2c-.5-.9-.2-2 .7-2.5.8-.5 1.9-.2 2.4.6L7 17V4.6c0-1.1.9-2 2-2z" fill="#0d0e12" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg><i id="cs"><svg viewBox="0 0 24 24"><path d="M6 5.5h12"/><path d="M12 9.5v9M8.5 15l3.5 3.5 3.5-3.5"/></svg></i><i id="cw"></i><i id="ci"></i><i id="cm"><svg viewBox="0 0 30 30" fill="none"><circle cx="15" cy="15" r="13" fill="rgba(13,14,18,.55)" stroke="#fff" stroke-width="1.4"/><path d="M15 5.5l3.2 3.6h-6.4zM15 24.5l3.2-3.6h-6.4z" fill="#fff"/><circle cx="15" cy="15" r="2" fill="#b8c4ff"/></svg></i></div><div id="cr"></div><div id="cl"></div>');
@@ -177,8 +177,15 @@ if (matchMedia('(pointer: fine)').matches && CFG.cursor){
       cl.style.transform = 'translate3d(' + (b.left + lx).toFixed(2) + 'px,' + (b.top + ly).toFixed(2) + 'px,0)' + (Math.abs(sx - 1) > .002 || Math.abs(sy2 - 1) > .002 ? ' scale(' + sx.toFixed(4) + ',' + sy2.toFixed(4) + ')' : '');
       if (lblSync) for (const [o, k] of lblSync) k.style.transform = getComputedStyle(o).transform;
     }
+    /* v2.9: con el mouse quieto y todo en su lugar, el ciclo se duerme (antes dibujaba 60 veces por segundo sin cambiar nada);
+       se despierta con cualquier movimiento, scroll, clic o tecla */
+    const still = !down && !scr && Math.abs(px - ax) < .05 && Math.abs(py - ay) < .05 && Math.abs(angV) < .005 && Math.abs(ang - target) < .05
+      && Math.abs(sv) < .02 && Math.abs(tgx - rx) < .05 && Math.abs(tgy - ry) < .05 && Math.abs(tw - rw) < .05 && Math.abs(th - rh) < .05
+      && Math.abs(((busyOn ? 0 : visT)) - vis) < .003 && Math.abs((down ? .86 : 1) - sc) < .002 && Math.abs(ox - lx) < .05 && Math.abs(oy - ly) < .05;
+    if (still && !lblSync){ curWake = () => { curWake = null; fl = performance.now(); requestAnimationFrame(frame); }; return; }
     requestAnimationFrame(frame);
   })(performance.now());
+  ['pointermove', 'pointerdown', 'pointerup', 'wheel', 'scroll', 'keydown', 'resize'].forEach(t => addEventListener(t, () => { if (curWake) curWake(); }, { passive:true, capture:true }));
 }
 
 

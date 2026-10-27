@@ -39,6 +39,7 @@ const SPACE = (() => {
   let pal = [], gold = '#ffc857';
   const paint = () => { pal = [col('text'), col('light')]; gold = col('spark'); S.forEach(s => { s.c = s.g ? gold : pal[s.k % pal.length]; }); };
   const init = () => {
+    if (document.documentElement.classList.contains('au8on')) return;
     const dpr = Math.min(devicePixelRatio || 1, 2);
     w = cv.clientWidth || innerWidth; h = cv.clientHeight || innerHeight; cv.width = w * dpr; cv.height = h * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -53,7 +54,7 @@ const SPACE = (() => {
   const draw = t => {
     raf = 0;
     /* v2.9: con el cielo en vivo (core 25h) sus estrellas ya están; este lienzo no se dibuja (era un segundo cielo a 30 cuadros) */
-    if (document.documentElement.classList.contains('au8on')){ ctx.clearRect(0, 0, w, h); return; }
+    if (document.documentElement.classList.contains('au8on')){ if (cv.width > 1){ cv.width = cv.height = 1; } return; }   /* y suelta su memoria */
     if (!still && t - last < 33){ if (!document.hidden && CFG.bg && !document.documentElement.classList.contains('sb-off')) raf = requestAnimationFrame(draw); return; }
     last = t; ctx.clearRect(0, 0, w, h);
     for (const s of S){

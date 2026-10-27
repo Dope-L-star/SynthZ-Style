@@ -25,7 +25,9 @@ function cradleAngles(t, A){
   const draw = now => { if (isFlow()) return drawFlow(now); if (link.getAttribute('href') !== 'media/v24/fav-z.png') link.href = 'media/v24/fav-z.png'; };
   let last = 0;
   let on = false;
-  const tick = now => { if (!CFG.favAnim){ on = false; draw(0); return; } if (now - last > 50){ last = now; draw(now); } requestAnimationFrame(tick); };
+  /* v2.9: solo la esfera de SynthFlow se mueve, y a ~8 cuadros por segundo (cada cuadro es una imagen PNG nueva: a 20 por
+     segundo pesaba). La Z de SynthZ es quieta: se pone una vez y el ciclo no corre */
+  const tick = now => { if (!CFG.favAnim || !isFlow()){ on = false; draw(0); return; } if (now - last > 120){ last = now; draw(now); } requestAnimationFrame(tick); };
   window.__favStart = () => { if (!on){ on = true; requestAnimationFrame(tick); } };
   window.__favStart();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => draw(CFG.favAnim ? performance.now() : 0));

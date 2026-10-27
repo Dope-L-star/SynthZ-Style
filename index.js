@@ -336,14 +336,19 @@ document.addEventListener('click', e => {
 const blobs = $$('#aurora i'), bf = [[40, 40], [-50, -30], [30, 20], [-30, 25]];
 let mxT = 0, myT = 0, mx = 0, my = 0, tx = 0, setW = 0, lastT = performance.now();
 const track = $('#track');
-let trackOn = true; if ('IntersectionObserver' in window) new IntersectionObserver(es => { trackOn = es[0].isIntersecting; }).observe(track);
+/* v2.9: la cinta de nombres solo se mueve mientras se ve; fuera de la pantalla el ciclo se detiene del todo */
+let trackOn = true, loopOn = false;
 const measure = () => { setW = track.scrollWidth / 4; };
 addEventListener('pointermove', e => { mxT = e.clientX / innerWidth - .5; myT = e.clientY / innerHeight - .5; }, { passive:true });
+const wakeLoop = () => { if (!loopOn && trackOn && !document.hidden){ loopOn = true; lastT = performance.now(); requestAnimationFrame(loop); } };
+if ('IntersectionObserver' in window) new IntersectionObserver(es => { trackOn = es[0].isIntersecting; wakeLoop(); }).observe(track);
+document.addEventListener('visibilitychange', wakeLoop);
 function loop(now){
-  requestAnimationFrame(loop);
+  if (!trackOn || document.hidden){ loopOn = false; return; }
+  loopOn = true; requestAnimationFrame(loop);
   const dt = Math.min(3, (now - lastT) / 16.67 || 1); lastT = now;
   const k = 1 - Math.pow(1 - .05, dt); mx += (mxT - mx) * k; my += (myT - my) * k;
-  if (!reduce && setW > 0 && trackOn){ tx -= .55 * dt; if (tx <= -setW) tx += setW; track.style.transform = 'translate3d(' + tx.toFixed(2) + 'px,0,0)'; }
+  if (!reduce && setW > 0){ tx -= .55 * dt; if (tx <= -setW) tx += setW; track.style.transform = 'translate3d(' + tx.toFixed(2) + 'px,0,0)'; }
 }
 
 /* ---------- hero: se escribe y luego aparece lo demás ---------- */

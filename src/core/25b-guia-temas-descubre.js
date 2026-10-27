@@ -79,12 +79,13 @@ document.addEventListener('click', e => {
 }, true);
 
 /* «Qué hay de nuevo»: SynthonIA te lo cuenta una vez por versión (y está en el menú cuando quieras) */
-const WHATSNEW = { v:'2.2', items:[
-  ['chat', 'SynthFlow se renovó: más limpio y fácil. Todo para escribir está en una sola caja, y el «+» trae archivos, crear imagen, buscar en internet y respuestas cortas.'],
-  ['extras', 'Busca en internet: «+» › «Buscar en internet». La IA responde con datos de hoy y te muestra sus fuentes (y si preguntas algo de hoy, busca sola).'],
-  ['archivos', 'Pídele «hazme una presentación de…» y te la entrega lista para descargar en PowerPoint.'],
-  ['ajustes', 'Ajustes ahora tiene 2 pestañas: «Página» e «IAs y memoria» (lo que recuerdo de ti, respuestas cortas, tus IA ideales y más).'],
-  ['synthonia', '¡Y ahora hablo de verdad: muevo la boca con cada sílaba! Cuando haya novedades verás un «!» sobre mi cabeza.']
+const WHATSNEW = { v:'2.9', items:[
+  ['synthonia', '¡Me renové! Ahora soy mi carita con mis manitas flotando cerca: saludo, señalo, aplaudo y celebro contigo. Tócame y verás.'],
+  ['chat', 'El cielo de SynthFlow es en vivo: cuando ya estás conversando, se calma y se oscurece para que leas mejor.'],
+  ['ajustes', 'Las ventanas (Ajustes, Tu límite de hoy, Conectar IA) ahora son de vidrio: ves el cielo a través de ellas.'],
+  ['proyectos', 'Proyectos: junta chats, instrucciones y archivos de un mismo tema. Ahora se pintan con los colores de tu tema.'],
+  ['app', 'La app SynthFlow tiene ventana nueva: instálala gratis con «Instalar la app», sin tiendas.'],
+  ['portada', 'Al entrar, la Z de SynthZ se dibuja con un cometa de luz; y al abrir el chat, entras por la «o» de Flow.']
 ] };
 function newsBang(onShow){
   const b = $('#szBot'); if (!b){ setTimeout(() => newsBang(onShow), 600); return; }

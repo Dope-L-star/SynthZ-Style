@@ -1,8 +1,11 @@
 /* ---------- v2.3 · SynthFlow como app: se instala desde el navegador (sin tiendas) ----------
    - El «trabajador» (sw.js) no guarda la página: todo llega siempre fresco de internet. Solo guarda la pantalla de «sin conexión».
-   - En el celular, una vez cada 7 días, sale «Descarga nuestra app SynthFlow» con un video corto.
+   - En el celular, una vez cada 7 días, sale «Descarga nuestra app SynthFlow».
+   - v2.9: la ventana es de vidrio, con un celular dibujado en código (sin el video viejo). Cuando haya video nuevo,
+     basta con poner su ruta en APP_VIDEO y se ve dentro de la pantalla del celular.
    - Android/Chrome: botón «Instalar» de verdad. iPhone: pasos con dibujos (Compartir › Agregar a inicio). */
 const APP = { evt:null, done:false };
+const APP_VIDEO = '';   /* el video nuevo de Sammuel va aquí (por ejemplo '/media/app/synthflow.mp4') */
 const appStandalone = () => { try{ return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }catch(e){ return false; } };
 const appIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const appPhone = () => { try{ return matchMedia('(pointer:coarse)').matches && Math.min(screen.width, screen.height) <= 820; }catch(e){ return false; } };
@@ -42,14 +45,21 @@ function appPromo(force){
   try{ localStorage.setItem('synthz:apppromo', String(Date.now())); }catch(e){}
   const o = document.createElement('div'); o.id = 'appPromo'; o.className = 'appp';
   const ios = appIOS(), canPrompt = !!APP.evt;
+  const I = d => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
+  const scr = APP_VIDEO ? '<video muted playsinline loop autoplay preload="metadata" aria-label="SynthFlow en acción"><source src="' + APP_VIDEO + '"></video>'
+    : '<span class="ap-top"><img src="/media/app/sf-192.png" alt="" width="18" height="18">SynthFlow</span><span class="ap-q">¿Qué quieres <em>FlowIA’r</em> hoy?</span>'
+      + '<span class="ap-m me"></span><span class="ap-m ai"><i></i><i></i><i></i></span><span class="ap-in"><i></i></span>';
   o.innerHTML = '<div class="ap-card" role="dialog" aria-modal="true" aria-label="Descarga la app SynthFlow">'
-    + '<div class="ap-vid"><video poster="/media/app/synthflow-demo.jpg" muted playsinline loop autoplay preload="metadata" aria-label="SynthFlow en acción"><source src="/media/app/synthflow-demo.webm" type="video/webm"><source src="/media/app/synthflow-demo.mp4" type="video/mp4"></video><span class="ap-badge"><img src="/media/app/sf-192.png" alt="" width="22" height="22">SynthFlow</span></div>'
+    + '<div class="ap-hero" aria-hidden="true"><i class="ap-glow"></i><div class="ap-phone"><div class="ap-scr">' + scr + '</div></div>'
+    + '<span class="ap-ico"><img src="/media/app/sf-192.png" alt="" width="54" height="54"></span><i class="ap-sp s1"></i><i class="ap-sp s2"></i><i class="ap-sp s3"></i></div>'
     + '<div class="ap-body"><span class="ap-kick">App gratis · sin tiendas</span><h3>Descarga nuestra app <em>SynthFlow</em></h3>'
-    + '<ul class="ap-why"><li><i>⚡</i><span><b>Va más fluida</b>: a pantalla completa, sin pestañas ni barra del navegador.</span></li><li><i>🌊</i><span><b>Más Flow</b>: tus chats y SuperiorSynth a un toque, desde tu pantalla de inicio.</span></li><li><i>🪶</i><span><b>Pesa casi nada</b> y siempre está al día: se instala desde aquí mismo.</span></li></ul>'
+    + '<ul class="ap-why"><li><i>' + I('<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>') + '</i><span><b>Va más fluida</b>: a pantalla completa, sin pestañas ni barra del navegador.</span></li>'
+    + '<li><i>' + I('<path d="M2 12c2.5-4 5-4 7.5 0s5 4 7.5 0 3.5-3 5-1"/><path d="M2 18c2.5-4 5-4 7.5 0s5 4 7.5 0 3.5-3 5-1" opacity=".5"/>') + '</i><span><b>Más Flow</b>: tus chats y SuperiorSynth a un toque, desde tu pantalla de inicio.</span></li>'
+    + '<li><i>' + I('<path d="M20 4C10 4 5 10 4 20"/><path d="M20 4c0 8-5 12-12 12"/>') + '</i><span><b>Pesa casi nada</b> y siempre está al día: se instala desde aquí mismo.</span></li></ul>'
     + '<div class="ap-how"></div>'
-    + '<div class="ap-acts"><button type="button" class="lnk" data-ap="no">Ahora no</button><button type="button" class="btn" data-ap="go">' + (canPrompt ? 'Instalar SynthFlow' : ios ? 'Ver cómo instalarla' : 'Instalar SynthFlow') + '</button></div></div></div>';
+    + '<div class="ap-acts"><button type="button" class="lnk" data-ap="no">Ahora no</button><button type="button" class="btn ap-go" data-ap="go">' + (canPrompt ? 'Instalar SynthFlow' : ios ? 'Ver cómo instalarla' : 'Instalar SynthFlow') + '</button></div></div></div>';
   document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('on'));
-  const v = $('video', o); if (v){ v.play().catch(() => {}); v.addEventListener('error', () => { const w = $('.ap-vid', o); if (w) w.classList.add('novid'); }); }
+  const v = $('video', o); if (v){ v.play().catch(() => {}); v.addEventListener('error', () => v.remove()); }
   const close = () => { if (!o.isConnected) return; o.classList.remove('on'); setTimeout(() => o.remove(), 420); };
   o._close = close;
   o.addEventListener('pointerdown', e => { if (e.target === o) close(); });

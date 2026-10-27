@@ -288,7 +288,9 @@ const AURORA = (() => {
     const fps = moving ? 30 : coarse || cTo ? 12 : 24;
     /* quieto: siempre el mismo instante, y solo se repinta si algo cambió */
     if (dirty || moving || (on && now - last >= 1000 / fps - 3)){ last = now; dirty = false; paint(on ? now : 0); }
-    if (moving || on) raf = requestAnimationFrame(frame);
+    /* v2.9: entre cuadro y cuadro duerme con un temporizador (antes despertaba 60 veces por segundo solo para mirar la hora) */
+    if (moving) raf = requestAnimationFrame(frame);
+    else if (on){ raf = -1; setTimeout(() => { raf = requestAnimationFrame(frame); }, Math.max(0, 1000 / fps - (performance.now() - last) - 8)); }
   };
   const go = () => { dirty = true; if (!raf) raf = requestAnimationFrame(frame); };
   recolor(); size(); paint(0); go();

@@ -37,4 +37,4 @@
 @media (prefers-reduced-motion:reduce){.uscene *{animation:none !important}.uscene .usc-page,.uscene .usc-bug .bo{opacity:0}}
 html.noanim .uscene *{animation:none !important}
 /* en las escenas el pedestal queda fuera del cuadro: no se dibuja (menos trabajo para el teléfono) */
-.uscene .syb-floor,.uscene .syb-beam,.uscene .syb-dots,.uscene .syb-base,.uscene .syb-glow{display:none}
+.uscene .syb-shadow,.uscene .syb-glow{display:none}

@@ -1192,7 +1192,7 @@ html.szlive #szBot,html.szlive #betaBot{opacity:0 !important;pointer-events:none
 main div.ready.lqg{background:linear-gradient(90deg,rgba(12,7,30,.62),rgba(12,7,30,.34) 55%,rgba(12,7,30,.08)),var(--lg-bg),rgba(20,12,44,.16)}
 @media (max-width:620px){main div.ready.lqg{background:linear-gradient(180deg,rgba(12,7,30,.6),rgba(12,7,30,.3) 60%,rgba(12,7,30,.1)),var(--lg-bg),rgba(20,12,44,.16)}}
 /* celular: la caja va en columna; SynthonIA quedaba subida encima del botón «Empezar gratis». Va debajo, sin pisarlo */
-@media (max-width:620px){div.ready .rd-f{margin:14px 0 -6px}div.ready .rd-f .szbody{width:min(190px,52vw)}}
+@media (max-width:620px){div.ready .rd-f{margin:14px 0 -44px}div.ready .rd-f .szbody{width:min(190px,52vw)}}
 /* el campo no empuja el ancho de la portada en celulares chicos (antes la estiraba a 347 px en una pantalla de 320) */
 .hask{width:100%;max-width:520px;box-sizing:border-box}
 .hask input{width:0}
@@ -1253,7 +1253,7 @@ main div.ready.lqg{background:linear-gradient(90deg,rgba(12,7,30,.62),rgba(12,7,
 @media (prefers-reduced-motion:reduce){.uscene *{animation:none !important}.uscene .usc-page,.uscene .usc-bug .bo{opacity:0}}
 html.noanim .uscene *{animation:none !important}
 /* en las escenas el pedestal queda fuera del cuadro: no se dibuja (menos trabajo para el teléfono) */
-.uscene .syb-floor,.uscene .syb-beam,.uscene .syb-dots,.uscene .syb-base,.uscene .syb-glow{display:none}
+.uscene .syb-shadow,.uscene .syb-glow{display:none}
 /* v2.7 · portada más intuitiva (index 13) */
 /* menos aire entre secciones: se baja menos y cada parte se siente conectada con la siguiente */
 section{padding-top:clamp(64px,10vh,112px);padding-bottom:clamp(64px,10vh,112px)}

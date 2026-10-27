@@ -17,27 +17,12 @@ const FACE_EYE = '#3de0ff';
     /* el rosa que se ve a través del vidrio, más fuerte a la derecha */
     + '<radialGradient id="szSub" cx=".7" cy=".86" r=".7"><stop offset="0" stop-color="#5ff4ff" stop-opacity=".55"/><stop offset=".55" stop-color="#ff3d9a" stop-opacity=".16"/><stop offset="1" stop-color="#ff3d9a" stop-opacity="0"/></radialGradient>'
     + '<radialGradient id="szVisor" cx=".42" cy=".32" r=".8"><stop offset="0" stop-color="#1d1236"/><stop offset=".55" stop-color="#0b0719"/><stop offset="1" stop-color="#030209"/></radialGradient>'
-    /* piezas cilíndricas (cuello, brazos, base): luz al centro y lila en los bordes */
-    + '<linearGradient id="szCyl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f3ecff"/><stop offset=".2" stop-color="#c3aef6"/><stop offset=".42" stop-color="#e9dcfd"/><stop offset=".6" stop-color="#a990f0"/><stop offset=".85" stop-color="#e3a3ea"/><stop offset="1" stop-color="#fbe9ff"/></linearGradient>'
-    + '<linearGradient id="szCylV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd1a8"/><stop offset=".5" stop-color="#ff7a45"/><stop offset="1" stop-color="#ff3d9a"/></linearGradient>'
-    + '<radialGradient id="szTorso" cx=".5" cy=".62" r=".62"><stop offset="0" stop-color="#f08fdc" stop-opacity=".92"/><stop offset=".45" stop-color="#b39bf2" stop-opacity=".88"/><stop offset=".82" stop-color="#d8c8fa" stop-opacity=".96"/><stop offset="1" stop-color="#f7f0ff"/></radialGradient>'
-    + '<linearGradient id="szBase" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f6efff"/><stop offset=".18" stop-color="#c2acf6"/><stop offset=".45" stop-color="#e8dafd"/><stop offset=".62" stop-color="#ad94f1"/><stop offset=".85" stop-color="#ee9fe4"/><stop offset="1" stop-color="#fde8ff"/></linearGradient>'
-    + '<radialGradient id="szCore" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#f2ffff"/><stop offset=".35" stop-color="#7befff"/><stop offset=".7" stop-color="#3de0ff" stop-opacity=".55"/><stop offset="1" stop-color="#3de0ff" stop-opacity="0"/></radialGradient>'
-    + '<linearGradient id="szRingG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff7ad0"/><stop offset=".5" stop-color="#bfe9ff"/><stop offset="1" stop-color="#3de0ff"/></linearGradient>'
-    /* v2.7 · cuerpo de cristal líquido: vidrio casi transparente, filo de luz cian, borde iridiscente con los colores de la marca */
+    /* v2.7 · vidrio de las manitas: casi transparente, filo de luz cian, borde iridiscente con los colores de la marca */
     + '<radialGradient id="sgGlass" cx=".42" cy=".34" r=".78"><stop offset="0" stop-color="#3a2340" stop-opacity=".38"/><stop offset=".6" stop-color="#1d1518" stop-opacity=".55"/><stop offset=".86" stop-color="#c98a6a" stop-opacity=".45"/><stop offset="1" stop-color="#fff1d6" stop-opacity=".9"/></radialGradient>'
     + '<radialGradient id="sgCaus" cx=".5" cy=".96" r=".62"><stop offset="0" stop-color="#ffd9a0" stop-opacity=".7"/><stop offset=".5" stop-color="#c9566c" stop-opacity=".22"/><stop offset="1" stop-color="#c9566c" stop-opacity="0"/></radialGradient>'
     + '<linearGradient id="sgIri" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1d6"/><stop offset=".3" stop-color="#e6b65f"/><stop offset=".68" stop-color="#e0607e"/><stop offset="1" stop-color="#9b7bff"/></linearGradient>'
     + '<linearGradient id="sgArm" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff1d6" stop-opacity=".9"/><stop offset=".22" stop-color="#8a5a4a" stop-opacity=".55"/><stop offset=".55" stop-color="#1d1518" stop-opacity=".6"/><stop offset=".82" stop-color="#e6b65f" stop-opacity=".55"/><stop offset="1" stop-color="#ffffff" stop-opacity=".85"/></linearGradient>'
-    + '<linearGradient id="sgSpec" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'
-    + '<linearGradient id="sgWave" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3de0ff"/><stop offset=".35" stop-color="#7b3ff2"/><stop offset=".7" stop-color="#ff3d9a"/><stop offset="1" stop-color="#ff7a45"/></linearGradient>'
-    + '<linearGradient id="sgBeam" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ffd9a0" stop-opacity=".5"/><stop offset=".6" stop-color="#c9566c" stop-opacity=".14"/><stop offset="1" stop-color="#c9566c" stop-opacity="0"/></linearGradient>'
-    + '<radialGradient id="sgCoreIn" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#1b1048"/><stop offset=".7" stop-color="#0a0620"/><stop offset="1" stop-color="#05030f"/></radialGradient>'
     + '<radialGradient id="sgHalo" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffc857" stop-opacity=".5"/><stop offset=".55" stop-color="#ff3d9a" stop-opacity=".16"/><stop offset="1" stop-color="#ff3d9a" stop-opacity="0"/></radialGradient>'
-    + '<clipPath id="sgCoreClip"><circle cx="150" cy="256" r="19"/></clipPath>'
-    + '<clipPath id="sgTorsoClip"><path d="M150 206C198 206 216 228 214 258C212 290 190 312 150 312C110 312 88 290 86 258C84 228 102 206 150 206Z"/></clipPath>'
-    + '<radialGradient id="sgBlobA" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#e6b65f" stop-opacity=".55"/><stop offset="1" stop-color="#e6b65f" stop-opacity="0"/></radialGradient>'
-    + '<radialGradient id="sgBlobB" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#c9566c" stop-opacity=".6"/><stop offset=".5" stop-color="#9b7bff" stop-opacity=".22"/><stop offset="1" stop-color="#9b7bff" stop-opacity="0"/></radialGradient>'
     + '<filter id="szBlur3" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2"/></filter>'
     + '<filter id="szBlur1" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1"/></filter>'
     + '</defs></svg>';
@@ -46,7 +31,7 @@ const FACE_EYE = '#3de0ff';
 /* ---------- v2.8 · SynthonIA vuelve a ser la de main (pedido de Sammuel, 27 oct) ----------
    Cabeza cuadradita oscura con filo dorado, antena y orejas rosadas, pantalla negra con ojos, boca y cachetes dorados.
    Todas las caras de main siguen igual; las nuevas (escuchando, analizando, creando, hablando, error) usan el mismo dibujo.
-   Lo nuevo es el cuerpo de cristal (más abajo) y los detalles que se mueven (engranes, foco, escáner, ondas de voz). */
+   v2.9: sin cuerpo; solo la cabecita y dos manitas que flotan (más abajo), con detalles que se mueven (engranes, foco, escáner, ondas). */
 const FFX_C = '#f6d9a0';
 const FFX = {
   bulb:'<g class="fx"><circle cx="90" cy="12" r="6.5" fill="#ffd36a"/><rect x="87.5" y="18" width="5" height="4" rx="1" fill="#e9b04a"/><path d="M78 6l2 4M98 4l-2 4M100 14h-3" stroke="#ffd36a" stroke-width="1.6" stroke-linecap="round"/></g>',
@@ -116,28 +101,29 @@ function face(mood, size, cls){
   return '<svg class="szface' + (cls ? ' ' + cls : '') + (f.w ? ' w' + f.w : '') + '" data-mood="' + m + '" viewBox="0 0 100 100" width="' + z + '" height="' + z + '" aria-hidden="true">'
     + wavesSvg() + headSvg(f) + '</svg>';
 }
-/* ---------- cuerpo entero · v2.7: SynthonIA de cristal líquido, toda en código (SVG) ----------
-   v2.8: la cabeza es la de main (cuadradita, dorada y rosada); el cuerpo es de cristal ahumado que combina con ella:
-   cuello de anillos, torso de vidrio con el corazón de SynthFlow (la onda de la marca), brazos por partes
-   que giran en el hombro, y un pedestal flotante con su luz. Nada es imagen: se dibuja y se anima en vivo,
-   y se pausa solo cuando no se ve. Escenario 300 × 400 (3:4). */
+/* ---------- v2.9 · SynthonIA es su cabecita y dos manitas que flotan cerca (sin cuerpo; pedido de Sammuel, 27 oct) ----------
+   La cabeza es la de main, grande y al centro, con todas sus caras. Las manos van sueltas a los lados (nunca pegadas)
+   y cada una flota a su propio ritmo. Cada pose dice dónde va cada mano: [x, y, giro, gesto]; la derecha se escribe
+   como si fuera la izquierda (va en espejo), así las poses quedan parejas. Alrededor: chispitas, una sombra que
+   respira cuando sube y baja, y un detalle según la cara (corazones, confeti, zzz, burbujas, «!», notas).
+   Todo en SVG, se mueve en vivo y se pausa cuando no se ve. Escenario 300 × 400 (3:4). */
+const SG_IDLE = [40, 280, 8, 'open'];
 const SPOSE = {
-  idle:     { l:0,   r:0 },
-  saluda:   { l:0,   r:-122, wave:'r', h:['open', 'wave'] },
-  senala:   { l:0,   r:-82, h:['open', 'point'] },
-  senalaL:  { l:82,  r:0, h:['point', 'open'] },
-  celebra:  { l:122, r:-122, h:['wave', 'wave'] },
-  piensa:   { l:6,   r:-36 },
-  escucha:  { l:0,   r:-116 },
-  presenta: { l:0,   r:-56, h:['open', 'wave'] },
-  sorpresa: { l:42,  r:-42, h:['wave', 'wave'] },
-  escribe:  { l:22,  r:-22, type:1 },
-  lee:      { l:30,  r:-30 }
+  idle:     { L:SG_IDLE, R:SG_IDLE },
+  saluda:   { L:SG_IDLE, R:[18, 148, 165, 'wave'], wave:'r' },
+  senala:   { L:SG_IDLE, R:[10, 206, 90, 'point'] },
+  senalaL:  { L:[10, 206, 90, 'point'], R:SG_IDLE },
+  celebra:  { L:[22, 130, 158, 'wave'], R:[22, 130, 158, 'wave'] },
+  piensa:   { L:SG_IDLE, R:[102, 332, 176, 'point'] },
+  escucha:  { L:SG_IDLE, R:[14, 172, 150, 'open'] },
+  presenta: { L:SG_IDLE, R:[12, 250, 66, 'wave'] },
+  sorpresa: { L:[26, 188, 168, 'wave'], R:[26, 188, 168, 'wave'] },
+  escribe:  { L:[104, 308, -4, 'open'], R:[104, 308, -4, 'open'] },
+  lee:      { L:[90, 306, -34, 'open'], R:[90, 306, -34, 'open'] }
 };
 /* una pieza de vidrio: relleno casi transparente, luz que se junta abajo, borde iridiscente y filo blanco */
 const sgPiece = (d, rim) => '<path d="' + d + '" fill="url(#sgGlass)"/><path d="' + d + '" fill="url(#sgCaus)"/>'
   + '<path d="' + d + '" fill="none" stroke="url(#sgIri)" stroke-width="' + (rim || 1.6) + '" stroke-opacity=".85"/><path d="' + d + '" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width=".7"/>';
-const sgOval = (cx, cy, rx, ry) => 'M' + (cx - rx) + ' ' + cy + 'a' + rx + ' ' + ry + ' 0 1 0 ' + 2 * rx + ' 0a' + rx + ' ' + ry + ' 0 1 0 ' + -2 * rx + ' 0z';
 /* v2.9 · manos de verdad: palma de vidrio, tres dedos con nudillos y pulgar (antes era una manopla).
    Cada dedo: [x de la base, giro, doblez de la punta, largo 1, largo 2]; el pulgar además dice dónde nace.
    open = relajada, wave = abierta para saludar o celebrar, point = puño con el índice estirado */
@@ -158,68 +144,66 @@ function sgHand(kind){
     + '<path d="M-6.5 4.5q4-2 9-1" stroke="#fff" stroke-opacity=".75" stroke-width="1.4" stroke-linecap="round" fill="none"/>'
     + '<ellipse cx="0" cy="1" rx="8.5" ry="2.6" fill="#c9566c" stroke="#e6b65f" stroke-opacity=".8" stroke-width=".8"/>';
 }
-/* el brazo izquierdo, colgando desde el hombro (0,0): brazo, codo, antebrazo y mano. El derecho es su espejo */
-const sgArm = hand => '<g transform="rotate(10)"><rect x="-12" y="-6" width="24" height="44" rx="12" fill="url(#sgArm)"/><rect x="-12" y="-6" width="24" height="44" rx="12" fill="none" stroke="url(#sgIri)" stroke-width="1.3" stroke-opacity=".85"/>'
-  + '<circle cx="0" cy="-2" r="10" fill="#c9566c" stroke="#e6b65f" stroke-opacity=".7" stroke-width="1.3"/><circle cx="-3.5" cy="-5.5" r="2.8" fill="#fff" opacity=".35"/>'
-  + '<circle cx="0" cy="38" r="8.5" fill="#c9566c" stroke="#e6b65f" stroke-opacity=".7" stroke-width="1.2"/><circle cx="-3" cy="35" r="2.4" fill="#fff" opacity=".35"/>'
-  + '<g transform="translate(0 38) rotate(-14)"><rect x="-10.5" y="0" width="21" height="32" rx="10.5" fill="url(#sgArm)"/><rect x="-10.5" y="0" width="21" height="32" rx="10.5" fill="none" stroke="url(#sgIri)" stroke-width="1.2" stroke-opacity=".85"/>'
-  +   '<g class="syb-hand" transform="translate(0 30) scale(1.3)">' + sgHand(hand) + '</g>'
-  + '</g><path d="M-6 0q-2 16 0 30" stroke="#fff" stroke-opacity=".6" stroke-width="2.4" stroke-linecap="round" fill="none"/></g>';
-const SG_TORSO = 'M150 206C198 206 216 228 214 258C212 290 190 312 150 312C110 312 88 290 86 258C84 228 102 206 150 206Z';
+/* una mano suelta: posición de la pose → flotar → gesto (saludar, teclear…) → el dibujo. La derecha va en espejo */
+const sgMano = (side, kind) => '<g class="syb-mano ' + side + '"' + (side === 'hr' ? ' transform="matrix(-1 0 0 1 300 0)"' : '') + '>'
+  + '<g class="syb-hp"><g class="syb-bob"><g class="syb-wv"><g class="syb-hand" transform="scale(1.95)">' + sgHand(kind) + '</g></g></g></g></g>';
+const sgVars = P => '--lx:' + P.L[0] + 'px;--ly:' + P.L[1] + 'px;--lr:' + P.L[2] + 'deg;--rx:' + P.R[0] + 'px;--ry:' + P.R[1] + 'px;--rr:' + P.R[2] + 'deg';
+/* chispitas que titilan alrededor (siempre) */
+const sgStar = (x, y, s, d) => '<g transform="translate(' + x + ' ' + y + ') scale(' + s + ')"><path class="syb-sp" style="--d:' + d + 's" d="M0-6L1.3-1.3 6 0 1.3 1.3 0 6-1.3 1.3-6 0-1.3-1.3z"/></g>';
+const SG_SPARKS = sgStar(36, 112, 1.1, 0) + sgStar(266, 86, 1.4, -1.1) + sgStar(278, 214, .8, -2) + sgStar(22, 206, .9, -.6) + sgStar(214, 44, .7, -1.6) + sgStar(92, 40, .9, -2.4);
+/* el detalle de cada cara: sube, cae o late encima de la cabeza */
+const sgUp = (x, y, d, dx, inner) => '<g transform="translate(' + x + ' ' + y + ')"><g class="syb-f" style="--d:' + d + 's;--dx:' + dx + 'px">' + inner + '</g></g>';
+const SG_HEART = '<path d="M0 6l-7-7a4 4 0 0 1 7-5a4 4 0 0 1 7 5z" fill="#ef7f93" stroke="#ffd1dc" stroke-width="1"/>';
+const SG_NOTE = '<path d="M0 0v-16l11-4v16" stroke="#f6d9a0" stroke-width="2.4" fill="none" stroke-linejoin="round"/><ellipse cx="-3" cy="0" rx="4" ry="3.2" fill="#f6d9a0"/><ellipse cx="8" cy="-4" rx="4" ry="3.2" fill="#f6d9a0"/>';
+const SG_Z = s => '<path d="M' + (-5 * s) + ' ' + (-5 * s) + 'h' + 10 * s + 'l' + (-10 * s) + ' ' + 10 * s + 'h' + 10 * s + '" stroke="#bfe9ff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>';
+const SG_CONF = ['#ff3d9a', '#3de0ff', '#ffc857', '#9b7bff', '#f6d9a0', '#ff7a45'];
+const SG_FX = {
+  love:  sgUp(58, 128, 0, -16, SG_HEART) + sgUp(244, 110, -.9, 14, SG_HEART) + sgUp(262, 176, -1.8, 20, SG_HEART) + sgUp(40, 190, -2.4, -12, SG_HEART),
+  music: sgUp(250, 120, 0, 18, SG_NOTE) + sgUp(46, 150, -1.3, -16, SG_NOTE),
+  zzz:   sgUp(236, 96, 0, 22, SG_Z(1)) + sgUp(236, 96, -1, 26, SG_Z(1.4)) + sgUp(236, 96, -2, 30, SG_Z(.8)),
+  think: '<g class="syb-tb"><circle cx="236" cy="96" r="4.5"/><circle cx="252" cy="74" r="7"/><circle cx="272" cy="46" r="10.5"/></g>',
+  wow:   '<g transform="translate(262 70)"><g class="syb-wow"><rect x="-4.5" y="-24" width="9" height="26" rx="4.5" fill="#ffc857"/><circle cy="12" r="5" fill="#ffc857"/><path d="M-16-18l-6-6M16-18l6-6M-19 0h-8M19 0h8" stroke="#f6d9a0" stroke-width="2.4" stroke-linecap="round"/></g></g>',
+  party: Array.from({ length:14 }, (_, i) => '<g transform="translate(' + (34 + i * 17.5) + ' ' + (36 + (i * 37) % 50) + ')"><rect class="syb-cf" style="--d:' + (-(i * .29) % 2).toFixed(2) + 's;--dx:' + ((i % 2 ? 1 : -1) * (6 + i % 4 * 5)) + 'px" x="-3" y="-5" width="6" height="10" rx="1.5" fill="' + SG_CONF[i % 6] + '"/></g>').join('')
+};
+const SG_MOODFX = { encantada:'love', flow:'music', dormida:'zzz', descansando:'zzz', pensando:'think', confundida:'think', sorprendida:'wow', celebrando:'party' };
+const sgFx = (m, p) => SG_FX[p === 'celebra' ? 'party' : SG_MOODFX[m]] || '';
 function synHead(mood){
   const m = FACE[mood] ? mood : 'feliz', f = FACE[m];
-  return '<svg class="szface syb-hsvg' + (f.w ? ' w' + f.w : '') + '" data-mood="' + m + '" x="50" y="14" width="200" height="200" viewBox="0 0 100 100" overflow="visible">'
+  return '<svg class="szface syb-hsvg' + (f.w ? ' w' + f.w : '') + '" data-mood="' + m + '" x="30" y="44" width="240" height="240" viewBox="0 0 100 100" overflow="visible">'
     + wavesSvg() + headSvg(f) + '</svg>';
 }
 function synBody(mood, pose, size){
-  const m = FACE[mood] ? mood : 'feliz', p = SPOSE[pose] ? pose : 'idle', P = SPOSE[p], hands = P.h || ['open', 'open'];
-  const torso = SG_TORSO;
-  return '<div class="szbody" data-mood="' + m + '" data-pose="' + p + '" style="--al:' + P.l + 'deg;--ar:' + P.r + 'deg' + (size ? ';--sz:' + size + 'px' : '') + '" aria-hidden="true">'
+  const m = FACE[mood] ? mood : 'feliz', p = SPOSE[pose] ? pose : 'idle', P = SPOSE[p];
+  return '<div class="szbody" data-mood="' + m + '" data-pose="' + p + '"' + (P.wave ? ' data-wave="' + P.wave + '"' : '') + ' style="' + sgVars(P) + (size ? ';--sz:' + size + 'px' : '') + '" aria-hidden="true">'
     + '<i class="syb-glow"></i>'
     + '<svg class="syb-svg" viewBox="0 0 300 400" overflow="visible" aria-hidden="true">'
-    /* piso: anillo que late y la luz del pedestal */
-    + '<g class="syb-floor"><ellipse class="syb-ring" cx="150" cy="380" rx="86" ry="13" fill="none" stroke="url(#sgIri)" stroke-width="2.2"/><ellipse cx="150" cy="380" rx="62" ry="8" fill="url(#sgHalo)"/></g>'
-    + '<path class="syb-beam" d="M112 340L128 300H172L188 340Z" fill="url(#sgBeam)"/>'
-    + '<g class="syb-dots" fill="#ffe2a8"><circle cx="136" cy="330" r="1.6"/><circle cx="150" cy="336" r="1.2"/><circle cx="163" cy="328" r="1.8"/><circle cx="144" cy="322" r="1"/><circle cx="158" cy="340" r="1.3"/></g>'
-    /* pedestal flotante de vidrio */
-    + '<g class="syb-base">' + sgPiece('M96 340a54 12 0 0 1 108 0v14a54 12 0 0 1 -108 0z', 1.4)
-    +   '<ellipse cx="150" cy="340" rx="54" ry="12" fill="url(#sgGlass)" stroke="url(#sgIri)" stroke-width="1.6"/><ellipse cx="150" cy="340" rx="34" ry="6.5" fill="none" stroke="#e6b65f" stroke-opacity=".85" stroke-width="1.4"/>'
-    +   '<path d="M104 350q46 10 92 0" stroke="#fff" stroke-opacity=".35" stroke-width="1.2" fill="none"/></g>'
-    /* todo lo de arriba flota sobre el pedestal */
-    + '<g class="syb-up">'
-    +   '<g class="syb-arm al"><g class="syb-sway"><g transform="translate(100 222)">' + sgArm(hands[0]) + '</g></g></g>'
-    +   '<g class="syb-arm ar' + (P.wave === 'r' ? ' wave' : '') + '"><g class="syb-sway"><g transform="translate(200 222) scale(-1 1)">' + sgArm(hands[1]) + '</g></g></g>'
-    +   '<g class="syb-torso">' + sgPiece(torso, 1.8)
-    +     '<g clip-path="url(#sgTorsoClip)" opacity=".75"><circle class="syb-liq a" cx="120" cy="240" r="46" fill="url(#sgBlobA)"/><circle class="syb-liq b" cx="182" cy="284" r="42" fill="url(#sgBlobB)"/></g>'
-    +     '<path d="M108 236q10-20 38-24" stroke="url(#sgSpec)" stroke-width="5" stroke-linecap="round" fill="none" opacity=".7"/>'
-    +     '<path d="M118 304q32 11 64 0" stroke="#ffd9a0" stroke-opacity=".5" stroke-width="2" stroke-linecap="round" fill="none"/>'
-    /*    el corazón: la esfera de SynthFlow con su onda de colores */
-    +     '<circle cx="150" cy="256" r="30" fill="url(#sgHalo)" class="syb-halo"/>'
-    +     '<circle cx="150" cy="256" r="19" fill="url(#sgCoreIn)" stroke="url(#sgIri)" stroke-width="1.6"/>'
-    +     '<g clip-path="url(#sgCoreClip)"><path class="syb-wave" d="M100 256q6.5-11 13 0t13 0t13 0t13 0t13 0t13 0t13 0t13 0" stroke="url(#sgWave)" stroke-width="3.6" stroke-linecap="round" fill="none"/></g>'
-    +     '<ellipse cx="143" cy="246" rx="7" ry="3.4" transform="rotate(-30 143 246)" fill="#fff" opacity=".55"/>'
-    +     '<path d="M126 318q24 9 48 0" stroke="url(#sgIri)" stroke-width="5" stroke-linecap="round" fill="none" opacity=".75"/></g>'
-    /*    cuello de anillos */
-    +   '<g class="syb-neck">' + sgPiece(sgOval(150, 208, 26, 7), 1.3) + sgPiece(sgOval(150, 200, 21, 6), 1.2) + '</g>'
-    +   '<g class="syb-head"><g class="syb-hd">' + synHead(m) + '</g></g>'
-    + '</g></svg></div>';
+    /* la sombrita de luz en el piso: se achica cuando ella sube */
+    + '<ellipse class="syb-shadow" cx="150" cy="370" rx="80" ry="12" fill="url(#sgHalo)"/>'
+    + '<g class="syb-sparks">' + SG_SPARKS + '</g>'
+    + '<g class="syb-up"><g class="syb-head"><g class="syb-hd">' + synHead(m) + '</g></g></g>'
+    + sgMano('hl', P.L[3]) + sgMano('hr', P.R[3])
+    + '<g class="syb-fx">' + sgFx(m, p) + '</g>'
+    + '</svg></div>';
 }
 /* las animaciones de SynthonIA se pausan cuando no está en pantalla (cero trabajo de más) */
 const synIO = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('syb-off', !e.isIntersecting)), { rootMargin:'80px' }) : null;
 function synWatch(host){ if (!synIO || !host) return; host.querySelectorAll('.szbody').forEach(b => { if (!b._sw){ b._sw = 1; synIO.observe(b); } }); }
 if (synIO) new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType === 1){ if (n.classList.contains('szbody')){ if (!n._sw){ n._sw = 1; synIO.observe(n); } } else if (n.querySelector) synWatch(n); } }))).observe(document.documentElement, { childList:true, subtree:true });
-/* cambia la cara y la pose de un cuerpo que ya está en pantalla (los brazos se mueven suave); si no hay, lo dibuja */
+/* cambia la cara y la pose de una SynthonIA que ya está en pantalla (las manos vuelan suave a su lugar); si no hay, la dibuja */
 function synSet(host, mood, pose, size){
   const b = host && host.querySelector('.szbody'); if (!host) return;
   if (!b){ host.innerHTML = synBody(mood, pose, size); return; }
   const m = FACE[mood] ? mood : 'feliz', p = SPOSE[pose] ? pose : 'idle', P = SPOSE[p];
-  if (b.dataset.mood !== m){ const hd = b.querySelector('.syb-hd'); hd.innerHTML = synHead(m); b.dataset.mood = m; }
+  const fx0 = sgFx(b.dataset.mood, b.dataset.pose), fx1 = sgFx(m, p);
+  if (b.dataset.mood !== m){ b.querySelector('.syb-hd').innerHTML = synHead(m); b.dataset.mood = m; }
   if (b.dataset.pose !== p){
-    const was = SPOSE[b.dataset.pose] || SPOSE.idle, h0 = was.h || ['open', 'open'], h1 = P.h || ['open', 'open'];
-    b.dataset.pose = p; b.style.setProperty('--al', P.l + 'deg'); b.style.setProperty('--ar', P.r + 'deg'); b.querySelector('.syb-arm.ar').classList.toggle('wave', P.wave === 'r');
+    const was = SPOSE[b.dataset.pose] || SPOSE.idle;
+    b.dataset.pose = p; if (P.wave) b.dataset.wave = P.wave; else delete b.dataset.wave;
+    sgVars(P).split(';').forEach(kv => { const [k, v] = kv.split(':'); b.style.setProperty(k, v); });
     /* las manos cambian de gesto solo si hace falta */
-    b.querySelectorAll('.syb-hand').forEach((hd, i) => { if (h0[i] !== h1[i]) hd.innerHTML = sgHand(h1[i]); });
+    b.querySelectorAll('.syb-hand').forEach((hd, i) => { const k = i ? 'R' : 'L'; if (was[k][3] !== P[k][3]) hd.innerHTML = sgHand(P[k][3]); });
   }
+  if (fx0 !== fx1) b.querySelector('.syb-fx').innerHTML = fx1;
   if (size) b.style.setProperty('--sz', size + 'px');
 }
 /* v1.9 · SynthonIA mueve la boca con cada letra que dice: a (abierta), e/i (ancha), o/u (redonda), m/b/p (cerrada) */
