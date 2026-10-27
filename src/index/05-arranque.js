@@ -5,21 +5,21 @@ function boot(){
 /* tarjeta de Puter + botón de cuenta */
 function puterCard(){
   const wrap = $('#cards'); if (!wrap || $('[data-id="puter"]', wrap)) return;
-  wrap.insertAdjacentHTML('beforeend', '<article class="card" data-id="puter" style="--c:#6fd3d6"><div class="card-top">' + SZ.puterLogo('lg') + '<h3>Puter</h3><span class="status" data-st>Sin conectar</span></div><p class="desc">Opcional. Con Puter usas la versión pro de las IAs más usadas, como ChatGPT, Claude o Gemini. Es gratis, tiene un límite que se renueva cada mes y se conecta con un clic.</p><div class="actions"><button class="btn sm" data-pu type="button">Conectar con Puter</button></div></article>');
+  wrap.insertAdjacentHTML('beforeend', '<article class="card" data-id="puter" style="--c:#6fd3d6"><div class="card-top">' + SZ.puterLogo('lg') + '<h3>Puter</h3><span class="status" data-st>' + SZ.t('ix.puOff') + '</span></div><p class="desc">' + SZ.t('ix.puDesc') + '</p><div class="actions"><button class="btn sm" data-pu type="button">' + SZ.t('ix.puGo') + '</button></div></article>');
   const card = $('[data-id="puter"]', wrap), b = $('[data-pu]', card);
-  const paint = () => { const on = !!(window.puter && puter.auth && puter.auth.isSignedIn()); setStatus(card, on ? 'Conectada' : 'Sin conectar', on ? 'ok' : ''); b.textContent = on ? 'Abrir SynthFlow' : 'Conectar con Puter'; };
+  const paint = () => { const on = !!(window.puter && puter.auth && puter.auth.isSignedIn()); setStatus(card, SZ.t(on ? 'ix.puOn' : 'ix.puOff'), on ? 'ok' : ''); b.textContent = SZ.t(on ? 'ix.qOpen' : 'ix.puGo'); };
   paint(); addEventListener('puter-ready', paint);
   b.addEventListener('click', () => {
     if (window.puter && puter.auth.isSignedIn()){ openChat(); return; }
     b.textContent = 'Conectando…';
-    puterSignIn({}).then(() => { paint(); updateTotals(); toast('Puter conectado.'); setTimeout(() => { if (!leaving) openChat(); }, 1000); }).catch(e => { paint(); if (!(e && e.shown)) toast('No terminaste de entrar a Puter. Inténtalo otra vez.'); });
+    puterSignIn({}).then(() => { paint(); updateTotals(); toast(SZ.t('ix.puDone')); setTimeout(() => { if (!leaving) openChat(); }, 1000); }).catch(e => { paint(); if (!(e && e.shown)) toast(SZ.t('ix.puFail')); });
   });
 }
 function renderAccIdx(){
   const b = $('#accBtn'); if (!b) return; const A = SZ.ACC;
   if (A.ready){ b.className = 'accb'; b.innerHTML = SZ.myAvatar() + '<span>' + esc(SZ.accName().slice(0, 14)) + '</span><i class="sy' + (A.err ? ' bad' : '') + '"></i>'; }
-  else if (A.busy || SZ.signedish()){ b.className = 'accb'; b.innerHTML = '<span class="av-me">…</span><span>Abriendo</span><i class="sy wait"></i>'; }
-  else { b.className = 'accb out'; b.textContent = 'Entrar'; }
+  else if (A.busy || SZ.signedish()){ b.className = 'accb'; b.innerHTML = '<span class="av-me">…</span><span>' + SZ.t('ix.opening') + '</span><i class="sy wait"></i>'; }
+  else { b.className = 'accb out'; b.textContent = SZ.t('ix.signin'); }
 }
 $('#accBtn').addEventListener('click', () => {
   if (SZ.ACC.ready){ SZ.portalOut('chat.html?acc=1'); return; }
@@ -60,6 +60,8 @@ else {
 }
 
 /* v2.5 · ya no hay barrita lateral en la portada: todo está en el menú de arriba */
+/* v3.0 · al cambiar de idioma, lo que pinta el JS se vuelve a pintar */
+if (SZ.onLang) SZ.onLang(() => { try{ updateTotals(); renderLaunch(); }catch(e){} });
 $('#limPill').addEventListener('click', () => { const u = $('#consumo'); if (u) u.scrollIntoView({ behavior:SZ.reduce ? 'auto' : 'smooth' }); });
 })();
 

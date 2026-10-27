@@ -21,6 +21,7 @@ U.compile = function(){
   });
   return {
     text: last ? String(S.results[last.id].output).trim() : '',
+    synth: last && S.results[last.id].synth && Array.isArray(S.results[last.id].synth.voices) ? S.results[last.id].synth : null,
     sources, files: files.reverse(),
     skipped: S.plan.steps.filter(s => S.skipped[s.id]).length
   };
@@ -99,6 +100,29 @@ async function download(f){
   save(toBlob(f), name);
 }
 
+/* ---- v3.0 · Síntesis: cuántas IAs, cuánto coinciden, en qué no, y cada voz ---- */
+function drawSynth(Y){
+  const box = $('#resSynth'); if (!box) return;
+  box.textContent = ''; box.hidden = !Y;
+  if (!Y) return;
+  const n = Y.voices.length;
+  const head = el('div', { class: 'syn-h' }, el('span', { class: 'syn-dots', 'aria-hidden': 'true' }, ...Y.voices.map(() => el('i'))), el('b', { text: n > 1 ? t('syn_titulo', { n }) : t('syn_una') }));
+  box.append(head);
+  if (Y.agree != null){
+    const lv = Y.agree >= 75 ? 'alto' : Y.agree >= 45 ? 'medio' : 'bajo';
+    const bar = el('div', { class: 'syn-ac ' + lv, role: 'img', 'aria-label': t('syn_acuerdo_aria', { n: Y.agree }) },
+      el('div', { class: 'syn-bar' }, el('i', { style: 'width:' + Y.agree + '%' })),
+      el('span', {}, el('b', { text: Y.agree + ' %' }), document.createTextNode(' · ' + t('syn_' + lv))));
+    box.append(bar);
+  }
+  if (Y.diffs) box.append(el('p', { class: 'syn-dif' }, el('b', { text: t('syn_dif') + ' ' }), document.createTextNode(Y.diffs)));
+  if (n > 1){
+    const d = el('details', { class: 'syn-v' }, el('summary', { text: t('syn_voces') }));
+    Y.voices.forEach(v => { const b = el('div', { class: 'rtext' }); U.renderText(b, v.text); d.append(el('div', { class: 'syn-voz' }, el('span', { class: 'syn-ia', text: v.name + (v.prov ? ' · ' + v.prov : '') }), b)); });
+    box.append(d);
+  }
+}
+
 /* ---- dibujar el resultado ---- */
 U.drawResult = function(){
   const S = U.S, box = $('#vResult');
@@ -109,6 +133,7 @@ U.drawResult = function(){
   const txt = $('#resText');
   if (R.text) U.renderText(txt, R.text); else { txt.textContent = ''; txt.append(el('p', { class: 'hint', text: t('res_vacio') })); }
 
+  drawSynth(R.synth);
   const note = $('#resNote'); note.textContent = R.skipped ? t('res_saltados', { n: R.skipped }) : ''; note.hidden = !R.skipped;
 
   const src = $('#resSources'); src.textContent = '';

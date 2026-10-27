@@ -2,12 +2,13 @@
 /* Integrado en alias-fase1: claves de textos unificadas con ESCRIBA (prefijo srv.*) y diccionario movido a la raíz (.vercelignore excluye /src). */
 /* POST /api/alias · A.L.I.A.S. (agente por pasos)
    { action:'plan', lang, goal }                  → { ok, plan:{ id, goal, steps:[{ id, title, tool, input }] } }
-   { action:'step', lang, plan, stepId, prev }    → { ok, step:{ id, status, output, sources, file, error } }
+   { action:'step', lang, plan, stepId, prev, synth? } → { ok, step:{ id, status, output, sources, file, error, synth? } }
+   (v3.0: el último paso de razonar se hace con Síntesis de varias IAs; synth:false lo apaga. synth = { voices:[{ name, prov, text }], agree, diffs })
    Errores: { ok:false, error } · límite diario: { ok:false, error, limit:true }
    Textos visibles: todos salen de alias-textos.json (raíz, para que viaje con la función) con t(). Los prompts del modelo no se ven y viven aquí. */
 import TX from '../alias-textos.json' with { type:'json' };
 import { route, body, json, auth, redis, pipe, limit, today, str, rid, sha, ipOf, roleOf } from './_lib.js';
-import { chat, pickKeys, searchWith, searchWiki, markPay, PAY_RX, classify } from './_pool.js';
+import { chat, pickKeys, searchWith, searchWiki, markPay, PAY_RX, classify, models, PROV, ORDER } from './_pool.js';
 
 const MAX_GOAL = 500, MAX_STEPS = 7, MIN_STEPS = 3;
 const TOOLS = ['search', 'file', 'memory', 'image', 'think'];
@@ -44,6 +45,46 @@ const datos = s => '<datos>\n' + String(s).replace(/<\/?datos>/gi, '') + '\n</da
 async function ask(req, me, lang, user, maxTokens){
   const r = await chat({ who:'al:' + me.sub, ipKey:'ip:' + sha('ip:' + ipOf(req)).slice(0, 16), messages:[{ role:'user', content:user }], model:'sz:auto', maxTokens, system:sys(lang), stream:false });
   return r.text;
+}
+
+/* ---------- v3.0 · Síntesis: el paso final no lo escribe una sola IA.
+   1) Varias IAs de proveedores distintos hacen el mismo paso a la vez (voces independientes).
+   2) Una IA jueza las une: conserva lo que coincide, corrige errores, decide en lo que chocan y lo dice,
+      y califica cuánto coinciden (ACUERDO 0-100). La persona ve el acuerdo, en qué no coincidían y cada voz.
+   Si solo responde una IA, se entrega esa respuesta tal cual (sin inventar un acuerdo). Todo cabe en el tiempo de la función. */
+const VOICES = 3, VOICE_MS = 24000;
+async function pickVoices(n){
+  const cat = await models(false), out = [];
+  for (const p of ORDER){
+    if (out.length >= n) break;
+    const m = (PROV[p].best || []).map(b => cat.list.find(x => x.prov === p && x.mid === b)).find(Boolean) || cat.list.find(x => x.prov === p);
+    if (m) out.push(m);
+  }
+  return out;
+}
+const within = (pr, ms) => Promise.race([pr, new Promise((_, no) => setTimeout(() => no(Object.assign(new Error('lento'), { code:'slow' })), ms))]);
+const AGREE_RX = /\n?\s*ACUERDO\s*[:=]\s*(\d{1,3})\s*%?\s*$/i;
+const DIFF_RX = /\n?\s*DIFERENCIAS\s*:\s*([^\n]*)\s*$/i;
+async function synthesize(req, me, lang, task, maxTokens){
+  const who = { who:'al:' + me.sub, ipKey:'ip:' + sha('ip:' + ipOf(req)).slice(0, 16), system:sys(lang), stream:false };
+  const vs = await pickVoices(VOICES);
+  const got = await Promise.allSettled(vs.map(m => within(chat(Object.assign({ messages:[{ role:'user', content:task }], model:m.id, maxTokens:Math.min(maxTokens, 900) }, who)), VOICE_MS)));
+  const lim = got.find(g => g.status === 'rejected' && g.reason && (g.reason.code === 'sz_limit' || g.reason.code === 'sz_limit_ip'));
+  const ok = got.map((g, i) => g.status === 'fulfilled' && g.value && String(g.value.text || '').trim() ? { name:(g.value.meta && g.value.meta.name) || vs[i].name, prov:(g.value.meta && g.value.meta.provName) || vs[i].prov, text:clip(g.value.text, 6000) } : null).filter(Boolean);
+  if (!ok.length){ if (lim) throw lim.reason; return null; }                       /* nadie respondió: el paso normal lo intenta */
+  if (ok.length === 1) return { output:ok[0].text, synth:{ voices:ok, agree:null, diffs:'' } };
+  const merge = 'Tarea original:\n' + task + '\n\nEstas son ' + ok.length + ' respuestas independientes de distintas IA:\n'
+    + datos(ok.map((v, i) => '--- Respuesta ' + (i + 1) + ' ---\n' + v.text).join('\n\n'))
+    + '\n\nEscribe UNA sola respuesta final para la tarea, mejor que cada una por separado: clara, correcta y completa. Conserva lo que coincide, corrige los errores, '
+    + 'y si se contradicen quédate con lo más probable. No menciones las respuestas numeradas ni que hubo varias IA. '
+    + 'Al final agrega exactamente dos líneas aparte: «DIFERENCIAS: …» (en una frase, en qué no coincidían; o «ninguna») y «ACUERDO: N» (N de 0 a 100: cuánto coincidían entre sí).';
+  let txt;
+  try{ txt = (await within(chat(Object.assign({ messages:[{ role:'user', content:merge }], model:'sz:auto', maxTokens }, who)), 26000)).text; }
+  catch(e){ if (e.code === 'sz_limit' || e.code === 'sz_limit_ip') throw e; const best = ok.slice().sort((a, b) => b.text.length - a.text.length)[0]; return { output:best.text, synth:{ voices:ok, agree:null, diffs:'' } }; }
+  let s = String(txt || '').trim(), agree = null, diffs = '';
+  const a = AGREE_RX.exec(s); if (a){ agree = Math.min(100, +a[1]); s = s.slice(0, a.index).trimEnd(); }
+  const d = DIFF_RX.exec(s); if (d){ diffs = str(d[1], 300); s = s.slice(0, d.index).trimEnd(); if (/^ningun|^none/i.test(diffs)) diffs = ''; }
+  return { output:s || ok[0].text, synth:{ voices:ok, agree, diffs } };
 }
 
 /* ---------- límites: contador por persona y por día + contador global; se devuelve si el paso falla ---------- */
@@ -199,6 +240,10 @@ async function doStep(req, me, b, lang){
     if (step.tool === 'search') return ok(await runSearch(req, me, lang, plan, step, prev));
     if (step.tool === 'file') return ok(await runFile(req, me, lang, plan, step, prev));
     const last = step.id === plan.steps[plan.steps.length - 1].id;
+    if (last && b.synth !== false){
+      const syn = await synthesize(req, me, lang, ctx(plan, step, prev) + '\n\nTarea: haz SOLO este paso y entrega su resultado, claro y útil (máximo 450 palabras).', 1300);
+      if (syn) return ok(syn);
+    }
     return ok({ output:await ask(req, me, lang, ctx(plan, step, prev) + '\n\nTarea: haz SOLO este paso y entrega su resultado, claro y útil (máximo ' + (last ? 450 : 300) + ' palabras).', last ? 1300 : 800) });
   }catch(e){
     await undo();

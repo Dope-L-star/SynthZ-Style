@@ -85,7 +85,7 @@ async function exec(st, hint){
   const idx = S.plan.steps.findIndex(s => String(s.id) === String(st.id));
   const prev = S.plan.steps.slice(0, idx).map(s => S.results[s.id]).filter(Boolean);
   let r;
-  try{ r = await A.runStep(hint ? withHint(S.plan, st.id) : S.plan, st.id, prev); }
+  try{ r = await A.runStep(hint ? withHint(S.plan, st.id) : S.plan, st.id, prev, { synth: U.synthOn !== false }); }
   catch(e){ return { err: t('err_red') }; }
   if (!r || !r.ok) return { err: (r && r.error) || t('err_generico'), limit: !!(r && r.limit) };
   const sp = r.step || {};
@@ -185,6 +185,13 @@ U.drawControls = function(){
 };
 
 U.bind = function(){
+  /* v3.0 · Síntesis encendida o apagada (se recuerda en este navegador) */
+  const so = $('#synthOn');
+  if (so){
+    try{ U.synthOn = localStorage.getItem('alias:synth') !== '0'; }catch(e){ U.synthOn = true; }
+    so.checked = U.synthOn !== false;
+    so.addEventListener('change', () => { U.synthOn = so.checked; try{ localStorage.setItem('alias:synth', so.checked ? '1' : '0'); }catch(e){} });
+  }
   const S = U.S;
   $('#goalForm').addEventListener('submit', e => { e.preventDefault(); U.requestPlan($('#goalInput').value); });
   $('#goalInput').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); U.requestPlan(e.target.value); } });

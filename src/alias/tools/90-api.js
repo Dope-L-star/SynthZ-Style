@@ -101,8 +101,11 @@
     return r;
   };
 
-  A.runStep = async function (plan, stepId, prev) {
-    var r = await post({ action: 'step', plan: plan, stepId: stepId, prev: Array.isArray(prev) ? prev : [] });
+  /* v3.0: opts.synth === false apaga la Síntesis del paso final (por defecto está encendida) */
+  A.runStep = async function (plan, stepId, prev, opts) {
+    var body = { action: 'step', plan: plan, stepId: stepId, prev: Array.isArray(prev) ? prev : [] };
+    if (opts && opts.synth === false) body.synth = false;
+    var r = await post(body);
     if (!r || !r.ok) return r || { ok: false, error: T('alias_err_server') };
     var s = r.step;
     if (!s) return { ok: false, error: T('alias_err_server') };

@@ -23,7 +23,7 @@ if (hb){
     /* v2.6: ella es la ayudante (ya no hay bolita): tocarla abre su ventanita para hablarle */
     try{ SZ.BOT && SZ.BOT.open && SZ.BOT.open(); }catch(e){}
   });
-  hb.setAttribute('role', 'button'); hb.tabIndex = 0; hb.setAttribute('aria-label', 'SynthonIA: tócala para hablar con ella');
+  hb.setAttribute('role', 'button'); hb.tabIndex = 0; hb.setAttribute('aria-label', SZ.t('rb.aria'));
   hb.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); hb.click(); } });
   /* detalle: los ojos y la cabeza siguen al mouse */
   if (!reduce && matchMedia('(pointer: fine)').matches){
@@ -37,7 +37,7 @@ if (dust && !reduce) dust.innerHTML = Array.from({ length:26 }, (_, i) => '<i st
 const rf = q('#readyFace');
 if (rf){
   rf.innerHTML = body('celebrando', 'celebra', 230);
-  rf.removeAttribute('aria-hidden'); rf.setAttribute('role', 'button'); rf.tabIndex = 0; rf.setAttribute('aria-label', 'SynthonIA: tócala para hablar con ella');
+  rf.removeAttribute('aria-hidden'); rf.setAttribute('role', 'button'); rf.tabIndex = 0; rf.setAttribute('aria-label', SZ.t('rb.aria'));
   const go = () => { try{ SZ.SND && SZ.SND.blip && SZ.SND.blip('feliz'); SZ.BOT && SZ.BOT.open && SZ.BOT.open(); }catch(e){} };
   rf.addEventListener('click', go); rf.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); go(); } });
 }
@@ -73,7 +73,7 @@ const bf = q('#blFace'); if (bf) bf.innerHTML = SZ.face('guino', 44);
 $$('.bl-v').forEach((b, i) => b.addEventListener('click', () => {
   $$('.bl-c').forEach((c, j) => { c.classList.toggle('won', i === j); c.classList.add('shown'); const n = c.querySelector('b'); if (n && !n.dataset.was){ n.dataset.was = n.textContent; n.textContent = 'IA de ejemplo ' + (j + 1); } });
   if (bf) bf.innerHTML = SZ.face('celebrando', 44);
-  const say = q('#blSay'); if (say) say.textContent = '¡Elegiste a la IA de ejemplo ' + (i + 1) + '! En SynthFlow lo haces con IAs de verdad.';
+  const say = q('#blSay'); if (say) say.textContent = SZ.t('ix.blindPick', { n:i + 1 });
   try{ SZ.burst && SZ.burst(b); }catch(e){}
 }));
 

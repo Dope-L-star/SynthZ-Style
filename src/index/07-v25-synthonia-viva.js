@@ -5,18 +5,18 @@
 const { $, reduce } = SZ;
 if (!SZ.synBody) return;
 const STOPS = {
-  como:     { side:'r', mood:'feliz',      pose:'saluda',   say:'¡Así de fácil! Pregunta lo que sea.' },
-  modos:    { side:'l', mood:'neutral',    pose:'senala',   say:'Si no sabes cuál elegir, déjalo en Automático.' },
-  usos:     { side:'r', mood:'creando',    pose:'presenta', say:'Estudia, programa o crea ideas conmigo.' },
-  comparar: { side:'l', mood:'pensando',   pose:'piensa',   say:'¿Cuál tiene más Flow? Tú decides.', at:'.blind h3|.cmp-top h2' },
-  conectar: { side:'r', mood:'feliz',      pose:'presenta', say:'Tu IA ya está lista, sin configurar nada.' },
-  chat:     { side:'l', mood:'hablando',   pose:'senala',   say:'Escribe aquí y te llevo a SynthFlow.' },
-  consumo:  { side:'r', mood:'analizando', pose:'escribe',  say:'Aquí ves cuánto te queda hoy.' },
-  faq:      { side:'l', mood:'escuchando', pose:'escucha',  say:'¿Tienes dudas? Tócame y pregúntame.' }
+  como:     { side:'r', mood:'feliz',      pose:'saluda',   get say(){ return SZ.t('rb.como'); } },
+  modos:    { side:'l', mood:'neutral',    pose:'senala',   get say(){ return SZ.t('rb.modos'); } },
+  usos:     { side:'r', mood:'creando',    pose:'presenta', get say(){ return SZ.t('rb.usos'); } },
+  comparar: { side:'l', mood:'pensando',   pose:'piensa',   get say(){ return SZ.t('rb.comparar'); }, at:'.blind h3|.cmp-top h2' },
+  conectar: { side:'r', mood:'feliz',      pose:'presenta', get say(){ return SZ.t('rb.conectar'); } },
+  chat:     { side:'l', mood:'hablando',   pose:'senala',   get say(){ return SZ.t('rb.chat'); } },
+  consumo:  { side:'r', mood:'analizando', pose:'escribe',  get say(){ return SZ.t('rb.consumo'); } },
+  faq:      { side:'l', mood:'escuchando', pose:'escucha',  get say(){ return SZ.t('rb.faq'); } }
 };
 const el = document.createElement('div');
 el.id = 'szRoam'; el.className = 'szroam'; el.setAttribute('role', 'button'); el.tabIndex = 0;
-el.setAttribute('aria-label', 'SynthonIA: tócala para hablar con ella');
+el.setAttribute('aria-label', SZ.t('rb.aria'));
 el.innerHTML = '<span class="rb-fig"></span><span class="rb-say" aria-live="polite"></span>';
 document.body.appendChild(el);
 const fig = el.querySelector('.rb-fig'), bub = el.querySelector('.rb-say');
