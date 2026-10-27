@@ -6,7 +6,7 @@
    · nunca toca lo que escriben las personas ni las IA (mensajes, títulos de chats, código), ni lo que ya usa data-i18n.
    Al volver a español, cada texto vuelve a como estaba. Para un texto nuevo: agrégalo a idioma-en.json. */
 const TR_ATTRS = ['placeholder', 'title', 'aria-label', 'data-tip', 'alt'];
-const TR_SKIP = 'script,style,pre,code,textarea,iframe,svg,[contenteditable],.notr,[data-i18n],[data-i18n-html],.m .body,.m .bub,.cmp-card .body,.fvi p,.thi .tt,.snip,.greet';
+const TR_SKIP = 'script,style,pre,code,textarea,iframe,svg,[contenteditable],.notr,[data-i18n],[data-i18n-html],.m .body,.m .bub,.cmp-card .body,.fvi p,.thi .tt,.snip,.greet,#szBotP .bl .bm';
 const TR = { map:null, rx:null, done:new Map(), mo:null, load:null };
 function trLoad(){
   if (!TR.load) TR.load = fetch('/idioma-en.json', { cache:'force-cache' }).then(r => r.json()).then(m => {
