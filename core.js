@@ -4483,9 +4483,9 @@ BOT_FAQ.push(
   { k:'portada inicio volver symphoria home back main page',
     a:'El logo de SymphorIA, arriba en la barrita, te lleva de vuelta a la portada.',
     en:'The SymphorIA logo, at the top of the bar, takes you back to the home page.', go:['#backLink', '#sideZ', '#mLogo'] },
-  { k:'alias sintesis juez acuerdo coinciden tres ias mision synthesis judge agreement',
-    a:'En A.L.I.A.S., con Síntesis encendida, 3 IAs responden lo mismo y una cuarta hace de juez: te da una sola respuesta, cuánto coinciden (en %) y en qué no están de acuerdo. Puedes ver cada voz.',
-    en:'In A.L.I.A.S., with Synthesis on, 3 AIs answer the same thing and a fourth one acts as judge: it gives you one answer, how much they agree (in %) and where they don\'t. You can see each voice.', go:['a[href*="alias"]'] },
+  { k:'alias sintesis combinar combina cuatro ias mejor respuesta mision synthesis combine four best answer',
+    a:'En A.L.I.A.S., con Síntesis encendida, 4 IAs hacen el último paso y se combinan en una sola respuesta, la mejor: se queda con lo correcto de cada una, comprueba lo que choca y quita el relleno. Lo que aportó cada una queda plegado debajo.',
+    en:'In A.L.I.A.S., with Synthesis on, 4 AIs do the last step and are combined into a single answer, the best one: it keeps what each got right, checks what clashes and cuts the filler. What each one added stays folded below.', go:['a[href*="alias"]'] },
   { k:'pulsem quitar llave borrar key remove delete team',
     a:'En Pulsem (solo para el equipo), en las llaves de las IAs conectadas, cada quien puede quitar la suya con «Quitar». Las de los demás siguen funcionando.',
     en:'In Pulsem (team only), under the connected AIs\' keys, each person can remove theirs with «Remove». The others keep working.', go:['#railPulse'] },
@@ -4999,7 +4999,7 @@ document.addEventListener('click', e => {
 const WHATSNEW = { v:'3.0', items:[
   ['portada', 'La página ahora se llama SymphorIA, «el portador de la armonía», y estrena icono.'],
   ['chat', ENERX + ': tu batería del día para usar las IAs conectadas. Baja con cada mensaje y se carga a medianoche.'],
-  ['chat', 'A.L.I.A.S. con Síntesis: 3 IAs responden y una cuarta hace de juez; ves cuánto coinciden (en %) y en qué no.'],
+  ['chat', 'A.L.I.A.S. con Síntesis: 4 IAs hacen el último paso y se combinan en una sola respuesta, la mejor (se queda con lo correcto de cada una, comprueba lo que choca y quita el relleno).'],
   ['chat', 'Sintéticos como en Claude: cuando la IA te crea una página, un juego o un dibujo, se abre solo al lado del chat. Y en la barrita, «Sintéticos» los junta todos.'],
   ['ajustes', 'Toda la página en español o en inglés: botón ES/EN en la portada, y en SynthFlow, Ajustes › «Idioma · Language» o el menú «⋯».'],
   ['synthonia', 'Ahora me sé toda la página: pregúntame dónde está cualquier cosa (también en inglés) y te la señalo con mi manita.'],
@@ -5077,9 +5077,11 @@ addEventListener('synthz-szq', () => {
    - En el celular, una vez cada 7 días, sale «Descarga nuestra app SynthFlow».
    - v2.9: la ventana es de vidrio, con un celular dibujado en código (sin el video viejo). Cuando haya video nuevo,
      basta con poner su ruta en APP_VIDEO y se ve dentro de la pantalla del celular.
+   - v3.0: ya está el video de Sammuel (20 s, 768 × 432, sin sonido, 1,4 MB). Es horizontal, así que la ventana lo muestra
+     entero en una pantalla 16:9 de vidrio en vez del celular; mientras carga se ve su póster.
    - Android/Chrome: botón «Instalar» de verdad. iPhone: pasos con dibujos (Compartir › Agregar a inicio). */
 const APP = { evt:null, done:false };
-const APP_VIDEO = '';   /* el video nuevo de Sammuel va aquí (por ejemplo '/media/app/synthflow.mp4') */
+const APP_VIDEO = '/media/app/synthflow-app.mp4?v=30', APP_POSTER = '/media/app/synthflow-app.webp?v=30';
 const appStandalone = () => { try{ return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }catch(e){ return false; } };
 const appIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const appPhone = () => { try{ return matchMedia('(pointer:coarse)').matches && Math.min(screen.width, screen.height) <= 820; }catch(e){ return false; } };
@@ -5122,7 +5124,7 @@ function appPromo(force){
   const I = d => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
   /* v2.9.1 · el video no se baja hasta que se abre esta ventana; con «ahorro de datos» o movimiento reducido no arranca solo */
   const lite = reduce || !!(navigator.connection && navigator.connection.saveData);
-  const scr = APP_VIDEO ? '<video muted playsinline loop' + (lite ? ' controls' : ' autoplay') + ' preload="none" aria-label="SynthFlow en acción"><source src="' + APP_VIDEO + '"></video>'
+  const scr = APP_VIDEO ? '<video muted playsinline loop' + (lite ? ' controls' : ' autoplay') + ' preload="none" poster="' + APP_POSTER + '" width="768" height="432" aria-label="SynthFlow en acción"><source src="' + APP_VIDEO + '" type="video/mp4"></video>'
     /* v2.9: la pantalla es la SynthFlow de hoy en el celular: esfera, plan, la pregunta, el cuadro con «Automática» y la barra de abajo */
     : '<span class="ap-top">' + flowOrb() + '<b>SynthFlow</b><i class="ap-dots"></i></span><span class="ap-chip"><i></i>Gratis · 5 mensajes</span>'
       + '<span class="ap-q">¿Qué quieres<br><em>FlowIA’r</em> hoy?</span>'
@@ -5130,7 +5132,7 @@ function appPromo(force){
       + '<span class="ap-in"><span class="ap-auto">Automática</span><i></i></span>'
       + '<span class="ap-tabs"><i></i><i></i><i class="ring"></i><i></i><i></i></span>';
   o.innerHTML = '<div class="ap-card" role="dialog" aria-modal="true" aria-label="Descarga la app SynthFlow">'
-    + '<div class="ap-hero" aria-hidden="true"><i class="ap-glow"></i><div class="ap-phone"><div class="ap-scr">' + scr + '</div></div>'
+    + '<div class="ap-hero' + (APP_VIDEO ? ' vid' : '') + '" aria-hidden="true"><i class="ap-glow"></i>' + (APP_VIDEO ? '<div class="ap-tv">' + scr + '</div>' : '<div class="ap-phone"><div class="ap-scr">' + scr + '</div></div>')
     + '<span class="ap-ico"><img src="/media/app/sf-192.png?v=29" alt="" width="54" height="54"></span><i class="ap-sp s1"></i><i class="ap-sp s2"></i><i class="ap-sp s3"></i></div>'
     + '<div class="ap-body"><span class="ap-kick">App gratis · sin tiendas</span><h3>Descarga nuestra app <em>SynthFlow</em></h3>'
     + '<ul class="ap-why"><li><i>' + I('<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>') + '</i><span><b>Va más fluida</b>: a pantalla completa, sin pestañas ni barra del navegador.</span></li>'
@@ -5139,7 +5141,7 @@ function appPromo(force){
     + '<div class="ap-how"></div>'
     + '<div class="ap-acts"><button type="button" class="lnk" data-ap="no">Ahora no</button><button type="button" class="btn ap-go" data-ap="go">' + (canPrompt ? 'Instalar SynthFlow' : ios ? 'Ver cómo instalarla' : 'Instalar SynthFlow') + '</button></div></div></div>';
   document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('on'));
-  const v = $('video', o); if (v){ v.play().catch(() => {}); v.addEventListener('error', () => v.remove()); }
+  const v = $('video', o); if (v){ v.play().catch(() => {}); v.addEventListener('error', () => v.remove(), true); }
   const close = () => { if (!o.isConnected) return; o.classList.remove('on'); setTimeout(() => o.remove(), 420); };
   o._close = close;
   o.addEventListener('pointerdown', e => { if (e.target === o) close(); });
