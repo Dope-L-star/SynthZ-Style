@@ -2386,6 +2386,8 @@ html.simple .cvp-syn{background:rgba(var(--sacc-rgb),.18);border-color:rgba(var(
 .syn-c small{color:var(--mute);font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .syn-c small+small{margin-top:auto}
 @media (max-width:620px){.syn-l{grid-template-columns:1fr 1fr}.syn-c{min-height:104px;padding:12px}}
+/* v3.0: Proyectos y Sintéticos reemplazan la vista del chat: el saludo, las sugerencias y la caja de escribir no se ven a través del vidrio */
+body.pjon #shell .main > :is(.msgs,.composer),body.synon #shell .main > :is(.msgs,.composer){visibility:hidden}
 
 /* ===== v2.9.2 · SynthFlow compacto o normal (Ajustes → Tamaño de SynthFlow; compacto por defecto) =====
    core (00) le pone html.compact. Todo lo de .shell (barras, chats, saludo, mensajes, caja de escribir) se achica junto con zoom.

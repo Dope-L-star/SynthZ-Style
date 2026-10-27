@@ -826,7 +826,7 @@ const hitsIn = (near, x0, y0, ww, hh) => near.some(e => { const r = e.getBoundin
 function standSmall(t, w, H){
   const near = nearOf(document.createElement('i')), x = innerWidth - w - 28, top = t.top - H * .9;   /* 28 px: deja espacio a su brazo cuando lo levanta */
   el.hidden = hitsIn(near, x + w * .15, top + H * .04, w * .7, H * .92) || top + scrollY < 90; if (el.hidden) return;
-  el._mute = true; el.classList.add('abs'); el.classList.remove('bside'); el.dataset.side = 'r';
+  el._mute = true; bub.style.marginLeft = ''; el.classList.add('abs'); el.classList.remove('bside'); el.dataset.side = 'r';
   el._x = Math.round(x + scrollX); el._top = Math.round(top + scrollY); stick();
 }
 function standAt(S, sec, h){
@@ -856,10 +856,12 @@ function standAt(S, sec, h){
   const x = xOf(side);
   /* la frase va a su lado solo si cabe sin tapar nada; si no, no habla sola (si la tocas, te contesta en su ventanita) */
   const bside = (side === 'r' ? innerWidth - (x + w) - 12 >= bw : x - 12 >= bw) && !hits(side === 'r' ? x + w + 6 : x - bw - 6, top + H * .15, bw, 64);
-  el._mute = !bside;
+  el._mute = !bside; bub.style.marginLeft = '';
   el.classList.add('abs'); el.classList.toggle('bside', bside); el.dataset.side = side;
   /* parada sobre la línea del título: los pies a la altura de las letras, nunca encima del texto de abajo */
   el._x = Math.round(x + scrollX); el._top = Math.round(top + scrollY); stick();
+  /* v3.0: la frase encima de ella se corre lo justo para no salirse de la pantalla (en inglés es más larga) */
+  if (!bside){ const bw2 = bub.offsetWidth, L = x + w * (side === 'r' ? .3 : .7) - bw2 / 2; bub.style.marginLeft = Math.round(Math.min(0, innerWidth - 8 - L - bw2) || Math.max(0, 8 - L)) + 'px'; }
 }
 /* se queda junto a su título y sube con él: nunca flota encima de las tarjetas ni del texto */
 function stick(){
