@@ -11,9 +11,8 @@ const SECRET_OLD = String(process.env.SYNTHZ_SECRET_OLD || '').split(',').map(s 
 /* cuentas del equipo de SynthZ: usuario → rango. Solo se pueden crear o reclamar con SYNTHZ_SETUP_CODE */
 export const SEED_ROLES = Object.fromEntries(String(process.env.SYNTHZ_RESERVED || 'sammuersynth:owner,sammueladmin:admin,sammuerbusiness:staff').split(',').map(x => x.trim().toLowerCase().split(':')).filter(([u, r]) => u && ['owner', 'admin', 'staff'].includes(r)));
 const SETUP_CODE = String(process.env.SYNTHZ_SETUP_CODE || '');
-/* sin variable en Vercel vale el código que Claude le entregó al dueño en privado; aquí solo está su huella (sha-256), no el código */
-const SETUP_HASH = 'gPdr9BebZicVNRBvdmxxy2dSywVwV2gXjVjIF3joHAc';
-export const setupOk = code => typeof code === 'string' && code.length >= 12 && sameHash(sha('setup:' + code.trim().toUpperCase()), SETUP_CODE.length >= 12 ? sha('setup:' + SETUP_CODE.trim().toUpperCase()) : SETUP_HASH);
+/* el código solo vive en Vercel (el repo es público): sin la variable, nadie puede reclamar las cuentas del equipo */
+export const setupOk = code => typeof code === 'string' && code.length >= 12 && SETUP_CODE.trim().length >= 12 && sameHash(sha('setup:' + code.trim().toUpperCase()), sha('setup:' + SETUP_CODE.trim().toUpperCase()));
 /* espacio en la nube por usuario (MB). 2 MB × 100 usuarios ≈ 200 MB, dentro de los 256 MB del plan gratis de Upstash */
 export const QUOTA = Math.round(Math.min(64, Math.max(0.5, +process.env.SYNTHZ_USER_MB || 2)) * 1024 * 1024);
 const CERTS = process.env.GOOGLE_CERTS_URL || 'https://www.googleapis.com/oauth2/v3/certs';
@@ -170,8 +169,9 @@ export async function withLock(name, fn){
   }
   throw Object.assign(new Error('Hay otro cambio en curso. Intenta de nuevo en un momento.'), { status:409 });
 }
-/* cuentas de Google del equipo: correo → rango. Solo aplica si Google confirmó que el correo es de quien entra */
-export const EMAIL_ROLES = Object.fromEntries(String(process.env.SYNTHZ_RESERVED_EMAILS || 'sammuel.loaiza10@gmail.com:owner,sammuel.loaiza@gmail.com:admin,sammuer.business@gmail.com:staff').split(',').map(x => x.trim().toLowerCase().split(':')).filter(([e, r]) => e && ['owner', 'admin', 'staff'].includes(r)));
+/* cuentas de Google del equipo: correo → rango («correo:owner,correo:admin»). Solo aplica si Google confirmó que el correo es de quien entra.
+   Los correos solo viven en Vercel (SYNTHZ_RESERVED_EMAILS): el repo es público. Quien ya tiene su rango lo conserva aunque falte la variable */
+export const EMAIL_ROLES = Object.fromEntries(String(process.env.SYNTHZ_RESERVED_EMAILS || '').split(',').map(x => x.trim().toLowerCase().split(':')).filter(([e, r]) => e && ['owner', 'admin', 'staff'].includes(r)));
 export const emailRole = e => EMAIL_ROLES[String(e || '').trim().toLowerCase()] || null;
 export const roleOf = u => (u && ['owner', 'admin', 'staff'].includes(u.role)) ? u.role : 'user';
 

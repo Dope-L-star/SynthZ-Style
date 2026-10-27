@@ -1360,3 +1360,41 @@ html:not(.simple) :is(#szBotP,.szdisc){
 html:not(.simple) #szBotP .bh{border-bottom-color:rgba(255,255,255,.12)}
 /* «¡Descubriste algo nuevo!» sale arriba: abajo tapaba el menú que acabas de abrir (adjuntar, modos…) */
 .szdisc{bottom:auto !important;top:calc(env(safe-area-inset-top) + 74px)}
+
+/* ===== v2.9.1 · accesibilidad: respeta lo que la persona eligió en su celular o PC =====
+   · «Reducir transparencia» (iPhone, Mac, Windows): el vidrio pasa a fondo sólido y se lee igual de bien.
+     core (00) le pone a la página .rtr y .noglass; aquí también va por @media, por si el JS tarda.
+   · «Aumentar contraste»: bordes y letras más fuertes.
+   · «Reducir movimiento»: se apagan las animaciones (core 00 también apaga las de JS).
+   · Teclado: todo lo que se puede enfocar muestra un anillo visible. */
+
+/* --- reducir transparencia --- */
+html.rtr :is(.tcard,.amenu,.ctxm,.navdrop,.navfly,#szBotP,.szdisc,.lqg,.ap-card,.rin,.chats,#side.side,#side.side .pf-l,.tabbar){
+  background:#15122a !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;border-color:rgba(255,255,255,.24) !important}
+html.rtr :is(.szm,#sx,#acc,#conn,#tour,#blk,#szGate,#drv){background:rgba(4,3,14,.86) !important}
+html.rtr *,html.rtr *::before,html.rtr *::after{-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+@media (prefers-reduced-transparency:reduce){
+  :is(.tcard,.amenu,.ctxm,.navdrop,.navfly,#szBotP,.szdisc,.lqg,.ap-card){background:#15122a !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+}
+
+/* --- aumentar contraste --- */
+@media (prefers-contrast:more){
+  :root{--mute:#e4e1f0;--soft:#f2f0f8}
+  :is(.tcard,.amenu,.ctxm,.navdrop,.navfly,#szBotP,.szdisc,.lqg,.ap-card){background:#100d22 !important;border:1px solid rgba(255,255,255,.6) !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+  :is(button,.btn,input,textarea,select){border-color:rgba(255,255,255,.55)}
+  :is(p,li) a{text-decoration:underline}
+}
+
+/* --- reducir movimiento --- */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;scroll-behavior:auto !important}
+  .au8-ss,.iz-cm{display:none !important}
+}
+
+/* --- teclado: anillo de foco visible (antes 9 sitios lo quitaban sin reemplazo) --- */
+:root{--focus-ring:#8fd8ff}
+:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+:is(#effMenu,#modeMenu,.ctxm) button:focus-visible,.hsug-i:focus-visible,.term:focus-visible{outline:2px solid var(--focus-ring) !important;outline-offset:-2px}
+/* cajas de texto sin borde propio: el anillo lo lleva la cajita que las envuelve (.field, .pj-q y la caja de SynthFlow ya se marcan solas) */
+:is(.lin,.hask):focus-within{box-shadow:0 0 0 3px rgba(143,216,255,.38)}
+:is(.pj-f input,.pj-f textarea,.pj-ta,#szMaint .mt-in,#szChat .cwin input,#szBotP .bin input,.fbt textarea):focus-visible{outline:2px solid var(--focus-ring);outline-offset:1px}

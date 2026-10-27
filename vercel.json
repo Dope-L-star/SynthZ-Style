@@ -1,4 +1,6 @@
 {
+  "buildCommand": "node build.mjs --dist",
+  "outputDirectory": "dist",
   "headers": [
     {
       "source": "/(.*)",

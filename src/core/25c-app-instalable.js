@@ -46,7 +46,9 @@ function appPromo(force){
   const o = document.createElement('div'); o.id = 'appPromo'; o.className = 'appp';
   const ios = appIOS(), canPrompt = !!APP.evt;
   const I = d => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
-  const scr = APP_VIDEO ? '<video muted playsinline loop autoplay preload="metadata" aria-label="SynthFlow en acción"><source src="' + APP_VIDEO + '"></video>'
+  /* v2.9.1 · el video no se baja hasta que se abre esta ventana; con «ahorro de datos» o movimiento reducido no arranca solo */
+  const lite = reduce || !!(navigator.connection && navigator.connection.saveData);
+  const scr = APP_VIDEO ? '<video muted playsinline loop' + (lite ? ' controls' : ' autoplay') + ' preload="none" aria-label="SynthFlow en acción"><source src="' + APP_VIDEO + '"></video>'
     /* v2.9: la pantalla es la SynthFlow de hoy en el celular: esfera, plan, la pregunta, el cuadro con «Automática» y la barra de abajo */
     : '<span class="ap-top">' + flowOrb() + '<b>SynthFlow</b><i class="ap-dots"></i></span><span class="ap-chip"><i></i>Gratis · 5 mensajes</span>'
       + '<span class="ap-q">¿Qué quieres<br><em>FlowIA’r</em> hoy?</span>'

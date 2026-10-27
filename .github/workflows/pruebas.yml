@@ -1,0 +1,34 @@
+# Pruebas automáticas en cada Pull Request (y en cada push a main).
+# Si algo sale en rojo aquí, no se pasa a main.
+name: Pruebas
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Archivos armados al día
+        run: node build.mjs --check
+      - name: Armar lo que publica Vercel (dist/)
+        run: node build.mjs --dist
+      - name: Instalar Playwright y Chromium
+        run: npm install --no-save playwright@1.48.2 && npx playwright install --with-deps chromium
+      - name: Prueba de humo (repo)
+        run: node t/humo/humo.mjs
+      - name: Prueba de humo (dist, minificado)
+        run: node t/humo/humo.mjs dist
+      - name: Calidad de la portada (6 pantallas)
+        run: node t/portada/calidad.mjs
+      - name: Contrato de A.L.I.A.S.
+        run: node t/alias/contrato.mjs
