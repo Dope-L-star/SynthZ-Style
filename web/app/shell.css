@@ -96,3 +96,5 @@
 .nota.ok { background: color-mix(in srgb, var(--ok) 16%, transparent); }
 .persona { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .persona span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.codigo-rec { display: block; text-align: center; font-family: var(--f-dato); font-size: 1.15rem; letter-spacing: .06em; padding: 14px; border: 1px dashed var(--acento); border-radius: 10px; background: var(--acento-suave); word-break: break-all; }
+.marca-check { display: flex; gap: 8px; align-items: center; font-size: .9rem; }

@@ -1,16 +1,16 @@
+import Link from "next/link";
 import "../shell.css";
 import { FormularioCuenta } from "@/componentes/FormularioCuenta";
 
 export const metadata = { title: "Entrar · SynthZ" };
 
-export default async function Entrar({ searchParams }: { searchParams: Promise<{ aviso?: string }> }) {
-  const { aviso } = await searchParams;
+export default function Entrar() {
   return (
     <main className="pagina-cuenta">
-      <a className="marca" href="/">Synth<span>Z</span></a>
+      <Link className="marca" href="/">Synth<span>Z</span></Link>
       <h1>Entra para tener más energía y guardar tus chats</h1>
-      <p className="tenue">Es gratis. Si prefieres probar primero, <a href="/">vuelve al chat</a>.</p>
-      <FormularioCuenta aviso={aviso} />
+      <p className="tenue">Es gratis. Si prefieres probar primero, <Link href="/">vuelve al chat</Link>.</p>
+      <FormularioCuenta />
     </main>
   );
 }
