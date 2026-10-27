@@ -174,6 +174,8 @@ body{padding:0 0 60px}
 .mini{padding:6px 12px;border-radius:999px;border:1px solid var(--line);font-size:12.5px;color:var(--soft);background:rgba(255,255,255,.03);transition:background .3s,border-color .3s,color .3s;white-space:nowrap}
 .mini:hover{background:rgba(255,255,255,.08);color:var(--text)}
 .mini.gold{border-color:rgba(230,182,95,.5);color:#f3d79e}
+.kact{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.mini.kdel:hover{border-color:rgba(255,107,107,.55);color:#ffb4b4;background:rgba(255,107,107,.08)}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
 .chips button{padding:6px 12px;border-radius:999px;border:1px solid var(--line);font-size:12.5px;color:var(--mute);transition:all .3s}
 .chips button[aria-pressed="true"]{color:var(--text);border-color:rgba(230,182,95,.5);background:rgba(230,182,95,.09)}
@@ -240,7 +242,7 @@ body{padding:0 0 60px}
   .pz{padding:14px 14px 0}.ptop{padding:12px 14px;margin:0 -14px 14px;gap:10px}.ptop .word{display:none}
   .grid{gap:12px}.card{padding:16px;border-radius:20px}
   .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .krow{grid-template-columns:auto minmax(0,1fr) auto;row-gap:6px}.krow .kmeter{grid-column:2 / -1}.krow .kact{grid-column:2 / -1;justify-self:start}
+  .krow{grid-template-columns:auto minmax(0,1fr) auto;row-gap:6px}.krow .kmeter{grid-column:2 / -1}.krow .kact{grid-column:2 / -1;justify-self:start}.krow>div:nth-child(3){grid-column:2 / -1;min-width:0}
   .mykeys{grid-template-columns:1fr}
   .lamp{width:92px;height:92px}.lamp b{font-size:34px}.hinfo h3{font-size:28px}
   .row{flex-wrap:wrap}.row .tags{width:100%;justify-content:flex-start;padding-left:48px}

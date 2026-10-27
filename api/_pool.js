@@ -67,6 +67,21 @@ export async function saveOwnerKeys(me, rank, patch){
   await redis('DEL', 'pool:models');                       /* la lista de modelos se rehace con las llaves nuevas */
   return o;
 }
+/* quitar una llave de la lista (Pulsem): se borra donde está guardada y también lo que quedó de ella (pruebas, pausas, avisos de pago, contadores de hoy) */
+export async function removeKey(id, me, canAll){
+  const k = (await loadKeys()).find(x => x.id === id);
+  if (!k) return { ok:false, status:404, error:'Esa llave ya no está.' };
+  if (k.src === 'vercel') return { ok:false, status:400, error:'Esta llave vive en Vercel (variables de entorno). Se quita desde Vercel.' };
+  const own = k.owner && k.owner.sub === me.sub;
+  if (!own && !canAll) return { ok:false, status:403, error:'Solo Prime y ZFlow pueden quitar llaves de otras personas.' };
+  if (k.src === 'panel'){ const L = (await getJ('cfg:trial')) || {}; if (L.keys) delete L.keys[k.prov]; await setJ('cfg:trial', L); }
+  else { const all = await ownersRaw(), o = all[k.owner.sub]; if (o && o.keys){ delete o.keys[k.prov]; if (k.prov === 'cloudflare') delete o.cfAccount; o.t = Date.now(); await setJ('cfg:pool', all); } }
+  const d = today();
+  await pipe([['DEL', 'pk:chk:' + id], ['DEL', 'pk:down:' + id], ['DEL', 'pk:plan:' + id], ['DEL', 'pool:cfacct:' + id], ['DEL', 'pk:n:' + id + ':' + d], ['DEL', 'pk:t:' + id + ':' + d], ['DEL', 'pool:models']]);
+  const rest = (await loadKeys()).some(x => x.prov === k.prov);
+  if (!rest) await pipe([['DEL', 'alert:' + k.prov], ['SREM', 'alerts', k.prov]]);
+  return { ok:true, prov:k.prov };
+}
 /* todas las llaves: las de Vercel, las del panel viejo de la prueba y las de cada cuenta del equipo */
 export async function loadKeys(){
   const out = [], seen = new Set();

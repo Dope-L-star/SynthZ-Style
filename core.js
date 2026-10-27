@@ -128,6 +128,8 @@ const onLang = f => langHooks.push(f);
 addEventListener('storage', e => { if (e.key === 'synthz:lang' && e.newValue && e.newValue !== LANG) setLang(e.newValue); });
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => i18nApply()); else setTimeout(() => i18nApply(), 0);
 /* ===== v3.0 · textos de la landing SymphorIA y de EnerX (español / inglés). Formato en 00b-idioma.js ===== */
+/* EnerX: el nombre de la batería vive solo aquí. Cambia ENERX y cambia en toda la página (landing, SynthFlow, Pulsem, SynthonIA), en español y en inglés */
+const ENERX = 'EnerX';
 Object.assign(I18N.es, {
   'landing.nombre.eyebrow': 'Por qué se llama así',
   'landing.nombre.t1': 'SymphorIA:',
@@ -135,25 +137,21 @@ Object.assign(I18N.es, {
   'landing.nombre.lead': 'Un nombre hecho con dos raíces griegas. Juntas dicen lo que hace la página: tomar muchas IAs y muchos datos y llevarlos a una sola respuesta clara.',
   'landing.nombre.sym': 'Junto, con, en sintonía. La misma raíz de <b>sinfonía</b>, <b>sinergia</b> y <b>simbiosis</b>.',
   'landing.nombre.phora': 'Llevar, ser portador. La misma raíz de <b>metáfora</b>, <b>semáforo</b> y <b>anáfora</b>.',
-  'landing.nombre.abacoT': 'Del ábaco a la sintonía',
-  'landing.nombre.abaco': 'El ábaco cuenta a mano, cuenta por cuenta. SymphorIA toma el caos de datos y respuestas y lo lleva a un flujo ordenado y automático.',
-  'landing.nombre.caos': 'Caos',
-  'landing.nombre.sinto': 'Sintonía',
   'landing.lang': 'EN',
   'landing.langAria': 'Cambiar el idioma a inglés',
   'landing.langMenu': 'English',
   'ix.hold': 'Pregúntale lo que sea…',
   'ix.meet': 'Conoce a SynthonIA',
-  'enerx.name': 'EnerX',
-  'enerx.today': 'EnerX de hoy',
-  'enerx.left': 'Te queda {n} % de EnerX',
-  'enerx.empty': 'Sin EnerX por hoy',
-  'enerx.emptyShort': 'Sin EnerX',
-  'enerx.of': 'de EnerX · se carga a medianoche',
-  'enerx.ofEmpty': 'sin EnerX · se carga a medianoche',
-  'enerx.used': ' · usó {u} % de tu EnerX · te queda {n} %',
-  'enerx.small': 'Gratis. Tu EnerX (tu batería) baja un poco con cada mensaje (lo que escribes y lo que te responde). A medianoche se carga al 100 %.',
-  'enerx.hint': 'Tu EnerX de hoy (tu batería): toca para ver el detalle',
+  'enerx.name': '{enerx}',
+  'enerx.today': '{enerx} de hoy',
+  'enerx.left': 'Te queda {n} % de {enerx}',
+  'enerx.empty': 'Sin {enerx} por hoy',
+  'enerx.emptyShort': 'Sin {enerx}',
+  'enerx.of': 'de {enerx} · se carga a medianoche',
+  'enerx.ofEmpty': 'sin {enerx} · se carga a medianoche',
+  'enerx.used': ' · usó {u} % de tu {enerx} · te queda {n} %',
+  'enerx.small': 'Gratis. Tu {enerx} (tu batería) baja un poco con cada mensaje (lo que escribes y lo que te responde). A medianoche se carga al 100 %.',
+  'enerx.hint': 'Tu {enerx} de hoy (tu batería): toca para ver el detalle',
   'enerx.guestLeft': 'Te quedan {n} mensajes de prueba',
   'enerx.guestShort': '{n} de prueba',
   'enerx.rest': 'Las IAs gratis están descansando',
@@ -168,25 +166,21 @@ Object.assign(I18N.en, {
   'landing.nombre.lead': 'A name built from two Greek roots. Together they say what the site does: take many AIs and lots of data and carry them into one clear answer.',
   'landing.nombre.sym': 'Together, with, in tune. The same root as <b>symphony</b>, <b>synergy</b> and <b>symbiosis</b>.',
   'landing.nombre.phora': 'To carry, to bear. The same root as <b>metaphor</b>, <b>semaphore</b> and <b>anaphora</b>.',
-  'landing.nombre.abacoT': 'From the abacus to harmony',
-  'landing.nombre.abaco': 'The abacus counts by hand, one bead at a time. SymphorIA takes the chaos of data and answers and carries it into an orderly, automatic flow.',
-  'landing.nombre.caos': 'Chaos',
-  'landing.nombre.sinto': 'Harmony',
   'landing.lang': 'ES',
   'landing.langAria': 'Switch the language to Spanish',
   'landing.langMenu': 'Español',
   'ix.hold': 'Ask it anything…',
   'ix.meet': 'Meet SynthonIA',
-  'enerx.name': 'EnerX',
-  'enerx.today': "Today's EnerX",
-  'enerx.left': '{n} % EnerX left',
-  'enerx.empty': 'Out of EnerX for today',
-  'enerx.emptyShort': 'No EnerX',
-  'enerx.of': 'EnerX · recharges at midnight',
-  'enerx.ofEmpty': 'no EnerX · recharges at midnight',
-  'enerx.used': ' · used {u} % of your EnerX · {n} % left',
-  'enerx.small': 'Free. Your EnerX (your battery) drops a little with each message (what you write and what you get back). At midnight it recharges to 100 %.',
-  'enerx.hint': "Today's EnerX (your battery): tap for details",
+  'enerx.name': '{enerx}',
+  'enerx.today': "Today's {enerx}",
+  'enerx.left': '{n} % {enerx} left',
+  'enerx.empty': 'Out of {enerx} for today',
+  'enerx.emptyShort': 'No {enerx}',
+  'enerx.of': '{enerx} · recharges at midnight',
+  'enerx.ofEmpty': 'no {enerx} · recharges at midnight',
+  'enerx.used': ' · used {u} % of your {enerx} · {n} % left',
+  'enerx.small': 'Free. Your {enerx} (your battery) drops a little with each message (what you write and what you get back). At midnight it recharges to 100 %.',
+  'enerx.hint': "Today's {enerx} (your battery): tap for details",
   'enerx.guestLeft': '{n} trial messages left',
   'enerx.guestShort': '{n} trial',
   'enerx.rest': 'The free AIs are resting',
@@ -293,13 +287,13 @@ Object.assign(I18N.es, {
  "ix.094": "Pregunta en SynthFlow",
  "ix.095": "SynthFlow es donde conversas con la IA. Elige con quién hablar, escribe tu pregunta y SynthFlow se abre en grande para que sigas ahí.",
  "ix.096": "Si no escribes nada, SynthFlow se abre vacío para que empieces allí.",
- "ix.097": "Siempre sabes cuánta EnerX tienes",
- "ix.098": "EnerX es tu batería del día: baja con cada mensaje y se carga a medianoche. Aquí ves cuánta te queda, lo que llevas chateado y tu día más activo.",
- "ix.099": "de EnerX hoy · se carga a medianoche",
+ "ix.097": "Siempre sabes cuánta {enerx} tienes",
+ "ix.098": "{enerx} es tu batería del día: baja con cada mensaje y se carga a medianoche. Aquí ves cuánta te queda, lo que llevas chateado y tu día más activo.",
+ "ix.099": "de {enerx} hoy · se carga a medianoche",
  "ix.100": "Dónde chateas",
  "ix.101": "¿Cuánto gasta cada cosa?",
- "ix.102": "<b>Pregunta normal</b> · un poquito de EnerX, según lo largo de la respuesta",
- "ix.103": "<b>Comparar IAs</b> · cada IA gasta su parte de EnerX",
+ "ix.102": "<b>Pregunta normal</b> · un poquito de {enerx}, según lo largo de la respuesta",
+ "ix.103": "<b>Comparar IAs</b> · cada IA gasta su parte de {enerx}",
  "ix.104": "<b>SuperiorSynth</b> · su plan y la respuesta",
  "ix.105": "<b>Crear una imagen</b> · 1 imagen de las de hoy",
  "ix.106": "<b>Buscar en internet</b> · 1 búsqueda (30 al día con tu cuenta)",
@@ -443,13 +437,13 @@ Object.assign(I18N.en, {
  "ix.094": "Ask in SynthFlow",
  "ix.095": "SynthFlow is where you talk with the AI. Choose who to talk to, type your question and SynthFlow opens full size so you can keep going there.",
  "ix.096": "If you don't type anything, SynthFlow opens empty so you can start there.",
- "ix.097": "You always know how much EnerX you have",
- "ix.098": "EnerX is your daily battery: it drops with each message and recharges at midnight. Here you see how much is left, how much you've chatted and your busiest day.",
- "ix.099": "EnerX today · recharges at midnight",
+ "ix.097": "You always know how much {enerx} you have",
+ "ix.098": "{enerx} is your daily battery: it drops with each message and recharges at midnight. Here you see how much is left, how much you've chatted and your busiest day.",
+ "ix.099": "{enerx} today · recharges at midnight",
  "ix.100": "Where you chat",
  "ix.101": "How much does each thing use?",
- "ix.102": "<b>Regular question</b> · a little EnerX, depending on the answer's length",
- "ix.103": "<b>Compare AIs</b> · each AI uses its share of EnerX",
+ "ix.102": "<b>Regular question</b> · a little {enerx}, depending on the answer's length",
+ "ix.103": "<b>Compare AIs</b> · each AI uses its share of {enerx}",
  "ix.104": "<b>SuperiorSynth</b> · its plan and the answer",
  "ix.105": "<b>Create an image</b> · 1 of today's images",
  "ix.106": "<b>Search the web</b> · 1 search (30 a day with your account)",
@@ -560,8 +554,8 @@ Object.assign(I18N.es, {
  "tour.logo.p": "El lugar para usar muchas IA gratis, desde un solo sitio. Toca el logo cuando quieras volver arriba.",
  "tour.menu.t": "El menú",
  "tour.menu.p": "Desde aquí vas a tus IA, al chat (SynthFlow) o a ver cuánto has usado, en un toque.",
- "tour.lim.t": "Tu EnerX de hoy",
- "tour.lim.p": "Cada día tienes EnerX, una batería gratis para usar las IAs conectadas. Baja mientras chateas y a medianoche se carga al 100 %.",
+ "tour.lim.t": "Tu {enerx} de hoy",
+ "tour.lim.p": "Cada día tienes {enerx}, una batería gratis para usar las IAs conectadas. Baja mientras chateas y a medianoche se carga al 100 %.",
  "tour.acc.t": "Tu cuenta",
  "tour.acc.p": "Entra a tu cuenta de SymphorIA: tus chats quedan guardados y los ves en cualquier celular o computador, personalizas tu perfil y hablas con el equipo si necesitas ayuda.",
  "tour.cfg.t": "Configuración",
@@ -573,9 +567,9 @@ Object.assign(I18N.es, {
  "tour.chat.t": "Pregunta desde aquí",
  "tour.chat.p": "Escribe tu pregunta aquí y te llevo al chat (SynthFlow) con tu pregunta lista.",
  "tour.uso.t": "Tu uso",
- "tour.uso.p": "Cómo va tu EnerX de hoy y cuánto chateaste estos días.",
+ "tour.uso.p": "Cómo va tu {enerx} de hoy y cuánto chateaste estos días.",
  "tour.fin.t": "¡Todo listo!",
- "tour.fin.p": "Ya sabes qué es SymphorIA y por dónde empezar: escribe tu pregunta o abre SynthFlow. Inicia sesión para tener más EnerX.",
+ "tour.fin.p": "Ya sabes qué es SymphorIA y por dónde empezar: escribe tu pregunta o abre SynthFlow. Inicia sesión para tener más {enerx}.",
  "tour.aria": "Recorrido por SymphorIA",
  "tour.skip": "Saltar",
  "tour.back": "Atrás",
@@ -591,7 +585,7 @@ Object.assign(I18N.en, {
  "rb.comparar": "Which one has more Flow? You decide.",
  "rb.conectar": "Your AI is ready, no setup needed.",
  "rb.chat": "Type here and I'll take you to SynthFlow.",
- "rb.consumo": "Here you see how much EnerX you have left today.",
+ "rb.consumo": "Here you see how much {enerx} you have left today.",
  "rb.faq": "Questions? Tap me and ask.",
  "rb.aria": "SynthonIA: tap her to talk",
  "ix.blindPick": "You picked example AI {n}! In SynthFlow you do it with real AIs.",
@@ -646,8 +640,8 @@ Object.assign(I18N.en, {
  "tour.logo.p": "The place to use many AIs for free, from one site. Tap the logo whenever you want to go back to the top.",
  "tour.menu.t": "The menu",
  "tour.menu.p": "From here you go to your AIs, to the chat (SynthFlow) or to see how much you've used, in one tap.",
- "tour.lim.t": "Today's EnerX",
- "tour.lim.p": "Every day you get EnerX, a free battery to use the connected AIs. It drops as you chat and recharges to 100 % at midnight.",
+ "tour.lim.t": "Today's {enerx}",
+ "tour.lim.p": "Every day you get {enerx}, a free battery to use the connected AIs. It drops as you chat and recharges to 100 % at midnight.",
  "tour.acc.t": "Your account",
  "tour.acc.p": "Sign in to your SymphorIA account: your chats are saved and you see them on any phone or computer, you personalize your profile and you can talk to the team if you need help.",
  "tour.cfg.t": "Settings",
@@ -659,9 +653,9 @@ Object.assign(I18N.en, {
  "tour.chat.t": "Ask from here",
  "tour.chat.p": "Type your question here and I'll take you to the chat (SynthFlow) with your question ready.",
  "tour.uso.t": "Your usage",
- "tour.uso.p": "How your EnerX is doing today and how much you've chatted these days.",
+ "tour.uso.p": "How your {enerx} is doing today and how much you've chatted these days.",
  "tour.fin.t": "All set!",
- "tour.fin.p": "Now you know what SymphorIA is and where to start: type your question or open SynthFlow. Sign in so you get more EnerX.",
+ "tour.fin.p": "Now you know what SymphorIA is and where to start: type your question or open SynthFlow. Sign in so you get more {enerx}.",
  "tour.aria": "SymphorIA tour",
  "tour.skip": "Skip",
  "tour.back": "Back",
@@ -670,6 +664,170 @@ Object.assign(I18N.en, {
  "tour.signin": "Sign in",
  "tour.enjoy": "Enjoy SymphorIA!"
 });
+/* v3.0: textos y atributos que quedaban en español en la landing */
+Object.assign(I18N.es,{
+ "ix.fromFlow":"De SynthFlow",
+ "ix.fromSup":"De SuperiorSynth",
+ "ix.fromAlias":"De A.L.I.A.S.",
+ "ix.sdb":"¿Te muestro dónde están tus chats?",
+ "ix.ft0":"Internet con fuentes",
+ "ix.ft1":"Archivos con vista previa",
+ "ix.ft2":"Presentaciones en PowerPoint",
+ "ix.ft3":"Imágenes a partir de tus palabras",
+ "ix.ft4":"Escucha las respuestas en voz alta",
+ "ix.ft5":"Memoria con tu permiso",
+ "ix.ft6":"Copia de tus chats en tu Google Drive",
+ "ix.ft7":"Funciona en el celular",
+ "ix.blSay":"Después te digo quién respondió",
+ "ix.wipe":"Borrar mis datos de este equipo",
+ "ix.app1":"Sí, gratis y sin tiendas. Toca",
+ "ix.app2":": en Android y computador se instala con un toque; en iPhone te mostramos los 3 pasos (Compartir › Agregar a inicio).",
+ "ixa.symphoriainicio":"SymphorIA, inicio",
+ "ixa.tulmitedehoy":"Tu límite de hoy",
+ "ixa.ayudaguarpida":"Ayuda: guía rápida",
+ "ixa.guarpida":"Guía rápida",
+ "ixa.configuracin":"Configuración",
+ "ixa.tucuenta":"Tu cuenta",
+ "ixa.abrirelmen":"Abrir el menú",
+ "ixa.pregntalealaia":"Pregúntale a la IA",
+ "ixa.preguntarensynthfl":"Preguntar en SynthFlow",
+ "ixa.cmofunciona":"Cómo funciona",
+ "ixa.modos":"Modos",
+ "ixa.paraqusirvesymphor":"Para qué sirve SymphorIA",
+ "ixa.compralasaciegas":"Compáralas a ciegas",
+ "ixa.conquinhablar":"Con quién hablar",
+ "ixa.escribetuprimermen":"Escribe tu primer mensaje (opcional) y pulsa Enter…",
+ "ixa.abrirsynthflow":"Abrir SynthFlow",
+ "ixa.preguntasfrecuente":"Preguntas frecuentes",
+ "ixa.producto":"Producto",
+ "ixa.ayuda":"Ayuda"
+});
+
+Object.assign(I18N.en,{
+ "ix.fromFlow":"From SynthFlow",
+ "ix.fromSup":"From SuperiorSynth",
+ "ix.fromAlias":"From A.L.I.A.S.",
+ "ix.sdb":"Want me to show you where your chats are?",
+ "ix.ft0":"The web, with sources",
+ "ix.ft1":"Files with preview",
+ "ix.ft2":"PowerPoint presentations",
+ "ix.ft3":"Images from your words",
+ "ix.ft4":"Listen to answers out loud",
+ "ix.ft5":"Memory, with your permission",
+ "ix.ft6":"A copy of your chats in your Google Drive",
+ "ix.ft7":"Works on your phone",
+ "ix.blSay":"I'll tell you who answered afterwards",
+ "ix.wipe":"Delete my data from this device",
+ "ix.app1":"Yes, free and with no app stores. Tap",
+ "ix.app2":": on Android and computers it installs with one tap; on iPhone we show you the 3 steps (Share › Add to Home Screen).",
+ "ixa.symphoriainicio":"SymphorIA, home",
+ "ixa.tulmitedehoy":"Today's {enerx}",
+ "ixa.ayudaguarpida":"Help: quick guide",
+ "ixa.guarpida":"Quick guide",
+ "ixa.configuracin":"Settings",
+ "ixa.tucuenta":"Your account",
+ "ixa.abrirelmen":"Open the menu",
+ "ixa.pregntalealaia":"Ask the AI",
+ "ixa.preguntarensynthfl":"Ask in SynthFlow",
+ "ixa.cmofunciona":"How it works",
+ "ixa.modos":"Modes",
+ "ixa.paraqusirvesymphor":"What SymphorIA is for",
+ "ixa.compralasaciegas":"Compare them blind",
+ "ixa.conquinhablar":"Who to talk to",
+ "ixa.escribetuprimermen":"Type your first message (optional) and press Enter…",
+ "ixa.abrirsynthflow":"Open SynthFlow",
+ "ixa.preguntasfrecuente":"Frequently asked questions",
+ "ixa.producto":"Product",
+ "ixa.ayuda":"Help"
+});
+/* v3.0: consumo, tarjetas, Ajustes, BETA, saldo y guardado */
+Object.assign(I18N.es,{
+ "ix.stOn":"Listas",
+ "ix.stOff":"Descansando",
+ "ix.connDesc":"Las IAs conectadas son IAs gratis que ya vienen listas en SymphorIA. No tienes que configurar nada ni dar tarjeta: solo escribes. Sin cuenta pruebas con 5 mensajes al día; con tu cuenta gratis, mucho más. Si una está llena, pasa sola a otra.",
+ "ix.today":"hoy",
+ "ix.in14":"en 14 días",
+ "ix.topDay":"tu día más activo",
+ "ix.noTop":"Aún sin día más activo",
+ "ix.msg1":"mensaje",
+ "ix.msgN":"mensajes",
+ "ix.totalNote":"Mensajes en total desde que usas SymphorIA.",
+ "ix.chEmpty":"Aún no has chateado. Cuando escribas tu primer mensaje, aquí verás cuántos mandas cada día.",
+ "ix.wipeQ":"¿Borrar todo de este navegador?",
+ "ix.wipeP":"Se borran tus chats y ajustes de este equipo. Lo que está guardado en tu cuenta de SymphorIA no se toca.",
+ "ix.wipeOk":"Borrar todo",
+ "ix.wiped":"Todo borrado.",
+ "ix.instFlow":"Instalar la app SynthFlow",
+ "ix.lk1":"Elegir mis IA ideales",
+ "ix.lk1d":"3 preguntas y te digo cuáles te sirven más",
+ "ix.lk2":"Conectar Puter u otra IA",
+ "ix.lk2d":"Tu versión pro de las IAs más usadas, gratis",
+ "ix.lk3d":"El chat con todas las IAs",
+ "ix.lk4":"Descargar la app SynthFlow",
+ "ix.lk4d":"Se instala desde aquí: pantalla completa y a un toque",
+ "ix.title":"SymphorIA · tu IA gratuita en una mesa",
+ "ix.metaDesc":"SymphorIA: tu espacio para explorar la IA. Pregunta, crea, programa y compara modelos desde un solo lugar. Totalmente gratis.",
+ "beta.title":"Estamos en beta: cuéntanos qué mejorar",
+ "beta.tip":"Cuéntanos qué mejorar",
+ "bal.puLeft":"Te queda {p} de tu crédito gratis de este mes",
+ "bal.puErr":"Puter no respondió con tu saldo. Intenta más tarde.",
+ "bal.puWait":"Puter todavía no nos dice cuánto saldo te queda.",
+ "bal.puOpt":"Puter es opcional. Conecta tu versión pro de las IAs más usadas.",
+ "bal.puSub":"Saldo de Puter · se llena otra vez cada mes",
+ "sync.opening":"Abriendo tu cuenta…",
+ "sync.local":"Tus chats se guardan en este equipo. Entra a tu cuenta para verlos también en tu celular o en otro computador.",
+ "sync.err":"No pude guardar en tu cuenta ({e}). Todo sigue aquí y se sube solo cuando vuelva la conexión.",
+ "sync.saved":"Guardado en tu cuenta",
+ "sync.ago":"guardado hace {s} s"
+});
+
+Object.assign(I18N.en,{
+ "ix.stOn":"Ready",
+ "ix.stOff":"Resting",
+ "ix.connDesc":"Connected AIs are free AIs that come ready in SymphorIA. Nothing to set up and no card needed: just type. Without an account you get 5 messages a day to try it; with your free account, much more. If one is full, it switches to another on its own.",
+ "ix.today":"today",
+ "ix.in14":"in 14 days",
+ "ix.topDay":"your most active day",
+ "ix.noTop":"No most active day yet",
+ "ix.msg1":"message",
+ "ix.msgN":"messages",
+ "ix.totalNote":"Total messages since you started using SymphorIA.",
+ "ix.chEmpty":"You haven't chatted yet. Once you send your first message, you'll see how many you send each day here.",
+ "ix.wipeQ":"Delete everything from this browser?",
+ "ix.wipeP":"Your chats and settings on this device are deleted. What's saved in your SymphorIA account stays untouched.",
+ "ix.wipeOk":"Delete everything",
+ "ix.wiped":"Everything deleted.",
+ "ix.instFlow":"Install the SynthFlow app",
+ "ix.lk1":"Pick my ideal AIs",
+ "ix.lk1d":"3 questions and I'll tell you which ones suit you best",
+ "ix.lk2":"Connect Puter or another AI",
+ "ix.lk2d":"The pro version of the most popular AIs, free",
+ "ix.lk3d":"The chat with every AI",
+ "ix.lk4":"Download the SynthFlow app",
+ "ix.lk4d":"Installs from here: full screen, one tap away",
+ "ix.title":"SymphorIA · your free AI, all at one table",
+ "ix.metaDesc":"SymphorIA: your space to explore AI. Ask, create, code and compare models from one place. Completely free.",
+ "beta.title":"We're in beta: tell us what to improve",
+ "beta.tip":"Tell us what to improve",
+ "bal.puLeft":"You have {p} of this month's free credit left",
+ "bal.puErr":"Puter didn't send your balance. Try again later.",
+ "bal.puWait":"Puter hasn't told us your balance yet.",
+ "bal.puOpt":"Puter is optional. Connect the pro version of the most popular AIs.",
+ "bal.puSub":"Puter balance · refills every month",
+ "sync.opening":"Opening your account…",
+ "sync.local":"Your chats are saved on this device. Sign in to see them on your phone or another computer too.",
+ "sync.err":"I couldn't save to your account ({e}). Everything is still here and uploads on its own when the connection is back.",
+ "sync.saved":"Saved to your account",
+ "sync.ago":"saved {s} s ago"
+});
+/* pone el nombre de la batería en todos los textos que dicen {enerx} */
+for (const L of Object.keys(I18N)) for (const k in I18N[L]) if (typeof I18N[L][k] === 'string') I18N[L][k] = I18N[L][k].replace(/\{enerx\}/g, ENERX);
+Object.assign(I18N.es, { 'pm.spent':'palabras de '+ENERX+' gastadas hoy · IAs conectadas', 'pm.capP':'Cuánto puede usar cada persona al día con las IAs conectadas (Puter no cuenta). Se guarda en tokens: {tok} tokens ≈ {w} palabras de '+ENERX+' (una palabra ≈ 4/3 de token). Entre 1.000 y 500.000.' });
+Object.assign(I18N.en, { 'pm.spent':ENERX+' words spent today · connected AIs', 'pm.capP':'How much each person can use per day with the connected AIs (Puter does not count). Stored in tokens: {tok} tokens ≈ {w} '+ENERX+' words (one word ≈ 4/3 of a token). Between 1,000 and 500,000.' });
+Object.assign(I18N.es, { 'pm.test':'Probar', 'pm.del':'Quitar', 'pm.deling':'Quitando…', 'pm.delQ':'¿Quitar la llave de {n}?', 'pm.delP':'Se borra del servidor y deja de usarse para las IAs conectadas. Las llaves de los demás siguen funcionando.', 'pm.delPo':'Es la llave de otra persona del equipo. Se borra del servidor y deja de usarse para las IAs conectadas.', 'pm.deled':'Llave de {n} quitada.' });
+Object.assign(I18N.en, { 'pm.test':'Test', 'pm.del':'Remove', 'pm.deling':'Removing…', 'pm.delQ':'Remove the {n} key?', 'pm.delP':'It is deleted from the server and stops being used for the connected AIs. Everyone else\'s keys keep working.', 'pm.delPo':'This key belongs to someone else on the team. It is deleted from the server and stops being used for the connected AIs.', 'pm.deled':'{n} key removed.' });
+Object.assign(I18N.es, { 'enerx.guest':'Sin cuenta tienes {n} mensajes de prueba al día. Con tu cuenta gratis tienes mucho más.', 'enerx.puter':'Si se acaba, puedes seguir con Puter, que te da la versión pro de las IAs más usadas.' });
+Object.assign(I18N.en, { 'enerx.guest':'Without an account you get {n} trial messages a day. With your free account you get much more.', 'enerx.puter':'If it runs out, you can keep going with Puter, which gives you the pro version of the most popular AIs.' });
 /* ---------- estado guardado (con limpieza por si el archivo viene dañado) ---------- */
 const KEY = 'synthz:v1', OLD = 'coro:v1';
 let memState = null;
@@ -1369,10 +1527,14 @@ function countTo(el, val){
   })(t0);
 }
 
+/* la etiqueta para lectores de pantalla sigue al idioma (si el texto tiene clave, se lee la traducción) */
+function ariaSync(el){ const k = el.dataset.i18n || el.dataset.i18nHtml, v = k && t(k); el.setAttribute('aria-label', (v && v !== k ? v : el.textContent).replace(/<[^>]+>/g, '').trim().replace(/\s+/g, ' ')); }
+onLang(() => document.querySelectorAll('[data-aa]').forEach(ariaSync));
+
 /* ===== escritura suave: cada letra aparece con un resplandor y un cursor la acompaña ===== */
 function charify(el){
   if (el._chars) return el._chars;
-  if (!el.getAttribute('aria-label') && el.textContent.trim()) el.setAttribute('aria-label', el.textContent.trim().replace(/\s+/g, ' '));
+  if (!el.getAttribute('aria-label') && el.textContent.trim()){ el.dataset.aa = '1'; ariaSync(el); }
   const chars = [];
   const walk = node => {
     [...node.childNodes].forEach(n => {
@@ -1637,7 +1799,7 @@ function limRing(size){
 }
 function limBar(o = {}){
   const k = 1 - limPct();
-  return '<div class="lbar ' + limLvl() + '"><div class="lb-h"><b>' + (o.title || t('enerx.today')) + '</b><span>' + limTxt() + '</span></div><div class="lb-t"><i style="transform:scaleX(' + k.toFixed(3) + ')"></i></div>' + (o.small === false ? '' : '<small>' + (isGuestQ() ? 'Sin cuenta tienes ' + (SZQ.guest.max || 5) + ' mensajes de prueba al día. Con tu cuenta gratis tienes mucho más. ' : '') + t('enerx.small') + (o.puter ? ' Si se acaba, puedes seguir con Puter, que te da la versión pro de las IAs más usadas.' : '') + '</small>') + '</div>';
+  return '<div class="lbar ' + limLvl() + '"><div class="lb-h"><b>' + (o.title || t('enerx.today')) + '</b><span>' + limTxt() + '</span></div><div class="lb-t"><i style="transform:scaleX(' + k.toFixed(3) + ')"></i></div>' + (o.small === false ? '' : '<small>' + (isGuestQ() ? t('enerx.guest', { n:SZQ.guest.max || 5 }) + ' ' : '') + t('enerx.small') + (o.puter ? ' ' + t('enerx.puter') : '') + '</small>') + '</div>';
 }
 async function szCatalog(){
   let r; try{ r = await fetch('/api/ai', { headers:szHeaders() }); }catch(e){ throw Object.assign(new Error('net'), { net:true }); }
@@ -3036,7 +3198,7 @@ function balanceHtml(b, extra){
   const row = (ico, name, main, sub) => '<div class="bl-row">' + ico + '<div><b>' + name + '</b><span>' + main + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</div></div>';
   let h = '';
   const pu = b.puter;
-  h += row(puterLogo(), 'Puter', pu && pu.pct != null ? 'Te queda <em>' + Math.round(pu.pct * 100) + '%</em> de tu crédito gratis de este mes' : pu && pu.err ? 'Puter no respondió con tu saldo. Intenta más tarde.' : window.puter && puter.auth && puter.auth.isSignedIn && puter.auth.isSignedIn() ? 'Puter todavía no nos dice cuánto saldo te queda.' : 'Puter es opcional. Conecta tu versión pro de las IAs más usadas.', 'Saldo de Puter · se llena otra vez cada mes');
+  h += row(puterLogo(), 'Puter', pu && pu.pct != null ? t('bal.puLeft', { p:'<em>' + Math.round(pu.pct * 100) + '%</em>' }) : pu && pu.err ? t('bal.puErr') : window.puter && puter.auth && puter.auth.isSignedIn && puter.auth.isSignedIn() ? t('bal.puWait') : t('bal.puOpt'), t('bal.puSub'));
   const or = b.openrouter, fr = todayReq('openrouter', true);
   const orMain = or && !or.err
     ? 'Modelos gratis: <em>' + fmt(fr) + '</em> de ' + (or.freeTier ? '50' : '50 (o 1.000 si compraste 10 créditos o más)') + ' mensajes hoy'
@@ -3049,10 +3211,10 @@ function balanceHtml(b, extra){
 /* desglose: confirmado (lo reportó el proveedor) vs estimado (≈, SymphorIA lo calculó por el largo del texto) */
 function splitHtml(){ return limBar({ puter:true }); }
 function syncNote(){
-  if (!ACC.ready) return signedish() ? '<p class="cnote">Abriendo tu cuenta…</p>' : '<p class="cnote">Tus chats se guardan en este equipo. Entra a tu cuenta para verlos también en tu celular o en otro computador.</p>';
+  if (!ACC.ready) return signedish() ? '<p class="cnote">' + t('sync.opening') + '</p>' : '<p class="cnote">' + t('sync.local') + '</p>';
   if (ACC.full) return '<p class="sxerr">⚠ ' + esc(ACC.err) + '</p>';
-  if (ACC.err) return '<p class="sxerr">⚠ No pude guardar en tu cuenta (' + esc(ACC.err) + '). Todo sigue aquí y se sube solo cuando vuelva la conexión.</p>';
-  return '<p class="cnote">Guardado en tu cuenta' + (ACC.t ? ' · guardado hace ' + Math.max(1, Math.round((Date.now() - ACC.t) / 1000)) + ' s' : '') + '.</p>';
+  if (ACC.err) return '<p class="sxerr">⚠ ' + t('sync.err', { e:esc(ACC.err) }) + '</p>';
+  return '<p class="cnote">' + t('sync.saved') + (ACC.t ? ' · ' + t('sync.ago', { s:Math.max(1, Math.round((Date.now() - ACC.t) / 1000)) }) : '') + '.</p>';
 }
 
 /* secciones que se abren y cierran suave (alto + desenfoque), SynthZ Style */
@@ -4269,8 +4431,10 @@ function feedbackModal(){
     catch(er){ e.currentTarget.disabled = false; toast(er.message || 'No pude enviarlo. Intenta de nuevo.'); }
   });
 }
+const betaTx = k => t(k);   /* fuera de betaMk: adentro «t» es el botón */
+onLang(() => document.querySelectorAll('.beta-tag').forEach(b => { b.title = betaTx('beta.title'); b.dataset.tip = betaTx('beta.tip'); }));
 function betaMk(){
-  const t = document.createElement('button'); t.type = 'button'; t.className = 'beta-tag'; t.textContent = 'BETA'; t.title = 'Estamos en beta: cuéntanos qué mejorar'; t.dataset.tip = 'Cuéntanos qué mejorar';
+  const t = document.createElement('button'); t.type = 'button'; t.className = 'beta-tag'; t.textContent = 'BETA'; t.title = betaTx('beta.title'); t.dataset.tip = betaTx('beta.tip');
   t.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); feedbackModal(); });
   return t;
 }

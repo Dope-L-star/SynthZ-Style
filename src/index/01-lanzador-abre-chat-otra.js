@@ -8,7 +8,7 @@ function placePill(seg){
 function renderLaunch(){
   const seg = $('#launchSeg');
   $$('button', seg).forEach(b => b.remove());
-  const items = [{ id:'synthz', label:'Gratis', p:byId('synthz') }];
+  const items = [{ id:'synthz', label:SZ.t('ix.046'), p:byId('synthz') }];
   items.forEach(it => {
     const b = document.createElement('button');
     b.setAttribute('role', 'tab'); b.dataset.id = it.id;
