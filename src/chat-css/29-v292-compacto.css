@@ -1,0 +1,12 @@
+
+/* ===== v2.9.2 · SynthFlow compacto o normal (Ajustes → Tamaño de SynthFlow; compacto por defecto) =====
+   core (00) le pone html.compact. Todo lo de .shell (barras, chats, saludo, mensajes, caja de escribir) se achica junto con zoom.
+   Para UI nueva: dentro de .shell no hace falta nada; lo que va suelto en body (ventanas centradas) lleva zoom:var(--ui-z).
+   Ojo: los menús que se colocan por JS con getBoundingClientRect no llevan zoom (se descuadran). */
+:root{--ui-z:1}
+html.compact{--ui-z:.9}
+@media (max-width:899px){ html.compact{--ui-z:.93} }
+html.compact .shell{zoom:var(--ui-z);height:calc(100vh / var(--ui-z)) !important;height:calc(100dvh / var(--ui-z)) !important}
+html.compact .szm > .tcard{zoom:var(--ui-z)}
+/* en el celular la caja de escribir se queda en 16 px de verdad: con menos, el iPhone hace zoom al tocarla */
+@media (max-width:899px){ html.compact #inp{font-size:calc(16px / var(--ui-z)) !important} }

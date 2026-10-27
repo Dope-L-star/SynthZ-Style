@@ -1369,18 +1369,27 @@ html:not(.simple) #szBotP .bh{border-bottom-color:rgba(255,255,255,.12)}
    · Teclado: todo lo que se puede enfocar muestra un anillo visible. */
 
 /* --- reducir transparencia --- */
-html.rtr :is(.tcard,.amenu,.ctxm,.navdrop,.navfly,#szBotP,.szdisc,.lqg,.ap-card,.rin,.chats,#side.side,#side.side .pf-l,.tabbar){
+html.rtr:not(.simple) :is(.tcard,.amenu,.ctxm,.navdrop,.navfly,#szBotP,.szdisc,.lqg,.ap-card,.rin,.chats,#side.side,#side.side .pf-l,.tabbar){
   background:#15122a !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;border-color:rgba(255,255,255,.24) !important}
-html.rtr :is(.szm,#sx,#acc,#conn,#tour,#blk,#szGate,#drv){background:rgba(4,3,14,.86) !important}
+html.rtr:not(.simple) :is(.szm,#sx,#acc,#conn,#tour,#blk,#szGate,#drv){background:rgba(4,3,14,.86) !important}
 html.rtr *,html.rtr *::before,html.rtr *::after{-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
 @media (prefers-reduced-transparency:reduce){
-  :is(.tcard,.amenu,.ctxm,.navdrop,.navfly,#szBotP,.szdisc,.lqg,.ap-card){background:#15122a !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+  html:not(.simple) :is(.tcard,.amenu,.ctxm,.navdrop,.navfly,#szBotP,.szdisc,.lqg,.ap-card){background:#15122a !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+}
+
+/* el estilo Simple ya es plano y tiene su paleta cálida (como Claude): «reducir transparencia» y «más contraste»
+   no lo pintan de morado; solo quitan lo que quede de vidrio y, con más contraste, marcan los bordes */
+html.rtr.simple :is(.tcard,.amenu,.ctxm,#szBotP,.szdisc,.lqg,.ap-card){background:#2a2927 !important}
+html.rtr.simple :is(.szm,#sx,#acc,#conn,#tour,#blk,#szGate,#drv){background:rgba(16,15,14,.86) !important}
+@media (prefers-contrast:more){
+  html.simple{--sline:rgba(255,255,255,.4);--smute:#d6d2c8;--ssoft:#ebe7de}
+  html.simple :is(.tcard,.amenu,.ctxm,#szBotP,.szdisc,.lqg,.ap-card){background:#232220 !important;border:1px solid rgba(255,255,255,.55) !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
 }
 
 /* --- aumentar contraste --- */
 @media (prefers-contrast:more){
   :root{--mute:#e4e1f0;--soft:#f2f0f8}
-  :is(.tcard,.amenu,.ctxm,.navdrop,.navfly,#szBotP,.szdisc,.lqg,.ap-card){background:#100d22 !important;border:1px solid rgba(255,255,255,.6) !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+  html:not(.simple) :is(.tcard,.amenu,.ctxm,.navdrop,.navfly,#szBotP,.szdisc,.lqg,.ap-card){background:#100d22 !important;border:1px solid rgba(255,255,255,.6) !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
   :is(button,.btn,input,textarea,select){border-color:rgba(255,255,255,.55)}
   :is(p,li) a{text-decoration:underline}
 }

@@ -31,6 +31,8 @@ function cfgClasses(){ const r = document.documentElement; r.classList.toggle('n
   /* v2.3 · solo en SynthFlow: estilo Simple, color del tema y barra del celular a la izquierda */
   const chat = !!document.getElementById('composer') || /chat(\.html)?$/.test(location.pathname), simple = chat && CFG.ui === 'simple';
   r.classList.toggle('simple', simple); if (simple){ r.classList.add('noglass', 'nobg'); } r.classList.toggle('navleft', chat && CFG.nav === 'left');
+  /* v2.9.2 · tamaño de SynthFlow: compacto (por defecto) o normal; el CSS (chat-css 29) lo achica con zoom:var(--ui-z) */
+  r.classList.toggle('compact', chat && CFG.size !== 'normal');
   if (chat && !simple && THEMES.some(t => t[0] === CFG.theme && !t[3])) r.dataset.theme = CFG.theme; else delete r.dataset.theme; }
 cfgClasses();
 function saveCfg(){ try{ localStorage.setItem('synthz:cfg', JSON.stringify(CFG)); }catch(e){} }
@@ -2736,6 +2738,7 @@ function cfgModal(tab){
     + '<section class="cfgpane" data-pane="page"' + (ia ? ' hidden' : '') + '>'
     + '<div class="cfglbl">Cómo se ve</div><div id="cfgCh"></div>'
     + '<div class="cfglbl">Estilo de SynthFlow</div><div class="cfgseg" id="cfgUi"><button type="button" data-ui="full" aria-pressed="' + (draft.ui !== 'simple') + '">SynthFlow</button><button type="button" data-ui="simple" aria-pressed="' + (draft.ui === 'simple') + '">Simple</button></div><p class="cnote">Simple: solo tus chats, la caja de escribir y las respuestas, con un diseño tranquilo y sin efectos.</p>'
+    + '<div class="cfglbl">Tamaño de SynthFlow</div><div class="cfgseg" id="cfgSz"><button type="button" data-sz="compact" aria-pressed="' + (draft.size !== 'normal') + '">Compacto</button><button type="button" data-sz="normal" aria-pressed="' + (draft.size === 'normal') + '">Normal</button></div><p class="cnote">Compacto: todo un poco más pequeño, para ver más chat en la pantalla. Normal: el tamaño grande de antes.</p>'
     + '<div class="cfglbl">Color de SynthFlow</div><div class="cfgth" id="cfgTh">' + THEMES.map(([id, nm, c1, lock, c2]) => '<button type="button" data-th="' + id + '" aria-pressed="' + ((draft.theme || 'synthz') === id) + '"' + (lock ? ' disabled aria-disabled="true"' : '') + ' style="--t1:' + c1 + ';--t2:' + c2 + '"><i></i><span>' + esc(nm) + '</span>' + (lock ? '<em>Pronto</em>' : '') + '</button>').join('') + '</div><p class="cnote" id="cfgThN"></p>'
     + (matchMedia('(pointer:coarse), (max-width:820px)').matches ? '<div class="cfglbl">Barra del celular</div><div class="cfgseg" id="cfgNav"><button type="button" data-nav="bottom" aria-pressed="' + (draft.nav !== 'left') + '">Abajo</button><button type="button" data-nav="left" aria-pressed="' + (draft.nav === 'left') + '">A la izquierda</button></div><p class="cnote">A la izquierda: la barra se esconde y la abres con el botón ☰ de arriba.</p>' : '')
     + '<div class="cfglbl">Detalles</div><div id="cfgRows">' + CFG_PAGE.map(row).join('') + '</div>'
@@ -2757,6 +2760,7 @@ function cfgModal(tab){
   const thNote = () => { const n = $('#cfgThN', o); if (n) n.textContent = draft.ui === 'simple' ? 'El estilo Simple usa sus propios colores: el color se ve en el estilo SynthFlow.' : 'Cambia el dorado y el rosado de SynthFlow. Aurora y Oro negro llegan con Syntonia.'; };
   thNote();
   $$('[data-ui]', o).forEach(b => b.addEventListener('click', () => { draft.ui = b.dataset.ui; $$('[data-ui]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); thNote(); }));
+  $$('[data-sz]', o).forEach(b => b.addEventListener('click', () => { draft.size = b.dataset.sz; $$('[data-sz]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
   $$('[data-th]', o).forEach(b => b.addEventListener('click', () => { if (b.disabled) return; draft.theme = b.dataset.th; $$('[data-th]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
   $$('[data-nav]', o).forEach(b => b.addEventListener('click', () => { draft.nav = b.dataset.nav; $$('[data-nav]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
   const tabs = $('.cfgtabs', o), pill = $('.pill', tabs);

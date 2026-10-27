@@ -1,5 +1,7 @@
 /* ===== v2.3 · estilo Simple de SynthFlow: solo tus chats, la caja de escribir y las respuestas.
    Tranquilo y plano, con su propia paleta cálida (los temas de color no aplican aquí) ===== */
+/* Simple conserva su serifa (como Claude), aunque el resto de la página use Bricolage Grotesque */
+html.simple{--serif:'Instrument Serif',Georgia,'Times New Roman',serif}
 html.simple{--sbg:#252422;--sside:#1d1c1a;--scard:#2f2e2b;--sline:rgba(255,255,255,.085);--stext:#f2efe8;--ssoft:#c8c4b8;--smute:#9a968b;--sacc:#d9a066;--sacc-rgb:217,160,102;
   --gold:#d9a066;--gold-rgb:217,160,102;--wine:#c07a5a;--wine-rgb:192,122,90;--text:var(--stext);--soft:var(--ssoft);--mute:var(--smute);--line:var(--sline)}
 html.simple,html.simple body,html.simple .shell,html.simple .main,html.simple .msgs{background:var(--sbg) !important}
