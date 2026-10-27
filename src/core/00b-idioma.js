@@ -17,8 +17,10 @@ function t(k, v){
   return String(s).replace(/\{(\w+)\}/g, (m, n) => n === 'brand' ? BRAND() : (v && v[n] != null ? v[n] : m));
 }
 function i18nApply(r = document){
-  r.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
-  r.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
+  /* si el texto ya es el mismo no se toca: así no se borran las letras animadas (charify) ni se rompen referencias */
+  r.querySelectorAll('[data-i18n]').forEach(el => { const v = t(el.dataset.i18n); if (el.textContent !== v) el.textContent = v; });
+  const tp = document.createElement('template');
+  r.querySelectorAll('[data-i18n-html]').forEach(el => { tp.innerHTML = t(el.dataset.i18nHtml); if (el.innerHTML !== tp.innerHTML) el.innerHTML = tp.innerHTML; });
   r.querySelectorAll('[data-i18n-attr]').forEach(el => el.dataset.i18nAttr.split(';').forEach(p => { const [a, k] = p.split('=').map(x => x && x.trim()); if (a && k) el.setAttribute(a, t(k)); }));
 }
 const langHooks = [];
