@@ -47,11 +47,15 @@ function appPromo(force){
   const ios = appIOS(), canPrompt = !!APP.evt;
   const I = d => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
   const scr = APP_VIDEO ? '<video muted playsinline loop autoplay preload="metadata" aria-label="SynthFlow en acción"><source src="' + APP_VIDEO + '"></video>'
-    : '<span class="ap-top"><img src="/media/app/sf-192.png" alt="" width="18" height="18">SynthFlow</span><span class="ap-q">¿Qué quieres <em>FlowIA’r</em> hoy?</span>'
-      + '<span class="ap-m me"></span><span class="ap-m ai"><i></i><i></i><i></i></span><span class="ap-in"><i></i></span>';
+    /* v2.9: la pantalla es la SynthFlow de hoy en el celular: esfera, plan, la pregunta, el cuadro con «Automática» y la barra de abajo */
+    : '<span class="ap-top">' + flowOrb() + '<b>SynthFlow</b><i class="ap-dots"></i></span><span class="ap-chip"><i></i>Gratis · 5 mensajes</span>'
+      + '<span class="ap-q">¿Qué quieres<br><em>FlowIA’r</em> hoy?</span>'
+      + '<span class="ap-m me"></span><span class="ap-m ai"><i></i><i></i><i></i></span>'
+      + '<span class="ap-in"><span class="ap-auto">Automática</span><i></i></span>'
+      + '<span class="ap-tabs"><i></i><i></i><i class="ring"></i><i></i><i></i></span>';
   o.innerHTML = '<div class="ap-card" role="dialog" aria-modal="true" aria-label="Descarga la app SynthFlow">'
     + '<div class="ap-hero" aria-hidden="true"><i class="ap-glow"></i><div class="ap-phone"><div class="ap-scr">' + scr + '</div></div>'
-    + '<span class="ap-ico"><img src="/media/app/sf-192.png" alt="" width="54" height="54"></span><i class="ap-sp s1"></i><i class="ap-sp s2"></i><i class="ap-sp s3"></i></div>'
+    + '<span class="ap-ico"><img src="/media/app/sf-192.png?v=29" alt="" width="54" height="54"></span><i class="ap-sp s1"></i><i class="ap-sp s2"></i><i class="ap-sp s3"></i></div>'
     + '<div class="ap-body"><span class="ap-kick">App gratis · sin tiendas</span><h3>Descarga nuestra app <em>SynthFlow</em></h3>'
     + '<ul class="ap-why"><li><i>' + I('<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>') + '</i><span><b>Va más fluida</b>: a pantalla completa, sin pestañas ni barra del navegador.</span></li>'
     + '<li><i>' + I('<path d="M2 12c2.5-4 5-4 7.5 0s5 4 7.5 0 3.5-3 5-1"/><path d="M2 18c2.5-4 5-4 7.5 0s5 4 7.5 0 3.5-3 5-1" opacity=".5"/>') + '</i><span><b>Más Flow</b>: tus chats y SuperiorSynth a un toque, desde tu pantalla de inicio.</span></li>'
