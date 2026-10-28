@@ -84,7 +84,7 @@
         </a>
         <button class="x-close" id="chatsClose" type="button" aria-label="Cerrar tus chats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
-      <div class="cseg" id="cSeg" hidden><span class="pill"></span><button role="tab" data-v="chats" aria-selected="true">Chats</button><button role="tab" data-v="favs" aria-selected="false">Favoritos</button></div>
+      <div class="cseg" id="cSeg" role="tablist" aria-label="Chats y favoritos" hidden><span class="pill" aria-hidden="true"></span><button role="tab" data-v="chats" aria-selected="true">Chats</button><button role="tab" data-v="favs" aria-selected="false">Favoritos</button></div>
       <button type="button" class="cnew" id="cNew"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Nuevo chat</button>
       <div class="cfavh" id="cFavH" hidden><b>★ Favoritos</b><button type="button" class="lnk" id="cFavBack">← Mis chats</button></div>
       <label class="field csearch" id="cSearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="thQ" type="search" placeholder="Buscar en mis chats…" autocomplete="off" spellcheck="false" aria-label="Buscar en mis chats"></label>
@@ -96,7 +96,7 @@
   <div class="main">
     <header class="top" id="top">
       <button class="navbtn" id="navBtn" type="button" aria-label="Abrir el menú" aria-expanded="false" aria-controls="tabbar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
-      <a class="mlogo" href="index.html" id="mLogo" aria-label="Volver a SymphorIA"></a>
+      <a class="mlogo" href="index.html" id="mLogo" aria-label="SynthFlow: volver a SymphorIA"></a>
       <div class="pickrow" id="pickRow"></div>
       <span class="tsp"></span>
       <div class="now" id="now" aria-live="polite"></div>

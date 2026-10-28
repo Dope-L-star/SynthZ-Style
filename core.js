@@ -138,7 +138,7 @@ Object.assign(I18N.es, {
   'landing.nombre.sym': 'Junto, con, en sintonía. La misma raíz de <b>sinfonía</b>, <b>sinergia</b> y <b>simbiosis</b>.',
   'landing.nombre.phora': 'Llevar, ser portador. La misma raíz de <b>metáfora</b>, <b>semáforo</b> y <b>anáfora</b>.',
   'landing.lang': 'EN',
-  'landing.langAria': 'Cambiar el idioma a inglés',
+  'landing.langAria': 'EN: cambiar el idioma a inglés',
   'landing.langMenu': 'English',
   'ix.hold': 'Pregúntale lo que sea…',
   'ix.meet': 'Conoce a SynthonIA',
@@ -167,7 +167,7 @@ Object.assign(I18N.en, {
   'landing.nombre.sym': 'Together, with, in tune. The same root as <b>symphony</b>, <b>synergy</b> and <b>symbiosis</b>.',
   'landing.nombre.phora': 'To carry, to bear. The same root as <b>metaphor</b>, <b>semaphore</b> and <b>anaphora</b>.',
   'landing.lang': 'ES',
-  'landing.langAria': 'Switch the language to Spanish',
+  'landing.langAria': 'ES: switch the language to Spanish',
   'landing.langMenu': 'Español',
   'ix.hold': 'Ask it anything…',
   'ix.meet': 'Meet SynthonIA',
@@ -338,6 +338,7 @@ Object.assign(I18N.es, {
  "ix.146": "Legal",
  "ix.147": "Privacidad",
  "ix.148": "Términos",
+ "ix.ayuda": "Ayuda",
  "ix.149": "Tus chats se guardan en este equipo. Si entras a tu cuenta, también los ves en tu celular y en cualquier computador."
 });
 Object.assign(I18N.en, {
@@ -488,6 +489,7 @@ Object.assign(I18N.en, {
  "ix.146": "Legal",
  "ix.147": "Privacy",
  "ix.148": "Terms",
+ "ix.ayuda": "Help",
  "ix.149": "Your chats are saved on this device. If you sign in, you also see them on your phone and on any computer."
 });
 
@@ -2694,7 +2696,7 @@ async function signedIn(d){
 /* al volver de Google por Supabase: el token llega en la dirección (#access_token=…), se cambia por tu sesión de SymphorIA y se borra de la barra */
 (async function sbReturn(){
   const h = location.hash || ''; if (!/access_token=|error_description=/.test(h)) return;
-  const p = new URLSearchParams(h.slice(1)); try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){}
+  const p = new URLSearchParams(h.slice(1)); try{ window.history.replaceState(null, '', location.pathname + location.search); }catch(e){}
   if (p.get('access_token')){ ACC.joining = true; root.classList.add('joining'); }
   let linking = false; try{ linking = sessionStorage.getItem('synthz:link') === '1'; sessionStorage.removeItem('synthz:link'); }catch(e){}
   if (p.get('error_description')){ ACC.joining = false; root.classList.remove('joining'); setTimeout(() => toast('No se pudo ' + (linking ? 'vincular' : 'entrar con') + ' Google: ' + p.get('error_description')), 800); return; }
@@ -5820,6 +5822,16 @@ const AURORA = (() => {
   };
   return { el, setCalm, repaint:() => { recolor(); go(); } };
 })();
+/* ---------- v3.0 · enlaces de la página de Ayuda (ayuda.html) ----------
+   ?ayuda=equipo abre «Hablar con el equipo», ?ayuda=mejorar abre «Cuéntanos qué mejorar» y ?ayuda=synthonia abre a SynthonIA.
+   Espera un poco a que la cuenta y SynthonIA estén listas; después borra el parámetro para que no se repita al recargar (window.history: en core, history() es otra función). */
+try{
+  const AY = new URLSearchParams(location.search).get('ayuda');
+  if (AY && ['equipo', 'mejorar', 'synthonia'].includes(AY)) setTimeout(() => {
+    try{ if (AY === 'equipo') botTeam(); else if (AY === 'mejorar') feedbackModal(); else botOpen(); }catch(e){}
+    try{ const u = new URL(location.href); u.searchParams.delete('ayuda'); window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash); }catch(e){}
+  }, 2200);
+}catch(e){}
 /* ===== v1.4 · eventos especiales: a las 50, 100 y 500 visitas la página «se hackea» y das un logro ===== */
 const EV = (() => {
   const K = 'synthz:visits', A = 'synthz:ach';
