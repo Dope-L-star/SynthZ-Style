@@ -21,7 +21,7 @@ const play = (el, kf, o) => { if (still() || skip(el) || !el.animate) return nul
 H.classList.add('mv');
 
 /* ---------- 1. entradas al bajar ---------- */
-const CHAT = !!document.getElementById('shell');
+const CHAT = !!document.getElementById('shell'), LAND = !!document.querySelector('main section#nombre, main section#faq');
 const CARD = '.lqg,.how-card,.use,.mode,.hub-i,.gi,.ft,.bl-c,.vf-c,.hd-c,.us-l,.us-r,.card,.tpl,.list > li,.faq-i,details,figure';
 const HEAD = 'section h2,section .head,main h1,main > .sub,.lead';
 const BOX = 'section,main';
@@ -35,7 +35,8 @@ const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => {
     el.classList.remove('mv-r');
     const o = { duration:760, easing:EASE, delay:Math.min(n, 6) * 75, fill:'backwards' };
     play(el, [{ opacity:0 }, { opacity:1 }], o);
-    play(el, [{ translate:'0 30px', scale:.965 }, { translate:'0 0', scale:1 }], Object.assign({ composite:'add' }, o));
+    /* en la portada SynthonIA se para junto a los textos midiendo dónde están: ahí solo se funde, sin correr nada de lugar */
+    if (!LAND) play(el, [{ translate:'0 30px', scale:.965 }, { translate:'0 0', scale:1 }], Object.assign({ composite:'add' }, o));
   });
 }, { threshold:.12, rootMargin:'0px 0px -6% 0px' }) : null;
 function discover(){
