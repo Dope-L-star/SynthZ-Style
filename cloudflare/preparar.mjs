@@ -6,7 +6,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-export const SITIO = 'https://synthz.pages.dev';
+export const SITIO = 'https://symphoria.pages.dev';
 const VIEJO = 'https://synthz-style.vercel.app';
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const sale = path.join(raiz, 'cloudflare', 'public');
@@ -33,6 +33,13 @@ const bloques = (v.headers || []).map(b => {
   if (m) { quitar['/' + m[1].replace(/\\/g, '')] = b.headers.map(x => x.key); return { source: '/*', headers: b.headers }; }
   return { source: ruta(b.source), headers: b.headers };
 });
+/* Pages sirve /x.html como /x (redirección 308): la regla de /x.html tiene que valer también para /x,
+   si no /sintetico se queda con la CSP estricta y el marco de los Sintéticos no carga */
+for (const b of [...bloques]) if (/^\/[^*]+\.html$/.test(b.source)) {
+  const corto = b.source.slice(0, -5);
+  if (quitar[b.source]) quitar[corto] = quitar[b.source];
+  bloques.push({ source: corto, headers: b.headers });
+}
 fs.writeFileSync(path.join(sale, '_headers'), bloques.map(b =>
   b.source + '\n' + [...(quitar[b.source] || []).map(k => '  ! ' + k), ...b.headers.map(x => '  ' + x.key + ': ' + x.value)].join('\n')
 ).join('\n\n') + '\n');
