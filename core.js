@@ -4105,7 +4105,7 @@ const BOT_FAQ = [
   { k:'comparar comparacion varias dos lado mismo tiempo', a:'Con «Comparar con otra IA» sumas hasta 4. Todas responden lo mismo y aparecen en el orden en que llegan.', go:['#cCmp', '#pickRow [data-add]'] },
   { k:'guia tutorial aprender enseñar como funciona', a:'En la Guía rápida te pregunto si la quieres completa o qué quieres ver: eliges uno o varios temas y te los muestro con mi manita, en ese orden.', go:['#guideTop', '#helpBtn'], act:'guide', lbl:'Abrir la Guía' },
   { k:'limite cuanto queda quedan mensajes barra uso gasto consumo enerx energia bateria pila carga synxcoin coins', a:'Cada día tienes EnerX, tu batería gratis para usar las IAs conectadas: baja un poco con cada mensaje (lo que escribes y lo que la IA te responde) y a medianoche se carga al 100 %. Sin cuenta son 5 mensajes de prueba al día; con tu cuenta gratis tu EnerX dura mucho más. Te muestro dónde está.', go:['#railCoin', '#tabCoin', '#navTotal', '.pill-total'], tour:'coins' },
-  { k:'pagar cobro cobran gratis precio plata dinero costo tarjeta', a:'SymphorIA es gratis y nunca te cobra. Las IAs conectadas son gratis, y Puter también tiene su parte gratis cada mes.' },
+  { k:'pagar cobro cobran gratis precio plata dinero costo tarjeta', a:'SymphorIA es gratis y hoy no te cobra nada. Las IAs conectadas son gratis, y Puter también tiene su parte gratis cada mes. Los planes del menú «⋯» › Planes por ahora solo se muestran: los pagos están apagados.', go:['#moreBtn'] },
   { k:'chats historial conversaciones anteriores guardados donde estan mis', a:'Tus chats están en «Mis chats», en la barrita (en el celular, la pestaña Chats). Se guardan en tu dispositivo y en tu cuenta si entras.', go:['#railChats', '[data-r="chats"]', '[data-tab="chats"]'] },
   { k:'drive google espacio guardar copia respaldo conectar conecto', a:'En Ajustes › IAs y memoria › Google Drive vinculas tu Drive y guardo una copia de tus chats en una carpeta privada. No puedo ver tus otros archivos.', go:['#moreBtn'] },
   { k:'adjuntar archivo pdf imagen foto subir documento clip', a:'Con el «+» agregas archivos, PDF o fotos (también puedes arrastrarlos). Para fotos elige una IA que «ve fotos».', go:['#attachBtn'] },
@@ -4132,6 +4132,7 @@ const BOT_QUICK = [['ias conectadas que', '¿Qué son las IAs conectadas?'], ['p
 const fold = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9ñ\s]/g, ' ');
 function botMatch(q){
   const STOP = /^(que|como|donde|cual|son|estan|esta|esto|es|para|por|con|una|uno|los|las|del|mis|tus|sus|esta|este|esto|eso|hay|hago|hacer|puedo|quiero|tengo|necesito|sobre|algo|the|and|how|can|what|where|does|you|are|there|this|that|with|for|from|have|want|need|page|please|help|synthflow|synthz|pagina|favor|porfa|ayuda|ayudame)$/;
+  if (/p[aá]gina de ayuda|centro de ayuda|help (page|center)|ayuda\.html/i.test(q)){ const ay = BOT_FAQ.find(f => f.k.startsWith('ayuda pagina')); if (ay) return ay; }
   const w = fold(q).split(/\s+/).filter(x => (x.length > 2 || /^(ia|ai)$/.test(x)) && !STOP.test(x)); if (!w.length) return /ayuda|help/i.test(q) ? BOT_FAQ.find(f => f.k.startsWith('guia')) : null;
   /* v3.0 · cada palabra pesa según qué tan rara es (una palabra que solo está en «Proyectos» decide más que «están») */
   const hit = (K, x) => K.includes(x) ? 1 : K.some(k => k.length > 4 && (k.startsWith(x) || x.startsWith(k))) ? .6 : 0;
@@ -4493,7 +4494,26 @@ BOT_FAQ.push(
     en:'In Pulsem (team only), under the connected AIs\' keys, each person can remove theirs with «Remove». The others keep working.', go:['#railPulse'] },
   { k:'groq rapida llave propia fast own key',
     a:'Groq es una opción muy rápida que usa tu propia llave (gratis con límites). Se conecta en Ajustes › IAs y memoria › «Conectar Puter u otra IA».',
-    en:'Groq is a very fast option that uses your own key (free with limits). Connect it in Settings › AIs and memory › «Connect Puter or another AI».', pre:openCfg('ia'), go:['[data-pane="ia"]', '#cfgBtn'] }
+    en:'Groq is a very fast option that uses your own key (free with limits). Connect it in Settings › AIs and memory › «Connect Puter or another AI».', pre:openCfg('ia'), go:['[data-pane="ia"]', '#cfgBtn'] },
+  { k:'planes plan chispa syntonia timeless orquesta cuesta cuestan vale valen premium suscripcion pro mejorar cuenta plans subscription upgrade',
+    a:'Los planes están en el menú «⋯» › Planes: Chispa (gratis, el de todos), Syntonia, Timeless y Orquesta. Por ahora solo se muestran: los pagos están apagados, así que nadie te cobra nada. Se encenderán cuando la página reciba su primer dinero y se puedan pagar las APIs con él, no antes. El equipo (Prime, ZFlow y Symmetrix) ya tiene Orquesta para probarlo todo.',
+    en:'Plans are in the «⋯» menu › Plans: Chispa (free, everyone\'s), Syntonia, Timeless and Orquesta. For now they are only shown: payments are off, so nobody charges you anything. They will turn on when the page gets its first money and the APIs can be paid with it, not before. The team (Prime, ZFlow and Symmetrix) already has Orquesta to test everything.',
+    pre:() => { if (!$('#szPlans') && typeof plansModal === 'function') plansModal(); }, go:['#szPlans', '#moreBtn'] },
+  { k:'aurora oro negro tema orquesta exclusivo bloqueado candado gold black theme locked',
+    a:'Aurora y Oro negro son los colores del plan Orquesta. Si eres del equipo ya los tienes en Ajustes › Página › «Color de SynthFlow»; para los demás salen con candado mientras los pagos estén apagados.',
+    en:'Aurora and Black gold are the Orquesta plan colors. If you are on the team you already have them in Settings › Page › «SynthFlow color»; for everyone else they show a lock while payments are off.', pre:openCfg(), go:['#cfgTh', '#cfgBtn', '[data-tab="cfg"]'] },
+  { k:'equipo sin limite admin prime zflow symmetrix acceso todo enerx infinita team unlimited full access',
+    a:'Prime, ZFlow y Symmetrix tienen acceso a todo, como si tuvieran Orquesta: su EnerX no baja («sin límite · equipo»), A.L.I.A.S. les da 100 veces más pasos y tienen los temas Aurora y Oro negro. Es para que puedan probar la página completa.',
+    en:'Prime, ZFlow and Symmetrix have access to everything, as if they had Orquesta: their EnerX never drops («no limit · team»), A.L.I.A.S. gives them 100 times more steps and they get the Aurora and Black gold themes. It is so they can test the whole page.', go:['#railCoin', '#tabCoin'] },
+  { k:'ayuda pagina centro preguntas frecuentes faq soporte help center support page',
+    a:'Hay una página de Ayuda (ayuda.html), en español y en inglés: preguntas frecuentes y botones para hablar con el equipo, enviar una idea o hablar conmigo. Está abajo en la portada y arriba en Términos y Privacidad.',
+    en:'There is a Help page (ayuda.html), in Spanish and English: frequent questions and buttons to talk to the team, send an idea or talk to me. It is at the bottom of the home page and at the top of Terms and Privacy.', go:['a[href*="ayuda"]'] },
+  { k:'guia dos minutos empieza synthflow sola automatica primera vez two minute guide first time auto',
+    a:'Cuando terminas «Empieza en SynthFlow» y eliges qué quieres hacer, arranco sola la guía de 2 minutos: ya no te pregunto el tema ni la IA otra vez y te muestro Nuevo chat, los modos, el esfuerzo, Proyectos, Sintéticos y Ajustes. Puedes decir «Ahora no» y volver a verla con el botón Guía.',
+    en:'When you finish «Start in SynthFlow» and pick what you want to do, I start the 2-minute guide on my own: I don\'t ask the topic or the AI again and I show you New chat, the modes, the effort, Projects, Synthetics and Settings. You can say «Not now» and see it again with the Guide button.', go:['#guideTop', '#helpBtn'] },
+  { k:'caja escribir barra larga compacta pequena textarea composer input box bar compact',
+    a:'La caja para escribir ahora es más larga y más bajita: ocupa más ancho (hasta 900 px) y menos alto, para que veas más chat. Está igual en SynthFlow, en el estilo Simple y en el celular.',
+    en:'The text box is now longer and shorter: it takes more width (up to 900 px) and less height, so you see more chat. It\'s the same in SynthFlow, the Simple style and on phones.', go:['#inp'] }
 );
 /* las respuestas de antes también entienden preguntas en inglés */
 [['conectar', 'connect connection setup key unlock works'], ['ias conectadas', 'connected ais free ready what are'], ['puter que', 'puter what is credits'], ['puter conectar', 'puter connect link'],
@@ -4507,7 +4527,7 @@ BOT_FAQ.push(
  ['gracias', 'thanks thank great perfect cool'], ['adios', 'bye goodbye see you later']].forEach(([s, en]) => { const f = BOT_FAQ.find(x => x.k.startsWith(s)); if (f) f.k += ' ' + en; });
 /* lo que sí existe en la página, para que la IA de SynthonIA (cuando no hay respuesta guardada) diga dónde está y la manita lo señale */
 const BOT_PLACES = { chats:['[data-r="chats"]', '[data-tab="chats"]'], nuevo:['#cNew', '[data-r="new"]'], buscar:['[data-r="search"]'], favoritos:['#railFav', '[data-r="favs"]'], proyectos:['#railProj', '#cProj'], sinteticos:['#railSyn', '#cSyn'],
-  ajustes:['#cfgBtn', '[data-tab="cfg"]'], cuenta:['#accBtn', '[data-tab="me"]'], mas:['#attachBtn'], menu:['#moreBtn'], ia:['#cPick'], comparar:['#cCmp'], modo:['#cMode'], esfuerzo:['#cEffort'], cortas:['#saverBtn'], caja:['#inp'], enerx:['#railCoin', '#tabCoin'], guia:['#guideTop', '#helpBtn'] };
+  ajustes:['#cfgBtn', '[data-tab="cfg"]'], cuenta:['#accBtn', '[data-tab="me"]'], mas:['#attachBtn'], menu:['#moreBtn'], ia:['#cPick'], comparar:['#cCmp'], modo:['#cMode'], esfuerzo:['#cEffort'], cortas:['#saverBtn'], caja:['#inp'], planes:['#moreBtn'], ayuda:['a[href*="ayuda"]'], enerx:['#railCoin', '#tabCoin'], guia:['#guideTop', '#helpBtn'] };
 /* ---- ayuda de personas ---- */
 async function helpApi(o){ return api('help' + (o && o.q ? o.q : ''), o && o.body ? { method:'POST', body:o.body, keep:true } : { keep:true }); }
 async function botTeam(){
@@ -5008,7 +5028,11 @@ const WHATSNEW = { v:'3.0', items:[
   ['proyectos', 'Proyectos: junta chats, instrucciones y archivos de un mismo tema. Ahora se pintan con los colores de tu tema.'],
   ['ajustes', 'Modo compacto: SynthFlow ahora se ve un poco más pequeño. Si prefieres el tamaño de antes, Ajustes → Tamaño → Normal.'],
   ['chat', 'Más seguro: lo que crea la IA corre aparte, en su propio espacio, y tu sesión queda protegida.'],
-  ['ajustes', 'Pulsem (equipo): ahora cada quien puede quitar su llave con «Quitar».']
+  ['ajustes', 'Pulsem (equipo): ahora cada quien puede quitar su llave con «Quitar».'],
+  ['chat', 'Planes en el menú «⋯» › Planes: Chispa (gratis), Syntonia, Timeless y Orquesta. Por ahora solo se muestran: los pagos están apagados y nadie te cobra.'],
+  ['chat', 'Guía de 2 minutos: al terminar «Empieza en SynthFlow» arranca sola, sin preguntarte otra vez el tema ni la IA.'],
+  ['chat', 'La caja para escribir ahora es más larga y más bajita, para que veas más chat.'],
+  ['synthonia', 'Nueva página de Ayuda, en español y en inglés: preguntas frecuentes y botones para hablar con el equipo o conmigo.']
 ] };
 function newsBang(onShow){
   const b = $('#szBot'); if (!b){ setTimeout(() => newsBang(onShow), 600); return; }

@@ -109,7 +109,26 @@ BOT_FAQ.push(
     en:'In Pulsem (team only), under the connected AIs\' keys, each person can remove theirs with «Remove». The others keep working.', go:['#railPulse'] },
   { k:'groq rapida llave propia fast own key',
     a:'Groq es una opción muy rápida que usa tu propia llave (gratis con límites). Se conecta en Ajustes › IAs y memoria › «Conectar Puter u otra IA».',
-    en:'Groq is a very fast option that uses your own key (free with limits). Connect it in Settings › AIs and memory › «Connect Puter or another AI».', pre:openCfg('ia'), go:['[data-pane="ia"]', '#cfgBtn'] }
+    en:'Groq is a very fast option that uses your own key (free with limits). Connect it in Settings › AIs and memory › «Connect Puter or another AI».', pre:openCfg('ia'), go:['[data-pane="ia"]', '#cfgBtn'] },
+  { k:'planes plan chispa syntonia timeless orquesta cuesta cuestan vale valen premium suscripcion pro mejorar cuenta plans subscription upgrade',
+    a:'Los planes están en el menú «⋯» › Planes: Chispa (gratis, el de todos), Syntonia, Timeless y Orquesta. Por ahora solo se muestran: los pagos están apagados, así que nadie te cobra nada. Se encenderán cuando la página reciba su primer dinero y se puedan pagar las APIs con él, no antes. El equipo (Prime, ZFlow y Symmetrix) ya tiene Orquesta para probarlo todo.',
+    en:'Plans are in the «⋯» menu › Plans: Chispa (free, everyone\'s), Syntonia, Timeless and Orquesta. For now they are only shown: payments are off, so nobody charges you anything. They will turn on when the page gets its first money and the APIs can be paid with it, not before. The team (Prime, ZFlow and Symmetrix) already has Orquesta to test everything.',
+    pre:() => { if (!$('#szPlans') && typeof plansModal === 'function') plansModal(); }, go:['#szPlans', '#moreBtn'] },
+  { k:'aurora oro negro tema orquesta exclusivo bloqueado candado gold black theme locked',
+    a:'Aurora y Oro negro son los colores del plan Orquesta. Si eres del equipo ya los tienes en Ajustes › Página › «Color de SynthFlow»; para los demás salen con candado mientras los pagos estén apagados.',
+    en:'Aurora and Black gold are the Orquesta plan colors. If you are on the team you already have them in Settings › Page › «SynthFlow color»; for everyone else they show a lock while payments are off.', pre:openCfg(), go:['#cfgTh', '#cfgBtn', '[data-tab="cfg"]'] },
+  { k:'equipo sin limite admin prime zflow symmetrix acceso todo enerx infinita team unlimited full access',
+    a:'Prime, ZFlow y Symmetrix tienen acceso a todo, como si tuvieran Orquesta: su EnerX no baja («sin límite · equipo»), A.L.I.A.S. les da 100 veces más pasos y tienen los temas Aurora y Oro negro. Es para que puedan probar la página completa.',
+    en:'Prime, ZFlow and Symmetrix have access to everything, as if they had Orquesta: their EnerX never drops («no limit · team»), A.L.I.A.S. gives them 100 times more steps and they get the Aurora and Black gold themes. It is so they can test the whole page.', go:['#railCoin', '#tabCoin'] },
+  { k:'ayuda pagina centro preguntas frecuentes faq soporte help center support page',
+    a:'Hay una página de Ayuda (ayuda.html), en español y en inglés: preguntas frecuentes y botones para hablar con el equipo, enviar una idea o hablar conmigo. Está abajo en la portada y arriba en Términos y Privacidad.',
+    en:'There is a Help page (ayuda.html), in Spanish and English: frequent questions and buttons to talk to the team, send an idea or talk to me. It is at the bottom of the home page and at the top of Terms and Privacy.', go:['a[href*="ayuda"]'] },
+  { k:'guia dos minutos empieza synthflow sola automatica primera vez two minute guide first time auto',
+    a:'Cuando terminas «Empieza en SynthFlow» y eliges qué quieres hacer, arranco sola la guía de 2 minutos: ya no te pregunto el tema ni la IA otra vez y te muestro Nuevo chat, los modos, el esfuerzo, Proyectos, Sintéticos y Ajustes. Puedes decir «Ahora no» y volver a verla con el botón Guía.',
+    en:'When you finish «Start in SynthFlow» and pick what you want to do, I start the 2-minute guide on my own: I don\'t ask the topic or the AI again and I show you New chat, the modes, the effort, Projects, Synthetics and Settings. You can say «Not now» and see it again with the Guide button.', go:['#guideTop', '#helpBtn'] },
+  { k:'caja escribir barra larga compacta pequena textarea composer input box bar compact',
+    a:'La caja para escribir ahora es más larga y más bajita: ocupa más ancho (hasta 900 px) y menos alto, para que veas más chat. Está igual en SynthFlow, en el estilo Simple y en el celular.',
+    en:'The text box is now longer and shorter: it takes more width (up to 900 px) and less height, so you see more chat. It\'s the same in SynthFlow, the Simple style and on phones.', go:['#inp'] }
 );
 /* las respuestas de antes también entienden preguntas en inglés */
 [['conectar', 'connect connection setup key unlock works'], ['ias conectadas', 'connected ais free ready what are'], ['puter que', 'puter what is credits'], ['puter conectar', 'puter connect link'],
@@ -123,4 +142,4 @@ BOT_FAQ.push(
  ['gracias', 'thanks thank great perfect cool'], ['adios', 'bye goodbye see you later']].forEach(([s, en]) => { const f = BOT_FAQ.find(x => x.k.startsWith(s)); if (f) f.k += ' ' + en; });
 /* lo que sí existe en la página, para que la IA de SynthonIA (cuando no hay respuesta guardada) diga dónde está y la manita lo señale */
 const BOT_PLACES = { chats:['[data-r="chats"]', '[data-tab="chats"]'], nuevo:['#cNew', '[data-r="new"]'], buscar:['[data-r="search"]'], favoritos:['#railFav', '[data-r="favs"]'], proyectos:['#railProj', '#cProj'], sinteticos:['#railSyn', '#cSyn'],
-  ajustes:['#cfgBtn', '[data-tab="cfg"]'], cuenta:['#accBtn', '[data-tab="me"]'], mas:['#attachBtn'], menu:['#moreBtn'], ia:['#cPick'], comparar:['#cCmp'], modo:['#cMode'], esfuerzo:['#cEffort'], cortas:['#saverBtn'], caja:['#inp'], enerx:['#railCoin', '#tabCoin'], guia:['#guideTop', '#helpBtn'] };
+  ajustes:['#cfgBtn', '[data-tab="cfg"]'], cuenta:['#accBtn', '[data-tab="me"]'], mas:['#attachBtn'], menu:['#moreBtn'], ia:['#cPick'], comparar:['#cCmp'], modo:['#cMode'], esfuerzo:['#cEffort'], cortas:['#saverBtn'], caja:['#inp'], planes:['#moreBtn'], ayuda:['a[href*="ayuda"]'], enerx:['#railCoin', '#tabCoin'], guia:['#guideTop', '#helpBtn'] };
