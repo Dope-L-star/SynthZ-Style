@@ -4,6 +4,7 @@
    · Brillo que sigue al puntero en tarjetas y vidrio; onda al tocar; los íconos saltan al pasar; apretar encoge un poco.
    · Listas que se arman (chats, Proyectos, Sintéticos, ventanas) entran una tras otra.
    · Barra de avance en la portada y transición suave entre páginas (en movimiento.css).
+   · v3.1: botones, chips y tarjetas se levantan al pasar; interruptores dan un saltito; imágenes aparecen suave; fondos de la portada con profundidad.
    Reglas: solo translate/scale/rotate (sueltos, se suman al transform de cada cosa) y opacity; nada con Animaciones apagadas en Ajustes; no toca el intro, el portal de la «o», el emblema, la batería EnerX ni el botón de idioma. */
 (() => {
 'use strict';
@@ -160,8 +161,53 @@ function progress(){
   set();
 }
 
+/* ---------- 7. pasar el puntero: botones, chips y tarjetas se levantan un poquito y vuelven al salir ---------- */
+const LIFT = '.btn,.chip,.cchip,.tchip,.cnew,.pjc,.syn-c,.use,.mode,.how-card,.hub-i,.gi,.ft,.tpl,.sugg button,.hsug,.hsug-i,details > summary,#nav a,.pj-ex button,.amenu button,.ctxm button,.seg button,.chips button';
+const BIG = '.pjc,.syn-c,.use,.mode,.how-card,.hub-i,.gi,.ft,.tpl';
+const lifted = new WeakMap();
+function liftOn(el){
+  if (lifted.has(el) || el.disabled) return;
+  const a = play(el, [{ translate:'0 0' }, { translate:el.matches(BIG) ? '0 -4px' : '0 -2px' }], { duration:260, easing:EASE, fill:'forwards', composite:'add' });
+  if (a) lifted.set(el, a);
+}
+function liftOff(el){ const a = lifted.get(el); if (!a) return; lifted.delete(el); a.reverse(); a.onfinish = () => a.cancel(); }
+if (FINE){
+  document.addEventListener('pointerover', e => { const el = e.target.closest && e.target.closest(LIFT); if (el && !(e.relatedTarget && el.contains(e.relatedTarget))) liftOn(el); }, { passive:true });
+  document.addEventListener('pointerout', e => { const el = e.target.closest && e.target.closest(LIFT); if (el && !(e.relatedTarget && el.contains(e.relatedTarget))) liftOff(el); }, { passive:true });
+}
+
+/* ---------- 8. interruptores y opciones: al cambiar, su cajita da un saltito ---------- */
+document.addEventListener('change', e => {
+  const t = e.target; if (!t.matches || !t.matches('input[type="checkbox"],input[type="radio"],select')) return;
+  const box = t.closest('label,.sw,.tog,.set-row,.cfg-row') || t;
+  play(box, [{ scale:1 }, { scale:1.04, offset:.35 }, { scale:1 }], { duration:380, easing:SPRING });
+});
+
+/* ---------- 9. imágenes que llegan tarde aparecen suave en vez de saltar ---------- */
+document.addEventListener('load', e => {
+  const t = e.target; if (!t || t.tagName !== 'IMG' || t.dataset.mvSeen) return; t.dataset.mvSeen = '1';
+  play(t, [{ opacity:0 }, { opacity:1 }], { duration:420, easing:'ease-out' });
+}, true);
+
+/* ---------- 10. fondos de la portada: se corren despacito al bajar (profundidad) ---------- */
+function parallax(){
+  const bgs = [...document.querySelectorAll('.secbg')]; if (!bgs.length || CHAT) return;
+  let raf = 0;
+  const run = () => {
+    raf = 0; if (still() || H.classList.contains('pmode')){ bgs.forEach(b => b.style.translate = ''); return; }
+    const mid = innerHeight / 2;
+    for (const b of bgs){
+      const r = b.getBoundingClientRect(); if (r.bottom < -200 || r.top > innerHeight + 200) continue;
+      const d = Math.max(-90, Math.min(90, (r.top + r.height / 2 - mid) * -0.1));
+      b.style.translate = '0 ' + d.toFixed(1) + 'px';
+    }
+  };
+  addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(run); }, { passive:true });
+  run(); stat.wired += bgs.length;
+}
+
 function start(){
-  discover(); progress(); watchWindows();
+  discover(); progress(); watchWindows(); parallax();
   mo.observe(document.body, { childList:true, subtree:true });
   setTimeout(() => { discover(); watchWindows(); }, 1200);
   addEventListener('load', () => { discover(); watchWindows(); }, { once:true });

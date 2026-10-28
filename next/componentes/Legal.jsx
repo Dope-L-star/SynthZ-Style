@@ -1,4 +1,4 @@
-import '../app/legal.css';
+import '../app/(legal)/legal.css';
 
 /* Términos y Privacidad comparten la misma cabecera, el mismo ancho y el mismo pie */
 export default function Legal({ actual, titulo, bajada, children }){

@@ -1,6 +1,6 @@
-import Legal from '../../componentes/Legal';
-import { meta } from '../../componentes/meta';
-import Contenido, { titulo, bajada } from '../../contenido/privacidad';
+import Legal from '../../../componentes/Legal';
+import { meta } from '../../../componentes/meta';
+import Contenido, { titulo, bajada } from '../../../contenido/privacidad';
 
 const desc = 'Qué datos guarda SymphorIA, para qué y cómo los cuidamos. En palabras sencillas.';
 export const metadata = meta('Privacidad · SymphorIA', desc, '/privacidad.html');

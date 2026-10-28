@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 const aqui = path.dirname(fileURLToPath(import.meta.url)), raiz = path.resolve(aqui, '..');
 /* páginas que ya pasaron a Next.js (app/<nombre>/page.jsx → out/<nombre>.html). Al pasar otra, se agrega aquí. */
-const HECHAS = ['terminos.html', 'privacidad.html'];
+const HECHAS = ['terminos.html', 'privacidad.html', 'pulsem.html'];
 const corre = (cmd, args, cwd) => execFileSync(cmd, args, { cwd, stdio: 'inherit' });
 
 corre(process.execPath, ['build.mjs', '--dist'], raiz);

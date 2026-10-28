@@ -5824,6 +5824,31 @@ const AURORA = (() => {
   };
   return { el, setCalm, repaint:() => { recolor(); go(); } };
 })();
+/* ===== v3.1 · Movimiento: SynthonIA sabe por qué todo se mueve, cómo apagarlo y qué cambió =====
+   La capa de animaciones vive en movimiento.css / movimiento.js (src/movimiento*). Aquí solo va lo que SynthonIA cuenta y las novedades. */
+WHATSNEW.v = '3.1';
+WHATSNEW.items.unshift(
+  ['portada', LANG === 'en'
+    ? 'Animations are back everywhere: blocks glide in as you scroll, cards glow under your pointer, buttons ripple when you tap them, and windows and lists come in one after another.'
+    : 'Volvieron las animaciones en todo: los bloques entran al bajar, las tarjetas brillan bajo tu puntero, los botones dejan una onda al tocarlos y las ventanas y listas entran una tras otra.'],
+  ['ajustes', LANG === 'en'
+    ? 'Your Settings decide now, not your computer: if Windows has its visual effects off, ' + BRAND() + ' still looks complete. To make it calmer, turn off Animations or use the faster mode in Settings.'
+    : 'Ahora mandan tus Ajustes, no tu computador: aunque Windows tenga apagados sus efectos visuales, ' + BRAND() + ' se ve completa. Si la quieres más tranquila, apaga Animaciones o usa el modo más rápido en Ajustes.']
+);
+BOT_FAQ.push(
+  { k:'animacion animaciones movimiento mueve moverse brillo onda efecto efectos transicion transiciones smooth suave animation animations motion moving glow ripple effects transition',
+    a:'Todo se mueve a propósito: los bloques entran al bajar, las tarjetas brillan bajo tu puntero, los botones dejan una onda al tocarlos, los íconos saltan y las ventanas entran en cascada. Solo se mueve lo que no pesa (posición y transparencia), así va fluido hasta en el celular. Si prefieres calma: Ajustes › «Animaciones», o el modo «Más rápido».',
+    en:'Everything moves on purpose: blocks glide in as you scroll, cards glow under your pointer, buttons ripple when you tap them, icons hop and windows cascade in. Only light things move (position and transparency), so it stays smooth even on phones. If you prefer calm: Settings › «Animations», or the «Faster» mode.', pre:openCfg(), go:['#cfgBtn', '[data-tab="cfg"]'] },
+  { k:'apagar quitar animaciones lento lag laguea tranquilo marea mareo quieto rapido turn off disable animations slow laggy calm dizzy still faster',
+    a:'Para que no se mueva nada: Ajustes › «Animaciones» apagado. Si tu equipo va lento, elige «Más rápido» arriba en Ajustes: quita vidrio, fondo animado y efectos pesados de una vez.',
+    en:'To stop everything moving: Settings › «Animations» off. If your device is slow, pick «Faster» at the top of Settings: it removes glass, animated background and heavy effects at once.', pre:openCfg(), go:['#cfgBtn', '[data-tab="cfg"]'] },
+  { k:'windows sistema efectos visuales reducir movimiento transparencia accesibilidad por que no se movia simplona fea system visual effects reduce motion transparency accessibility why plain',
+    a:'Antes, si Windows (o tu celular) tenía apagados los efectos visuales, ' + BRAND() + ' también apagaba sus animaciones y su vidrio, y se veía simplona. Desde la versión 3.1 mandan tus Ajustes de aquí, no los del sistema: así la ves completa, y la calmas tú cuando quieras.',
+    en:'Before, if Windows (or your phone) had its visual effects off, ' + BRAND() + ' also turned off its animations and glass, and looked plain. Since version 3.1 your Settings here decide, not the system\'s: you see it complete, and you calm it down whenever you want.' },
+  { k:'next nextjs react tecnologia hecha como esta hecha framework migracion migrar technology built how made migration',
+    a:BRAND() + ' se está pasando a Next.js (React) por partes, sin romper nada: Términos y Privacidad ya están hechas así, y las demás páginas siguen el mismo camino una por una. Para ti no cambia nada: mismas direcciones, misma cuenta, más rápida de mantener y de mejorar.',
+    en:BRAND() + ' is moving to Next.js (React) step by step, without breaking anything: Terms and Privacy are already built that way, and the other pages follow one by one. Nothing changes for you: same addresses, same account, quicker to maintain and improve.' }
+);
 /* ===== v1.4 · eventos especiales: a las 50, 100 y 500 visitas la página «se hackea» y das un logro ===== */
 const EV = (() => {
   const K = 'synthz:visits', A = 'synthz:ach';
