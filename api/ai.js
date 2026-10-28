@@ -12,7 +12,7 @@ const IMG_GLOBAL = +process.env.SYNTHZ_IMG_GLOBAL || 150;
 const SEARCH_GLOBAL = +process.env.SYNTHZ_SEARCH_GLOBAL || 300;
 async function webSearch(req, me, who, b){
   const q = str(b.q, 300); if (q.length < 2) throw Object.assign(new Error('Escribe qué quieres buscar.'), { status:400, code:'s_empty' });
-  const team = me && roleOf(me) !== 'user', max = team ? 200 : me ? 30 : 3, d = today();
+  const team = me && roleOf(me) !== 'user', max = team ? 5000 : me ? 30 : 3, d = today();   /* v3.0: el equipo, sin límite propio (solo el tope de todos) */
   await limit('srch:' + who, 10, 60);
   const uk = 'srch:' + who + ':' + d, gk = 'srch:all:' + d;
   const [n, g] = (await pipe([['GET', uk], ['GET', gk]])).map(x => +x || 0);
@@ -39,7 +39,7 @@ async function webSearch(req, me, who, b){
 async function makeImage(req, me, b){
   if (!me) throw Object.assign(new Error('Para crear imágenes entra a tu cuenta (es gratis).'), { status:401, code:'img_login' });
   const set = await settings(), d = today(), team = roleOf(me) !== 'user';
-  const max = team ? Math.max(set.imgDay, 20) : set.imgDay;
+  const max = team ? 5000 : set.imgDay;   /* v3.0: el equipo, sin límite propio (solo el tope de todos, IMG_GLOBAL) */
   if (!max) throw Object.assign(new Error('Crear imágenes está pausado por ahora.'), { status:403, code:'img_off' });
   await limit('img:' + me.sub, 6, 60);
   const prompt = str(b.prompt, 600); if (prompt.length < 3) throw Object.assign(new Error('Describe la imagen que quieres.'), { status:400, code:'img_empty' });
@@ -90,7 +90,7 @@ export default route({
     const [{ who, ipKey, me }, cat, set] = await Promise.all([whoOf(req), models(false), settings()]);
     const g = me ? null : await guestUsed(who, ipKey);
     const alert = await outage().catch(() => false), alertN = me && roleOf(me) !== 'user' ? +(await redis('SCARD', 'alerts').catch(() => 0)) || 0 : 0;
-    return json({ provs:cat.provs.map(p => ({ id:p, name:PROV[p].name })), models:cat.list.map(m => ({ id:m.id, name:m.name, prov:m.prov, ctx:m.ctx })), limit:set.dayLimit, used:await usedToday(who), guest:g ? { used:Math.max(g.used, Math.min(g.usedIp, GUEST_MAX)), max:GUEST_MAX } : null, alert, alertN, img:me ? { max:roleOf(me) !== 'user' ? Math.max(set.imgDay, 20) : set.imgDay, used:+(await redis('GET', 'img:' + me.sub + ':' + today())) || 0 } : null });
+    return json({ provs:cat.provs.map(p => ({ id:p, name:PROV[p].name })), models:cat.list.map(m => ({ id:m.id, name:m.name, prov:m.prov, ctx:m.ctx })), limit:set.dayLimit, used:me && roleOf(me) !== 'user' ? 0 : await usedToday(who), team:!!(me && roleOf(me) !== 'user'), guest:g ? { used:Math.max(g.used, Math.min(g.usedIp, GUEST_MAX)), max:GUEST_MAX } : null, alert, alertN, img:me ? { max:roleOf(me) !== 'user' ? 5000 : set.imgDay, used:+(await redis('GET', 'img:' + me.sub + ':' + today())) || 0 } : null });
   },
   async POST(req){
     const b = await body(req, 600000), { who, ipKey, me } = await whoOf(req); let guest = null;
@@ -104,7 +104,7 @@ export default route({
       if (!isNew && (+n || 0) >= PER_TURN) throw guestErr();
       guest = { turn, isNew, ipNew:!(+inIp) };
     }
-    const r = await chat({ who, ipKey, messages:b.messages, model:typeof b.model === 'string' ? b.model : 'sz:auto', maxTokens:b.maxTokens, stream:true });
+    const r = await chat({ who, ipKey, messages:b.messages, model:typeof b.model === 'string' ? b.model : 'sz:auto', maxTokens:b.maxTokens, stream:true, free:!!(me && roleOf(me) !== 'user') });
     let gu = '';
     if (guest){
       const tk = 'gt:' + who + ':' + guest.turn;

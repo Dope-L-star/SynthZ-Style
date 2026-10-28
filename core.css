@@ -863,6 +863,13 @@ html.noanim .ap-hero *{animation:none !important}
 .ap-card:has(.ap-steps) .ap-hero{height:min(18dvh,140px);transition:height .4s ease}
 .ap-card:has(.ap-steps) .ap-phone{scale:.62}
 .ap-card:has(.ap-steps) .ap-ico{scale:.7}
+/* v3.0 · el video de la app es horizontal: se ve entero en una pantalla 16:9 de vidrio (sin recortar), con su póster mientras carga */
+.ap-hero.vid{height:auto;aspect-ratio:16/9;padding:6px;place-items:stretch}
+.ap-tv{position:relative;z-index:1;border-radius:17px;overflow:hidden;border:1px solid rgba(255,255,255,.32);background:#0b0618;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 18px 44px -18px rgba(3,1,14,.85)}
+.ap-tv video{display:block;width:100%;height:100%;object-fit:cover}
+.ap-hero.vid .ap-ico{z-index:2;scale:.7;right:8px;bottom:6px;top:auto;left:auto;animation:none;transform-origin:100% 100%}
+.ap-hero.vid .ap-sp{display:none}
 /* ===== v2.2 · menús, etiquetas, ajustes con pestañas y el «!» de novedades ===== */
 .ctxm{min-width:236px;max-width:min(320px,calc(100vw - 20px));padding:6px;gap:1px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(22,22,28,.86);backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);box-shadow:0 24px 60px -18px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.06)}
 .ctxm button{display:flex;align-items:center;gap:10px;width:100%;min-height:34px;padding:7px 10px;border-radius:9px;font-size:14px;color:var(--soft,#c3c5ce);text-align:left}

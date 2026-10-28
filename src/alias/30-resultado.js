@@ -106,19 +106,17 @@ function drawSynth(Y){
   box.textContent = ''; box.hidden = !Y;
   if (!Y) return;
   const n = Y.voices.length;
-  const head = el('div', { class: 'syn-h' }, el('span', { class: 'syn-dots', 'aria-hidden': 'true' }, ...Y.voices.map(() => el('i'))), el('b', { text: n > 1 ? t('syn_titulo', { n }) : t('syn_una') }));
+  /* la respuesta de abajo ES la combinada; aquí solo se dice de dónde salió y, plegado, qué aportó cada IA */
+  const head = el('div', { class: 'syn-h' }, el('span', { class: 'syn-dots', 'aria-hidden': 'true' }, ...Y.voices.map(() => el('i'))),
+    el('div', {}, el('b', { text: n > 1 ? t(Y.fused ? 'syn_titulo' : 'syn_cons', { n }) : t('syn_una') }), n > 1 ? el('small', { text: Y.voices.map(v => v.name).join(' · ') }) : ''));
   box.append(head);
-  if (Y.agree != null){
-    const lv = Y.agree >= 75 ? 'alto' : Y.agree >= 45 ? 'medio' : 'bajo';
-    const bar = el('div', { class: 'syn-ac ' + lv, role: 'img', 'aria-label': t('syn_acuerdo_aria', { n: Y.agree }) },
-      el('div', { class: 'syn-bar' }, el('i', { style: 'width:' + Y.agree + '%' })),
-      el('span', {}, el('b', { text: Y.agree + ' %' }), document.createTextNode(' · ' + t('syn_' + lv))));
-    box.append(bar);
-  }
-  if (Y.diffs) box.append(el('p', { class: 'syn-dif' }, el('b', { text: t('syn_dif') + ' ' }), document.createTextNode(Y.diffs)));
   if (n > 1){
     const d = el('details', { class: 'syn-v' }, el('summary', { text: t('syn_voces') }));
-    Y.voices.forEach(v => { const b = el('div', { class: 'rtext' }); U.renderText(b, v.text); d.append(el('div', { class: 'syn-voz' }, el('span', { class: 'syn-ia', text: v.name + (v.prov ? ' · ' + v.prov : '') }), b)); });
+    Y.voices.forEach(v => {
+      const b = el('div', { class: 'rtext' }); U.renderText(b, v.text);
+      d.append(el('div', { class: 'syn-voz' }, el('span', { class: 'syn-ia', text: v.name + (v.prov ? ' · ' + v.prov : '') }),
+        v.aporte ? el('p', { class: 'syn-ap' }, el('b', { text: t('syn_aporte') + ' ' }), document.createTextNode(v.aporte)) : '', b));
+    });
     box.append(d);
   }
 }
