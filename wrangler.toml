@@ -1,0 +1,5 @@
+# Cloudflare Pages (symphoria.pages.dev). Las llaves (KV_REST_API_URL, KV_REST_API_TOKEN, CF_PROXY_KEY…) van como Secret en el panel, nunca aquí.
+name = "symphoria"
+pages_build_output_dir = "cloudflare/public"
+compatibility_date = "2025-04-01"
+compatibility_flags = ["nodejs_compat"]
