@@ -9,7 +9,7 @@ Object.assign(I18N.es, {
   'landing.nombre.sym': 'Junto, con, en sintonía. La misma raíz de <b>sinfonía</b>, <b>sinergia</b> y <b>simbiosis</b>.',
   'landing.nombre.phora': 'Llevar, ser portador. La misma raíz de <b>metáfora</b>, <b>semáforo</b> y <b>anáfora</b>.',
   'landing.lang': 'EN',
-  'landing.langAria': 'Cambiar el idioma a inglés',
+  'landing.langAria': 'EN: cambiar el idioma a inglés',
   'landing.langMenu': 'English',
   'ix.hold': 'Pregúntale lo que sea…',
   'ix.meet': 'Conoce a SynthonIA',
@@ -38,7 +38,7 @@ Object.assign(I18N.en, {
   'landing.nombre.sym': 'Together, with, in tune. The same root as <b>symphony</b>, <b>synergy</b> and <b>symbiosis</b>.',
   'landing.nombre.phora': 'To carry, to bear. The same root as <b>metaphor</b>, <b>semaphore</b> and <b>anaphora</b>.',
   'landing.lang': 'ES',
-  'landing.langAria': 'Switch the language to Spanish',
+  'landing.langAria': 'ES: switch the language to Spanish',
   'landing.langMenu': 'Español',
   'ix.hold': 'Ask it anything…',
   'ix.meet': 'Meet SynthonIA',
@@ -209,6 +209,7 @@ Object.assign(I18N.es, {
  "ix.146": "Legal",
  "ix.147": "Privacidad",
  "ix.148": "Términos",
+ "ix.ayuda": "Ayuda",
  "ix.149": "Tus chats se guardan en este equipo. Si entras a tu cuenta, también los ves en tu celular y en cualquier computador."
 });
 Object.assign(I18N.en, {
@@ -359,6 +360,7 @@ Object.assign(I18N.en, {
  "ix.146": "Legal",
  "ix.147": "Privacy",
  "ix.148": "Terms",
+ "ix.ayuda": "Help",
  "ix.149": "Your chats are saved on this device. If you sign in, you also see them on your phone and on any computer."
 });
 

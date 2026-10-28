@@ -142,7 +142,7 @@ Object.assign(I18N.es, {
   'landing.nombre.sym': 'Junto, con, en sintonía. La misma raíz de <b>sinfonía</b>, <b>sinergia</b> y <b>simbiosis</b>.',
   'landing.nombre.phora': 'Llevar, ser portador. La misma raíz de <b>metáfora</b>, <b>semáforo</b> y <b>anáfora</b>.',
   'landing.lang': 'EN',
-  'landing.langAria': 'Cambiar el idioma a inglés',
+  'landing.langAria': 'EN: cambiar el idioma a inglés',
   'landing.langMenu': 'English',
   'ix.hold': 'Pregúntale lo que sea…',
   'ix.meet': 'Conoce a SynthonIA',
@@ -171,7 +171,7 @@ Object.assign(I18N.en, {
   'landing.nombre.sym': 'Together, with, in tune. The same root as <b>symphony</b>, <b>synergy</b> and <b>symbiosis</b>.',
   'landing.nombre.phora': 'To carry, to bear. The same root as <b>metaphor</b>, <b>semaphore</b> and <b>anaphora</b>.',
   'landing.lang': 'ES',
-  'landing.langAria': 'Switch the language to Spanish',
+  'landing.langAria': 'ES: switch the language to Spanish',
   'landing.langMenu': 'Español',
   'ix.hold': 'Ask it anything…',
   'ix.meet': 'Meet SynthonIA',
@@ -342,6 +342,7 @@ Object.assign(I18N.es, {
  "ix.146": "Legal",
  "ix.147": "Privacidad",
  "ix.148": "Términos",
+ "ix.ayuda": "Ayuda",
  "ix.149": "Tus chats se guardan en este equipo. Si entras a tu cuenta, también los ves en tu celular y en cualquier computador."
 });
 Object.assign(I18N.en, {
@@ -492,6 +493,7 @@ Object.assign(I18N.en, {
  "ix.146": "Legal",
  "ix.147": "Privacy",
  "ix.148": "Terms",
+ "ix.ayuda": "Help",
  "ix.149": "Your chats are saved on this device. If you sign in, you also see them on your phone and on any computer."
 });
 
@@ -2705,7 +2707,7 @@ async function signedIn(d){
 /* al volver de Google por Supabase: el token llega en la dirección (#access_token=…), se cambia por tu sesión de SymphorIA y se borra de la barra */
 (async function sbReturn(){
   const h = location.hash || ''; if (!/access_token=|error_description=/.test(h)) return;
-  const p = new URLSearchParams(h.slice(1)); try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){}
+  const p = new URLSearchParams(h.slice(1)); try{ window.history.replaceState(null, '', location.pathname + location.search); }catch(e){}
   if (p.get('access_token')){ ACC.joining = true; root.classList.add('joining'); }
   let linking = false; try{ linking = sessionStorage.getItem('synthz:link') === '1'; sessionStorage.removeItem('synthz:link'); }catch(e){}
   if (p.get('error_description')){ ACC.joining = false; root.classList.remove('joining'); setTimeout(() => toast('No se pudo ' + (linking ? 'vincular' : 'entrar con') + ' Google: ' + p.get('error_description')), 800); return; }
@@ -2999,7 +3001,7 @@ function cfgModal(tab){
   memPanel($('#szMem', o));
   $$('.cfgsw[data-k]', o).forEach(b => b.addEventListener('click', () => { draft[b.dataset.k] = !draft[b.dataset.k]; paintRows(); }));
   $$('[data-in]', o).forEach(b => b.addEventListener('click', () => { draft.intro = b.dataset.in; $$('[data-in]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
-  const thNote = () => { const n = $('#cfgThN', o); if (n) n.textContent = draft.ui === 'simple' ? 'El estilo Simple usa sus propios colores: el color se ve en el estilo SynthFlow.' : 'Cambia el dorado y el rosado de SynthFlow. Aurora y Oro negro llegan con Syntonia.'; };
+  const thNote = () => { const n = $('#cfgThN', o); if (n) n.textContent = draft.ui === 'simple' ? 'El estilo Simple usa sus propios colores: el color se ve en el estilo SynthFlow.' : (szTeam ? 'Cambia el dorado y el rosado de SynthFlow. Aurora y Oro negro ya son tuyos por ser del equipo (plan Orquesta).' : 'Cambia el dorado y el rosado de SynthFlow. Aurora y Oro negro llegan con Syntonia.'); };
   thNote();
   $$('[data-ui]', o).forEach(b => b.addEventListener('click', () => { draft.ui = b.dataset.ui; $$('[data-ui]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); thNote(); }));
   $$('[data-lang]', o).forEach(b => b.addEventListener('click', () => { setLang(b.dataset.lang); $$('[data-lang]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));   /* el idioma cambia al instante, sin «Guardar» */
@@ -4114,7 +4116,7 @@ const BOT_FAQ = [
   { k:'comparar comparacion varias dos lado mismo tiempo', a:'Con «Comparar con otra IA» sumas hasta 4. Todas responden lo mismo y aparecen en el orden en que llegan.', go:['#cCmp', '#pickRow [data-add]'] },
   { k:'guia tutorial aprender enseñar como funciona', a:'En la Guía rápida te pregunto si la quieres completa o qué quieres ver: eliges uno o varios temas y te los muestro con mi manita, en ese orden.', go:['#guideTop', '#helpBtn'], act:'guide', lbl:'Abrir la Guía' },
   { k:'limite cuanto queda quedan mensajes barra uso gasto consumo enerx energia bateria pila carga synxcoin coins', a:'Cada día tienes EnerX, tu batería gratis para usar las IAs conectadas: baja un poco con cada mensaje (lo que escribes y lo que la IA te responde) y a medianoche se carga al 100 %. Sin cuenta son 5 mensajes de prueba al día; con tu cuenta gratis tu EnerX dura mucho más. Te muestro dónde está.', go:['#railCoin', '#tabCoin', '#navTotal', '.pill-total'], tour:'coins' },
-  { k:'pagar cobro cobran gratis precio plata dinero costo tarjeta', a:'SymphorIA es gratis y nunca te cobra. Las IAs conectadas son gratis, y Puter también tiene su parte gratis cada mes.' },
+  { k:'pagar cobro cobran gratis precio plata dinero costo tarjeta', a:'SymphorIA es gratis y hoy no te cobra nada. Las IAs conectadas son gratis, y Puter también tiene su parte gratis cada mes. Los planes del menú «⋯» › Planes por ahora solo se muestran: los pagos están apagados.', go:['#moreBtn'] },
   { k:'chats historial conversaciones anteriores guardados donde estan mis', a:'Tus chats están en «Mis chats», en la barrita (en el celular, la pestaña Chats). Se guardan en tu dispositivo y en tu cuenta si entras.', go:['#railChats', '[data-r="chats"]', '[data-tab="chats"]'] },
   { k:'drive google espacio guardar copia respaldo conectar conecto', a:'En Ajustes › IAs y memoria › Google Drive vinculas tu Drive y guardo una copia de tus chats en una carpeta privada. No puedo ver tus otros archivos.', go:['#moreBtn'] },
   { k:'adjuntar archivo pdf imagen foto subir documento clip', a:'Con el «+» agregas archivos, PDF o fotos (también puedes arrastrarlos). Para fotos elige una IA que «ve fotos».', go:['#attachBtn'] },
@@ -4141,6 +4143,7 @@ const BOT_QUICK = [['ias conectadas que', '¿Qué son las IAs conectadas?'], ['p
 const fold = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9ñ\s]/g, ' ');
 function botMatch(q){
   const STOP = /^(que|como|donde|cual|son|estan|esta|esto|es|para|por|con|una|uno|los|las|del|mis|tus|sus|esta|este|esto|eso|hay|hago|hacer|puedo|quiero|tengo|necesito|sobre|algo|the|and|how|can|what|where|does|you|are|there|this|that|with|for|from|have|want|need|page|please|help|synthflow|synthz|pagina|favor|porfa|ayuda|ayudame)$/;
+  if (/p[aá]gina de ayuda|centro de ayuda|help (page|center)|ayuda\.html/i.test(q)){ const ay = BOT_FAQ.find(f => f.k.startsWith('ayuda pagina')); if (ay) return ay; }
   const w = fold(q).split(/\s+/).filter(x => (x.length > 2 || /^(ia|ai)$/.test(x)) && !STOP.test(x)); if (!w.length) return /ayuda|help/i.test(q) ? BOT_FAQ.find(f => f.k.startsWith('guia')) : null;
   /* v3.0 · cada palabra pesa según qué tan rara es (una palabra que solo está en «Proyectos» decide más que «están») */
   const hit = (K, x) => K.includes(x) ? 1 : K.some(k => k.length > 4 && (k.startsWith(x) || x.startsWith(k))) ? .6 : 0;
@@ -4502,7 +4505,26 @@ BOT_FAQ.push(
     en:'In Pulsem (team only), under the connected AIs\' keys, each person can remove theirs with «Remove». The others keep working.', go:['#railPulse'] },
   { k:'groq rapida llave propia fast own key',
     a:'Groq es una opción muy rápida que usa tu propia llave (gratis con límites). Se conecta en Ajustes › IAs y memoria › «Conectar Puter u otra IA».',
-    en:'Groq is a very fast option that uses your own key (free with limits). Connect it in Settings › AIs and memory › «Connect Puter or another AI».', pre:openCfg('ia'), go:['[data-pane="ia"]', '#cfgBtn'] }
+    en:'Groq is a very fast option that uses your own key (free with limits). Connect it in Settings › AIs and memory › «Connect Puter or another AI».', pre:openCfg('ia'), go:['[data-pane="ia"]', '#cfgBtn'] },
+  { k:'planes plan chispa syntonia timeless orquesta cuesta cuestan vale valen premium suscripcion pro mejorar cuenta plans subscription upgrade',
+    a:'Los planes están en el menú «⋯» › Planes: Chispa (gratis, el de todos), Syntonia, Timeless y Orquesta. Por ahora solo se muestran: los pagos están apagados, así que nadie te cobra nada. Se encenderán cuando la página reciba su primer dinero y se puedan pagar las APIs con él, no antes. El equipo (Prime, ZFlow y Symmetrix) ya tiene Orquesta para probarlo todo.',
+    en:'Plans are in the «⋯» menu › Plans: Chispa (free, everyone\'s), Syntonia, Timeless and Orquesta. For now they are only shown: payments are off, so nobody charges you anything. They will turn on when the page gets its first money and the APIs can be paid with it, not before. The team (Prime, ZFlow and Symmetrix) already has Orquesta to test everything.',
+    pre:() => { if (!$('#szPlans') && typeof plansModal === 'function') plansModal(); }, go:['#szPlans', '#moreBtn'] },
+  { k:'aurora oro negro tema orquesta exclusivo bloqueado candado gold black theme locked',
+    a:'Aurora y Oro negro son los colores del plan Orquesta. Si eres del equipo ya los tienes en Ajustes › Página › «Color de SynthFlow»; para los demás salen con candado mientras los pagos estén apagados.',
+    en:'Aurora and Black gold are the Orquesta plan colors. If you are on the team you already have them in Settings › Page › «SynthFlow color»; for everyone else they show a lock while payments are off.', pre:openCfg(), go:['#cfgTh', '#cfgBtn', '[data-tab="cfg"]'] },
+  { k:'equipo sin limite admin prime zflow symmetrix acceso todo enerx infinita team unlimited full access',
+    a:'Prime, ZFlow y Symmetrix tienen acceso a todo, como si tuvieran Orquesta: su EnerX no baja («sin límite · equipo»), A.L.I.A.S. les da 100 veces más pasos y tienen los temas Aurora y Oro negro. Es para que puedan probar la página completa.',
+    en:'Prime, ZFlow and Symmetrix have access to everything, as if they had Orquesta: their EnerX never drops («no limit · team»), A.L.I.A.S. gives them 100 times more steps and they get the Aurora and Black gold themes. It is so they can test the whole page.', go:['#railCoin', '#tabCoin'] },
+  { k:'ayuda pagina centro preguntas frecuentes faq soporte help center support page',
+    a:'Hay una página de Ayuda (ayuda.html), en español y en inglés: preguntas frecuentes y botones para hablar con el equipo, enviar una idea o hablar conmigo. Está abajo en la portada y arriba en Términos y Privacidad.',
+    en:'There is a Help page (ayuda.html), in Spanish and English: frequent questions and buttons to talk to the team, send an idea or talk to me. It is at the bottom of the home page and at the top of Terms and Privacy.', go:['a[href*="ayuda"]'] },
+  { k:'guia dos minutos empieza synthflow sola automatica primera vez two minute guide first time auto',
+    a:'Cuando terminas «Empieza en SynthFlow» y eliges qué quieres hacer, arranco sola la guía de 2 minutos: ya no te pregunto el tema ni la IA otra vez y te muestro Nuevo chat, los modos, el esfuerzo, Proyectos, Sintéticos y Ajustes. Puedes decir «Ahora no» y volver a verla con el botón Guía.',
+    en:'When you finish «Start in SynthFlow» and pick what you want to do, I start the 2-minute guide on my own: I don\'t ask the topic or the AI again and I show you New chat, the modes, the effort, Projects, Synthetics and Settings. You can say «Not now» and see it again with the Guide button.', go:['#guideTop', '#helpBtn'] },
+  { k:'caja escribir barra larga compacta pequena textarea composer input box bar compact',
+    a:'La caja para escribir ahora es más larga y más bajita: ocupa más ancho (hasta 900 px) y menos alto, para que veas más chat. Está igual en SynthFlow, en el estilo Simple y en el celular.',
+    en:'The text box is now longer and shorter: it takes more width (up to 900 px) and less height, so you see more chat. It\'s the same in SynthFlow, the Simple style and on phones.', go:['#inp'] }
 );
 /* las respuestas de antes también entienden preguntas en inglés */
 [['conectar', 'connect connection setup key unlock works'], ['ias conectadas', 'connected ais free ready what are'], ['puter que', 'puter what is credits'], ['puter conectar', 'puter connect link'],
@@ -4516,7 +4538,7 @@ BOT_FAQ.push(
  ['gracias', 'thanks thank great perfect cool'], ['adios', 'bye goodbye see you later']].forEach(([s, en]) => { const f = BOT_FAQ.find(x => x.k.startsWith(s)); if (f) f.k += ' ' + en; });
 /* lo que sí existe en la página, para que la IA de SynthonIA (cuando no hay respuesta guardada) diga dónde está y la manita lo señale */
 const BOT_PLACES = { chats:['[data-r="chats"]', '[data-tab="chats"]'], nuevo:['#cNew', '[data-r="new"]'], buscar:['[data-r="search"]'], favoritos:['#railFav', '[data-r="favs"]'], proyectos:['#railProj', '#cProj'], sinteticos:['#railSyn', '#cSyn'],
-  ajustes:['#cfgBtn', '[data-tab="cfg"]'], cuenta:['#accBtn', '[data-tab="me"]'], mas:['#attachBtn'], menu:['#moreBtn'], ia:['#cPick'], comparar:['#cCmp'], modo:['#cMode'], esfuerzo:['#cEffort'], cortas:['#saverBtn'], caja:['#inp'], enerx:['#railCoin', '#tabCoin'], guia:['#guideTop', '#helpBtn'] };
+  ajustes:['#cfgBtn', '[data-tab="cfg"]'], cuenta:['#accBtn', '[data-tab="me"]'], mas:['#attachBtn'], menu:['#moreBtn'], ia:['#cPick'], comparar:['#cCmp'], modo:['#cMode'], esfuerzo:['#cEffort'], cortas:['#saverBtn'], caja:['#inp'], planes:['#moreBtn'], ayuda:['a[href*="ayuda"]'], enerx:['#railCoin', '#tabCoin'], guia:['#guideTop', '#helpBtn'] };
 /* ---- ayuda de personas ---- */
 async function helpApi(o){ return api('help' + (o && o.q ? o.q : ''), o && o.body ? { method:'POST', body:o.body, keep:true } : { keep:true }); }
 async function botTeam(){
@@ -5017,7 +5039,11 @@ const WHATSNEW = { v:'3.0', items:[
   ['proyectos', 'Proyectos: junta chats, instrucciones y archivos de un mismo tema. Ahora se pintan con los colores de tu tema.'],
   ['ajustes', 'Modo compacto: SynthFlow ahora se ve un poco más pequeño. Si prefieres el tamaño de antes, Ajustes → Tamaño → Normal.'],
   ['chat', 'Más seguro: lo que crea la IA corre aparte, en su propio espacio, y tu sesión queda protegida.'],
-  ['ajustes', 'Pulsem (equipo): ahora cada quien puede quitar su llave con «Quitar».']
+  ['ajustes', 'Pulsem (equipo): ahora cada quien puede quitar su llave con «Quitar».'],
+  ['chat', 'Planes en el menú «⋯» › Planes: Chispa (gratis), Syntonia, Timeless y Orquesta. Por ahora solo se muestran: los pagos están apagados y nadie te cobra.'],
+  ['chat', 'Guía de 2 minutos: al terminar «Empieza en SynthFlow» arranca sola, sin preguntarte otra vez el tema ni la IA.'],
+  ['chat', 'La caja para escribir ahora es más larga y más bajita, para que veas más chat.'],
+  ['synthonia', 'Nueva página de Ayuda, en español y en inglés: preguntas frecuentes y botones para hablar con el equipo o conmigo.']
 ] };
 function newsBang(onShow){
   const b = $('#szBot'); if (!b){ setTimeout(() => newsBang(onShow), 600); return; }
@@ -5831,6 +5857,55 @@ const AURORA = (() => {
   };
   return { el, setCalm, repaint:() => { recolor(); go(); } };
 })();
+/* ---------- v3.0 · enlaces de la página de Ayuda (ayuda.html) ----------
+   ?ayuda=equipo abre «Hablar con el equipo», ?ayuda=mejorar abre «Cuéntanos qué mejorar» y ?ayuda=synthonia abre a SynthonIA.
+   Espera un poco a que la cuenta y SynthonIA estén listas; después borra el parámetro para que no se repita al recargar (window.history: en core, history() es otra función). */
+try{
+  const AY = new URLSearchParams(location.search).get('ayuda');
+  if (AY && ['equipo', 'mejorar', 'synthonia'].includes(AY)) setTimeout(() => {
+    try{ if (AY === 'equipo') botTeam(); else if (AY === 'mejorar') feedbackModal(); else botOpen(); }catch(e){}
+    try{ const u = new URL(location.href); u.searchParams.delete('ayuda'); window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash); }catch(e){}
+  }, 2200);
+}catch(e){}
+/* ---------- v3.0 · Planes (Chispa, Syntonia, Timeless y Orquesta) ----------
+   Los pagos están APAGADOS (PENDIENTES.md › Plan de pagos): nadie puede pagar todavía y nada se cobra.
+   Esta ventana solo muestra qué traerá cada plan y en cuál estás. Hoy todos están en Chispa (gratis, con las IAs gratis de siempre)
+   y el equipo (Prime, ZFlow y Symmetrix) en Orquesta: sin límite de EnerX, búsquedas ni imágenes, y con los colores Aurora y Oro negro.
+   El servidor es quien decide el límite (api/_pool.js › free); aquí solo se muestra. */
+const PLANS = [
+  { id:'chispa', n:'Chispa', p:'Gratis', c:'#e6b65f', L:['Las IAs gratis de hoy: Groq, Gemini Flash, Mistral y más', 'Tu EnerX diaria, que se carga a medianoche', 'Imágenes con límite, internet y memoria', 'Proyectos, Sintéticos y A.L.I.A.S.'] },
+  { id:'syntonia', n:'Syntonia', p:'US$7,99 al mes', c:'#9fffd6', L:['Todo lo de Chispa con un límite mucho más amplio', '400 mensajes al mes con IAs pro (GPT, Claude, Grok, Gemini Pro)', '30 imágenes pro', 'Los colores Aurora y Oro negro'] },
+  { id:'timeless', n:'Timeless', p:'US$17,99 al mes', c:'#a98bff', L:['Todo lo de Syntonia', '900 mensajes pro y 50 con lo más potente', '80 imágenes y 2 videos cortos', 'SynthFlow en WhatsApp y Telegram'] },
+  { id:'orquesta', n:'Orquesta', p:'US$8,99 por persona', c:'#ffd27a', L:['Para equipos (desde 3 personas)', 'Lo de Syntonia para cada persona', 'Chats y panel de equipo', 'Hoy lo usan Prime, ZFlow y Symmetrix, sin límites, para probar todo'] }
+];
+let szTeam = false; try{ szTeam = localStorage.getItem('synthz:team') === '1'; }catch(e){}
+const planOf = () => szTeam ? 'orquesta' : 'chispa';
+/* el equipo estrena los colores de pago (Aurora y Oro negro): se quita el «Pronto» y se vuelve a pintar el tema */
+function planPerks(){
+  THEMES.forEach(t => { if (t[0] === 'aurora' || t[0] === 'oro') t[3] = szTeam ? 0 : 1; });
+  try{ cfgClasses(); }catch(e){}
+}
+planPerks();
+addEventListener('synthz-szq', e => {
+  const d = e.detail || {}; if (d.team == null) return;
+  const t = !!d.team; if (t === szTeam) return;
+  szTeam = t; try{ t ? localStorage.setItem('synthz:team', '1') : localStorage.removeItem('synthz:team'); }catch(er){}
+  planPerks();
+});
+function plansModal(){
+  if ($('#szPlans')) return;
+  const me = planOf(), o = document.createElement('div'); o.id = 'szPlans'; o.className = 'szm';
+  o.innerHTML = '<div class="tcard plans" role="dialog" aria-modal="true" aria-label="Planes de SymphorIA"><div class="word">' + zWord('Synth') + '</div><div class="tn">PLANES</div><div class="tb">'
+    + '<h3>Elige cómo FlowIAr</h3><p>Las IAs gratis siempre van a estar. Los planes de pago llegan pronto: hoy nadie puede pagar y no se cobra nada.</p>'
+    + '<div class="pl-grid">' + PLANS.map((P, i) => '<article class="pl-card' + (P.id === me ? ' me' : '') + '" style="--pc:' + P.c + ';--i:' + i + '"><header><b>' + esc(P.n) + '</b>' + (P.id === me ? '<em>Tu plan</em>' : '') + '</header><span class="pl-p">' + esc(P.p) + '</span><ul>' + P.L.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>'
+      + (P.id === me ? '<span class="pl-on">Activo</span>' : P.id === 'chispa' ? '' : '<button type="button" class="btn sm ghost" disabled aria-disabled="true">Pronto</button>') + '</article>').join('') + '</div>'
+    + '<p class="cnote">' + (me === 'orquesta' ? 'Eres del equipo: tienes todo como en Orquesta, sin límite de EnerX, para probar la página.' : 'Cuando lleguen los pagos verás aquí cuánto te queda de cada cosa, y podrás cancelar con un clic.') + '</p>'
+    + '<div class="tbtn"><button class="btn sm" type="button" data-close>Listo</button></div></div></div>';
+  document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('on'));
+  const close = () => { o.classList.remove('on'); setTimeout(() => o.remove(), 420); };
+  $('[data-close]', o).addEventListener('click', close); o.addEventListener('pointerdown', e => { if (e.target === o) close(); });
+  addEventListener('keydown', function k(e){ if (e.key === 'Escape'){ close(); removeEventListener('keydown', k); } });
+}
 /* ===== v3.1 · Movimiento: SynthonIA sabe por qué todo se mueve, cómo apagarlo y qué cambió =====
    La capa de animaciones vive en movimiento.css / movimiento.js (src/movimiento*). Aquí solo va lo que SynthonIA cuenta y las novedades. */
 WHATSNEW.v = '3.1';
@@ -5950,5 +6025,5 @@ const EV = (() => {
 window.SZ = { I18N, LANGS, t, lang, setLang, onLang, i18nApply, root, $, $$, clamp, fmt, reduce, today, sleepRaw, esc, est, Z_PATH, ICONS, ico, zWord, API, MANUAL, ALL, byId,
   get state(){ return state; }, set state(v){ state = v; normalize(); },
   normalize, cleanUsage, cleanChats, cleanStrMap, save, total, addUsage, resetUsage, estAll, todayEst, todayReq, providerBalance, balanceHtml, splitHtml, syncNote, helpGuide, smoothDetails, szPrompt, swapDir, swapDir, face, FACE_GOOD, randomGoodFace, welcomeBack, wasAway, accSignOutAll, accClaim, ROLE_NAME, trialGet, trialSet, trialStart, legacyRow, cleanLedger, mergeLedger, DEV, hooks, toast, hydrateIcons, md, countTo,
-  BRAND, SPACE, AURORA, isFlow, flowWord, flowOrb, LOGO_Z, fileIco, gIcon, giFill, giFile, zMark, synBody, synSet, SPOSE, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, BRANDS, brandOf, glassIcon, PIXART, pixelRun, pixelGrid, workView, workSaved, mdLoad, MDLIB, SZ_P, SZQ, SZ_AUTO, szqSet, msgsLeft, msgsTotal, coinsOf, coinsLeft, coinsTotal, coinsFmt, coinsShort, coinNote, limTxt, limShort, limLvl, limPct, limRing, battPct, limBar, szCatalog, szHeaders, guestGate, guestFull, isGuestQ, setTurn, puterOut, puterOutNote, TEL, telEv, telBeat, DEVH, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, feedbackModal, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI, EV, lipSync, ballFace, guideAsk, GTOPICS, whatsNew, signedish, cfgLinks, memAddCore, memPanel, menuOpen, menuClose, MICO, appInstall, appPromo, appStandalone, appPhone };
+  BRAND, SPACE, AURORA, isFlow, flowWord, flowOrb, LOGO_Z, fileIco, gIcon, giFill, giFile, zMark, synBody, synSet, SPOSE, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, BRANDS, brandOf, glassIcon, PIXART, pixelRun, pixelGrid, workView, workSaved, mdLoad, MDLIB, SZ_P, SZQ, SZ_AUTO, szqSet, msgsLeft, msgsTotal, coinsOf, coinsLeft, coinsTotal, coinsFmt, coinsShort, coinNote, limTxt, limShort, limLvl, limPct, limRing, battPct, limBar, szCatalog, szHeaders, guestGate, guestFull, isGuestQ, setTurn, puterOut, puterOutNote, TEL, telEv, telBeat, DEVH, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, feedbackModal, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI, EV, lipSync, ballFace, guideAsk, GTOPICS, whatsNew, signedish, cfgLinks, memAddCore, memPanel, menuOpen, menuClose, MICO, appInstall, appPromo, appStandalone, appPhone, plansModal, planOf };
 })();

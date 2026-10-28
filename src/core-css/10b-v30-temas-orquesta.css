@@ -1,0 +1,5 @@
+/* v3.0 · los dos colores de los planes de pago: hoy solo los usa el equipo (Prime, ZFlow y Symmetrix, plan Orquesta) */
+html[data-theme="aurora"]{--sb-bg:#04131a;--sb-deep:#0b3a3f;--sb-primary:#3dffc2;--sb-secondary:#a46bff;--sb-warm:#9fffd6;--sb-spark:#e2fff4;--sb-light:#8ef5ff;--sb-text:#effffa;
+  --gold:#9fffd6;--gold-rgb:159,255,214;--wine:#a46bff;--wine-rgb:164,107,255;--bg:#04131a}
+html[data-theme="oro"]{--sb-bg:#0b0a08;--sb-deep:#2a2316;--sb-primary:#ffc24a;--sb-secondary:#ffe7a8;--sb-warm:#ffd27a;--sb-spark:#fff3cf;--sb-light:#f5d58a;--sb-text:#fff8e8;
+  --gold:#ffd27a;--gold-rgb:255,210,122;--wine:#b8862e;--wine-rgb:184,134,46;--bg:#0b0a08}

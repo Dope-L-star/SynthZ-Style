@@ -1,0 +1,15 @@
+/* ===== v3.0 · la caja de escribir más larga y más bajita (pedido de Sammuel, 28 oct) =====
+   Antes era ancha y alta (56 px solo para el texto, mucho relleno). Ahora es más larga a lo ancho y más compacta:
+   menos relleno, el texto empieza en una línea y crece solo cuando escribes más. Vale para el inicio y para el chat,
+   en los dos estilos (SynthFlow y Simple) y en celular. */
+body.fresh .lane{width:min(100%,920px)}
+.hcomp{max-width:900px}
+.composer .comp-in{width:min(100%,900px)}
+.composer.big .comp-in{padding:10px 12px 8px;gap:4px 8px;border-radius:22px}
+.composer.big .comp-in textarea,.composer .comp-in textarea{min-height:34px;padding:6px 8px;line-height:1.45}
+.composer .comp-in{padding:8px 10px 8px 12px;gap:4px 8px}
+html.simple .comp-in{border-radius:18px !important}
+@media (max-width:760px){
+  .composer .comp-in,.composer.big .comp-in{padding:6px 8px 6px 10px;border-radius:20px}
+  .composer.big .comp-in textarea,.composer .comp-in textarea{min-height:28px;padding:5px 6px}
+}

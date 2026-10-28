@@ -16,6 +16,8 @@ if (hb){
   setTimeout(calm, 3800);
   /* detalle: si la tocas, se emociona, celebra y suelta un destello */
   hb.parentElement.style.pointerEvents = 'auto';
+  /* v3.0: ella se puede tocar y enfocar, así que no puede estar dentro de algo con aria-hidden: lo decorativo de al lado sí lo queda */
+  { const st = hb.parentElement; st.removeAttribute('aria-hidden'); [...st.children].forEach(c => { if (c !== hb) c.setAttribute('aria-hidden', 'true'); }); }
   hb.addEventListener('click', () => {
     set(hb, 'celebrando', 'celebra', 300); hb.classList.remove('boop'); void hb.offsetWidth; hb.classList.add('boop');
     try{ SZ.SND && SZ.SND.blip && SZ.SND.blip('feliz'); SZ.burst && SZ.burst(hb); }catch(e){}

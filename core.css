@@ -1064,6 +1064,11 @@ html.noanim .sb-root *,html.pmode .sb-root *{animation:none !important}
 /* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .sb-root *{animation:none !important}
 /* en el celular: sin cintas borrosas ni burbujas (pesan), solo brillos y estrellas */
 @media (max-width:760px){.rb-glow,.sb-bubble{display:none}}
+/* v3.0 · los dos colores de los planes de pago: hoy solo los usa el equipo (Prime, ZFlow y Symmetrix, plan Orquesta) */
+html[data-theme="aurora"]{--sb-bg:#04131a;--sb-deep:#0b3a3f;--sb-primary:#3dffc2;--sb-secondary:#a46bff;--sb-warm:#9fffd6;--sb-spark:#e2fff4;--sb-light:#8ef5ff;--sb-text:#effffa;
+  --gold:#9fffd6;--gold-rgb:159,255,214;--wine:#a46bff;--wine-rgb:164,107,255;--bg:#04131a}
+html[data-theme="oro"]{--sb-bg:#0b0a08;--sb-deep:#2a2316;--sb-primary:#ffc24a;--sb-secondary:#ffe7a8;--sb-warm:#ffd27a;--sb-spark:#fff3cf;--sb-light:#f5d58a;--sb-text:#fff8e8;
+  --gold:#ffd27a;--gold-rgb:255,210,122;--wine:#b8862e;--wine-rgb:184,134,46;--bg:#0b0a08}
 /* ===== v2.4 · SynthonIA nueva: ojos cian que brillan, ondas de voz a la derecha (habla) y a la izquierda (escucha) ===== */
 .szface .fe{filter:drop-shadow(0 0 2px rgba(246,217,160,.55))}
 .szface .fhead{filter:drop-shadow(0 0 5px rgba(196,120,255,.4))}
@@ -1427,3 +1432,22 @@ html.simple .pxg i{background:rgba(255,255,255,.035)}
 .pxg i.on{animation:pxPop .42s cubic-bezier(.34,1.56,.64,1)}
 @keyframes pxPop{0%{scale:.2;opacity:.2}60%{scale:1.25}100%{scale:1;opacity:1}}
 html.noanim .pxg i.on{animation:none}
+/* v3.0 · ventana de Planes: cuatro tarjetas de vidrio; la tuya brilla con su color */
+.tcard.plans{width:min(760px,calc(100vw - 24px))}
+.pl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:14px 0 6px}
+.pl-card{position:relative;display:flex;flex-direction:column;gap:6px;padding:14px 14px 12px;border-radius:18px;text-align:left;
+  border:1px solid rgba(255,255,255,.12);background:linear-gradient(160deg,color-mix(in srgb,var(--pc) 14%,transparent),rgba(255,255,255,.03) 60%);
+  animation:plIn .55s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(var(--i) * 70ms);transition:transform .35s cubic-bezier(.22,1,.36,1),border-color .3s}
+.pl-card:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--pc) 50%,transparent)}
+.pl-card.me{border-color:color-mix(in srgb,var(--pc) 70%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--pc) 40%,transparent),0 14px 40px -18px color-mix(in srgb,var(--pc) 70%,transparent)}
+.pl-card header{display:flex;align-items:center;gap:8px}
+.pl-card header b{font-size:17px;color:var(--pc)}
+.pl-card header em{margin-left:auto;font-style:normal;white-space:nowrap;font-size:11px;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--pc) 22%,transparent);color:#fff}
+.pl-p{font-size:13px;opacity:.8}
+.pl-card ul{margin:2px 0 4px;padding-left:16px;font-size:12.5px;line-height:1.4;opacity:.9}
+.pl-card li{margin:3px 0}
+.pl-card .btn,.pl-on{margin-top:auto;align-self:flex-start}
+.pl-on{font-size:12px;font-weight:600;color:var(--pc)}
+@keyframes plIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+html.noanim .pl-card{animation:none}
+@media (max-width:520px){.pl-grid{grid-template-columns:1fr 1fr;gap:8px}.pl-card{padding:11px 10px 10px}.pl-card ul{font-size:11.5px;padding-left:14px}.pl-card header b{font-size:15px}}

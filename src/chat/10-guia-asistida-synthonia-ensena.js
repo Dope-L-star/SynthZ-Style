@@ -1,6 +1,8 @@
 /* =====================================================================
    Guía Asistida: SynthonIA enseña SynthFlow con su manita (camino B)
    1 temas · 2 IA recomendadas · 3 recorrido · 4 comparar 2 · 5 prueba real · 6 conectar
+   v3.0: arranca sola al terminar «Empieza en SynthFlow» (ya elegiste tema e IA, así que salta 1 y 2) y el recorrido
+   muestra también Nuevo chat, los modos, el esfuerzo, Proyectos, Sintéticos y los Ajustes (temas, Simple, tamaño, rápido, idioma)
    ===================================================================== */
 const H = SZ.HAND;
 const GUIDE_PROMPTS = {
@@ -51,6 +53,7 @@ function gHud(n, label){
     document.body.appendChild(h); requestAnimationFrame(() => h.classList.add('on'));
     $('.gh-x', h).addEventListener('click', () => endGuide(false));
   }
+  n -= G.off || 0;
   $('.gh-t i', h).textContent = n + ' de ' + G.total + ' · ' + label;
   $('.gh-bar i', h).style.transform = 'scaleX(' + (n / G.total).toFixed(3) + ')';
 }
@@ -107,27 +110,30 @@ function gRestore(s){
 }
 async function waitCatalog(ms){ const t0 = Date.now(); while (!cat.list.length && Date.now() - t0 < ms){ await gWait(250); } }
 
-async function runGuide(){
+async function runGuide(o = {}){
   if (G) return;
+  const pre = o.topic && TOPIC[o.topic] ? o.topic : null;   /* v3.0: vienes de «Empieza en SynthFlow»: ya elegiste tema e IA */
   closeSide(); closeChatsSheet(); if (tourEl) closeTour(false);
   if ($('#conn')) { const c = $('#cClose'); if (c) c.click(); }
-  G = { skip:false, total:SZ.ACC.dcid ? 7 : 6, topics:[] };
-  SZ.DRIVE.cid().then(c => { if (G && c && !(SZ.DRIVE.meta() || {}).linked){ G.total = 7; const h = $('#szgHud .gh-t i'); if (h) h.textContent = h.textContent.replace(/de \d+/, 'de 7'); } else if (G && !c) G.total = 6; }).catch(() => {});
+  const off = pre ? 2 : 0;
+  G = { skip:false, total:(SZ.ACC.dcid ? 7 : 6) - off, topics:pre ? [pre] : [], off };
+  SZ.DRIVE.cid().then(c => { if (G && c && !(SZ.DRIVE.meta() || {}).linked){ G.total = 7 - off; const h = $('#szgHud .gh-t i'); if (h) h.textContent = h.textContent.replace(/de \d+/, 'de ' + G.total); } else if (G && !c) G.total = 6 - off; }).catch(() => {});
   root.classList.add('guiding');
   try{
     if (mode !== 'solo') setMode('solo');
-    if (chatArr().length) newChat();
+    if (chatArr().length && !pre) newChat();
     H.show({ x:innerWidth - 60, y:innerHeight - 70 });
     await gWait(80);
     await H.moveTo({ x:innerWidth / 2, y:innerHeight * .26 }, { shape:'arrow' });
     H.wave(2);
-    let r = await H.talk('¡Hola! Soy SynthonIA. Te enseño SynthFlow en unos 2 minutos: eliges tus temas, te muestro las IA que mejor los hacen, comparamos 2 y chateas de verdad, gratis.', { mood:'feliz', buttons:[{ label:'¡Vamos!' }, { label:'Saltar', ghost:true }] });
+    let r = await H.talk(pre ? '¡Aquí está la guía! Ya elegiste «' + TOPIC[pre].l + '» y tu IA. En unos 2 minutos te muestro cómo seguir: dónde está cada cosa, cómo comparar IAs y tu primer chat de verdad, gratis.'
+      : '¡Hola! Soy SynthonIA. Te enseño SynthFlow en unos 2 minutos: eliges tus temas, te muestro las IA que mejor los hacen, comparamos 2 y chateas de verdad, gratis.', { mood:'feliz', buttons:[{ label:'¡Vamos!' }, { label:'Ahora no', ghost:true }] });
     if (r === 1){ endGuide(false); return; }
     gNeed();
 
     /* 1 · temas y 2 · IA recomendadas (camino B). «← Cambiar temas» vuelve con la animación al revés */
     let gdir = 1;
-    for (;;){
+    for (;!pre;){
     gHud(1, 'Tus temas');
     H.quiet();
     const P = gPanel('<h3>¿Qué te interesa?</h3><div class="gp-topics">' + TOPICS.map(([k, e, l], i) => '<button type="button" class="tchip" data-gt="' + k + '" aria-pressed="' + G.topics.includes(k) + '" style="--i:' + i + '"><span aria-hidden="true">' + e + '</span>' + esc(l) + '</button>').join('') + '</div><div class="gp-act"><span class="gp-n">' + G.topics.length + ' de 3</span><button type="button" class="btn sm flow" data-gnext' + (G.topics.length ? '' : ' disabled') + '>Siguiente →</button></div>', 'pick', 'Elige hasta 3 temas que te interesen. Por ejemplo, si vendes algo: «Marketing» y «Ventas».', 'senalando', gdir);
@@ -177,7 +183,25 @@ async function runGuide(){
     await gPoint(gAny('#payPill', '#payL', '#payM'), 'Aquí ves cómo va tu límite gratis de hoy.', { pad:6 });
     await gPoint(gT('#rail [data-r="chats"]', '#tabbar [data-tab="chats"]'), 'Tus chats y tus mensajes favoritos quedan aquí, en cualquier dispositivo si entras con tu cuenta.', { side:true });
     await gPoint(gT('.tchip[data-topic]', '.tchip[data-topic]'), 'Toca un tema cuando quieras y te recomiendo IA expertas en eso.');
-    await gPoint(gT('#guideTop', '#guideTop') || gT('#helpBtn', '#helpBtn'), 'Y si te pierdes, la Guía rápida siempre está aquí: la ves completa o solo lo que quieras.', { mood:'guino' });
+    /* v3.0: lo nuevo, para que nadie se quede sin saber dónde está */
+    await gPoint(gT('#cNew', '#rail [data-r="new"]') || gT('#rail [data-r="new"]', '#tabbar [data-tab="chats"]'), 'Con «Nuevo chat» empiezas una conversación limpia cuando cambies de tema. La anterior queda guardada.', { side:true });
+    await gPoint(gAny('#cMode'), 'Aquí eliges el modo: «Automática» escoge la mejor IA por ti, «Chat» te deja elegirla, y «SuperiorSynth» trabaja por pasos como un agente.');
+    await gPoint(gAny('#cEffort'), 'Y aquí, cuánto piensa: Auto, Bajo (rápido), Medio o Alto (con calma, para cosas difíciles).');
+    await gPoint(gT('#railProj', '#cProj') || gT('#cProj', '#cProj'), '«Proyectos» junta chats, instrucciones y archivos de un mismo tema. La IA los tiene en cuenta en cada chat del proyecto, como en Claude.', { side:true });
+    await gPoint(gT('#railSyn', '#cSyn') || gT('#cSyn', '#cSyn'), '«Sintéticos» guarda todo lo que la IA crea: páginas, juegos, dibujos y documentos. Cuando una respuesta trae uno, se abre solo al lado del chat.', { side:true });
+    const cfgB = gT('#cfgBtn', '#tabbar [data-tab="cfg"]');
+    const rr = await gPoint(cfgB, 'En «Ajustes» cambias cómo se ve todo. ¿Te muestro lo más útil?', { buttons:[{ label:'Muéstrame' }, { label:'Ahora no', ghost:true }], auto:15000, mood:'guino' });
+    if (rr === 0 && cfgB){
+      SZ.cfgModal(); await gWait(700);
+      await gPoint(gAny('#cfgCh'), '«Más bonito» trae todos los efectos. Si tu equipo va lento, «Más rápido» quita efectos y todo responde al instante.');
+      await gPoint(gAny('#cfgTh'), 'Aquí eliges el color: SymphorIA, Océano, Bosque, Lavanda y los que vienen.');
+      await gPoint(gAny('#cfgUi'), 'Y el estilo: «SynthFlow» con vidrio y animaciones, o «Simple», el más limpio y parecido a Claude.');
+      await gPoint(gAny('#cfgSz'), 'Si quieres que todo se vea más pequeño, usa el tamaño compacto.');
+      await gPoint(gAny('#cfgLang'), 'Y aquí pones la página en inglés o en español.');
+      const x = $('#cfgm [data-close]'); if (x) x.click();
+      await gWait(400);
+    }
+    await gPoint(gT('#guideTop', '#guideTop') || gT('#helpBtn', '#helpBtn'), 'Y si te pierdes, la Guía rápida siempre está aquí: la ves completa o solo lo que quieras. También puedes preguntarme lo que sea con mi bolita.', { mood:'guino' });
     H.unspot(); H.quiet();
 
     /* 4 · comparar 2 IA (ejemplo animado: no gasta nada) */
