@@ -82,7 +82,8 @@ if (matchMedia('(pointer: fine)').matches && CFG.cursor){
         const l = t.closest(LINK);
         if (l && !l.disabled && !l.closest('.hide')){
           hand = true;
-          if (!l.matches(NOGLASS)){ m = 'link'; h = l; }          /* el switch se anima solo: sin vidrio ni copia encima */
+          if (!l.matches(NOGLASS) && !l.closest('#szMaint')){ m = 'link'; h = l; }   /* en el aviso de mantenimiento el vidrio queda debajo y escondía el texto del botón */
+          /* el switch se anima solo: sin vidrio ni copia encima */
         }
       }
     }
