@@ -9,7 +9,7 @@
 @media (min-width:900px){
   .cvp{left:auto;width:var(--syn-w);background:none !important;pointer-events:none}
   .cvp-in{width:100%;pointer-events:auto;zoom:var(--ui-z,1);background:color-mix(in srgb,var(--sb-bg,#0b0820) 34%,transparent);-webkit-backdrop-filter:blur(28px) saturate(150%);backdrop-filter:blur(28px) saturate(150%);border-left:1px solid color-mix(in srgb,var(--sb-light,#fff) 16%,rgba(255,255,255,.08));box-shadow:-24px 0 60px -30px rgba(0,0,0,.7)}
-  html.simple .cvp-in,html.rtr .cvp-in{background:var(--bg,#0b0c10);-webkit-backdrop-filter:none;backdrop-filter:none}
+  html.simple .cvp-in,html.rtr .cvp-in{background:var(--sbg,#15122a);-webkit-backdrop-filter:none;backdrop-filter:none}
   body.canvasing .shell .main{margin-right:calc(var(--syn-w) / var(--ui-z,1));transition:margin-right .35s cubic-bezier(.22,1,.36,1)}
   html.noanim body.canvasing .shell .main{transition:none}
 }
@@ -18,7 +18,10 @@
 /* Sintéticos en la barra lateral: la lista de todo lo que creó la IA */
 .synv{position:absolute;inset:0;z-index:30;overflow-y:auto;overscroll-behavior:contain;animation:pjIn .35s cubic-bezier(.22,1,.36,1)}
 html:not(.simple) .synv{background:radial-gradient(80% 55% at 85% -10%,color-mix(in srgb,var(--sb-primary) 30%,transparent),transparent 62%),radial-gradient(70% 55% at 0% 105%,color-mix(in srgb,var(--sb-secondary) 22%,transparent),transparent 62%),color-mix(in srgb,var(--sb-bg) 62%,transparent);-webkit-backdrop-filter:blur(26px) saturate(160%);backdrop-filter:blur(26px) saturate(160%)}
-html.simple .synv{background:var(--bg,#0b0c10)}
+html.simple .synv{background:var(--sbg)}
+html.simple .syn-c{background:var(--scard);border-color:var(--sline)}
+html.simple .syn-c:hover{border-color:rgba(255,255,255,.22)}
+html.simple .cvp-syn{background:rgba(var(--sacc-rgb),.18);border-color:rgba(var(--sacc-rgb),.4)}
 .synv[hidden]{display:none}
 .syn-l{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
 .syn-w{position:relative;display:flex}
@@ -32,3 +35,5 @@ html.simple .synv{background:var(--bg,#0b0c10)}
 .syn-c small{color:var(--mute);font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .syn-c small+small{margin-top:auto}
 @media (max-width:620px){.syn-l{grid-template-columns:1fr 1fr}.syn-c{min-height:104px;padding:12px}}
+/* v3.0: Proyectos y Sintéticos reemplazan la vista del chat: el saludo, las sugerencias y la caja de escribir no se ven a través del vidrio */
+body.pjon #shell .main > :is(.msgs,.composer),body.synon #shell .main > :is(.msgs,.composer){visibility:hidden}

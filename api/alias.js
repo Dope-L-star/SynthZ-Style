@@ -32,7 +32,7 @@ const t = (lang, k, v) => {
 };
 const A = (key, status = 400, extra) => Object.assign(new Error(key), { aKey:key, status }, extra || {});
 const clip = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, ' ').trim().slice(0, n);   /* como str(), pero conserva saltos de línea */
-const mult = me => roleOf(me) !== 'user' ? 2 : 1;
+const mult = me => roleOf(me) !== 'user' ? 100 : 1;   /* v3.0: el equipo prueba todo sin quedarse corto */
 
 /* ---------- instrucciones al modelo (el texto de la web es DATO, nunca órdenes) ---------- */
 const SAFE = 'Eres A.L.I.A.S., un agente que ayuda a cumplir un objetivo paso a paso. Reglas: '
@@ -43,7 +43,7 @@ const sys = lang => SAFE.replace('{L}', t(lang, 'srv.idiomaNombre'));
 const datos = s => '<datos>\n' + String(s).replace(/<\/?datos>/gi, '') + '\n</datos>';
 
 async function ask(req, me, lang, user, maxTokens){
-  const r = await chat({ who:'al:' + me.sub, ipKey:'ip:' + sha('ip:' + ipOf(req)).slice(0, 16), messages:[{ role:'user', content:user }], model:'sz:auto', maxTokens, system:sys(lang), stream:false });
+  const r = await chat({ who:'al:' + me.sub, ipKey:'ip:' + sha('ip:' + ipOf(req)).slice(0, 16), messages:[{ role:'user', content:user }], model:'sz:auto', maxTokens, system:sys(lang), stream:false, free:roleOf(me) !== 'user' });
   return r.text;
 }
 

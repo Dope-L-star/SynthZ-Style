@@ -179,9 +179,11 @@ const est = s => Math.ceil(String(s || '').length / 4);
 /* cuánto puede escribir cada IA en una sola respuesta (antes eran 1.200: por eso las respuestas largas se cortaban) */
 const OUT_MAX = { groq:6000, mistral:6000, openrouter:6000, google:8000, ollama:6000, cloudflare:3500, siliconflow:4000 };
 const outTok = (prov, asked) => Math.max(64, Math.min(OUT_MAX[prov] || 3500, Math.round(+asked) || 4096));
-export async function chat({ who, ipKey, messages, model, maxTokens, system, stream = true, onDone }){
+/* v3.0 · free: el equipo (Prime, ZFlow y Symmetrix) usa todo sin límite de EnerX para probar (pedido de Sammuel, 27 oct).
+   Lo suyo no cuenta para el límite de su conexión (así no le quita a nadie que esté en la misma red) y su batería se ve llena */
+export async function chat({ who, ipKey, messages, model, maxTokens, system, stream = true, onDone, free = false }){
   const { dayLimit } = await settings();
-  const [used, usedIp] = (await pipe([['GET', quotaKey(who)], ['GET', quotaKey(ipKey)]])).map(x => +x || 0);
+  const [used, usedIp] = free ? [0, 0] : (await pipe([['GET', quotaKey(who)], ['GET', quotaKey(ipKey)]])).map(x => +x || 0);
   if (used >= dayLimit) throw err(429, 'Llegaste al límite de hoy. Se renueva a medianoche. Si quieres seguir ya, conecta Puter (gratis, opcional).', 'sz_limit');
   if (usedIp >= dayLimit * 3) throw err(429, 'Desde esta conexión ya se usó mucho hoy. Se renueva a medianoche, o conecta Puter (gratis, opcional).', 'sz_limit_ip');
   let msgs = (Array.isArray(messages) ? messages : []).filter(m => m && ['user', 'assistant', 'system'].includes(m.role) && typeof m.content === 'string').slice(-24).map(m => ({ role:m.role, content:m.content.slice(0, 12000) }));
@@ -223,7 +225,7 @@ export async function chat({ who, ipKey, messages, model, maxTokens, system, str
       await pipe([['INCR', 'pk:n:' + k.id + ':' + d], ['EXPIRE', 'pk:n:' + k.id + ':' + d, '172800'], ['DEL', 'pk:plan:' + k.id]]);
       const account = async (tok, outChars) => {
         const total = Math.max(1, tok || 0);
-        await pipe([['INCRBY', quotaKey(who), String(total)], ['EXPIRE', quotaKey(who), '172800'], ['INCRBY', quotaKey(ipKey), String(total)], ['EXPIRE', quotaKey(ipKey), '172800'],
+        await pipe([...(free ? [] : [['INCRBY', quotaKey(who), String(total)], ['EXPIRE', quotaKey(who), '172800'], ['INCRBY', quotaKey(ipKey), String(total)], ['EXPIRE', quotaKey(ipKey), '172800']]),
           ['INCRBY', 'pk:t:' + k.id + ':' + d, String(total)], ['EXPIRE', 'pk:t:' + k.id + ':' + d, '172800'],
           ['INCR', 'stm:' + Math.floor(Date.now() / 60e3)], ['EXPIRE', 'stm:' + Math.floor(Date.now() / 60e3), '3600'],
           ['HINCRBY', 'st:' + d, 'req', '1'], ['HINCRBY', 'st:' + d, 'tok', String(total)], ['HINCRBY', 'st:' + d, 'ms', String(Date.now() - t0)], ['EXPIRE', 'st:' + d, '1209600']]).catch(() => {});
@@ -236,7 +238,7 @@ export async function chat({ who, ipKey, messages, model, maxTokens, system, str
         if (typeof text !== 'string' || !text.trim()) continue;
         const u = j.usage || {}, tok = (u.prompt_tokens || 0) + (u.completion_tokens || 0) || inTok + est(text);
         const total = await account(tok);
-        return { text:text.trim(), meta, used:used + total, limit:dayLimit };
+        return { text:text.trim(), meta, used:free ? 0 : used + total, limit:dayLimit };
       }
       /* streaming: se pasa tal cual y al final se suma lo gastado (lo que dijo el proveedor o una estimación) */
       const dec2 = new TextDecoder(), enc2 = new TextEncoder(); let buf = '', usage = null, outChars = 0;
@@ -253,7 +255,7 @@ export async function chat({ who, ipKey, messages, model, maxTokens, system, str
         async flush(ctl){
           const tok = usage ? (usage.prompt_tokens || 0) + (usage.completion_tokens || 0) : inTok + Math.ceil(outChars / 4);
           const total = await account(tok);
-          ctl.enqueue(enc2.encode('data: ' + JSON.stringify({ sz:{ used:used + total, limit:dayLimit, spent:total, est:!usage } }) + '\n\n'));
+          ctl.enqueue(enc2.encode('data: ' + JSON.stringify({ sz:{ used:free ? 0 : used + total, limit:dayLimit, spent:total, est:!usage } }) + '\n\n'));
         }
       });
       return { stream:up.body.pipeThrough(ts), meta, used, limit:dayLimit };
