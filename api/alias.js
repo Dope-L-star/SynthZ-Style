@@ -6,7 +6,7 @@
    (v3.0: el último paso de razonar se hace con Síntesis: 4 IAs y se combinan en una; synth:false lo apaga. synth = { voices:[{ name, prov, text, aporte? }], fused })
    Errores: { ok:false, error } · límite diario: { ok:false, error, limit:true }
    Textos visibles: todos salen de alias-textos.json (raíz, para que viaje con la función) con t(). Los prompts del modelo no se ven y viven aquí. */
-import TX from '../alias-textos.json' with { type:'json' };
+import TX from './_alias-textos.js';
 import { route, body, json, auth, redis, pipe, limit, today, str, rid, sha, ipOf, roleOf } from './_lib.js';
 import { chat, pickKeys, searchWith, searchWiki, markPay, PAY_RX, classify, models, PROV, ORDER } from './_pool.js';
 
