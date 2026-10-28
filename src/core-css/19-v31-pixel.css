@@ -1,0 +1,7 @@
+/* ===== v3.1 · «Pensando»: los dibujitos de píxeles se ven como un sprite, no como un tablero lleno =====
+   Los cuadritos apagados casi no se ven; solo brilla el dibujo (de contorno, ver PIXART en core 05). */
+.pxg i{background:rgba(255,255,255,.028)}
+html.simple .pxg i{background:rgba(255,255,255,.035)}
+.pxg i.on{animation:pxPop .42s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pxPop{0%{scale:.2;opacity:.2}60%{scale:1.25}100%{scale:1;opacity:1}}
+html.noanim .pxg i.on{animation:none}
