@@ -6,7 +6,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-export const SITIO = 'https://synthz.pages.dev';
+export const SITIO = 'https://symphoria.pages.dev';
 const VIEJO = 'https://synthz-style.vercel.app';
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const sale = path.join(raiz, 'cloudflare', 'public');
@@ -25,16 +25,23 @@ for (const f of fs.readdirSync(sale)) {
 }
 
 const v = JSON.parse(fs.readFileSync(path.join(raiz, 'vercel.json'), 'utf8'));
+let cabecerasSintetico = null;
 const ruta = s => s.replace(/\(\.\*\)/g, '*');
-/* «/((?!x$).*)» = todo menos /x: en Pages es «/*», y a /x se le quitan esas cabeceras con «! Nombre» antes de poner las suyas */
-const quitar = {};
-const bloques = (v.headers || []).map(b => {
+/* «/((?!x$).*)» = todo menos /x: en Pages es «/*». Pero _headers no puede quitarle esas reglas a /x sin quitarle también las suyas:
+   la regla propia de /x.html se ignora aquí y esa página se sirve desde functions/ (functions/sintetico.js) con sus cabeceras exactas */
+const propias = {};
+const bloques = [];
+for (const b of v.headers || []) {
   const m = /^\/\(\(\?!(.+)\$\)\.\*\)$/.exec(b.source);
-  if (m) { quitar['/' + m[1].replace(/\\/g, '')] = b.headers.map(x => x.key); return { source: '/*', headers: b.headers }; }
-  return { source: ruta(b.source), headers: b.headers };
-});
+  if (m) { bloques.push({ source: '/*', headers: b.headers }); propias['/' + m[1].replace(/\\/g, '')] = true; continue; }
+  if (propias[b.source]) { cabecerasSintetico = Object.fromEntries(b.headers.map(x => [x.key, x.value])); continue; }
+  bloques.push({ source: ruta(b.source), headers: b.headers });
+}
+if (!cabecerasSintetico) throw new Error('vercel.json ya no tiene reglas propias para /sintetico.html');
+fs.mkdirSync(path.join(raiz, 'cloudflare', 'generado'), { recursive: true });
+fs.writeFileSync(path.join(raiz, 'cloudflare', 'generado', 'sintetico-cabeceras.js'), '/* generado por cloudflare/preparar.mjs desde vercel.json: no se edita */\nexport default ' + JSON.stringify(cabecerasSintetico, null, 2) + ';\n');
 fs.writeFileSync(path.join(sale, '_headers'), bloques.map(b =>
-  b.source + '\n' + [...(quitar[b.source] || []).map(k => '  ! ' + k), ...b.headers.map(x => '  ' + x.key + ': ' + x.value)].join('\n')
+  b.source + '\n' + b.headers.map(x => '  ' + x.key + ': ' + x.value).join('\n')
 ).join('\n\n') + '\n');
 fs.writeFileSync(path.join(sale, '_redirects'), [
   /* las que mandan de Vercel a Cloudflare (destino con https://) no aplican aquí */

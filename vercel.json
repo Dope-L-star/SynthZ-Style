@@ -122,7 +122,7 @@
     },
     {
       "source": "/:ruta((?!api/|v/|portal\\.css$|portal\\.js$|sw\\.js$|icon\\.svg$|og-synthz\\.jpg$|robots\\.txt$).+)",
-      "destination": "https://synthz.pages.dev/:ruta",
+      "destination": "https://symphoria.pages.dev/:ruta",
       "permanent": false
     }
   ],

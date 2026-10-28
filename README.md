@@ -3,11 +3,11 @@ SynthZ AI Page made by Sammuel.
 Is free IA for all of u.
 SO MANY IA'S OMG.
 
-## 👉 La nueva página: **[synthz.pages.dev](https://synthz.pages.dev)**
+## 👉 La nueva página: **[symphoria.pages.dev](https://symphoria.pages.dev)**
 
-[![Así se ve la nueva página de SynthZ](.github/readme/synthz.gif)](https://synthz.pages.dev)
+[![Así se ve SymphorIA](.github/readme/synthz.gif)](https://symphoria.pages.dev)
 
-SynthZ se mudó a Cloudflare (gratis). [synthz-style.vercel.app](https://synthz-style.vercel.app) ahora solo muestra este video y el link a la página nueva.
+SynthZ ahora es SymphorIA y vive en Cloudflare (gratis). [synthz-style.vercel.app](https://synthz-style.vercel.app) ahora solo muestra este video y el link a la página nueva.
 
 ## Qué es
 SynthZ (portada) y SynthFlow (el chat): chatea gratis con cientos de IA, compáralas a ciegas y trabaja con tu equipo. Página estática en Cloudflare Pages + funciones de Vercel en `api/` (Cloudflare se las pasa con `functions/api/`) + Redis (Upstash).
