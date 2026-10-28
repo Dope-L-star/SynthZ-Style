@@ -270,8 +270,20 @@ function nextGreet(){
   try{ localStorage.setItem(GBAG, JSON.stringify(bag)); }catch(e){}
 }
 /* «¿Qué es FlowIA’r?»: un botoncito bajo el saludo que lo explica para quien no sabe inglés ni conoce la página */
+/* v3.2 · quién lo ve (Sammuel, 28 oct): sin cuenta (prueba) sale siempre; con cuenta, una sola vez
+   (durante esa visita se queda aunque abras chats nuevos). Lleva el borde de luz (.mv-edge) para que se note. */
+function flowQOn(){
+  try{
+    const acc = !!((SZ.ACC && SZ.ACC.ready) || (SZ.signedish && SZ.signedish()));
+    if (!acc) return true;
+    if (sessionStorage.getItem('synthz:flowqNow')) return true;
+    if (localStorage.getItem('synthz:flowq')) return false;
+    localStorage.setItem('synthz:flowq', '1'); sessionStorage.setItem('synthz:flowqNow', '1'); return true;
+  }catch(e){ return true; }
+}
 function flowWhatHtml(){
-  return '<button type="button" class="flowq notr" id="flowQ" aria-expanded="false" aria-controls="flowW">'
+  if (!flowQOn()) return '';
+  return '<button type="button" class="flowq notr mv-edge" id="flowQ" aria-expanded="false" aria-controls="flowW">'
     + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>'
     + (SZ.lang() === 'en' ? 'What does «FlowIA» mean?' : '¿Qué significa «FlowIA’r»?') + '</button>';
 }

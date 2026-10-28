@@ -52,14 +52,14 @@ const EXK = ['marketing', 'estudiar', 'codigo', 'escribir', 'negocios', 'ideas',
 let exSeed = Math.floor(Math.random() * EXK.length);
 function examplesHtml(){
   const ks = [0, 1, 2].map(i => EXK[(exSeed + i * 4) % EXK.length]);
-  return '<div class="hexs">' + ks.map((k, i) => { const T = TOPIC[k], x = T.ex[0]; return '<button type="button" class="hex" data-hex="' + k + '" style="--i:' + i + '"><small>' + esc(T.l.toUpperCase()) + '</small><span>' + esc(x[0]) + '</span></button>'; }).join('') + '</div>';
+  return '<div class="hexs">' + ks.map((k, i) => { const T = TOPIC[k], x = T.ex[0]; return '<button type="button" class="hex" data-hex="' + k + '" style="--i:' + i + '"><small>' + esc(T.l) + '</small><span>' + esc(x[0]) + '</span></button>'; }).join('') + '</div>';
 }
 /* v1.3: los ejemplos van debajo del saludo, cambian solos y desaparecen cuando ya usaste el chat más de 5 veces */
 const sentN = () => { let n = 0; try{ n = +localStorage.getItem('synthz:sent') || 0; }catch(e){} if (!n){ try{ n = Object.values(st().chats || {}).filter(a => Array.isArray(a) && a.some(m => m.role === 'user')).length; }catch(e){} } return n; };
 const showEx = () => sentN() <= 5;
 function exRowHtml(){
   const ks = [0, 1, 2].map(i => EXK[(exSeed + i * 4) % EXK.length]);
-  return ks.map((k, i) => { const T = TOPIC[k], x = T.ex[0]; return '<button type="button" class="hex hxs" data-hex="' + k + '" style="--i:' + i + '"><small>' + esc(T.l.toUpperCase()) + '</small><span>' + esc(x[0]) + '</span></button>'; }).join('');
+  return ks.map((k, i) => { const T = TOPIC[k], x = T.ex[0]; return '<button type="button" class="hex hxs" data-hex="' + k + '" style="--i:' + i + '"><small>' + esc(T.l) + '</small><span>' + esc(x[0]) + '</span></button>'; }).join('');
 }
 setInterval(() => {
   const r = document.getElementById('hexR'); if (!r || document.hidden || root.classList.contains('idle-sleep') || r.matches(':hover') || r.contains(document.activeElement)) return;
