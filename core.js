@@ -3954,6 +3954,249 @@ const SND = (() => {
     t = setTimeout(() => document.documentElement.classList.remove('szlisten'), 1300);
   }, true);
 })();
+
+/* ---------- v3.2 · SynthonIA juega cuando no estás (pedido de Sammuel, 28 oct) ----------
+   2 min sin moverte: sale de su rincón, grandota, y se duerme en la mitad de la pantalla sobre una nubecita.
+   1 min y medio después abre los ojos, se estira y juega con la página: se cuelga de un título, hace ejercicio,
+   empuja un botón, apaga la gravedad, hace malabares, rebota por las esquinas o se asoma por un borde.
+   Tres juegos y vuelve a dormir; así mientras no vuelvas. Cuando mueves el mouse (o tocas, o una tecla): cara de
+   sorprendida, sale corriendo a su lugar de siempre y dice «¡Ah, volviste!». Lo que movió vuelve solo: a la página
+   solo le pone animaciones sumadas (composite:'add') que se cancelan al final, nunca le cambia estilos.
+   Con Animaciones apagadas solo se duerme en su bolita, como antes. Para probar rápido: ?siesta=rapida */
+SPOSE.colgada = { L:[42, 116, 166, 'open'], R:[42, 116, 166, 'open'] };
+SPOSE.estira = { L:[4, 212, 98, 'wave'], R:[4, 212, 98, 'wave'] };
+const SZIDLE = (() => {
+  const FAST = /[?&]siesta=rapida/.test(location.search);
+  const T_SLEEP = FAST ? 4000 : 120000, T_NAP = FAST ? 6000 : 90000;
+  const L2 = (es, en) => LANG === 'en' ? en : es, pickOne = a => a[Math.floor(Math.random() * a.length)];
+  const NOPE = '#szIdle,#szBot,#szBotB,#szBotP,#szRoam,#intro,#portal,.p8,.sy-svg,.lbatt,#langBtn,[data-mv-no],.szm,#cur,#curDot';
+  const STOP = { stop:1 };
+  let state = 'off', gen = 0, ov = null, pos = null, act = null, fig = null, say = null, P = { x:0, y:0, s:1, r:0 }, S = 240, lastAct = '', home = null, moved = [], played = {};
+  const page = () => !!(document.getElementById('composer') || document.getElementById('szRoam'));
+  const allowed = () => !reduce && !root.classList.contains('noanim') && page();
+  const W = () => innerWidth, H = () => innerHeight, FH = () => S * 4 / 3;
+  const T = p => 'translate(' + p.x.toFixed(1) + 'px,' + p.y.toFixed(1) + 'px) scale(' + p.s.toFixed(3) + ') rotate(' + (p.r || 0) + 'deg)';
+  /* esperar y volar se cortan si vuelves (gen cambia) */
+  const wait = async (g, ms) => { await sleepRaw(ms); if (g !== gen) throw STOP; };
+  async function fly(g, to, ms, easing){
+    const n = Object.assign({}, P, to), a = pos.animate([{ transform:T(P) }, { transform:T(n) }], { duration:ms, easing:easing || 'cubic-bezier(.45,0,.25,1)' });
+    try{ await a.finished; }catch(e){ throw STOP; }
+    if (g !== gen) throw STOP;
+    pos.style.transform = T(n); P = n; a.cancel();
+  }
+  const look = (mood, pose) => synSet(fig, mood, pose || 'idle', S);
+  function talk(text, ms){
+    if (!say) return;
+    say.textContent = text; say.classList.add('on');
+    const b = fig.querySelector('.szbody'); if (b) b.classList.add('talking');
+    clearTimeout(say._t); say._t = setTimeout(() => { if (!say) return; say.classList.remove('on'); const q = fig.querySelector('.szbody'); if (q) q.classList.remove('talking'); }, ms || 2600);
+  }
+  /* mueve algo de la página SUMANDO una animación (no pisa la suya) y la recuerda para cancelarla al final */
+  function nudge(el, frames, opt){ try{ const a = el.animate(frames, Object.assign({ composite:'add', easing:'ease-in-out' }, opt)); moved.push(a); return a; }catch(e){ return null; } }
+  const restore = () => { moved.forEach(a => { try{ a.cancel(); }catch(e){} }); moved = []; };
+  /* cosas de la página que se ven enteras (y que no son de ella ni de las partes que nunca se tocan) */
+  function seen(sel, ok){
+    return $$(sel).map(n => { if (n.closest(NOPE) || n.closest('[hidden],[aria-hidden=true]')) return null; const r = n.getBoundingClientRect();
+      return r.width > 0 && r.height > 0 && r.top >= 8 && r.left >= 0 && r.bottom <= H() - 8 && r.right <= W() && getComputedStyle(n).display !== 'inline' && (!ok || ok(r)) ? { n, r } : null; }).filter(Boolean);
+  }
+  const homeEl = () => { const b = typeof botAt === 'function' && BOT.el ? botAt() : (document.getElementById('szRoam') || BOT.el); return b && b.getClientRects().length ? b : null; };
+  const center = () => ({ x:(W() - S) / 2, y:Math.max(8, (H() - FH()) / 2), s:1, r:0 });
+  const spot = () => ({ x:12 + Math.random() * Math.max(0, W() - S - 24), y:Math.max(8, 12 + Math.random() * Math.max(0, H() - FH() - 24)), s:1, r:0 });
+
+  function mount(){
+    S = Math.round(clamp(Math.min(W() * (W() < 600 ? .62 : .42), H() * .5), 170, 340));
+    ov = document.createElement('div'); ov.id = 'szIdle'; ov.className = 'notr'; ov.setAttribute('aria-hidden', 'true');
+    ov.innerHTML = '<div class="szi-pos" style="--S:' + S + 'px"><div class="szi-act"><i class="szi-cloud"></i><span class="szi-fig"></span>'
+      + '<i class="szi-ball"></i><i class="szi-ball"></i><i class="szi-ball"></i></div><p class="szi-say"></p></div>';
+    document.body.appendChild(ov);
+    pos = ov.firstChild; act = pos.firstChild; fig = act.querySelector('.szi-fig'); say = pos.querySelector('.szi-say');
+    fig.innerHTML = synBody('feliz', 'idle', S);
+  }
+  function unmount(){ restore(); if (ov) ov.remove(); ov = pos = act = fig = say = null; if (home){ home.classList.remove('szi-away'); home = null; } }
+
+  /* ---- sale de su rincón y se duerme en la mitad ---- */
+  async function start(){
+    const g = ++gen; state = 'sleep';
+    mount(); home = homeEl();
+    const r = home && home.getBoundingClientRect();
+    if (r){ const k = Math.max(.12, r.width / S); P = { x:r.left + r.width / 2 - S * k / 2, y:r.top + r.height / 2 - FH() * k / 2, s:k, r:0 }; }
+    else { P = center(); P.s = .2; P.x += S * .4; P.y += FH() * .4; }
+    pos.style.transformOrigin = '0 0'; pos.style.transform = T(P);
+    if (home) home.classList.add('szi-away');
+    look('dormida', 'idle');
+    try{
+      ov.classList.add('on');
+      await fly(g, center(), 1400, 'cubic-bezier(.3,1.25,.5,1)');
+      await nap(g);
+    }catch(e){ if (e !== STOP) throw e; }
+  }
+  async function nap(g){
+    state = 'sleep'; restore(); act.className = 'szi-act zz'; look('dormida', 'idle');
+    await wait(g, T_NAP);
+    await play(g);
+  }
+  /* ---- se despierta, se estira y juega tres cosas ---- */
+  const ACTS = { hang, gym, push, float, juggle, bounce, peek };
+  async function play(g){
+    state = 'play'; act.className = 'szi-act';
+    look('neutral', 'idle'); await wait(g, 900);
+    look('feliz', 'celebra'); talk(L2('¡Ahh, qué siesta! ¿Hay alguien?…', 'Ahh, what a nap! Anyone there?…'), 2400); await wait(g, 2600);
+    look('guino', 'idle'); talk(L2('Nadie. ¡A jugar con la página!', 'Nobody. Time to play with the page!'), 2200); await wait(g, 2200);
+    /* primero los juegos que menos ha hecho (y nunca el mismo con que terminó la vez pasada) */
+    const only = FAST && (location.search.match(/[?&]juego=(\w+)/) || [])[1];
+    const keys = only && ACTS[only] ? [only] : Object.keys(ACTS).filter(k => k !== lastAct).map(k => [k, (played[k] || 0) + Math.random() * .9]).sort((x, y) => x[1] - y[1]).map(x => x[0]);
+    let done = 0;
+    for (const k of keys){
+      if (done >= 3) break;
+      act.className = 'szi-act'; restore();
+      if (await ACTS[k](g) !== false){ done++; lastAct = k; played[k] = (played[k] || 0) + 1; }
+    }
+    act.className = 'szi-act'; restore();
+    look('dormida', 'idle'); talk(L2('Me dio sueño otra vez…', 'I got sleepy again…'), 2200);
+    await fly(g, center(), 1300);
+    await nap(g);
+  }
+  /* se cuelga de un título (o del borde de arriba) y se columpia; el título se hunde un poquito con su peso */
+  async function hang(g){
+    const t = pickOne(seen('h1,h2,h3,#nav,header,.topbar,.head', r => r.width >= 140 && r.bottom >= 40 && r.bottom <= H() * .5)) || null;
+    const k = S / 300, gy = t ? t.r.bottom : 0;
+    const x = t ? clamp(t.r.left + t.r.width / 2 - S / 2, 8, W() - S - 8) : (W() - S) / 2;
+    look('feliz', 'idle'); await fly(g, { x, y:Math.max(-20 * k, gy + 20), r:0 }, 1100);
+    look('encantada', 'colgada'); await fly(g, { y:gy - 54 * k }, 500, 'cubic-bezier(.3,1.6,.5,1)');
+    act.classList.add('swing');
+    if (t) nudge(t.n, [{ transform:'translateY(0)' }, { transform:'translateY(5px) rotate(.4deg)' }], { duration:900, iterations:6, direction:'alternate' });
+    talk(L2(t ? '¡Wiii! Me cuelgo de aquí.' : '¡Wiii! Me cuelgo del borde.', t ? 'Wheee! Hanging from here.' : 'Wheee! Hanging from the edge.'), 2600);
+    await wait(g, 4200);
+    look('sorprendida', 'sorpresa'); talk(L2('¡Uy, me resbalo!', 'Oops, I\'m slipping!'), 1600); await wait(g, 700);
+    act.classList.remove('swing');
+    await fly(g, { y:Math.min(H() - FH() - 8, gy + H() * .25) }, 650, 'cubic-bezier(.5,0,.9,.5)');
+    act.classList.add('land'); look('riendo', 'idle'); await wait(g, 900);
+    return true;
+  }
+  /* hace ejercicio: saltos de tijera con sus lentes de Flow y va contando */
+  async function gym(g){
+    await fly(g, spot(), 1000); look('flow', 'idle');
+    talk(L2('Hora de hacer ejercicio. 💪', 'Workout time!'), 1800); await wait(g, 1700);
+    for (let i = 1; i <= 8; i++){
+      look('flow', i % 2 ? 'celebra' : 'estira'); act.classList.remove('jump'); void act.offsetWidth; act.classList.add('jump');
+      talk(String(i) + (i === 8 ? '!' : '…'), 700); await wait(g, 620);
+    }
+    act.classList.remove('jump'); look('riendo', 'idle'); talk(L2('¡Uf! Hay que mantenerse en forma.', 'Phew! Gotta stay in shape.'), 2400); await wait(g, 2400);
+    return true;
+  }
+  /* empuja un botón o una tarjeta… y lo devuelve a su lugar */
+  async function push(g){
+    const L = seen('button,.btn,.card,.tcard,.chip,.sug,.pill,h2,h3,img', r => r.width >= 40 && r.width <= 560 && r.height >= 20 && r.height <= 280 && (r.left > S * .9 || W() - r.right > S * .9));
+    const t = pickOne(L); if (!t) return false;
+    const left = t.r.left > S * .9 && (W() - t.r.right <= S * .9 || Math.random() < .5), dir = left ? 1 : -1;
+    const y = clamp(t.r.top + t.r.height / 2 - FH() * .55, 8, H() - FH() - 8);
+    await fly(g, { x:left ? t.r.left - S * .95 : t.r.right - S * .05, y }, 1100);
+    look('pensando', left ? 'senala' : 'senalaL'); talk(L2('Mmm… ¿y si muevo esto?', 'Hmm… what if I move this?'), 2000); await wait(g, 1900);
+    look('celebrando', left ? 'senala' : 'senalaL');
+    for (let i = 1; i <= 3; i++){
+      nudge(t.n, [{ transform:'translateX(' + dir * (i - 1) * 14 + 'px)' }, { transform:'translateX(' + dir * i * 14 + 'px) rotate(' + dir * i + 'deg)' }], { duration:320, fill:'forwards', easing:'cubic-bezier(.3,1.5,.5,1)' });
+      await fly(g, { x:P.x + dir * 14 }, 320, 'cubic-bezier(.3,1.5,.5,1)'); await wait(g, 260);
+    }
+    look('sorprendida', 'sorpresa'); talk(L2('¡Ups! Lo dejo como estaba.', 'Oops! Putting it back.'), 2000); await wait(g, 900);
+    nudge(t.n, [{ transform:'translateX(' + dir * 42 + 'px) rotate(' + dir * 3 + 'deg)' }, { transform:'none' }], { duration:600, fill:'forwards', easing:'cubic-bezier(.3,1.4,.5,1)' });
+    await fly(g, { x:P.x - dir * 42 }, 600); await wait(g, 700);
+    restore(); look('guino', 'idle'); await wait(g, 700);
+    return true;
+  }
+  /* experimento: apaga la gravedad y las cosas flotan; luego la vuelve a prender */
+  async function float(g){
+    const L = seen('button,.btn,.chip,.sug,.pill,h2,h3,.card,.tcard,img,.gi', r => r.width <= 420 && r.height <= 220).sort(() => Math.random() - .5).slice(0, 7);
+    if (L.length < 2) return false;
+    await fly(g, spot(), 1000); look('creando', 'piensa');
+    talk(L2('Experimento: ¿y si apago la gravedad? 🧪', 'Experiment: what if I turn off gravity?'), 2400); await wait(g, 2300);
+    look('sorprendida', 'celebra');
+    L.forEach(({ n }, i) => nudge(n, [{ transform:'none' }, { transform:'translateY(' + (-14 - i * 4) + 'px) rotate(' + (i % 2 ? 4 : -4) + 'deg)' }], { duration:1300 + i * 120, delay:i * 90, iterations:4, direction:'alternate', easing:'ease-in-out' }));
+    talk(L2('¡Todo flota!', 'Everything floats!'), 2400); await wait(g, 5200);
+    restore();
+    L.forEach(({ n }, i) => nudge(n, [{ transform:'translateY(-16px)' }, { transform:'none' }], { duration:520, delay:i * 60, easing:'cubic-bezier(.3,1.7,.5,1)' }));
+    look('riendo', 'idle'); talk(L2('¡Gravedad, vuelve! Todo en su lugar.', 'Gravity, come back! All in place.'), 2200); await wait(g, 2200);
+    return true;
+  }
+  /* malabares con tres bolitas de luz; al final se le cae una */
+  async function juggle(g){
+    await fly(g, spot(), 1000); look('encantada', 'celebra'); act.classList.add('jug');
+    talk(L2('¡Mira, malabares!', 'Look, juggling!'), 2200); await wait(g, 5200);
+    act.classList.add('drop'); look('sorprendida', 'sorpresa'); talk(L2('¡Ay! Se me cayó una.', 'Oops! Dropped one.'), 2000); await wait(g, 1600);
+    act.classList.remove('jug', 'drop'); look('riendo', 'idle'); await wait(g, 800);
+    return true;
+  }
+  /* rebota por la pantalla como el logo del DVD, a ver si le pega a una esquina */
+  async function bounce(g){
+    look('riendo', 'celebra'); talk(L2('¡Wiii!', 'Wheee!'), 1800);
+    let x = P.x, y = P.y, vx = Math.random() < .5 ? 1 : -1, vy = 1;
+    const mx = Math.max(0, W() - S), my = Math.max(0, H() - FH());
+    for (let i = 0; i < 5; i++){
+      const tx = vx > 0 ? mx - x : x, ty = vy > 0 ? my - y : y, d = Math.max(30, Math.min(tx, ty));
+      x = clamp(x + vx * d, 0, mx); y = clamp(y + vy * d, 0, my);
+      await fly(g, { x, y, r:vx * 8 }, Math.max(350, d * 2.2), 'linear');
+      if (x <= 0 || x >= mx) vx *= -1; if (y <= 0 || y >= my) vy *= -1;
+      act.classList.remove('land'); void act.offsetWidth; act.classList.add('land');
+    }
+    await fly(g, { r:0 }, 300); look('celebrando', 'celebra'); talk(L2('¡Casi le pego a la esquina!', 'Almost hit the corner!'), 2200); await wait(g, 2200);
+    return true;
+  }
+  /* se asoma por un borde: «¿hay alguien?», y sale por el otro */
+  async function peek(g){
+    const right = Math.random() < .5, y = clamp(H() * .3, 8, H() - FH() - 8);
+    await fly(g, { x:right ? W() - S * .38 : -S * .62, y, r:right ? -14 : 14 }, 1200);
+    look('guino', 'idle'); talk(L2('¿Hay alguien ahí…?', 'Is anybody there…?'), 2200); await wait(g, 2600);
+    await fly(g, { x:right ? W() + 20 : -S - 20 }, 500);
+    P = Object.assign({}, P, { x:right ? -S - 20 : W() + 20, r:right ? 14 : -14 }); pos.style.transform = T(P);
+    await fly(g, { x:right ? -S * .5 : W() - S * .5 }, 700); look('riendo', 'idle'); talk(L2('¡Nadie! A seguir jugando.', 'Nobody! Let\'s keep playing.'), 2000); await wait(g, 2000);
+    await fly(g, Object.assign(spot(), { r:0 }), 900);
+    return true;
+  }
+
+  /* ---- volviste: cara de sorpresa, sale corriendo a su lugar y te saluda ---- */
+  async function back(quiet){
+    const g = ++gen; state = 'back'; restore();
+    if (!ov){ state = 'off'; return; }
+    act.className = 'szi-act'; clearTimeout(say && say._t); if (say) say.classList.remove('on');
+    /* donde esté en este momento (aunque vaya volando) */
+    try{ const m = new DOMMatrix(getComputedStyle(pos).transform); P = { x:m.e, y:m.f, s:Math.hypot(m.a, m.b) || 1, r:0 }; }catch(e){}
+    try{ pos.getAnimations().forEach(a => a.cancel()); }catch(e){}
+    pos.style.transform = T(P);
+    look('sorprendida', 'sorpresa'); try{ SND.blip('sorprendida'); }catch(e){}
+    act.classList.add('jump'); await sleepRaw(650); if (g !== gen) return;
+    const h = home || homeEl(), r = h && h.getBoundingClientRect(), tgt = r && r.width ? r : { left:W() - 70, top:H() - 70, width:56, height:56 };
+    const s = Math.max(.1, tgt.width / S), right = tgt.left + tgt.width / 2 > P.x + S * P.s / 2;
+    const to = { x:tgt.left + tgt.width / 2 - S * s / 2, y:tgt.top + tgt.height / 2 - FH() * s / 2, s, r:right ? 10 : -10 };
+    act.classList.toggle('left', !right);
+    act.classList.remove('jump'); act.classList.add('run'); look('sorprendida', 'celebra');
+    const a = pos.animate([{ transform:T(P) }, { transform:T(to) }], { duration:720, easing:'cubic-bezier(.55,0,.75,.3)', fill:'forwards' });
+    try{ await a.finished; }catch(e){}
+    if (g !== gen) return;
+    unmount(); state = 'off'; if (quiet) return;
+    const hi = L2(pickOne(['¡Ah, volviste! 👀', '¡Ah, volviste! No estaba jugando con tu página… 🙈', '¡Ah, volviste! Ya dejé todo como estaba. 😉']),
+                  pickOne(['Oh, you\'re back! 👀', 'Oh, you\'re back! I wasn\'t playing with your page… 🙈', 'Oh, you\'re back! I put everything back. 😉']));
+    if (BOT.el && typeof botBubble === 'function'){ botFace('sorprendida', true); setTimeout(() => { botBubble(hi, 3600); setTimeout(() => botFace('feliz'), 2600); }, 450); }
+    else if (h){
+      /* en la portada no hay bolita: ella misma (la que camina por las secciones) pone la cara y el globito sale a su lado */
+      if (h.querySelector('.szbody')) synSet(h.querySelector('.rb-fig') || h, 'sorprendida', 'sorpresa');
+      const q = document.createElement('p'); q.className = 'szi-hi notr'; q.textContent = hi.replace(/\s*\p{Extended_Pictographic}/gu, '');
+      document.body.appendChild(q); const hr = h.getBoundingClientRect(), qw = Math.min(300, W() - 24);
+      q.style.width = qw + 'px'; q.style.left = clamp(hr.left + hr.width / 2 - qw / 2, 12, W() - qw - 12) + 'px';
+      if (hr.top > 120) q.style.bottom = (H() - hr.top + 10) + 'px'; else q.style.top = (hr.bottom + 10) + 'px';
+      requestAnimationFrame(() => q.classList.add('on'));
+      setTimeout(() => { q.classList.remove('on'); setTimeout(() => q.remove(), 400); }, 3400);
+    }
+  }
+  return {
+    /* core 25 la llama con cuánto llevas sin moverte y si la página está ocupada */
+    tick(idle, busy){
+      /* si se abre algo (una guía, una ventana, una IA respondiendo) mientras juega, vuelve a su lugar sin estorbar */
+      if (busy && (state === 'sleep' || state === 'play')){ back(true).catch(() => { unmount(); state = 'off'; }); return; }
+      if (state === 'off' && idle >= T_SLEEP && !busy && !document.hidden && allowed()) start().catch(() => { unmount(); state = 'off'; }); },
+    /* vuelves: true si ella estaba fuera (así core 25 no repite el saludo) */
+    wake(){ if (state === 'off' || state === 'back') return state === 'back'; back().catch(() => { unmount(); state = 'off'; }); return true; },
+    get state(){ return state; }, FAST
+  };
+})();
 /* ---------- la manita robótica de SynthonIA: señala, hace clic, escribe y explica ---------- */
 const HAND_SVG = {
   arrow:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 3l20 11.2-8.6 2.2L12 25.5z" fill="url(#hgd)" stroke="#1a0f08" stroke-width="1.6" stroke-linejoin="round"/><path d="M8.6 8.3l11.3 6.3" stroke="#fff4d6" stroke-opacity=".7" stroke-width="1.2" stroke-linecap="round"/><circle cx="12.6" cy="17.6" r="1.6" fill="#c9566c" stroke="#1a0f08" stroke-width=".8"/></svg>',
@@ -4873,18 +5116,21 @@ addEventListener('pointerdown', e => {
   const busyUI = () => root.classList.contains('guiding') || root.classList.contains('lock') || root.classList.contains('leaving') || !root.classList.contains('ready') && !isFlow() || !!document.querySelector('#ptour,#tour,.szm,#vintro,#intro,#portal,.hackev') || BOT.open;
   function wake(){
     last = Date.now();
+    const out = SZIDLE.wake();              /* v3.2 · si estaba jugando fuera, ella misma corre de vuelta y saluda */
     if (!asleep) return; asleep = false;
     root.classList.remove('idle-sleep');
-    if (BOT.el){ botFace('sorprendida'); try{ SND.blip('sorprendida'); }catch(e){} if (!busyUI()) botBubble(['¡Ah! ¡Volviste! 👀', '¡Uy, me quedé dormida! Ya estoy aquí.', '¡Hola otra vez! Te estaba esperando.'][Math.floor(Math.random() * 3)], 3200); setTimeout(() => { if (!asleep) botFace('feliz'); }, 2200); }
+    if (BOT.el && !out){ botFace('sorprendida'); try{ SND.blip('sorprendida'); }catch(e){} if (!busyUI()) botBubble(['¡Ah! ¡Volviste! 👀', '¡Uy, me quedé dormida! Ya estoy aquí.', '¡Hola otra vez! Te estaba esperando.'][Math.floor(Math.random() * 3)], 3200); setTimeout(() => { if (!asleep) botFace('feliz'); }, 2200); }
   }
   ['pointermove', 'pointerdown', 'keydown', 'wheel', 'touchstart', 'scroll'].forEach(t => addEventListener(t, wake, { capture:true, passive:true }));
   document.addEventListener('visibilitychange', () => { if (!document.hidden) wake(); });
   /* 1 minuto sin moverte: SynthonIA se duerme y la página baja el ritmo para ahorrar batería */
   setInterval(() => {
+    /* v3.2 · a los 2 minutos sale a dormir en la mitad de la pantalla y luego juega (core 20, SZIDLE) */
+    SZIDLE.tick(Date.now() - last, busyUI() || !!document.querySelector('.work:not(.fin)'));
     if (asleep || Date.now() - last < 60000 || busyUI()) return;
     if (document.querySelector('.work:not(.fin)')) return;     /* no se duerme mientras una IA responde */
     asleep = true; root.classList.add('idle-sleep'); if (BOT.el) botFace('dormida');
-  }, 5000);
+  }, SZIDLE.FAST ? 1000 : 5000);
   BOTAPI.sleeping = () => asleep;
 
   /* ---- de vez en cuando (solo si estás activo): un dato curioso o un chiste ---- */

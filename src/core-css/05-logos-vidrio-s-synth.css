@@ -26,7 +26,7 @@ body.railup #nav .logow .logo{transform:none}
 @keyframes ghNudge{0%,100%{transform:none}25%{transform:scale(1.12)}50%{transform:scale(.96)}75%{transform:scale(1.05)}}
 html.guiding .shell,html.guiding #nav{cursor:not-allowed}
 /* SynthonIA dormida: la página baja el ritmo (animaciones en pausa) hasta que vuelvas */
-html.idle-sleep body *:not(#szBot):not(#szBot *):not(#szBotB){animation-play-state:paused !important}
+html.idle-sleep body *:not(#szBot):not(#szBot *):not(#szBotB):not(#szIdle *){animation-play-state:paused !important}
 html.idle-sleep #szBot{filter:saturate(.7) brightness(.85)}
 html.idle-sleep #szBot::after{content:"z z";position:absolute;right:-4px;top:-14px;font:600 11px var(--mono,monospace);color:#f3d79e;letter-spacing:.2em;animation:zzz 2.4s ease-in-out infinite}
 @keyframes zzz{0%{opacity:0;transform:translate(0,4px)}40%{opacity:1}100%{opacity:0;transform:translate(6px,-10px)}}
