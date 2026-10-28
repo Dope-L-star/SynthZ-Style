@@ -1,7 +1,7 @@
 /* ===== SymphorIA · Movimiento (v3.1) =====
    Una sola capa de animaciones para todas las páginas (portada, SynthFlow, Pulsem, A.L.I.A.S., términos, privacidad y las de Next.js).
    · Solo se anima transform (translate/scale/rotate sueltos, que se suman al transform que ya tenga cada cosa) y opacity: 60 fps en un celular medio.
-   · Con «reducir movimiento» del sistema, o Animaciones apagadas en Ajustes (html.noanim), no se mueve nada.
+   · Con Animaciones apagadas en Ajustes (html.noanim) no se mueve nada. La opción del sistema ya no manda (pedido de Sammuel, 28 oct).
    · No toca el intro, el portal de la «o», el emblema de SymphorIA, la batería EnerX ni el botón de idioma. */
 
 /* --- entradas al bajar: lo que aún no se ve espera un poco escondido; movimiento.js lo hace aparecer --- */
@@ -27,7 +27,7 @@ html.simple .mv-rp{mix-blend-mode:normal;background:radial-gradient(closest-side
 html.simple .mv-prog{background:linear-gradient(90deg,#d97757,#e9a17f)}
 
 /* --- transición entre páginas (Chrome/Edge 126+; los demás navegadores cambian de página como siempre) --- */
-@media (prefers-reduced-motion:no-preference){@view-transition{navigation:auto}}
+@view-transition{navigation:auto}
 ::view-transition-old(root){animation:mvOut .26s cubic-bezier(.4,0,1,1) both}
 ::view-transition-new(root){animation:mvIn .42s cubic-bezier(.22,1,.36,1) both}
 @keyframes mvOut{to{opacity:0;transform:scale(.985)}}
@@ -35,9 +35,6 @@ html.simple .mv-prog{background:linear-gradient(90deg,#d97757,#e9a17f)}
 
 /* --- nada se mueve si la persona lo pidió --- */
 html.noanim .mv-gl,html.noanim .mv-rp,html.noanim .mv-prog{display:none}
-@media (prefers-reduced-motion:reduce){
-  .mv-gl,.mv-rp,.mv-prog{display:none}
-  html.mv .mv-r{opacity:1}
-}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .mv-gl,html.noanim .mv-rp,html.noanim .mv-prog{display:none}html.noanim.mv .mv-r{opacity:1}
 html.noanim .mv-r{opacity:1}
 html.noanim::view-transition-old(root),html.noanim::view-transition-new(root){animation:none}

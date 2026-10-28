@@ -857,7 +857,7 @@ html.noglass .ap-card{-webkit-backdrop-filter:blur(18px) saturate(170%) brightne
 .ap-acts .btn{flex:1;max-width:240px;min-height:48px;border-radius:999px;font-weight:600}
 .ap-acts .ap-go{background:var(--grad);color:#fff;border:0;box-shadow:0 10px 34px -10px rgba(255,61,154,.75),inset 0 1px 0 rgba(255,255,255,.4)}
 @media (min-width:700px){.appp{align-items:center}}
-@media (prefers-reduced-motion:reduce){.ap-card{transition:none}.ap-hero *{animation:none !important}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .ap-card{transition:none}html.noanim .ap-hero *{animation:none !important}
 html.noanim .ap-hero *{animation:none !important}
 /* v2.6: con los pasos a la vista, el dibujo se achica para que todo quepa sin bajar */
 .ap-card:has(.ap-steps) .ap-hero{height:min(18dvh,140px);transition:height .4s ease}
@@ -971,7 +971,7 @@ html.mt-on #szBot{display:none!important}
 @keyframes mtPing{0%{box-shadow:0 0 0 0 rgba(var(--gold-rgb),.6)}100%{box-shadow:0 0 0 9px rgba(var(--gold-rgb),0)}}
 @keyframes mtIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (max-width:480px){#szMaint .mt-face,#szMaint .mt-face .szface{width:132px;height:132px}#szMaint .mt-wrap{gap:12px}#szMaint .mt-chat{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(22,18,24,.92)}}
-@media (prefers-reduced-motion:reduce){#szMaint *,#szMaint .mt-face{animation:none!important}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim #szMaint *,html.noanim #szMaint .mt-face{animation:none!important}
 html.noanim #szMaint .mt-bg i,html.noanim #szMaint .mt-face{animation:none}
 
 /* sin resaltado azul al tocar en el celular (todas las páginas) */
@@ -1061,7 +1061,7 @@ html,body{background:var(--sb-bg)}
 @keyframes sb-sway{from{transform:translate3d(-1.5%,0,0)}to{transform:translate3d(1.5%,-16px,0)}}
 html.nobg .sb-root{display:none}
 html.noanim .sb-root *,html.pmode .sb-root *{animation:none !important}
-@media (prefers-reduced-motion:reduce){.sb-root *{animation:none !important}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .sb-root *{animation:none !important}
 /* en el celular: sin cintas borrosas ni burbujas (pesan), solo brillos y estrellas */
 @media (max-width:760px){.rb-glow,.sb-bubble{display:none}}
 /* ===== v2.4 · SynthonIA nueva: ojos cian que brillan, ondas de voz a la derecha (habla) y a la izquierda (escucha) ===== */
@@ -1172,7 +1172,7 @@ html.noanim .szface .fwr path,html.noanim .szface .fwl path{animation:none}
 @keyframes sybconf{0%{opacity:0;transform:translate(0,-12px) rotate(0)}12%{opacity:1}85%{opacity:1}100%{opacity:0;transform:translate(var(--dx,0px),170px) rotate(560deg)}}
 @keyframes sybtb{0%,100%{opacity:.25;transform:scale(.7)}50%{opacity:1;transform:scale(1)}}
 @keyframes sybwow{0%,40%,100%{transform:none}8%{transform:scale(1.35) rotate(-10deg)}16%{transform:scale(.94) rotate(6deg)}24%{transform:rotate(-2deg)}}
-@media (prefers-reduced-motion:reduce){.szbody *{animation:none !important;transition:none !important}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .szbody *{animation:none !important;transition:none !important}
 html.noanim .szface .fx,html.noanim .szface .fe,html.noanim .szbody *{animation:none !important}
 /* ===== v2.5 · logos del boceto ===== */
 /* v3.0 · SymphorIA: la S de vidrio con su órbita + «Symphor» blanco con «IA» en degradado (letra Chakra Petch, de la rama simple) */
@@ -1237,7 +1237,7 @@ html[data-scheme="light"] .zw,html[data-scheme="light"] .flw-w .fw-t{color:#1b10
 @keyframes gieyes{0%,40%,48%,100%{transform:scaleY(1)}44%{transform:scaleY(.12)}}
 @keyframes gipie{to{transform:translate(1.6px,-1.6px)}}
 @keyframes giink{0%{stroke-dasharray:1 1;stroke-dashoffset:1}60%,100%{stroke-dasharray:1 1;stroke-dashoffset:0}}
-@media (prefers-reduced-motion:reduce){.gi *{animation:none !important}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .gi *{animation:none !important}
 html.noanim .gi *{animation:none !important}
 /* v2.8 · el portal nuevo (core 12): la Z se vuelve el orbe de SynthFlow, SynthonIA salta adentro y la cámara se zambulle */
 #portal.p8{position:fixed;inset:0;z-index:9950;display:grid;place-items:center;overflow:hidden;background:transparent;opacity:1;pointer-events:auto;cursor:default}
@@ -1281,7 +1281,7 @@ html.au8on .secbg{display:none}
 html.au8on .sb-root[data-kind="chat"]{display:none}
 html.simple .au8{display:none}
 html.nobg .au8-tw,html.noanim .au8-tw,html.pmode .au8-tw{animation:none;opacity:.55}
-@media (prefers-reduced-motion:reduce){.au8-tw{animation:none}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .au8-tw{animation:none}
 
 /* conversación (SynthFlow con mensajes): una ola de noche sube desde la caja de escribir y la deja calma;
    por su borde corre un filo de aurora. En un chat nuevo la ola baja y se va por donde vino. */
@@ -1317,7 +1317,7 @@ html.noanim .au8-wash,html.noanim .au8-edge{transition:none}
 @keyframes au8-ss{0%{opacity:0;translate:0 0}1.5%{opacity:1}8%{opacity:0;translate:-240px 120px}100%{opacity:0;translate:-240px 120px}}
 html.nobg .au8 *,html.noanim .au8 *,html.pmode .au8 *{animation:none !important}
 html.nobg .au8-ss,html.noanim .au8-ss,html.pmode .au8-ss{display:none}
-@media (prefers-reduced-motion:reduce){.au8 *{animation:none !important}.au8-ss{display:none}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .au8 *{animation:none !important}html.noanim .au8-ss{display:none}
 @media (max-width:760px){.au8-gx{left:74%;top:16%;width:46vw}.au8-pl{left:24%;top:80%;width:44vw}}
 /* ===== v2.9 · ventanas flotantes de vidrio líquido (como el de Apple): se ve 60-75 % de lo que hay detrás =====
    Ajustes, Conectar IA, Tu límite de hoy, menús, el panel del celular… Antes eran casi opacas (y en «Más rápido» del todo).
@@ -1373,10 +1373,10 @@ html:not(.simple) #szBotP .bh{border-bottom-color:rgba(255,255,255,.12)}
 .szdisc{bottom:auto !important;top:calc(env(safe-area-inset-top) + 74px)}
 
 /* ===== v2.9.1 · accesibilidad: respeta lo que la persona eligió en su celular o PC =====
-   · «Reducir transparencia» (iPhone, Mac, Windows): el vidrio pasa a fondo sólido y se lee igual de bien.
-     core (00) le pone a la página .rtr y .noglass; aquí también va por @media, por si el JS tarda.
+   · v3.1: «reducir transparencia» y «reducir movimiento» ya no se toman del sistema (Windows los activa al apagar sus efectos
+     y la página quedaba sin animaciones ni vidrio). Las reglas siguen, pero solo con html.rtr / html.noanim, que pone Ajustes.
    · «Aumentar contraste»: bordes y letras más fuertes.
-   · «Reducir movimiento»: se apagan las animaciones (core 00 también apaga las de JS).
+   · Animaciones apagadas en Ajustes (html.noanim): se apagan también las de CSS.
    · Teclado: todo lo que se puede enfocar muestra un anillo visible. */
 
 /* --- reducir transparencia --- */
@@ -1384,9 +1384,7 @@ html.rtr:not(.simple) :is(.tcard,.amenu,.ctxm,.navdrop,.navfly,#szBotP,.szdisc,.
   background:#15122a !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;border-color:rgba(255,255,255,.24) !important}
 html.rtr:not(.simple) :is(.szm,#sx,#acc,#conn,#tour,#blk,#szGate,#drv){background:rgba(4,3,14,.86) !important}
 html.rtr *,html.rtr *::before,html.rtr *::after{-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
-@media (prefers-reduced-transparency:reduce){
-  html:not(.simple) :is(.tcard,.amenu,.ctxm,.navdrop,.navfly,#szBotP,.szdisc,.lqg,.ap-card){background:#15122a !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
-}
+/* antes @media (prefers-reduced-transparency:reduce): ahora lo decide Ajustes */html.rtr:not(.simple) :is(.tcard,.amenu,.ctxm,.navdrop,.navfly,#szBotP,.szdisc,.lqg,.ap-card){background:#15122a !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
 
 /* el estilo Simple ya es plano y tiene su paleta cálida (como Claude): «reducir transparencia» y «más contraste»
    no lo pintan de morado; solo quitan lo que quede de vidrio y, con más contraste, marcan los bordes */
@@ -1406,10 +1404,7 @@ html.rtr.simple :is(.szm,#sx,#acc,#conn,#tour,#blk,#szGate,#drv){background:rgba
 }
 
 /* --- reducir movimiento --- */
-@media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;scroll-behavior:auto !important}
-  .au8-ss,.iz-cm{display:none !important}
-}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim *,html.noanim *::before,html.noanim *::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;scroll-behavior:auto !important}html.noanim .au8-ss,html.noanim .iz-cm{display:none !important}
 
 /* --- teclado: anillo de foco visible (antes 9 sitios lo quitaban sin reemplazo) --- */
 :root{--focus-ring:#8fd8ff}

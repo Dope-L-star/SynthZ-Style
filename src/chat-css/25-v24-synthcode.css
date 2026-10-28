@@ -64,4 +64,4 @@
 .cvp-code .hn{color:#f7c98b}
 .cvp-code .hf{color:#9ecbff}
 html.noanim .ckbar,html.noanim .ckbar .ck-ic.spin svg{animation:none}
-@media (prefers-reduced-motion:reduce){.ckbar,.ckbar .ck-ic.spin svg{animation:none}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .ckbar,html.noanim .ckbar .ck-ic.spin svg{animation:none}

@@ -184,5 +184,5 @@ html.enter:not(.go) .chats{opacity:0;translate:-18px 0;--td:.08s}
 html.noglass .rin,html.noglass .rail.open .rin,html.noglass #side.side,html.noglass .amenu,html.noglass .chats{background:#14151b !important}
 html.noanim .rin,html.noanim .rl,html.noanim .rword,html.noanim .chats,html.noanim #side.side,html.noanim .chead .back,html.noanim .rcoin{transition-duration:.01s !important;transition-delay:0s !important}
 html.noanim .greet .w,html.noanim .greet em,html.noanim .tchip,html.noanim .rcard,html.noanim .cmp-card.arrive,html.noanim .thi,html.noanim .fvi,html.noanim .texs button{animation:none !important}
-@media (prefers-reduced-motion:reduce){ .greet .w,.greet em,.tchip,.rcard,.cmp-card.arrive{animation-duration:.01s !important} }
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .greet .w,html.noanim .greet em,html.noanim .tchip,html.noanim .rcard,html.noanim .cmp-card.arrive{animation-duration:.01s !important}
 

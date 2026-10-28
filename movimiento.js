@@ -4,14 +4,11 @@
    · Brillo que sigue al puntero en tarjetas y vidrio; onda al tocar; los íconos saltan al pasar; apretar encoge un poco.
    · Listas que se arman (chats, Proyectos, Sintéticos, ventanas) entran una tras otra.
    · Barra de avance en la portada y transición suave entre páginas (en movimiento.css).
-   Reglas: solo translate/scale/rotate (sueltos, se suman al transform de cada cosa) y opacity; nada con «reducir movimiento» ni con
-   Animaciones apagadas; no toca el intro, el portal de la «o», el emblema, la batería EnerX ni el botón de idioma. */
+   Reglas: solo translate/scale/rotate (sueltos, se suman al transform de cada cosa) y opacity; nada con Animaciones apagadas en Ajustes; no toca el intro, el portal de la «o», el emblema, la batería EnerX ni el botón de idioma. */
 (() => {
 'use strict';
 const H = document.documentElement;
-const RM = matchMedia('(prefers-reduced-motion: reduce)');
-const still = () => RM.matches || H.classList.contains('noanim');
-if (RM.matches) return;
+const still = () => H.classList.contains('noanim');   /* v3.1: lo decide Ajustes (Animaciones), no el sistema */
 const FINE = matchMedia('(hover: hover) and (pointer: fine)').matches;
 const EASE = 'cubic-bezier(.22,1,.36,1)', SPRING = 'cubic-bezier(.34,1.56,.64,1)';
 const NO = '#intro,.p8,.sy-svg,.lbatt,#langBtn,[data-mv-no]';

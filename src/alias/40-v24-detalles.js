@@ -1,7 +1,7 @@
 /* A.L.I.A.S. · pieza 40 · v2.4: estrellas del fondo, el check que salta al terminar un paso y estrellitas al ver el resultado. Solo adorno. */
 (function(){
 'use strict';
-const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reduce = document.documentElement.classList.contains('noanim');   /* v3.1: lo decide Ajustes, no el sistema */
 
 /* estrellas: puntitos que titilan; siempre el mismo cielo para la misma pantalla */
 const cv = document.getElementById('alStars');

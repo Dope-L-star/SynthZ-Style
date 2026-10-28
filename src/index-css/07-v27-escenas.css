@@ -34,7 +34,7 @@
 @keyframes uscbo{0%,44%{opacity:0;transform:scale(.3)}54%,90%{opacity:1;transform:scale(1)}98%,100%{opacity:0;transform:scale(.6)}}
 @keyframes uscsteam{0%{transform:translateY(2px);opacity:0}40%{opacity:.9}100%{transform:translateY(-5px);opacity:0}}
 @keyframes uscbeam{50%{opacity:.62}}
-@media (prefers-reduced-motion:reduce){.uscene *{animation:none !important}.uscene .usc-page,.uscene .usc-bug .bo{opacity:0}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .uscene *{animation:none !important}html.noanim .uscene .usc-page,html.noanim .uscene .usc-bug .bo{opacity:0}
 html.noanim .uscene *{animation:none !important}
 /* en las escenas el pedestal queda fuera del cuadro: no se dibuja (menos trabajo para el teléfono) */
 .uscene .syb-shadow,.uscene .syb-glow{display:none}

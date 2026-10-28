@@ -2,7 +2,7 @@
    · El servidor: sin variables de Vercel, nadie puede reclamar las cuentas del equipo ni sale ningún correo.
    · Las páginas (portada, SynthFlow, términos, privacidad, Pulsem) abren sin errores de JavaScript, a 390 y 1280 px.
    · Compartir: canonical, og:image y twitter:card; robots.txt y sitemap.xml; Pulsem no se indexa.
-   · Accesibilidad: «reducir movimiento» del sistema apaga las animaciones; el teclado ve el foco.
+   · Accesibilidad: Animaciones apagadas en Ajustes apaga todo (el sistema ya no manda); el teclado ve el foco.
    Se corre desde la raíz del repo:  node t/humo/humo.mjs           (los archivos del repo)
                                       node t/humo/humo.mjs dist      (lo que publica Vercel, después de «node build.mjs --dist»)
    Necesita el paquete playwright (sirve NODE_PATH apuntando a donde esté instalado).
@@ -128,8 +128,16 @@ try{
 
 /* accesibilidad: las preferencias del sistema y el teclado */
 try{
-  const { page, errors } = await open('chat.html', 1280, { reducedMotion:'reduce' });
-  check('«reducir movimiento» del sistema apaga las animaciones', await page.evaluate(() => document.documentElement.classList.contains('noanim') && window.SZ && SZ.reduce === true), errors.join(' | '));
+  /* v3.1: manda Ajustes, no el sistema (Windows con sus efectos apagados pide «reducir movimiento» y dejaba la página sin animaciones) */
+  const sys = await open('chat.html', 1280, { reducedMotion:'reduce' });
+  check('«reducir movimiento» del sistema ya no apaga las animaciones', await sys.page.evaluate(() => !document.documentElement.classList.contains('noanim') && window.SZ && SZ.reduce === false), sys.errors.join(' | '));
+  await sys.page.close();
+  const off = await open('index.html', 1280);
+  await off.page.evaluate(() => { localStorage.setItem('synthz:cfg', JSON.stringify({ v:2, perf:'visual', cursor:true, smooth:true, favAnim:true, bg:true, glass:true, anim:false })); });
+  await off.page.reload(); await off.page.waitForTimeout(2500);
+  check('Animaciones apagadas en Ajustes: la página no se mueve', await off.page.evaluate(() => document.documentElement.classList.contains('noanim') && SZ.reduce === true && document.getAnimations().filter(a => a.playState === 'running' && a.effect && a.effect.getTiming().duration > 50).length === 0), off.errors.join(' | '));
+  await off.page.close();
+  const { page, errors } = await open('chat.html', 1280);
   await page.keyboard.press('Tab'); await page.keyboard.press('Tab');
   const ring = await page.evaluate(() => { const a = document.activeElement; if (!a || a === document.body) return 'nada enfocado'; const s = getComputedStyle(a); return s.outlineStyle !== 'none' && parseFloat(s.outlineWidth) > 0 || s.boxShadow !== 'none' ? '' : (a.tagName + '.' + a.className + ' sin anillo'); });
   check('con el teclado se ve dónde está el foco', !ring, ring);
