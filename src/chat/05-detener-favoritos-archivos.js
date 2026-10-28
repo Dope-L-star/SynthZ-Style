@@ -49,7 +49,7 @@ function readImg(file){
     const url = URL.createObjectURL(file), im = new Image();
     im.onload = () => {
       const mk = max => { const s = Math.min(1, max / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.max(1, Math.round(im.width * s)); c.height = Math.max(1, Math.round(im.height * s)); const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height); return c; };
-      const r = { dataUrl: mk(1568).toDataURL('image/jpeg', .85), thumb: mk(96).toDataURL('image/jpeg', .7) };
+      const r = { dataUrl: mk(1280).toDataURL('image/jpeg', .82), thumb: mk(96).toDataURL('image/jpeg', .7) };   /* v3.4 · 1280 px: se lee igual de bien y cabe en el envío a las IAs de SymphorIA */
       URL.revokeObjectURL(url); ok(r);
     };
     im.onerror = () => { URL.revokeObjectURL(url); no(new Error('No pude leer la imagen ' + file.name + '.')); };
@@ -129,6 +129,7 @@ function apiMsgs(chat, vision, o = {}){
     let t = noDk(m.ask || m.content || '') + dk;
     m.files.forEach(f => {
       if (f.text) t += full ? '\n\n[Archivo adjunto: ' + f.name + ']\n```\n' + (saver && f.text.length > 12000 ? f.text.slice(0, 12000) + '\n…(recortado por el modo ahorro)' : f.text) + '\n```' : '\n\n[Archivo adjunto antes: ' + f.name + ' (no se reenvía para ahorrar SynXCoin\'s)]';
+      else if (f.kind === 'img' && f.seen) t += '\n\n[Imagen adjunta: ' + f.name + '. Tú no la ves, pero otra IA la miró por ti. Esto es lo que se ve, con su texto copiado tal cual:]\n' + f.seen + '\n[Fin de la descripción. Responde como si hubieras visto la imagen.]';
       else if (f.kind === 'img' && !(vision && m._imgs && full)) t += '\n\n[Imagen adjunta: ' + f.name + (full ? ' (ya no está disponible)' : ' (no se reenvía)') + ']';
     });
     const imgs = vision && m._imgs && full ? m._imgs : [];
@@ -137,6 +138,7 @@ function apiMsgs(chat, vision, o = {}){
   }).filter(Boolean);
   while (h.length && h[0].role !== 'user') h.shift();
   const sys = [];
+  if (!o.naive) sys.push(QUALITY);   /* v3.4 · reglas de calidad para todas las IAs */
   if (saver) sys.push('Responde en el idioma del usuario, de forma clara y breve, sin relleno.');
   { const cs = o.naive ? '' : codeSystem(chat, saver); if (cs) sys.push(cs); }   /* v2.4 · SynthCode: manual de programación cuando pides código */
   { const ef = effortHint(); if (ef && !o.naive) sys.push(ef); }   /* v2.3.1 · esfuerzo */

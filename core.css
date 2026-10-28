@@ -1534,6 +1534,12 @@ html.noanim .pxg i.on{animation:none}
 .mp.mp.speed .h2{background:#9aa3c7;opacity:1}
 .mp.mp.speed .cds b{background:#1a1924;border-color:#2a2936;box-shadow:none}
 html.noanim .mp.mp,html.noanim .mp.mp *{animation:none!important}
+/* v3.4 · los switches encendidos toman el color del tema que elegiste (antes el vidrio de las ventanas les quitaba el color y se veían apagados) */
+html :is(.cfgsw,.sxsw)[aria-pressed="true"]{background:linear-gradient(90deg,var(--sb-primary,#7b3ff2),var(--sb-secondary,#ff3d9a)) !important;border-color:transparent !important;
+  box-shadow:0 0 14px -3px color-mix(in srgb,var(--sb-primary,#7b3ff2) 75%,transparent),inset 0 1px 0 rgba(255,255,255,.25)}
+html :is(.cfgsw,.sxsw){transition:background .3s,box-shadow .3s}
+/* estilo Simple: el acento cálido de ese estilo */
+html.simple :is(.cfgsw,.sxsw)[aria-pressed="true"]{background:var(--sacc,#d9a066) !important;box-shadow:none}
 /* v3.0 · ventana de Planes: cuatro tarjetas de vidrio; la tuya brilla con su color */
 .tcard.plans{width:min(760px,calc(100vw - 24px))}
 .pl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:14px 0 6px}

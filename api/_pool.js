@@ -115,13 +115,19 @@ const gVer = id => /latest/.test(id) ? 99 : +((id.match(/(\d+(?:\.\d+)?)/) || []
 const gSort = (a, b) => (/^gemma/.test(a.id) - /^gemma/.test(b.id)) || (gVer(b.id) - gVer(a.id)) || (/lite/.test(a.id) - /lite/.test(b.id));
 const SF_FREE = /(^|\/)(qwen3-8b|qwen2\.5-7b-instruct|qwen3\.5-4b|glm-4-9b-0414|glm-z1-9b-0414|deepseek-r1-0528-qwen3-8b|hunyuan-mt-7b)$/i;
 const DROP = /whisper|guard|tts|orpheus|safeguard|allam|compound|distil|playai|embed|moderation|ocr|voxtral|transcri|lora|vision-preview|lyria|music|audio|image|flux|stable|dall/i;
+/* v3.4 · ¿esta IA ve imágenes? (lo dice el proveedor cuando puede; si no, por el nombre). Cloudflare y Ollama no: su formato de fotos es otro */
+export const visOf = (prov, mid) => prov === 'google' ? /gemini|gemma-[34]/i.test(mid) : prov === 'groq' ? /llama-4|scout|maverick/i.test(mid)
+  : prov === 'mistral' ? /pixtral|mistral-(small|medium|large)-latest|ministral-(3|8|14)b-latest|magistral-(small|medium)-latest/i.test(mid) && !/code|fim|vibe/i.test(mid)
+  : prov === 'openrouter' ? /-vl\b|vl:|vision|gemma-[34]|omni/i.test(mid) : false;
+export const isVis = m => !!m && (m.vis != null ? !!m.vis : visOf(m.prov, m.mid));
 async function listFor(prov, k){
   const base = await baseOf(k), H = { Authorization:'Bearer ' + k.key };
   if (prov === 'openrouter'){
     const d = await (await fetch(base + '/models', { signal:AbortSignal.timeout(10000) })).json();
     return (d.data || []).filter(m => m && m.id && /:free$/.test(m.id) && !/^openrouter\//.test(m.id) && m.pricing && +m.pricing.prompt === 0 && +m.pricing.completion === 0
       && (!m.architecture || !Array.isArray(m.architecture.output_modalities) || m.architecture.output_modalities.includes('text')) && !DROP.test(m.id))
-      .map(m => ({ mid:m.id, name:String(m.name || m.id).replace(/\s*\(free\)\s*$/i, ''), ctx:+m.context_length || 0 }));
+      .map(m => ({ mid:m.id, name:String(m.name || m.id).replace(/\s*\(free\)\s*$/i, ''), ctx:+m.context_length || 0,
+        vis:!!(m.architecture && Array.isArray(m.architecture.input_modalities) ? m.architecture.input_modalities.includes('image') : visOf('openrouter', m.id)) }));
   }
   if (prov === 'cloudflare'){
     const r = await fetch(base.replace(/\/ai\/v1$/, '/ai/models/search?per_page=100&task=Text%20Generation'), { headers:H, signal:AbortSignal.timeout(10000) });
@@ -133,7 +139,7 @@ async function listFor(prov, k){
   if (prov === 'google') L = L.filter(m => GOOGLE_FREE.test(m.id)).sort(gSort);
   if (prov === 'siliconflow') L = L.filter(m => SF_FREE.test(m.id) && !/^pro\//i.test(m.id));
   if (prov === 'mistral') L = L.filter(m => !m.capabilities || m.capabilities.completion_chat !== false).filter(m => !m.deprecation && (/-latest$/.test(m.id) || /nemo/.test(m.id)));
-  return L.map(m => ({ mid:m.id, name:m.id, ctx:+m.context_window || +m.max_context_length || 0 }));
+  return L.map(m => ({ mid:m.id, name:m.id, ctx:+m.context_window || +m.max_context_length || 0, vis:prov === 'mistral' && m.capabilities && typeof m.capabilities.vision === 'boolean' ? m.capabilities.vision && !/code|fim|vibe|ocr/i.test(m.id) : visOf(prov, m.id) }));
 }
 const nice = s => String(s).replace(/^[^/]+\//, '').replace(/-latest$/, '').split(/[-_]/).map(w => /^gpt$/i.test(w) ? 'GPT' : /^oss$/i.test(w) ? 'OSS' : /^\d+(\.\d+)?b$/i.test(w) ? w.toUpperCase() : /^[a-z]/.test(w) ? w[0].toUpperCase() + w.slice(1) : w).join(' ');
 export async function models(force){
@@ -145,7 +151,7 @@ export async function models(force){
     for (const k of ks.slice(0, 2)){ try{ got = await listFor(p, k); if (got && got.length) break; }catch(e){} }
     if (!got || !got.length) got = PROV[p].best.map(mid => ({ mid, name:mid, ctx:0 }));
     provs.push(p);
-    got.slice(0, 40).forEach(m => out.push({ id:'sz:' + p + ':' + m.mid, prov:p, mid:m.mid, name:m.name && m.name !== m.mid ? m.name : nice(m.mid), ctx:m.ctx }));
+    got.slice(0, 40).forEach(m => out.push({ id:'sz:' + p + ':' + m.mid, prov:p, mid:m.mid, name:m.name && m.name !== m.mid ? m.name : nice(m.mid), ctx:m.ctx, vis:m.vis != null ? !!m.vis : visOf(p, m.mid) }));
   }
   const bad = (await redis('HGETALL', 'pool:badm').catch(() => [])) || [], gone = new Set();
   for (let i = 0; i < bad.length; i += 2) if (Date.now() - (+bad[i + 1] || 0) < 6 * 3600e3) gone.add(bad[i]);
@@ -162,12 +168,44 @@ export async function pickKeys(prov){
   return ks.map((k, i) => Object.assign(k, { n:+r[i * 2] || 0, down:r[i * 2 + 1] })).filter(k => !k.down && k.n < cap).sort((a, b) => a.n - b.n);
 }
 /* orden de respaldo: el modelo pedido y, si su proveedor no responde, el mejor de los otros */
-async function plan(model){
+/* v3.4 · con fotos (vis): solo IAs que ven, las mejores primero */
+const VIS_BEST = [/mistral-medium/i, /mistral-small/i, /gemini-flash-latest/i, /gemini/i, /llama-4/i, /gemma-4-31b/i, /nemotron.*vl/i, /gemma/i];
+async function plan(model, vis){
   const cat = await models(false), want = cat.list.find(m => m.id === model);
   const alts = [];
+  if (vis){
+    const L = cat.list.filter(isVis);
+    for (const rx of VIS_BEST){ const m = L.find(x => rx.test(x.mid) && !alts.includes(x)); if (m) alts.push(m); }
+    L.forEach(m => { if (!alts.includes(m)) alts.push(m); });
+    const ok = want && isVis(want) ? [want, ...alts.filter(a => a !== want)] : alts;
+    return ok.slice(0, 4);
+  }
   for (const p of ORDER){ const m = PROV[p].best.map(b => cat.list.find(x => x.prov === p && x.mid === b)).find(Boolean) || cat.list.find(x => x.prov === p); if (m) alts.push(m); }
   if (model && model !== 'sz:auto' && !want) throw err(400, 'Ese modelo no es de los gratis de SymphorIA.', 'sz_model');
   return want ? [want, ...alts.filter(a => a.prov !== want.prov)].slice(0, 3) : alts.slice(0, 3);
+}
+/* v3.4 · mensajes con fotos: el texto se recorta como siempre y solo viajan las fotos del ÚLTIMO mensaje (máx. 4, data:image de hasta ~2,5 MB) */
+const MAX_IMGS = 4, IMG_MAX = 2_600_000;
+const textOf = c => typeof c === 'string' ? c : (Array.isArray(c) ? c.map(x => x && x.type === 'text' ? String(x.text || '') : '').join('\n') : '');
+const imgsOf = c => Array.isArray(c) ? c.map(x => x && x.type === 'image_url' && x.image_url ? String(typeof x.image_url === 'string' ? x.image_url : x.image_url.url || '') : '').filter(u => /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(u) && u.length <= IMG_MAX) : [];
+const lenOf = m => typeof m.content === 'string' ? m.content.length : textOf(m.content).length + 4000 * imgsOf(m.content).length;
+export function cleanMsgs(messages){
+  const raw = (Array.isArray(messages) ? messages : []).filter(m => m && ['user', 'assistant', 'system'].includes(m.role) && (typeof m.content === 'string' || Array.isArray(m.content))).slice(-24);
+  return raw.map((m, i) => {
+    const t = textOf(m.content).trim().slice(0, 12000), im = i === raw.length - 1 && m.role === 'user' ? imgsOf(m.content).slice(0, MAX_IMGS) : [];
+    const lost = Array.isArray(m.content) && !im.length && m.content.some(x => x && x.type === 'image_url');
+    if (!im.length) return { role:m.role, content:lost ? (t + '\n[imagen]').trim() : t };
+    return { role:m.role, content:[{ type:'text', text:t || 'Mira la imagen.' }, ...im.map(url => ({ type:'image_url', image_url:{ url } }))] };
+  });
+}
+const hasImgs = msgs => msgs.some(m => Array.isArray(m.content));
+/* «vista prestada»: la IA que elegiste no ve fotos, así que una que sí ve las describe con detalle (y copia el texto que tengan) y se las paso en palabras */
+const SEE_PROMPT = 'Otra IA que NO puede ver imágenes va a responder a esta persona. Tu trabajo es ser sus ojos. Describe cada imagen con todo detalle y en orden: qué es (foto, captura de pantalla, documento, gráfico, dibujo…), todo el texto visible copiado EXACTO (respeta números, mayúsculas, tablas y código), personas, objetos, colores, posición de las cosas, gráficos con sus valores y cualquier detalle que sirva para responder. No respondas la pregunta ni opines: solo describe. Responde en el idioma de la persona. Su mensaje es: ';
+async function borrowEyes(o, msgs){
+  const last = msgs[msgs.length - 1], ask = textOf(last.content).slice(0, 1500), im = imgsOf(last.content);
+  const r = await chat(Object.assign({}, o, { messages:[{ role:'user', content:[{ type:'text', text:SEE_PROMPT + '«' + ask + '»' }, ...im.map(url => ({ type:'image_url', image_url:{ url } }))] }], model:'sz:auto', maxTokens:1200, system:'', stream:false, onDone:null }));
+  const desc = String(r.text || '').trim().slice(0, 8000);
+  return msgs.map((m, i) => i === msgs.length - 1 ? { role:m.role, content:(ask ? ask + '\n\n' : '') + '[La persona adjuntó ' + (im.length > 1 ? im.length + ' imágenes' : 'una imagen') + '. Tú no la ves, pero ' + r.meta.name + ' la miró por ti. Esto es lo que se ve, con el texto copiado tal cual:]\n' + desc + '\n[Fin de la descripción. Responde como si hubieras visto la imagen; no digas que no puedes verla.]' } : m);
 }
 
 /* ---------- cuota de cada persona ---------- */
@@ -186,13 +224,21 @@ export async function chat({ who, ipKey, messages, model, maxTokens, system, str
   const [used, usedIp] = free ? [0, 0] : (await pipe([['GET', quotaKey(who)], ['GET', quotaKey(ipKey)]])).map(x => +x || 0);
   if (used >= dayLimit) throw err(429, 'Llegaste al límite de hoy. Se renueva a medianoche. Si quieres seguir ya, conecta Puter (gratis, opcional).', 'sz_limit');
   if (usedIp >= dayLimit * 3) throw err(429, 'Desde esta conexión ya se usó mucho hoy. Se renueva a medianoche, o conecta Puter (gratis, opcional).', 'sz_limit_ip');
-  let msgs = (Array.isArray(messages) ? messages : []).filter(m => m && ['user', 'assistant', 'system'].includes(m.role) && typeof m.content === 'string').slice(-24).map(m => ({ role:m.role, content:m.content.slice(0, 12000) }));
-  while (msgs.length > 1 && msgs.reduce((s, m) => s + m.content.length, 0) > 48000) msgs = msgs.slice(1);
+  let msgs = cleanMsgs(messages);
+  while (msgs.length > 1 && msgs.reduce((s, m) => s + lenOf(m), 0) > 48000) msgs = msgs.slice(1);
   if (!msgs.length || msgs[msgs.length - 1].role !== 'user') throw err(400, 'Escribe un mensaje.', 'sz_empty');
   if (system) msgs = [{ role:'system', content:system }, ...msgs.filter(m => m.role !== 'system')];
-  const inTok = msgs.reduce((s, m) => s + est(m.content), 0);
-  const steps = await plan(model || 'sz:auto');
-  if (!steps.length) throw err(503, 'Las IAs están descansando un momento. Mientras tanto, puedes conectar Puter.', 'sz_off');
+  let vis = hasImgs(msgs);
+  if (vis && model && model !== 'sz:auto'){
+    const cat = await models(false), want = cat.list.find(m => m.id === model);
+    if (want && !isVis(want)){
+      if (!(await plan('sz:auto', true)).length) throw err(503, 'Ahora mismo ninguna IA gratis puede mirar fotos. Prueba en un rato, o escribe lo que dice la imagen.', 'sz_novision');
+      msgs = await borrowEyes({ who, ipKey, free, maxTokens }, msgs); vis = false;
+    }
+  }
+  const inTok = msgs.reduce((s, m) => s + est(textOf(m.content)) + 1000 * imgsOf(m.content).length, 0);
+  const steps = await plan(model || 'sz:auto', vis);
+  if (!steps.length) throw vis ? err(503, 'Ahora mismo ninguna IA gratis puede mirar fotos. Prueba en un rato, o escribe lo que dice la imagen.', 'sz_novision') : err(503, 'Las IAs están descansando un momento. Mientras tanto, puedes conectar Puter.', 'sz_off');
   const d = today(), t0 = Date.now(), tried = [];
   for (const m of steps){
     const keys = (await pickKeys(m.prov)).slice(0, 2);

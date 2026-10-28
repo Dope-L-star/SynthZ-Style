@@ -1892,7 +1892,7 @@ async function szCatalog(){
   if (!arr.length) return [];
   const out = arr.filter(m => m && typeof m.id === 'string' && /^sz:/.test(m.id) && !/allam|infron|openrouter\/(free|auto)|models?[-_ ]router/i.test(m.id) && !/free models router|router/i.test(String(m.name || ''))).map(m => {
     const mid = m.id.split(':').slice(2).join(':'), vendor = szVendor(mid, m.prov);
-    return { id:m.id, name:String(m.name || mid).replace(/\s*\(free\)\s*$/i, ''), vendor, vlabel:vendorLabel(vendor) + ' · SymphorIA', ctx:num(m.ctx), free:true, created:0, vision:false,
+    return { id:m.id, name:String(m.name || mid).replace(/\s*\(free\)\s*$/i, ''), vendor, vlabel:vendorLabel(vendor) + ' · SymphorIA', ctx:num(m.ctx), free:true, created:0, vision:!!m.vis,
       reasoning:/gpt-oss|qwen3|qwq|r1|reason|think|magistral|kimi|deepseek/i.test(mid), tools:false, desc:'Gratis: no necesitas cuenta ni nada.' };
   });
   return [SZ_AUTO, ...out];
@@ -2942,7 +2942,7 @@ function cfgChooser(box, cur, onPick){
 const CFG_ROWS = [['cursor', 'Cursor ' + BRAND(), 'El cursor de vidrio con viento.'], ['smooth', 'Desplazamiento suave', 'La ruedita baja la página sin saltos.'], ['bg', 'Fondo animado', 'Los colores se mueven y giran al bajar.'], ['glass', 'Efecto vidrio', 'Ventanas y paneles que parecen de vidrio.'], ['anim', 'Animaciones', 'Escritura letra por letra, golpe de cristal y agua.'], ['favAnim', 'Icono animado', 'El péndulo (o el destello de Flow) en el icono de la pestaña.'], ['sound', 'Sonidos', 'La voz de SynthonIA, las teclas, las transiciones y los avisos. Apágalos si te molestan.'], ['beginner', 'Modo principiante', 'Las IA te responden con palabras sencillas, paso a paso y con ejemplos.']];
 /* v2.2 · Ajustes con 2 pestañas: «Página» (cómo se ve y se siente) e «IAs y memoria» (cómo te responden y qué recuerdan de ti) */
 const CFG_PAGE = CFG_ROWS.filter(r => r[0] !== 'beginner');
-const CFG_IA = [['beginner', 'Modo principiante', 'Te responden con palabras sencillas, paso a paso y con ejemplos.'], ['autoWeb', 'Buscar en internet cuando haga falta', 'Si preguntas por algo de hoy (precios, noticias, el clima…), la IA busca sola y te muestra sus fuentes.'], ['saver', 'Respuestas cortas', 'Respuestas más breves: gastas menos de tu límite de hoy.']];
+const CFG_IA = [['beginner', 'Modo principiante', 'Te responden con palabras sencillas, paso a paso y con ejemplos.'], ['autoWeb', 'Buscar en internet cuando haga falta', 'Si preguntas por algo de hoy (precios, noticias, el clima…), la IA busca sola y te muestra sus fuentes.'], ['saver', 'Respuestas cortas', 'Respuestas más breves: gastas menos de tu límite de hoy.'], ['review', 'Revisión de lógica', 'Después de responder, una segunda pasada revisa la lógica, los datos y los cálculos, y corrige si hace falta (unos segundos más, nunca más de 30).']];
 const memSt0 = () => state.mem || (state.mem = { on:true, t:0, items:[] });
 function memTouch(){ const m = memSt0(); m.t = Date.now(); save(); try{ if (ACC.ready) accPush(); }catch(e){} }
 function memAddCore(text){
@@ -2973,7 +2973,7 @@ function memPanel(host){
 const cfgLinks = [];
 function cfgModal(tab){
   if ($('#cfgm')) return;
-  const draft = Object.assign({ autoWeb:true }, CFG); draft.saver = !!(state.sx && state.sx.saver);
+  const draft = Object.assign({ autoWeb:true, review:true }, CFG); draft.saver = !!(state.sx && state.sx.saver);
   const o = document.createElement('div'); o.id = 'cfgm'; o.className = 'szm';
   const row = ([k, t, s]) => '<div class="cfgrow"><p>' + t + '<small>' + s + '</small></p><button class="cfgsw" type="button" role="switch" data-k="' + k + '" aria-checked="' + !!draft[k] + '" aria-pressed="' + !!draft[k] + '" aria-label="' + t + '"></button></div>';
   const IN = [['always', 'Cada vez'], ['session', 'Una vez por visita'], ['never', 'Nunca']];
@@ -3089,8 +3089,8 @@ async function askStream(p, messages, opts = {}, onDelta){
   };
   const model0 = String(opts.model || state.model[p.id] || '');
   /* sin créditos de Puter: pasa sola a las IAs conectadas (el único aviso es «Usaste el saldo de este mes de Puter: sigo con las IAs conectadas») */
-  const flat = ms => ms.map(m => typeof m.content === 'string' ? m : { role:m.role, content:(m.content || []).map(x => x.type === 'text' ? x.text : '[imagen]').join('\n') });
-  const fallSz = () => { puterOutNote(); return askStream(SZ_P, flat(messages), Object.assign({}, opts, { model:'sz:auto', _noFall:true }), onDelta).then(r => Object.assign(r, { swapped:true })); };
+  /* v3.4 · las fotos viajan tal cual también a las IAs de SymphorIA (antes se cambiaban por «[imagen]» y la IA no veía nada) */
+  const fallSz = () => { puterOutNote(); return askStream(SZ_P, messages, Object.assign({}, opts, { model:'sz:auto', _noFall:true }), onDelta).then(r => Object.assign(r, { swapped:true })); };
   if (/^pu:/.test(model0)){
     if (!window.puter) throw new Error('No pude abrir Puter. Revisa tu internet o apaga el bloqueador de anuncios para esta página.');
     if (!puter.auth.isSignedIn()) throw Object.assign(new Error('Conecta tu cuenta de Puter para usar esta IA.'), { needLogin:true });
@@ -3132,7 +3132,7 @@ async function askStream(p, messages, opts = {}, onDelta){
   const viaTeam = !viaTrial && !viaGroq && p.id === 'openrouter' && !state.keys.openrouter && !!state.useTeam && !!SESS;
   const key = state.keys[p.id];
   if (!key && !viaTeam && !viaTrial && !viaSz) throw new Error('Falta la llave de ' + p.name + '.');
-  const body = viaSz ? { messages:flat(messages), model:model0, turn:opts.turn || (TURN && Date.now() - TURN.at < 120000 ? TURN.id : turnId(messages)) } : viaGroq ? { model:model0.replace(/^gq:/, ''), messages, stream:true, stream_options:{ include_usage:true } } : { model:model0.replace(/^or:/, ''), messages, stream:true, usage:{ include:true } };
+  const body = viaSz ? { messages, model:model0, turn:opts.turn || (TURN && Date.now() - TURN.at < 120000 ? TURN.id : turnId(messages)) } : viaGroq ? { model:model0.replace(/^gq:/, ''), messages, stream:true, stream_options:{ include_usage:true } } : { model:model0.replace(/^or:/, ''), messages, stream:true, usage:{ include:true } };
   if (viaTeam) body.teamId = state.useTeam;
   if (opts.maxTokens) body.max_tokens = opts.maxTokens;
   if (opts.effort && p.id === 'openrouter' && !viaSz && !viaGroq && !viaTrial) body.reasoning = { effort:opts.effort };   /* v2.3.1 · esfuerzo: OpenRouter lo ignora en las IA que no razonan */
@@ -6241,6 +6241,27 @@ BOT_FAQ.push(
 );
 /* si alguien pregunta por «la barra del estilo Simple», gana la respuesta nueva (antes ganaba la de colores y temas) */
 { const i = BOT_FAQ.findIndex(f => f.k.startsWith('simple estilo barra lateral')); if (i > 0) BOT_FAQ.unshift(BOT_FAQ.splice(i, 1)[0]); }
+/* ===== v3.4 · fotos para todas las IAs, revisión de lógica y switches con el color del tema: SynthonIA lo cuenta ===== */
+WHATSNEW.v = '3.4';
+WHATSNEW.items.unshift(
+  ['chat', LANG === 'en'
+    ? 'Photos and files work with every AI again. If the AI you chose can\'t see photos, another one looks at it, copies its text and describes it for her.'
+    : 'Las fotos y archivos vuelven a funcionar con todas las IAs. Si la IA que elegiste no ve fotos, otra la mira por ella, copia su texto y se la describe.'],
+  ['chat', LANG === 'en'
+    ? 'Better answers: every AI follows the same quality rules, and the new «Logic check» rereads each answer and fixes it if something is off (never more than 30 seconds). You can turn it off in Settings › AIs.'
+    : 'Respuestas mejores: todas las IAs siguen las mismas reglas de calidad, y la nueva «Revisión de lógica» relee cada respuesta y la corrige si algo está mal (nunca más de 30 segundos). Se apaga en Ajustes › IAs.'],
+  ['ajustes', LANG === 'en'
+    ? 'The switches in Settings light up again, with the colors of the theme you chose.'
+    : 'Los switches de Ajustes vuelven a tener color: el del tema que elegiste.']
+);
+BOT_FAQ.unshift(
+  { k:'foto fotos imagen imagenes subir adjuntar archivo archivos pdf no deja ve ver leer photo photos image images upload attach file files see read',
+    a:'Toca el «+» junto a la caja (o arrastra la foto) y escribe tu pregunta. Todas las IAs pueden con fotos: las que ven la reciben tal cual, y a las que no ven, otra IA les describe la foto con su texto copiado. Los PDF y archivos de texto los leen todas.',
+    en:'Tap the «+» next to the box (or drag the photo in) and write your question. Every AI can handle photos: the ones that see get it as is, and for the ones that don\'t, another AI describes the photo and copies its text. PDFs and text files are read by all of them.' },
+  { k:'revision logica revisada mejorada respuesta corrige corregida segunda pasada logic check checked improved answer fix second pass',
+    a:'La «Revisión de lógica» relee cada respuesta como una revisora: si está bien, verás «✓ Lógica revisada»; si encuentra un error o le falta algo, la cambia por la corregida y verás «✨ Revisada». Nunca tarda más de 30 segundos. La apagas en Ajustes › IAs y memoria.',
+    en:'The «Logic check» rereads each answer like a reviewer: if it is fine you will see «✓ Logic checked»; if it finds a mistake or something missing, it swaps it for the fixed one and you will see «✨ Checked». It never takes more than 30 seconds. Turn it off in Settings › AIs and memory.', pre:openCfg('ia') }
+);
 /* ===== v1.4 · eventos especiales: a las 50, 100 y 500 visitas la página «se hackea» y das un logro ===== */
 const EV = (() => {
   const K = 'synthz:visits', A = 'synthz:ach';

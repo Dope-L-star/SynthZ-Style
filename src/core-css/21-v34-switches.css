@@ -1,0 +1,6 @@
+/* v3.4 · los switches encendidos toman el color del tema que elegiste (antes el vidrio de las ventanas les quitaba el color y se veían apagados) */
+html :is(.cfgsw,.sxsw)[aria-pressed="true"]{background:linear-gradient(90deg,var(--sb-primary,#7b3ff2),var(--sb-secondary,#ff3d9a)) !important;border-color:transparent !important;
+  box-shadow:0 0 14px -3px color-mix(in srgb,var(--sb-primary,#7b3ff2) 75%,transparent),inset 0 1px 0 rgba(255,255,255,.25)}
+html :is(.cfgsw,.sxsw){transition:background .3s,box-shadow .3s}
+/* estilo Simple: el acento cálido de ese estilo */
+html.simple :is(.cfgsw,.sxsw)[aria-pressed="true"]{background:var(--sacc,#d9a066) !important;box-shadow:none}

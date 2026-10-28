@@ -91,6 +91,23 @@ async function agentPlan(text){
   const j = JSON.parse(m[0]); if (!j || typeof j.pedido !== 'string' || j.pedido.trim().length < 4) throw new Error('sin plan');
   return { tema:TOPIC[j.tema] ? j.tema : null, web:j.internet === true, simple:j.dificultad === 'muy_simple', pedido:j.pedido.trim().slice(0, 4000) };
 }
+/* v3.4 · fotos para TODAS las IAs: las de SymphorIA las reciben (si no ven, el servidor les presta la vista);
+   las demás que no ven reciben lo que una IA que sí ve describió de la foto, con su texto copiado tal cual */
+const canSee = mid => !!info(mid).vision || /^sz:/.test(mid);
+const EYES = 'Otra IA que NO puede ver imágenes va a responder a esta persona. Tu trabajo es ser sus ojos. Describe cada imagen con todo detalle y en orden: qué es (foto, captura de pantalla, documento, gráfico, dibujo…), todo el texto visible copiado EXACTO (respeta números, mayúsculas, tablas y código), personas, objetos, colores, posición de las cosas, gráficos con sus valores y cualquier detalle que sirva para responder. No respondas la pregunta ni opines: solo describe. Responde en el idioma de la persona. Su mensaje es: ';
+async function lendEyes(imgs, text){
+  if (!szOn()){ toast('Esta IA no ve fotos. Elige una que diga «ve fotos» o una de SymphorIA, y envía otra vez.'); openSide(); return false; }
+  toast('Esta IA no ve fotos: otra IA la mira por ella y se la describe…');
+  sendBtn.disabled = true; inp.readOnly = true;
+  try{
+    const r = await SZ.askStream(SZ.SZ_P, [{ role:'user', content:[{ type:'text', text:EYES + '«' + (text || 'Mira la imagen.').slice(0, 1500) + '»' }, ...imgs.map(f => ({ type:'image_url', image_url:{ url:f.dataUrl } }))] }], { model:'sz:auto', maxTokens:1200 });
+    const d = String(r.text || '').trim();
+    if (!d || /^\(La IA devolvió una respuesta vacía\.\)$/.test(d)) throw new Error('vacía');
+    imgs.forEach((f, i) => { f.seen = i ? '(va en la descripción de «' + imgs[0].name + '»)' : d; });
+    return true;
+  }catch(e){ toast(e && e.message && !/vacía/.test(e.message) ? e.message : 'No pude mirar la foto ahora. Prueba otra vez o elige una IA que diga «ve fotos».'); return false; }
+  finally{ sendBtn.disabled = false; inp.readOnly = false; }
+}
 async function send(){
   if (imgMode && mode === 'solo'){ const t = inp.value.trim(); if (t) createImage(t); return; }
   if (isLocked()){ lockNudge(); return; }
@@ -153,13 +170,13 @@ async function send(){
   if (!(await ensureConn())) return;
   /* si la ventanita de Puter tardó o cambiaste de chat o de IA mientras tanto, no envío solo: tu texto sigue en la caja */
   if (needed && (ckey() !== th0 || selId() !== m0 || Date.now() - at0 > 15000 || inp.value.trim() !== text)){ toast('¡Listo! Revisa tu mensaje y toca enviar.'); inp.focus(); return; }
-  if (ready.some(f => f.kind === 'img') && !info(selId()).vision){ toast('Este modelo no ve imágenes. Activa el filtro "Visión" y elige otro.'); openSide(); return; }
+  if (ready.some(f => f.kind === 'img' && !f.seen) && !canSee(selId()) && !(await lendEyes(ready.filter(f => f.kind === 'img'), text))) return;
   try{ localStorage.setItem('synthz:sent', String(sentN() + 1)); }catch(e){}
   try{ frustration(text, false); }catch(e){}
   const chat = chatArr(), sent = files.splice(0).filter(f => f.state === 'ok');
   inp.value = ''; autoGrow(); updateHint(); renderTray();
   const msg = { role:'user', content:text };
-  if (sent.length) msg.files = sent.map(f => ({ name:f.name, kind:f.kind, text:f.text, thumb:f.thumb }));
+  if (sent.length) msg.files = sent.map(f => Object.assign({ name:f.name, kind:f.kind, text:f.text, thumb:f.thumb }, f.seen ? { seen:f.seen } : {}));
   const imgs = sent.filter(f => f.kind === 'img').map(f => f.dataUrl);
   if (imgs.length) Object.defineProperty(msg, '_imgs', { value:imgs, enumerable:false, writable:true });
   if (text && wantsDeck(text)) msg.deck = true;
@@ -203,7 +220,7 @@ function frustration(text, regen){
   SZ.BOT.offer('Mmm… parece que ' + info(mid).name + ' no tiene el flow para esto. ' + alt.name + ' tiene más flow 😎 ¿Probamos con ella?', 'guino', 'Cambiar a ' + alt.name, () => { pickModel(alt.id, null); toast('Ahora hablas con ' + alt.name + '. Vuelve a enviar tu mensaje o escribe uno nuevo.'); inp.focus(); });
 }
 async function runSolo(onFail, o = {}){
-  const mid = selId(), chat = chatArr(), g = gen, vis = info(mid).vision, saver = st().sx.saver;
+  const mid = selId(), chat = chatArr(), g = gen, vis = canSee(mid), saver = st().sx.saver;
   const slowT = setTimeout(() => { if (busy[mid] === 'think' && SZ.BOT.react) SZ.BOT.react('slow'); }, 14000);
   const sent = apiMsgs(chat, vis), naive = apiMsgs(chat, vis, { naive:true }), ck = hashStr(mid + '|' + saver + '|' + effKey() + '|' + JSON.stringify(sent));
   const canCache = !sent.some(m => Array.isArray(m.content));
@@ -268,6 +285,7 @@ async function runSolo(onFail, o = {}){
       finishBot(el, msg.meta, true, msg.cont); follow();
       if (!r.aborted) synAuto(el);
       if (!r.aborted) codeAfter(el, chat);   /* v2.4 · la página se prueba sola y, si tiene errores, la IA la arregla */
+      if (!r.aborted && !o.noReview) reviewAfter(el, msg, chat, mid, r, t => { if (canCache) cachePut(ck, Object.assign({}, r, { text:t })); });   /* v3.4 · revisión de lógica */
       if (SZ.BOT.react && !r.aborted && !G) SZ.BOT.react('done', { cool:180000 });
     }
   }catch(err){
