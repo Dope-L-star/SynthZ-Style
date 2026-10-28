@@ -43,7 +43,7 @@ try{
   if (params.get('guia') === '1') setTimeout(runGuide, enter ? 2000 : 500);
   else if (Array.isArray(gt) && gt.length) setTimeout(() => runTopics(gt), enter ? 2000 : 600);
   else if (!q && !draftK && !localStorage.getItem('synthz:tour')) bflowOpen(enter ? 1500 : 200);
-  else { setTimeout(warnBlocked, enter ? 2700 : 900); if (!q && SZ.wasAway()) setTimeout(() => SZ.welcomeBack({ learn:runGuide, flow:() => { if (matchMedia('(pointer: fine)').matches) inp.focus(); } }), enter ? 2200 : 700); setTimeout(() => { if (!G && !document.querySelector('.szm, #szWelcome')) SZ.whatsNew(false, list => runTopics(list)); }, enter ? 4200 : 3000); }
+  else { setTimeout(warnBlocked, enter ? 2700 : 900); SZ.synReady.then(() => { if (!q && SZ.wasAway()) setTimeout(() => SZ.welcomeBack({ learn:runGuide, flow:() => { if (matchMedia('(pointer: fine)').matches) inp.focus(); } }), enter ? 2200 : 700); }); setTimeout(() => { if (!G && !document.querySelector('.szm, #szWelcome')) SZ.whatsNew(false, list => runTopics(list)); }, enter ? 4200 : 3000); }
 }catch(e){}
 try{ if (new URLSearchParams(location.search).get('conn') === '1') setTimeout(() => openConnect(), 1200); }catch(e){}
 try{ const clean = new URLSearchParams(location.search); ['q', 'from', 'draft', 'prueba', 'guia', 'conn'].forEach(k => clean.delete(k)); window.history.replaceState(null, '', location.pathname + (clean.toString() ? '?' + clean.toString() : '')); }catch(e){}

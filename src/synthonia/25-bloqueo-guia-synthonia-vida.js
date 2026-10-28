@@ -96,7 +96,7 @@ addEventListener('pointerdown', e => {
     for (let k = 0; k < 2; k++){
       try{
         const q = kind === 'j' ? 'Cuéntame un chiste corto, blanco y nuevo, de una o dos líneas.' : 'Dime un dato curioso corto y verdadero del mundo, de una línea.';
-        const r = await fetch('/api/help', { method:'POST', headers:Object.assign({ 'content-type':'application/json' }, SESS ? { authorization:'Bearer ' + SESS } : {}), body:JSON.stringify({ action:'ask', q, hist:[] }) });
+        const r = await fetch('/api/help', { method:'POST', headers:Object.assign({ 'content-type':'application/json' }, B.SESS ? { authorization:'Bearer ' + B.SESS } : {}), body:JSON.stringify({ action:'ask', q, hist:[] }) });
         const d = await r.json().catch(() => ({}));
         if (r.ok && d.text && !s.x.includes(hash(d.text))){ s.x = [...s.x, hash(d.text)].slice(-500); keep(s); return d.text; }
       }catch(e){ break; }

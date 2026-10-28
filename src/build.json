@@ -10,5 +10,6 @@
   "alias-tools.js": "src/alias/tools",
   "alias.js": "src/alias",
   "movimiento.js": "src/movimiento",
-  "movimiento.css": "src/movimiento-css"
+  "movimiento.css": "src/movimiento-css",
+  "synthonia.js": "src/synthonia"
 }

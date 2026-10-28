@@ -216,7 +216,7 @@ function botRender(){
 const SZ_RANK = () => { const r = ACC.user && ACC.user.role; return { owner:'Prime', admin:'ZFlow', staff:'Symmetrix' }[r] || ''; };
 const agoS = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'ahora' : m < 60 ? 'hace ' + m + ' min' : m < 1440 ? 'hace ' + Math.round(m / 60) + ' h' : 'hace ' + Math.round(m / 1440) + ' d'; };
 function botSay(text, mood, btn){
-  if (LANG === 'en') text = trStr(text);   /* v3.0 · en inglés, lo suyo sale traducido (lo de las personas nunca se toca) */
+  if (B.LANG === 'en') text = trStr(text);   /* v3.0 · en inglés, lo suyo sale traducido (lo de las personas nunca se toca) */
   const D = demoji(text); mood = mood || D.mood || 'feliz';
   BOT.hist.push({ role:'assistant', content:D.text, mood, btn }); BOT.hist = BOT.hist.slice(-30); botFace(mood); SND.blip(mood); botRender();
   /* en la ventanita, su último mensaje se escribe mientras mueve la boca */
@@ -228,7 +228,7 @@ function botSay(text, mood, btn){
 async function botAnswer(f){
   if (f.joke || f.fact){ const t = await botThink(() => f.joke ? BOTAPI.joke() : BOTAPI.fact()); return botSay((f.fact ? '¿Sabías que…? ' : '') + t, f.joke ? 'riendo' : 'sorprendida'); }
   await botThink();
-  botSay(LANG === 'en' && f.en ? f.en : f.a, f.mood || (f.go ? 'senalando' : 'feliz'), f.act ? [f.act, f.lbl] : null);
+  botSay(B.LANG === 'en' && f.en ? f.en : f.a, f.mood || (f.go ? 'senalando' : 'feliz'), f.act ? [f.act, f.lbl] : null);
   if (f.wave && HAND && BOT.el){ const r0 = BOT.el.getBoundingClientRect(); HAND.show({ x:r0.left + r0.width / 2, y:r0.top - 10 }); await HAND.moveTo({ x:clamp(r0.left - 40, 40, innerWidth - 40), y:clamp(r0.top - 50, 40, innerHeight - 40) }, { shape:'palm' }); await HAND.wave(2); HAND.hide(); return; }
   if (f.tour === 'coins' && HAND && $('#railTog') && $('#railCoin') && !matchMedia('(max-width:760px)').matches) return coinsTour();
   if (f.pre && f.go){ await sleepRaw(400); try{ f.pre(); }catch(e){} await sleepRaw(650); }   /* v3.0 · abre Ajustes (u otra cosa) para señalar lo de adentro */
@@ -272,13 +272,13 @@ async function botAsk(q){
   /* SynthonIA no hace tareas, código ni trabajos: eso es para las IAs del chat */
   if (TASKY.test(fold(q)) || q.length > 220){ BOT.pendingQ = q; await botThink(); return botSay('Eso es trabajo para las IAs de SynthFlow 💪 Yo te ayudo con la página, y con chistes o datos curiosos. ¿Te lo dejo listo en la caja del chat?', 'guino', ['tochat', 'Sí, llévalo al chat']); }
   try{
-    const res = await botThink(async () => { const r = await fetch('/api/help', { method:'POST', headers:Object.assign({ 'content-type':'application/json' }, SESS ? { authorization:'Bearer ' + SESS } : {}), body:JSON.stringify({ action:'ask', q, lang:LANG, hist:BOT.hist.slice(-7, -1).filter(m => m.role === 'user' || m.role === 'assistant').map(m => ({ role:m.role, content:m.content })) }) });
+    const res = await botThink(async () => { const r = await fetch('/api/help', { method:'POST', headers:Object.assign({ 'content-type':'application/json' }, B.SESS ? { authorization:'Bearer ' + B.SESS } : {}), body:JSON.stringify({ action:'ask', q, lang:B.LANG, hist:BOT.hist.slice(-7, -1).filter(m => m.role === 'user' || m.role === 'assistant').map(m => ({ role:m.role, content:m.content })) }) });
     const d = await r.json().catch(() => ({})); return { r, d }; });
     const { r, d } = res;
     if (!r.ok) return botSay(d.error || 'No pude pensar una respuesta ahora. Mira la Guía o habla con el equipo.', 'disculpa', ['team', 'Hablar con el equipo']);
     /* v3.0 · si la IA dice [ver:lugar], la manita lo señala */
     const pm = String(d.text || '').match(/\[ver:(\w+)\]/), place = pm && BOT_PLACES[pm[1]];
-    botSay(String(d.text || '').replace(/\s*\[ver:\w+\]/g, '').trim() + (d.left <= 3 ? '\n\n' + (LANG === 'en' ? '(You have ' + d.left + ' new questions left today.)' : '(Te quedan ' + d.left + ' preguntas nuevas hoy.)') : ''), place ? 'senalando' : 'feliz');
+    botSay(String(d.text || '').replace(/\s*\[ver:\w+\]/g, '').trim() + (d.left <= 3 ? '\n\n' + (B.LANG === 'en' ? '(You have ' + d.left + ' new questions left today.)' : '(Te quedan ' + d.left + ' preguntas nuevas hoy.)') : ''), place ? 'senalando' : 'feliz');
     if (place) botAnswer({ a:'', go:place, point:true });
   }catch(e){ botSay('No pude conectarme. Revisa tu internet e intenta otra vez.', 'disculpa'); }
 }

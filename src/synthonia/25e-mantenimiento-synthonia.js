@@ -59,7 +59,7 @@ async function mtSend(q){
   MT.busy = true; $('.mt-send', MT.el).disabled = true; MT.el.classList.add('thinking');
   let text = '', mood = MT_MOOD_OF[kind];
   try{
-    const r = await fetch('/api/help', { method:'POST', headers:Object.assign({ 'content-type':'application/json' }, SESS ? { authorization:'Bearer ' + SESS } : {}), body:JSON.stringify({ action:'ask', ctx:'maint', q, hist:MT.hist.slice(-7, -1) }) });
+    const r = await fetch('/api/help', { method:'POST', headers:Object.assign({ 'content-type':'application/json' }, B.SESS ? { authorization:'Bearer ' + B.SESS } : {}), body:JSON.stringify({ action:'ask', ctx:'maint', q, hist:MT.hist.slice(-7, -1) }) });
     const d = await r.json().catch(() => ({}));
     if (r.ok && d.text){ text = d.text; if (d.mood && FACE[d.mood]) mood = d.mood; }
   }catch(e){}

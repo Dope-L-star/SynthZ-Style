@@ -2,13 +2,13 @@
    La capa de animaciones vive en movimiento.css / movimiento.js (src/movimiento*). Aquí solo va lo que SynthonIA cuenta y las novedades. */
 WHATSNEW.v = '3.1';
 WHATSNEW.items.unshift(
-  ['guia', LANG === 'en'
+  ['guia', B.LANG === 'en'
     ? 'Where to tap is easy to see now: «Start free», the Next and Show me buttons of the guide and «Connect Puter» have a light flowing around their edge. And the «this is how it will look» preview in Settings moves again, with the new design.'
     : 'Ahora se ve dónde tocar: «Empezar gratis», los botones de Siguiente y Muéstrame de la guía y «Conectar Puter» tienen una luz que corre por su borde. Y la vista previa «así se verá» de Ajustes se mueve otra vez, con el diseño nuevo.'],
-  ['portada', LANG === 'en'
+  ['portada', B.LANG === 'en'
     ? 'Animations are back everywhere: blocks glide in as you scroll, cards glow under your pointer, buttons ripple when you tap them, and windows and lists come in one after another.'
     : 'Volvieron las animaciones en todo: los bloques entran al bajar, las tarjetas brillan bajo tu puntero, los botones dejan una onda al tocarlos y las ventanas y listas entran una tras otra.'],
-  ['ajustes', LANG === 'en'
+  ['ajustes', B.LANG === 'en'
     ? 'Your Settings decide now, not your computer: if Windows has its visual effects off, ' + BRAND() + ' still looks complete. To make it calmer, turn off Animations or use the faster mode in Settings.'
     : 'Ahora mandan tus Ajustes, no tu computador: aunque Windows tenga apagados sus efectos visuales, ' + BRAND() + ' se ve completa. Si la quieres más tranquila, apaga Animaciones o usa el modo más rápido en Ajustes.']
 );
