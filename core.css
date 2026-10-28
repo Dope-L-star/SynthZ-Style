@@ -639,7 +639,7 @@ body.railup #nav .logow .logo{transform:none}
 @keyframes ghNudge{0%,100%{transform:none}25%{transform:scale(1.12)}50%{transform:scale(.96)}75%{transform:scale(1.05)}}
 html.guiding .shell,html.guiding #nav{cursor:not-allowed}
 /* SynthonIA dormida: la página baja el ritmo (animaciones en pausa) hasta que vuelvas */
-html.idle-sleep body *:not(#szBot):not(#szBot *):not(#szBotB){animation-play-state:paused !important}
+html.idle-sleep body *:not(#szBot):not(#szBot *):not(#szBotB):not(#szIdle *){animation-play-state:paused !important}
 html.idle-sleep #szBot{filter:saturate(.7) brightness(.85)}
 html.idle-sleep #szBot::after{content:"z z";position:absolute;right:-4px;top:-14px;font:600 11px var(--mono,monospace);color:#f3d79e;letter-spacing:.2em;animation:zzz 2.4s ease-in-out infinite}
 @keyframes zzz{0%{opacity:0;transform:translate(0,4px)}40%{opacity:1}100%{opacity:0;transform:translate(6px,-10px)}}
@@ -1189,6 +1189,68 @@ html.noanim .szface .fwr path,html.noanim .szface .fwl path{animation:none}
 @keyframes sybwow{0%,40%,100%{transform:none}8%{transform:scale(1.35) rotate(-10deg)}16%{transform:scale(.94) rotate(6deg)}24%{transform:rotate(-2deg)}}
 /* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .szbody *{animation:none !important;transition:none !important}
 html.noanim .szface .fx,html.noanim .szface .fe,html.noanim .szbody *{animation:none !important}
+/* ===== v3.2 · SynthonIA juega cuando no estás (core 20, SZIDLE): grandota en la mitad, por encima de la página
+   pero debajo de su bolita y sus ventanas; no recibe clics (cualquier movimiento la hace volver) ===== */
+#szIdle{position:fixed;inset:0;z-index:9500;pointer-events:none;opacity:0;transition:opacity .4s ease}
+#szIdle.on{opacity:1}
+#szIdle .szi-pos{position:absolute;left:0;top:0;width:var(--S);height:calc(var(--S)*4/3);transform-origin:0 0;will-change:transform}
+#szIdle .szi-act{position:absolute;inset:0;transform-origin:50% 100%}
+#szIdle .szi-fig{position:absolute;inset:0;filter:drop-shadow(0 18px 30px rgba(0,0,0,.45))}
+#szIdle .szi-fig .szbody{width:100%}
+/* durmiendo: respira lento sobre una nubecita de vidrio */
+#szIdle .szi-cloud{position:absolute;left:12%;right:12%;bottom:4%;height:11%;border-radius:999px;opacity:0;transform:scale(.6);transition:opacity .6s,transform .6s cubic-bezier(.34,1.5,.64,1);
+  background:radial-gradient(60% 90% at 30% 30%,rgba(255,255,255,.34),transparent 70%),linear-gradient(180deg,rgba(220,235,255,.26),rgba(160,140,255,.14));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 10px 30px -8px rgba(120,100,255,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#szIdle .szi-cloud::before,#szIdle .szi-cloud::after{content:"";position:absolute;bottom:40%;border-radius:50%;background:inherit;box-shadow:inherit}
+#szIdle .szi-cloud::before{left:14%;width:30%;height:120%;bottom:35%}
+#szIdle .szi-cloud::after{left:42%;width:38%;height:150%;bottom:30%}
+#szIdle .szi-act.zz .szi-cloud{opacity:1;transform:none}
+#szIdle .szi-act.zz .szi-fig{animation:sziBreath 4.2s ease-in-out infinite;transform-origin:50% 90%}
+/* se columpia colgada (gira desde las manos), salta, aterriza, corre */
+#szIdle .szi-act.swing{transform-origin:50% 9%;animation:sziSwing 1.6s ease-in-out infinite alternate}
+#szIdle .szi-act.jump{animation:sziJump .6s cubic-bezier(.3,0,.5,1)}
+#szIdle .szi-act.land{animation:sziLand .5s cubic-bezier(.3,1.5,.5,1)}
+#szIdle .szi-act.run{animation:sziRun .18s ease-in-out infinite alternate}
+#szIdle .szi-act.run::before{content:"";position:absolute;top:30%;bottom:30%;right:96%;width:60%;border-radius:999px;opacity:.75;
+  background:repeating-linear-gradient(180deg,transparent 0 9%,rgba(246,217,160,.85) 9% 12%);-webkit-mask:linear-gradient(90deg,transparent,#000);mask:linear-gradient(90deg,transparent,#000)}
+#szIdle .szi-act.run.left::before{right:auto;left:96%;-webkit-mask:linear-gradient(-90deg,transparent,#000);mask:linear-gradient(-90deg,transparent,#000)}
+/* malabares: tres bolitas de luz que dan la vuelta sobre su cabeza */
+#szIdle .szi-ball{position:absolute;left:0;top:0;width:9%;aspect-ratio:1;border-radius:50%;opacity:0;pointer-events:none;
+  background:radial-gradient(circle at 35% 30%,#fff,#ffd27a 35%,#ff3d9a 75%);box-shadow:0 0 14px 2px rgba(255,120,190,.6)}
+#szIdle .szi-ball:nth-of-type(2){background:radial-gradient(circle at 35% 30%,#fff,#7ef0ff 35%,#5a7bd6 75%);box-shadow:0 0 14px 2px rgba(90,200,255,.6)}
+#szIdle .szi-ball:nth-of-type(3){background:radial-gradient(circle at 35% 30%,#fff,#c9b6ff 35%,#7a4dff 75%);box-shadow:0 0 14px 2px rgba(150,110,255,.6)}
+#szIdle .szi-act.jug .szi-ball{opacity:1;animation:sziJug 1.35s linear infinite}
+#szIdle .szi-act.jug .szi-ball:nth-of-type(2){animation-delay:-.45s}
+#szIdle .szi-act.jug .szi-ball:nth-of-type(3){animation-delay:-.9s}
+#szIdle .szi-act.jug.drop .szi-ball:nth-of-type(3){animation:sziDrop 1.2s cubic-bezier(.5,0,.9,.6) forwards}
+/* su globito de texto, encima de ella */
+#szIdle .szi-say{position:absolute;left:50%;bottom:calc(100% - 4%);margin:0;max-width:min(300px,86vw);width:max-content;padding:9px 14px;border-radius:16px;
+  font:600 14px/1.35 var(--sans,system-ui,sans-serif);color:#fff6ea;text-align:center;
+  background:linear-gradient(180deg,rgba(40,28,70,.62),rgba(22,16,40,.66));border:1px solid rgba(var(--gold-rgb,230,182,95),.45);
+  box-shadow:0 12px 30px -10px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.18);backdrop-filter:blur(12px) saturate(1.3);-webkit-backdrop-filter:blur(12px) saturate(1.3);
+  opacity:0;transform:translate(-50%,8px) scale(.9);transition:opacity .25s,transform .35s cubic-bezier(.34,1.5,.64,1)}
+#szIdle .szi-say.on{opacity:1;transform:translate(-50%,0)}
+/* «¡Ah, volviste!» en la portada (allí no hay bolita) */
+.szi-hi{position:fixed;z-index:9550;margin:0;padding:10px 14px;border-radius:16px;box-sizing:border-box;text-align:center;
+  font:600 14px/1.35 var(--sans,system-ui,sans-serif);color:#fff6ea;background:linear-gradient(180deg,rgba(40,28,70,.7),rgba(22,16,40,.74));
+  border:1px solid rgba(var(--gold-rgb,230,182,95),.45);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);pointer-events:none;
+  opacity:0;transform:translateY(6px) scale(.92);transition:opacity .25s,transform .35s cubic-bezier(.34,1.5,.64,1)}
+.szi-hi.on{opacity:1;transform:none}
+/* su lugar de siempre se vacía mientras ella está fuera */
+.szi-away{visibility:hidden !important}
+html.rtr #szIdle .szi-say,html.rtr .szi-hi,html.noglass #szIdle .szi-say,html.noglass .szi-hi{backdrop-filter:none;-webkit-backdrop-filter:none;background:#221838}
+html.noanim #szIdle{display:none}
+@keyframes sziBreath{0%,100%{transform:none}50%{transform:scale(1.035,.97) translateY(2%)}}
+@keyframes sziSwing{from{transform:rotate(-9deg)}to{transform:rotate(9deg)}}
+@keyframes sziJump{0%{transform:none}25%{transform:scale(1.08,.9)}55%{transform:translateY(-14%) scale(.95,1.06)}100%{transform:none}}
+@keyframes sziLand{0%{transform:scale(1.14,.84)}100%{transform:none}}
+@keyframes sziRun{from{transform:translateY(0) rotate(-3deg)}to{transform:translateY(-6%) rotate(3deg)}}
+@keyframes sziJug{0%{transform:translate(calc(var(--S)*.12),calc(var(--S)*.62));animation-timing-function:ease-out}
+  25%{transform:translate(calc(var(--S)*.45),calc(var(--S)*-.12));animation-timing-function:ease-in}
+  50%{transform:translate(calc(var(--S)*.79),calc(var(--S)*.62));animation-timing-function:ease-out}
+  75%{transform:translate(calc(var(--S)*.45),calc(var(--S)*.3));animation-timing-function:ease-in}
+  100%{transform:translate(calc(var(--S)*.12),calc(var(--S)*.62))}}
+@keyframes sziDrop{to{transform:translate(calc(var(--S)*.9),calc(var(--S)*1.5)) rotate(200deg);opacity:0}}
 /* ===== v2.5 · logos del boceto ===== */
 /* v3.0 · SymphorIA: la S de vidrio con su órbita + «Symphor» blanco con «IA» en degradado (letra Chakra Petch, de la rama simple) */
 .lgz{display:block;flex:none;width:auto;height:38px;aspect-ratio:1;object-fit:contain;filter:drop-shadow(0 0 10px rgba(176,92,255,.45));transition:transform .5s cubic-bezier(.22,1,.36,1),filter .4s}

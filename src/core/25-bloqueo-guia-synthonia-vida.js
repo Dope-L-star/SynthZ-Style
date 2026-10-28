@@ -111,18 +111,21 @@ addEventListener('pointerdown', e => {
   const busyUI = () => root.classList.contains('guiding') || root.classList.contains('lock') || root.classList.contains('leaving') || !root.classList.contains('ready') && !isFlow() || !!document.querySelector('#ptour,#tour,.szm,#vintro,#intro,#portal,.hackev') || BOT.open;
   function wake(){
     last = Date.now();
+    const out = SZIDLE.wake();              /* v3.2 · si estaba jugando fuera, ella misma corre de vuelta y saluda */
     if (!asleep) return; asleep = false;
     root.classList.remove('idle-sleep');
-    if (BOT.el){ botFace('sorprendida'); try{ SND.blip('sorprendida'); }catch(e){} if (!busyUI()) botBubble(['¡Ah! ¡Volviste! 👀', '¡Uy, me quedé dormida! Ya estoy aquí.', '¡Hola otra vez! Te estaba esperando.'][Math.floor(Math.random() * 3)], 3200); setTimeout(() => { if (!asleep) botFace('feliz'); }, 2200); }
+    if (BOT.el && !out){ botFace('sorprendida'); try{ SND.blip('sorprendida'); }catch(e){} if (!busyUI()) botBubble(['¡Ah! ¡Volviste! 👀', '¡Uy, me quedé dormida! Ya estoy aquí.', '¡Hola otra vez! Te estaba esperando.'][Math.floor(Math.random() * 3)], 3200); setTimeout(() => { if (!asleep) botFace('feliz'); }, 2200); }
   }
   ['pointermove', 'pointerdown', 'keydown', 'wheel', 'touchstart', 'scroll'].forEach(t => addEventListener(t, wake, { capture:true, passive:true }));
   document.addEventListener('visibilitychange', () => { if (!document.hidden) wake(); });
   /* 1 minuto sin moverte: SynthonIA se duerme y la página baja el ritmo para ahorrar batería */
   setInterval(() => {
+    /* v3.2 · a los 2 minutos sale a dormir en la mitad de la pantalla y luego juega (core 20, SZIDLE) */
+    SZIDLE.tick(Date.now() - last, busyUI() || !!document.querySelector('.work:not(.fin)'));
     if (asleep || Date.now() - last < 60000 || busyUI()) return;
     if (document.querySelector('.work:not(.fin)')) return;     /* no se duerme mientras una IA responde */
     asleep = true; root.classList.add('idle-sleep'); if (BOT.el) botFace('dormida');
-  }, 5000);
+  }, SZIDLE.FAST ? 1000 : 5000);
   BOTAPI.sleeping = () => asleep;
 
   /* ---- de vez en cuando (solo si estás activo): un dato curioso o un chiste ---- */
