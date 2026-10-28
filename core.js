@@ -2103,7 +2103,8 @@ if (matchMedia('(pointer: fine)').matches && CFG.cursor){
         const l = t.closest(LINK);
         if (l && !l.disabled && !l.closest('.hide')){
           hand = true;
-          if (!l.matches(NOGLASS)){ m = 'link'; h = l; }          /* el switch se anima solo: sin vidrio ni copia encima */
+          if (!l.matches(NOGLASS) && !l.closest('#szMaint')){ m = 'link'; h = l; }   /* en el aviso de mantenimiento el vidrio queda debajo y escondía el texto del botón */
+          /* el switch se anima solo: sin vidrio ni copia encima */
         }
       }
     }
@@ -5210,6 +5211,7 @@ const MT_FUN = /(ja(ja)+|je(je)+|xd|😂|🤣|chiste|gracios)/i;
 const MT_SAD = /(fe[ao]|tonta|in[uú]til|odio|aburr|mala|est[uú]pida)/i;
 const mtOff = () => /pulsem/.test(location.pathname);
 const mtAdmin = () => !!(ACC && ACC.user && ['owner', 'admin'].includes(ACC.user.role));
+const mtTeam = () => !!(ACC && ACC.user && ['owner', 'admin', 'staff'].includes(ACC.user.role));
 const mtSkipped = () => { try{ return sessionStorage.getItem('synthz:mtskip') === '1'; }catch(e){ return false; } };
 
 /* frases propias por si la IA no está (la falla puede ser justo esa) */
@@ -5273,6 +5275,9 @@ async function mtSend(q){
 function mtExit(){
   const x = MT.el && $('.mt-exit', MT.el); if (!x) return;
   x.hidden = !mtAdmin();
+  /* «Iniciar sesión»: se va si ya hay cuenta; si es del equipo aparece «Ir a Pulsem» (desde ahí se apaga el mantenimiento) */
+  const lg = $('.mt-login', MT.el), box = $('.mt-auth', MT.el), pu = $('.mt-pulsem', MT.el), on = !!(ACC && ACC.user);
+  if (lg) lg.hidden = on; if (box && on) box.hidden = true; if (pu) pu.hidden = !mtTeam();
 }
 function mtAgo(){
   if (!MT.el || !MT.since) return;
@@ -5290,6 +5295,8 @@ function mtOpen(m){
     + '<div class="mt-chat"><div class="mt-msgs" aria-live="polite"></div>'
     + '<div class="mt-sugs">' + ['Cuéntame un chiste', '¿Qué estás arreglando?', 'Eres la mejor 💛'].map(s => '<button type="button" class="mt-sug">' + esc(s) + '</button>').join('') + '</div>'
     + '<form class="mt-form" autocomplete="off"><input class="mt-in" maxlength="300" placeholder="Charla con SynthonIA…" aria-label="Escribir a SynthonIA"><button class="mt-send" type="submit" aria-label="Enviar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></form></div>'
+    + '<div class="mt-acct"><button class="mt-login" type="button"><span>Iniciar sesión</span></button><div class="mt-auth" hidden></div>'
+    + '<a class="mt-pulsem" href="/pulsem" hidden><span>Ir a Pulsem</span><small>Ahí se activa y se desactiva el mantenimiento</small></a></div>'
     + '<button class="mt-exit" type="button" hidden>Entrar igual · solo Prime y ZFlow</button></div>';
   document.body.appendChild(el); document.documentElement.classList.add('mt-on');
   MT.el = el;
@@ -5298,6 +5305,15 @@ function mtOpen(m){
   $('.mt-form', el).addEventListener('submit', e => { e.preventDefault(); mtSend($('.mt-in', el).value); });
   $('.mt-sugs', el).addEventListener('click', e => { const b = e.target.closest('.mt-sug'); if (b){ mtSend(b.textContent); b.remove(); } });
   $('.mt-face', el).addEventListener('click', () => { const k = MT.mood === 'riendo' ? 'encantada' : 'riendo'; mtSetMood(k, true); mtBurst(k === 'encantada' ? 'love' : 'fun'); });
+  $('.mt-login', el).addEventListener('click', () => {
+    const box = $('.mt-auth', el), open = box.hidden;
+    box.hidden = !open; el.classList.toggle('mt-authing', open);
+    if (open){
+      if (!box.firstChild) authBox(box, () => { box.hidden = true; el.classList.remove('mt-authing'); mtExit(); }, () => {}, 'login');
+      if (!reduce) box.animate([{ opacity:0, transform:'translateY(10px)' }, { opacity:1, transform:'none' }], { duration:360, easing:'cubic-bezier(.22,1,.36,1)' });
+      setTimeout(() => { const i = $('input', box); if (i) i.focus({ preventScroll:true }); }, 120);
+    }
+  });
   $('.mt-exit', el).addEventListener('click', () => { try{ sessionStorage.setItem('synthz:mtskip', '1'); }catch(e){} mtClose(); });
   if (!reduce) el.animate([{ opacity:0 }, { opacity:1 }], { duration:500 });
   setTimeout(() => { if (MT.el && !MT.hist.length) mtAdd('assistant', '¡Hola! Soy SynthonIA. Estamos dejando todo mejor para ti. Mientras tanto, ¿charlamos un rato?', 'feliz'); }, 650);
