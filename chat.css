@@ -1423,6 +1423,8 @@ html.noanim .tchip.rise,html.noanim .pgo.pop{animation:none}
 
 /* ---------- saludo e inicio ---------- */
 .hello{margin:auto;width:100%;display:flex;flex-direction:column;align-items:center;text-align:center;gap:18px;padding:34px 0 18px}
+.ghi{margin:0 0 -6px;font-size:clamp(16px,1.6vw,19px);color:var(--soft);letter-spacing:.005em;animation:chipin .6s cubic-bezier(.22,1,.36,1) both}
+.ghi b{font-weight:600;color:var(--text)}
 .greet{font-family:var(--serif);font-weight:400;font-size:clamp(38px,5.4vw,66px);line-height:1.04;letter-spacing:-.02em;color:var(--text);max-width:19ch;text-wrap:balance}
 .greet .wp{margin-left:-.1em}
 .greet .w{display:inline-block;animation:gw 1s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(var(--i) * 55ms + .05s)}

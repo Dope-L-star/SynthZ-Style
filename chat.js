@@ -821,6 +821,17 @@ document.addEventListener('click', e => {
   q.after(w); q.setAttribute('aria-expanded', 'true'); requestAnimationFrame(() => w.classList.add('on'));
   SZ.SND && SZ.SND.tap && SZ.SND.tap();
 });
+/* v3.3 · con cuenta, el saludo te llama por tu nombre (Sammuel, 28 oct: «para que se sienta más amigable») */
+function hiName(){
+  try{
+    if (!(SZ.ACC && SZ.ACC.ready && SZ.ACC.user)) return '';
+    const full = String((SZ.ACC.profile && SZ.ACC.profile.name) || SZ.ACC.user.name || SZ.ACC.user.username || '').trim();
+    const n = full.split(/\s+/)[0].replace(/^@/, '').slice(0, 24); if (!n) return '';
+    const h = new Date().getHours(), en = SZ.lang() === 'en';
+    const hi = en ? (h < 12 ? 'Good morning' : h < 19 ? 'Good afternoon' : 'Good evening') : (h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches');
+    return '<p class="ghi notr">' + hi + ', <b>' + esc(n) + '</b> <span aria-hidden="true">👋</span></p>';
+  }catch(e){ return ''; }
+}
 function greetHtml(g){
   if (SZ.lang() === 'en') g = GREET_EN[g.join('')] || g;
   let i = 0;
@@ -1264,12 +1275,12 @@ function emptyEl(){
   const ex = showEx();
   if (agentOn()){
     e.classList.add('aghello');
-    e.innerHTML = '<p class="agbadge">' + AG_ICO + 'Modo SuperiorSynth activado</p><h1 class="greet">' + greetHtml(['¿Qué quieres ', 'FlowIA’r', '?']) + '</h1>' + flowWhatHtml()
+    e.innerHTML = '<p class="agbadge">' + AG_ICO + 'Modo SuperiorSynth activado</p>' + hiName() + '<h1 class="greet">' + greetHtml(['¿Qué quieres ', 'FlowIA’r', '?']) + '</h1>' + flowWhatHtml()
       + (ex ? '<div class="hexs hexr" id="hexR" aria-label="Ideas para empezar">' + exRowHtml() + '</div>' : '')
       + '<p class="hsub2">Cuéntame qué necesitas. SuperiorSynth entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso.</p><div class="hcomp"></div>';
     return e;
   }
-  let h = '<h1 class="greet">' + greetHtml(GREET[greetI] || GREET[0]) + '</h1>' + flowWhatHtml()
+  let h = hiName() + '<h1 class="greet">' + greetHtml(GREET[greetI] || GREET[0]) + '</h1>' + flowWhatHtml()
     + (ex ? '<div class="hexs hexr" id="hexR" aria-label="Ideas para empezar">' + exRowHtml() + '</div>' : '')
     + '<p class="hsub2">Escribe lo que necesitas y da detalles: qué quieres, para qué es y cómo te sirve la respuesta. Ya hay una IA lista para empezar; si prefieres otra, la cambias abajo.</p>';
   h += '<div class="hcomp"></div>' + topicsHtml() + '<div class="tpanel" id="tPanel">' + (curTopic ? topicPanelHtml(curTopic) : '') + '</div>'
