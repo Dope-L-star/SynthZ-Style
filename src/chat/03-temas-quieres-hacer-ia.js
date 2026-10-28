@@ -112,12 +112,12 @@ function emptyEl(){
   const ex = showEx();
   if (agentOn()){
     e.classList.add('aghello');
-    e.innerHTML = '<p class="agbadge">' + AG_ICO + 'Modo SuperiorSynth activado</p><h1 class="greet">' + greetHtml(['¿Qué quieres ', 'FlowIA’r', '?']) + '</h1>' + flowWhatHtml()
+    e.innerHTML = '<p class="agbadge">' + AG_ICO + 'Modo SuperiorSynth activado</p>' + hiName() + '<h1 class="greet">' + greetHtml(['¿Qué quieres ', 'FlowIA’r', '?']) + '</h1>' + flowWhatHtml()
       + (ex ? '<div class="hexs hexr" id="hexR" aria-label="Ideas para empezar">' + exRowHtml() + '</div>' : '')
       + '<p class="hsub2">Cuéntame qué necesitas. SuperiorSynth entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso.</p><div class="hcomp"></div>';
     return e;
   }
-  let h = '<h1 class="greet">' + greetHtml(GREET[greetI] || GREET[0]) + '</h1>' + flowWhatHtml()
+  let h = hiName() + '<h1 class="greet">' + greetHtml(GREET[greetI] || GREET[0]) + '</h1>' + flowWhatHtml()
     + (ex ? '<div class="hexs hexr" id="hexR" aria-label="Ideas para empezar">' + exRowHtml() + '</div>' : '')
     + '<p class="hsub2">Escribe lo que necesitas y da detalles: qué quieres, para qué es y cómo te sirve la respuesta. Ya hay una IA lista para empezar; si prefieres otra, la cambias abajo.</p>';
   h += '<div class="hcomp"></div>' + topicsHtml() + '<div class="tpanel" id="tPanel">' + (curTopic ? topicPanelHtml(curTopic) : '') + '</div>'
@@ -145,7 +145,7 @@ function renderMsgs(){
   parkComposer();
   lane.innerHTML = '';
   if (mode === 'cmp'){ setFresh(false); if (cmpLast) lane.appendChild(cmpLast.node); else lane.appendChild(emptyEl()); jump(); return; }
-  const chat = chatArr(), thinking = Object.keys(busy).find(k => busy[k] === 'think' && k === selId());
+  const chat = chatArr(), thinking = Object.keys(busy).find(k => busy[k] === 'think' && (k === selId() || agentOn()));
   const fresh = !chat.length && !thinking;
   if (fresh){ const e = emptyEl(); lane.appendChild(e); if (!isMobile()){ const hc = $('.hcomp', e); if (hc) hc.appendChild(composer); } }
   setFresh(fresh);
@@ -156,7 +156,8 @@ function renderMsgs(){
     else if (m.role === 'user'){ const u = userEl(m.content, m.files); u.style.animation = 'none'; lane.appendChild(u); if (m.agent) lane.appendChild(agentSumEl(m.agent)); srcs = m.sources && m.sources.length ? m.sources : null; if (srcs) lane.appendChild(sourcesEl(m)); }
     else { const b = botEl(m.model || selId()); b.style.animation = 'none'; b._raw = m.content; b._ck = ck0; b._ci = i; b.dataset.ci = i; if (m.work) b.insertBefore(SZ.workSaved(m.work), $('.body', b)); $('.body', b).innerHTML = md(m.content); if (m.imgId) imgFill($('.body', b), m); b._sources = srcs; finishBot(b, m.meta, i === chat.length - 1, m.cont, m.star); if (!isFix(chat[i + 1])) ckIdle(b); lane.appendChild(b); }
   });
-  if (thinking) lane.appendChild(thinkEl(thinking));
+  if (live && live.chat === chat && live.el){ $$('.m.last', lane).forEach(x => x.classList.remove('last')); lane.appendChild(live.el); }   /* v3.3 · la respuesta en vivo no se pierde al repintar */
+  else if (thinking) lane.appendChild(thinkEl(thinking));
   if (fresh){ msgsEl.scrollTop = 0; requestAnimationFrame(() => { msgsEl.scrollTop = 0; }); } else jump();
 }
 function showErr(err, o){ if (err && err.aborted) return; showErr2(err, o || {}); }

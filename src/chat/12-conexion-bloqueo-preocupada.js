@@ -153,7 +153,7 @@ async function worry(){
   await wSay('Ay… te veo un poquito perdido 😟', 'preocupada'); if (!alive()) return;
   await zz(SZ.reduce ? 200 : 700); if (!alive()) return;
   /* con su manita: primero se señala a ella, luego la Guía (se nota el esfuerzo) */
-  const me = $('.wme', w), gd = [$('#guideTop'), $('#helpBtn')].find(n => n && n.getClientRects().length && n.getBoundingClientRect().width);
+  const me = $('.wme', w), gd = [$('#guideTop')].find(n => n && n.getClientRects().length && n.getBoundingClientRect().width);
   try{
     H2.show({ x:innerWidth * .55, y:innerHeight * .45 });
     wSay('Tranqui, aquí estoy yo. Si tienes dudas o necesitas ayuda, pregúntame sin pena…', 'senalando');
@@ -203,6 +203,7 @@ function bestUsable(strict){
 /* si el modelo elegido no se puede usar pero hay otro conectado, cambia solo */
 function fixModel(quiet){
   if (mode !== 'solo' || !cat.list.length) return false;
+  if (Object.keys(busy).length) return false;   /* v3.3 · nunca cambia la IA mientras una está respondiendo */
   const cur = selId(), missing = !idx.has(cur);
   if (/^pu:/.test(cur) && !window.__puterBlocked && !cat.list.some(m => /^pu:/.test(m.id))) return false;
   if (!missing && st().pinned === cur) return false;

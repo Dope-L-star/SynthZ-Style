@@ -108,7 +108,6 @@ function tourStep(anim, dir){
   SZ.swapDir(b, dir || 1, set);
 }
 function openHelp(){ SZ.helpGuide({ extra:[['Ver la Guía Asistida', () => runGuide()], ['Conectar mi Puter', () => openConnect()], ['Ver mi límite de hoy', () => coinModal('panel')]] }); }
-$('#helpBtn').addEventListener('click', () => openGuide());
 $('#guideTop').addEventListener('click', () => openGuide());
 function openTour(){
   if (tourEl) return; tourI = 0; tourPick = null;

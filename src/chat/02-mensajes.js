@@ -309,6 +309,17 @@ document.addEventListener('click', e => {
   q.after(w); q.setAttribute('aria-expanded', 'true'); requestAnimationFrame(() => w.classList.add('on'));
   SZ.SND && SZ.SND.tap && SZ.SND.tap();
 });
+/* v3.3 · con cuenta, el saludo te llama por tu nombre (Sammuel, 28 oct: «para que se sienta más amigable») */
+function hiName(){
+  try{
+    if (!(SZ.ACC && SZ.ACC.ready && SZ.ACC.user)) return '';
+    const full = String((SZ.ACC.profile && SZ.ACC.profile.name) || SZ.ACC.user.name || SZ.ACC.user.username || '').trim();
+    const n = full.split(/\s+/)[0].replace(/^@/, '').slice(0, 24); if (!n) return '';
+    const h = new Date().getHours(), en = SZ.lang() === 'en';
+    const hi = en ? (h < 12 ? 'Good morning' : h < 19 ? 'Good afternoon' : 'Good evening') : (h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches');
+    return '<p class="ghi notr">' + hi + ', <b>' + esc(n) + '</b> <span aria-hidden="true">👋</span></p>';
+  }catch(e){ return ''; }
+}
 function greetHtml(g){
   if (SZ.lang() === 'en') g = GREET_EN[g.join('')] || g;
   let i = 0;

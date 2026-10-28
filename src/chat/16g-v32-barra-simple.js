@@ -63,7 +63,7 @@
     else if (k === 'cfg') SZ.cfgModal();
     else if (k === 'favs') showChats('favs');
     else if (k === 'energy') coinModal('panel');
-    else if (k === 'guide'){ const h = $('#helpBtn'); if (h) h.click(); }
+    else if (k === 'guide'){ openGuide(); }
     else if (k === 'help') location.href = 'ayuda.html';
     if (k !== 'new' && k !== 'favs') moreOn(false);
     if (isMobile() && k !== 'favs') closeChatsSheet();

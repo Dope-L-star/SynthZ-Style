@@ -249,7 +249,9 @@ export async function chat({ who, ipKey, messages, model, maxTokens, system, str
           while ((i = buf.indexOf('\n')) >= 0){
             const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
             if (!line.startsWith('data:')) continue; const x = line.slice(5).trim(); if (x === '[DONE]') continue;
-            try{ const j = JSON.parse(x); const u = j.usage || (j.x_groq && j.x_groq.usage); if (u) usage = u; const c = j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content; if (typeof c === 'string') outChars += c.length; }catch(e){}
+            /* v3.3 · casi sin procesador (Workers gratis da 10 ms): solo se lee el JSON de la línea que trae el gasto; el resto se cuenta por su largo */
+            if (x.indexOf('"usage"') < 0){ const c = x.indexOf('"content":"'); if (c >= 0) outChars += Math.max(0, x.length - c - 30); continue; }
+            try{ const j = JSON.parse(x); const u = j.usage || (j.x_groq && j.x_groq.usage); if (u) usage = u; }catch(e){}
           }
         },
         async flush(ctl){

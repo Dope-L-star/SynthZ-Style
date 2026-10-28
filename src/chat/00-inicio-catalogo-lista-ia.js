@@ -23,6 +23,7 @@ const isMobile = () => matchMedia('(max-width:760px)').matches;
 const isTablet = () => matchMedia('(max-width:1100px) and (min-width:761px)').matches;
 let query = '';
 const busy = {};                 /* id del modelo -> 'think' | 'write' */
+let live = null;                 /* v3.3 · la respuesta que se está escribiendo ahora: si algo repinta el chat, vuelve a aparecer */
 let gen = 0, cmpRun = 0, stick = true, loading = false;
 
 /* ---------- catálogo en vivo ---------- */

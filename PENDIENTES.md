@@ -1,6 +1,7 @@
 # Para después (pedido por Sammuel, 20-oct-2026)
 - **Pulsem con cara de dashboard típico**: tarjetas de números arriba, gráficas de uso por día, tablas de cuentas y llaves, filtros. (No tocar hasta que Sammuel diga.)
 - **Dominio**: synthetismflow.com (US$11,25/año) o synthetismflow.app (US$9,99 y luego US$15). Lo compra Sammuel cuando quiera.
+- **A.L.I.A.S. hay que rehacerlo (Sammuel, 28-oct-2026)**: dice que como está ahora es «horrible, feo, inservible». No se le suman cosas encima: cuando se retome, se replantea desde cero (qué hace, cómo se ve y para qué le sirve a la persona) y se le muestra antes de construir.
 - **Video de la app**: si Sammuel consigue música con permiso de uso, se le agrega.
 
 # Pendientes
