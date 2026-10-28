@@ -54,6 +54,34 @@ function lightPick(){
   for (const rx of LIGHT){ const m = L.find(x => rx.test(x.id)); if (m) return m.id; }
   return null;
 }
+/* v3.4 · SuperiorSynth sigue aunque una IA se rompa: corre la respuesta y, si la IA falla, pasa el MISMO trabajo a otra
+   IA experta en ese tema (nunca reintenta con la que falló). Hasta 3 IAs distintas; devuelve { ok, cur, err }. */
+async function runExpert(tema, o = {}){
+  const g0 = gen, tl = tema && TOPIC[tema] ? TOPIC[tema].l.toLowerCase() : '';
+  let cur = selId(), lastErr = null; const tried = [cur];
+  for (let n = 0; ; n++){
+    lastErr = null;
+    await runSolo(err => { lastErr = err; }, Object.assign({}, o, { noRescue:true }));
+    if (!lastErr) return { ok:true, cur };
+    const next = lastErr.aborted || lastErr.guest || g0 !== gen || n >= 2 ? null : agentNext(tema, tried, lastErr);
+    if (!next) return { ok:false, err:lastErr, cur };
+    tried.push(next);
+    toast(info(cur).name + ' falló. Sigo con ' + info(next).name + (tl ? ', que sabe de ' + tl : '') + ': tu trabajo continúa.');
+    try{ SZ.BOT.react && SZ.BOT.react('slow'); }catch(e){}
+    if (o.onSwap) try{ o.onSwap(next); }catch(e){}
+    cur = next; st().model.openrouter = next; save(); paintSel(); renderTop(false); paintAccent();
+  }
+}
+/* v3.4 · la siguiente IA experta cuando la elegida falló: otra del mismo tema, nunca una que ya falló.
+   Si falló por límite, también se salta las del mismo proveedor (tendrían el mismo límite). */
+function agentNext(tema, tried, err){
+  const prov = id => /^sz:/.test(id) ? 'sz' : String(id).split(':')[0];
+  const lastP = prov(tried[tried.length - 1]);
+  const ok = m => m && !m.stub && !tried.includes(m.id) && connected(m.id) && !SZ.isBad(m.id) && !(err && err.limit && prov(m.id) === lastP);
+  const L = tema ? recommendTop(tema, 15) : [];
+  const m = L.find(ok) || [info(APODEX), bestUsable(true), bestUsable(false)].find(ok) || cat.list.find(ok);
+  return m ? m.id : null;
+}
 function agentPick(tema){
   const L = tema ? recommendTop(tema, 10).filter(m => connected(m.id)) : [];
   const top = L.find(m => (info(m.id).spend || 1) < 3) || L[0];   /* no gasta tu Puter en las IA que más consumen si hay otra experta */
@@ -141,9 +169,13 @@ async function send(){
     if (wantsDeck(text)) msg.deck = true;
     msg.agent = { pick, name:info(pick).name, tl:light ? 'cosas sencillas (gasta menos)' : tl, ask:same ? '' : plan.pedido };
     st().model.openrouter = pick; save(); paintSel(); renderTop(false); paintAccent();
-    let ok = true;
-    await runSolo(err => { ok = false; chat.pop(); save(); renderMsgs(); showErr(err); inp.value = text; autoGrow(); updateHint(); });
-    if (ok && g0 === gen) agentChoice(pick);
+    /* v3.4 · si la IA falla, SuperiorSynth NO reintenta con la misma (siempre volvería a fallar): pasa el trabajo a otra IA
+       experta en ese tema y sigue sola, sin que tengas que hacer nada. Hasta 3 IAs distintas; solo si todas fallan ves el error. */
+    const rx = await runExpert(plan.tema, { onSwap:next => { msg.agent = Object.assign({}, msg.agent, { pick:next, name:info(next).name }); } });
+    const ok = rx.ok, cur = rx.cur, lastErr = rx.err;
+    if (!ok){ chat.pop(); save(); renderMsgs(); showErr(lastErr); inp.value = text; autoGrow(); updateHint(); if (g0 === gen && !(lastErr && lastErr.aborted)) setTimeout(() => rescue(cur, lastErr), 900); }
+    const pickF = cur;
+    if (ok && g0 === gen) agentChoice(pickF);
     if (ok && g0 === gen && MEM_RX.test(text)) memOffer(text);
     }catch(e){ console.error('[superiorsynth]', e); $$('.agrun', lane).forEach(x => x.remove()); renderMsgs(); toast('SuperiorSynth tuvo un problema. Tu mensaje quedó guardado: vuelve a intentarlo.'); }
     finally{ unlock(); }
@@ -153,14 +185,21 @@ async function send(){
   if (!(await ensureConn())) return;
   /* si la ventanita de Puter tardó o cambiaste de chat o de IA mientras tanto, no envío solo: tu texto sigue en la caja */
   if (needed && (ckey() !== th0 || selId() !== m0 || Date.now() - at0 > 15000 || inp.value.trim() !== text)){ toast('¡Listo! Revisa tu mensaje y toca enviar.'); inp.focus(); return; }
-  if (ready.some(f => f.kind === 'img') && !info(selId()).vision){ toast('Este modelo no ve imágenes. Activa el filtro "Visión" y elige otro.'); openSide(); return; }
+  /* v3.4 · si la IA elegida no ve fotos, ya no te bloquea: esta respuesta la da una que sí ve (antes salía «Este modelo no ve imágenes» y no podías enviar) */
+  if (ready.some(f => f.kind === 'img') && !info(selId()).vision){
+    const v = visionPick();
+    if (!v){ toast('Ninguna de tus IAs conectadas ve fotos ahora. Conecta Puter o envía tu pregunta sin la imagen.'); return; }
+    const was = info(selId()).name;
+    st().model.openrouter = v.id; save(); paintSel(); renderTop(false); paintAccent();
+    toast(was + ' no ve fotos: te responde ' + v.name + ', que sí las ve.');
+  }
   try{ localStorage.setItem('synthz:sent', String(sentN() + 1)); }catch(e){}
   try{ frustration(text, false); }catch(e){}
   const chat = chatArr(), sent = files.splice(0).filter(f => f.state === 'ok');
   inp.value = ''; autoGrow(); updateHint(); renderTray();
   const msg = { role:'user', content:text };
   if (sent.length) msg.files = sent.map(f => ({ name:f.name, kind:f.kind, text:f.text, thumb:f.thumb }));
-  const imgs = sent.filter(f => f.kind === 'img').map(f => f.dataUrl);
+  const imgs = sent.filter(f => f.kind === 'img').flatMap(f => f.dataUrls || [f.dataUrl]);
   if (imgs.length) Object.defineProperty(msg, '_imgs', { value:imgs, enumerable:false, writable:true });
   if (text && wantsDeck(text)) msg.deck = true;
   chat.push(msg); touchThread(); save();
@@ -170,6 +209,11 @@ async function send(){
   if (okSent && text && MEM_RX.test(text)) memOffer(text);
 }
 
+/* v3.4 · la mejor IA conectada que ve fotos: primero la Automática de SymphorIA (elige sola una que ve), luego cualquiera de la lista */
+function visionPick(){
+  if (szOn()) return info('sz:auto');
+  return cat.list.find(m => m.vision && connected(m.id) && !SZ.isBad(m.id)) || null;
+}
 /* ---------- v1.3 · SynthonIA te rescata cuando una IA falla o cuando notas que no te entiende ---------- */
 const TOPIC_RX = [['codigo', /c[oó]digo|program|funci[oó]n|javascript|python|html|css|sql|bug|error de|script/i], ['mate', /ecuaci|matem|calcul|derivad|integral|\d+\s*[x×*+\/-]\s*\d+/i], ['estudiar', /explica|estudi|examen|tarea|aprend|resum/i], ['correo', /correo|email|e-mail/i], ['marketing', /marketing|publicidad|anuncio|vender|ventas|campa[ñn]a/i], ['redes', /instagram|tiktok|reel|post|redes/i], ['idiomas', /traduc|ingl[eé]s|franc[eé]s|idioma/i], ['negocios', /negocio|emprend|empresa|cliente/i], ['ideas', /idea|nombre para|lluvia de/i], ['escribir', /escrib|texto|carta|historia|poema|redact/i]];
 function guessTopic(t){ const f = TOPIC_RX.find(([k, rx]) => TOPIC[k] && rx.test(t)); return f ? f[0] : null; }
@@ -266,13 +310,14 @@ async function runSolo(onFail, o = {}){
       $('.body', el).innerHTML = md(r.text);
       { const u = [...chat].reverse().find(x => x.role === 'user'); el._sources = u && u.sources && u.sources.length ? u.sources : null; }
       finishBot(el, msg.meta, true, msg.cont); follow();
+      qualityAfter(el, chat, msg, mid, r);   /* v3.4 · otra IA revisa la lógica y, si hace falta, la corrige */
       if (!r.aborted) synAuto(el);
       if (!r.aborted) codeAfter(el, chat);   /* v2.4 · la página se prueba sola y, si tiene errores, la IA la arregla */
       if (SZ.BOT.react && !r.aborted && !G) SZ.BOT.react('done', { cool:180000 });
     }
   }catch(err){
     if (rv) rv.skip();
-    if (g === gen && !(err && err.aborted)) setTimeout(() => rescue(mid, err), 900);
+    if (g === gen && !(err && err.aborted) && !o.noRescue) setTimeout(() => rescue(mid, err), 900);
     W.finish({ error:!(err && err.aborted), aborted:err && err.aborted });
     if (el) el.remove();
     if (err && err.gone) hideBadModel(mid, err);

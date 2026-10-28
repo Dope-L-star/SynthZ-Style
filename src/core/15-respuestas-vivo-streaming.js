@@ -25,8 +25,8 @@ async function askStream(p, messages, opts = {}, onDelta){
   };
   const model0 = String(opts.model || state.model[p.id] || '');
   /* sin créditos de Puter: pasa sola a las IAs conectadas (el único aviso es «Usaste el saldo de este mes de Puter: sigo con las IAs conectadas») */
-  const flat = ms => ms.map(m => typeof m.content === 'string' ? m : { role:m.role, content:(m.content || []).map(x => x.type === 'text' ? x.text : '[imagen]').join('\n') });
-  const fallSz = () => { puterOutNote(); return askStream(SZ_P, flat(messages), Object.assign({}, opts, { model:'sz:auto', _noFall:true }), onDelta).then(r => Object.assign(r, { swapped:true })); };
+  /* v3.4 · las fotos ya viajan a las IAs conectadas (antes se cambiaban por «[imagen]» y el servidor las botaba) */
+  const fallSz = () => { puterOutNote(); return askStream(SZ_P, messages, Object.assign({}, opts, { model:'sz:auto', _noFall:true }), onDelta).then(r => Object.assign(r, { swapped:true })); };
   if (/^pu:/.test(model0)){
     if (!window.puter) throw new Error('No pude abrir Puter. Revisa tu internet o apaga el bloqueador de anuncios para esta página.');
     if (!puter.auth.isSignedIn()) throw Object.assign(new Error('Conecta tu cuenta de Puter para usar esta IA.'), { needLogin:true });
@@ -68,7 +68,7 @@ async function askStream(p, messages, opts = {}, onDelta){
   const viaTeam = !viaTrial && !viaGroq && p.id === 'openrouter' && !state.keys.openrouter && !!state.useTeam && !!SESS;
   const key = state.keys[p.id];
   if (!key && !viaTeam && !viaTrial && !viaSz) throw new Error('Falta la llave de ' + p.name + '.');
-  const body = viaSz ? { messages:flat(messages), model:model0, turn:opts.turn || (TURN && Date.now() - TURN.at < 120000 ? TURN.id : turnId(messages)) } : viaGroq ? { model:model0.replace(/^gq:/, ''), messages, stream:true, stream_options:{ include_usage:true } } : { model:model0.replace(/^or:/, ''), messages, stream:true, usage:{ include:true } };
+  const body = viaSz ? { messages, model:model0, turn:opts.turn || (TURN && Date.now() - TURN.at < 120000 ? TURN.id : turnId(messages)) } : viaGroq ? { model:model0.replace(/^gq:/, ''), messages, stream:true, stream_options:{ include_usage:true } } : { model:model0.replace(/^or:/, ''), messages, stream:true, usage:{ include:true } };
   if (viaTeam) body.teamId = state.useTeam;
   if (opts.maxTokens) body.max_tokens = opts.maxTokens;
   if (opts.effort && p.id === 'openrouter' && !viaSz && !viaGroq && !viaTrial) body.reasoning = { effort:opts.effort };   /* v2.3.1 · esfuerzo: OpenRouter lo ignora en las IA que no razonan */

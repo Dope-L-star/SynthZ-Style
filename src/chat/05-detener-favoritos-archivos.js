@@ -42,14 +42,16 @@ function flyStar(from){
 
 /* ---------- archivos: imágenes, PDF y texto/código ---------- */
 const files = []; let fid = 0;
-const TEXTX = /\.(txt|md|markdown|csv|tsv|json|jsonl|xml|html?|css|scss|js|mjs|jsx|ts|tsx|py|java|c|h|cpp|hpp|cs|go|rs|rb|php|sh|bat|sql|yml|yaml|toml|ini|log|tex|swift|kt|r|lua|vue|svelte)$/i;
+const TEXTX = /\.(txt|md|markdown|csv|tsv|json|jsonl|xml|html?|css|scss|less|js|cjs|mjs|jsx|ts|tsx|py|ipynb|java|c|h|cpp|hpp|cs|go|rs|rb|php|sh|bat|ps1|sql|yml|yaml|toml|ini|cfg|conf|env|log|tex|swift|kt|kts|dart|scala|pl|r|lua|vue|svelte|astro|graphql|gql|proto|srt|vtt|rtf|svg|gradle|properties)$/i;
+/* v3.4 · Word, Excel, PowerPoint y OpenDocument: se sacan sus textos en el navegador (son un .zip con XML adentro) */
+const OFFX = /\.(docx|xlsx|pptx|odt|ods|odp)$/i;
 const CAP = 40000, clip = t => t.length > CAP ? t.slice(0, CAP) + '\n…(archivo recortado)' : t;
 function readImg(file){
   return new Promise((ok, no) => {
     const url = URL.createObjectURL(file), im = new Image();
     im.onload = () => {
       const mk = max => { const s = Math.min(1, max / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.max(1, Math.round(im.width * s)); c.height = Math.max(1, Math.round(im.height * s)); const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height); return c; };
-      const r = { dataUrl: mk(1568).toDataURL('image/jpeg', .85), thumb: mk(96).toDataURL('image/jpeg', .7) };
+      const r = { dataUrl: mk(1280).toDataURL('image/jpeg', .84), thumb: mk(96).toDataURL('image/jpeg', .7) };   /* v3.4 · 1280 px: se ve igual de bien y viaja más rápido */
       URL.revokeObjectURL(url); ok(r);
     };
     im.onerror = () => { URL.revokeObjectURL(url); no(new Error('No pude leer la imagen ' + file.name + '.')); };
@@ -73,8 +75,71 @@ async function readPdf(file){
     const tc = await (await pdf.getPage(i)).getTextContent();
     t += '\n--- página ' + i + ' ---\n' + tc.items.map(x => x.str).join(' ');
   }
-  if (t.replace(/--- página \d+ ---/g, '').trim().length < 20) throw new Error('Ese PDF parece escaneado (sin texto). Prueba subiéndolo como imagen.');
+  /* v3.4 · PDF escaneado (sin texto): sus primeras páginas se mandan como fotos, así una IA que ve lo puede leer */
+  if (t.replace(/--- página \d+ ---/g, '').trim().length < 20){
+    const pics = [];
+    for (let i = 1; i <= Math.min(pdf.numPages, 4); i++){
+      const pg = await pdf.getPage(i), v0 = pg.getViewport({ scale:1 }), k = Math.min(2, 1280 / Math.max(v0.width, v0.height)), vp = pg.getViewport({ scale:k });
+      const c = document.createElement('canvas'); c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+      const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+      await pg.render({ canvasContext:g, viewport:vp }).promise; pics.push(c.toDataURL('image/jpeg', .8));
+    }
+    if (!pics.length) throw new Error('Ese PDF está vacío.');
+    return { scanned:true, pics, pages:pdf.numPages };
+  }
   return clip(t.trim());
+}
+/* lector mínimo de .zip (sin librerías): lee el índice del final y descomprime con DecompressionStream */
+async function zipOpen(buf){
+  const dv = new DataView(buf), td = new TextDecoder();
+  let e = buf.byteLength - 22; while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+  if (e < 0) throw new Error('El archivo está dañado.');
+  const n = dv.getUint16(e + 10, true), ent = {}; let p = dv.getUint32(e + 16, true);
+  for (let i = 0; i < n && p + 46 <= buf.byteLength; i++){
+    const nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true);
+    ent[td.decode(new Uint8Array(buf, p + 46, nl))] = { m:dv.getUint16(p + 10, true), cs:dv.getUint32(p + 20, true), lo:dv.getUint32(p + 42, true) };
+    p += 46 + nl + xl + cl;
+  }
+  const read = async name => {
+    const x = ent[name]; if (!x) return '';
+    const at = x.lo + 30 + dv.getUint16(x.lo + 26, true) + dv.getUint16(x.lo + 28, true), raw = new Uint8Array(buf, at, x.cs);
+    if (x.m === 0) return td.decode(raw);
+    if (x.m !== 8 || typeof DecompressionStream === 'undefined') throw new Error('Tu navegador no puede abrir este archivo. Guárdalo como PDF y súbelo otra vez.');
+    return new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+  };
+  return { names:Object.keys(ent), read };
+}
+const xmlTxt = x => x.replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(+d)).replace(/&amp;/g, '&');
+const byNum = (a, b) => (+(a.match(/(\d+)\.xml$/) || [])[1] || 0) - (+(b.match(/(\d+)\.xml$/) || [])[1] || 0);
+async function readOffice(file){
+  const z = await zipOpen(await file.arrayBuffer()), ext = file.name.split('.').pop().toLowerCase();
+  let t = '';
+  if (ext === 'docx'){
+    const x = await z.read('word/document.xml');
+    t = xmlTxt(x.replace(/<w:tab\/>/g, '\t').replace(/<w:br[^>]*\/>/g, '\n').replace(/<\/w:p>/g, '\n').replace(/<\/w:tc>/g, ' | ').replace(/<\/w:tr>/g, '\n'));
+  } else if (ext === 'pptx'){
+    const sl = z.names.filter(n => /^ppt\/slides\/slide\d+\.xml$/.test(n)).sort(byNum);
+    for (let i = 0; i < sl.length && t.length < CAP; i++) t += '\n--- diapositiva ' + (i + 1) + ' ---\n' + xmlTxt((await z.read(sl[i])).replace(/<\/a:p>/g, '\n'));
+  } else if (ext === 'xlsx'){
+    const ss = [...(await z.read('xl/sharedStrings.xml')).matchAll(/<si>([\s\S]*?)<\/si>/g)].map(m => xmlTxt(m[1]));
+    const sh = z.names.filter(n => /^xl\/worksheets\/sheet\d+\.xml$/.test(n)).sort(byNum);
+    for (let i = 0; i < sh.length && t.length < CAP; i++){
+      t += '\n--- hoja ' + (i + 1) + ' ---\n';
+      for (const row of (await z.read(sh[i])).matchAll(/<row[^>]*>([\s\S]*?)<\/row>/g)){
+        const cells = [...row[1].matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)].map(c => {
+          const ty = (/\bt="(\w+)"/.exec(c[1]) || [])[1], v = (/<v>([\s\S]*?)<\/v>/.exec(c[2] || '') || [])[1];
+          return ty === 's' ? (ss[+v] || '') : ty === 'inlineStr' ? xmlTxt((/<is>([\s\S]*?)<\/is>/.exec(c[2] || '') || [])[1] || '') : v != null ? xmlTxt(v) : '';
+        });
+        if (cells.some(Boolean)) t += cells.join('\t') + '\n';
+        if (t.length > CAP) break;
+      }
+    }
+  } else {
+    t = xmlTxt((await z.read('content.xml')).replace(/<\/text:(p|h)>/g, '\n').replace(/<text:tab\/>/g, '\t').replace(/<\/table:table-cell>/g, '\t').replace(/<\/table:table-row>/g, '\n'));
+  }
+  t = t.replace(/\n{3,}/g, '\n\n').trim();
+  if (t.length < 2) throw new Error('No encontré texto en «' + file.name + '».');
+  return clip(t);
 }
 function renderTray(){
   $('#tray').innerHTML = files.map(f => '<span class="fc ' + f.state + '" data-id="' + f.id + '">' + (f.thumb ? '<img src="' + esc(f.thumb) + '" alt="">' : (SZ.fileIco(f.name.split('.').pop()) ? '<i class="ic img">' + SZ.fileIco(f.name.split('.').pop()) + '</i>' : '<i class="ic">' + esc((f.name.split('.').pop() || 'file').slice(0, 4)) + '</i>')) + '<b>' + esc(f.name) + '</b><button class="x" type="button" aria-label="Quitar archivo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>').join('');
@@ -86,12 +151,16 @@ async function addFiles(list){
     const f = { id:++fid, name:file.name || 'archivo', state:'load', kind:'text' }; files.push(f); renderTray();
     try{
       if (/^image\//.test(file.type)){ f.kind = 'img'; Object.assign(f, await readImg(file)); }
-      else if (/\.pdf$/i.test(file.name) || file.type === 'application/pdf'){ f.kind = 'pdf'; f.text = await readPdf(file); }
+      else if (/\.pdf$/i.test(file.name) || file.type === 'application/pdf'){
+        f.kind = 'pdf'; const p = await readPdf(file);
+        if (p && p.scanned){ f.kind = 'img'; f.dataUrl = p.pics[0]; f.dataUrls = p.pics; f.thumb = p.pics[0]; f.scan = p.pages; } else f.text = p;
+      }
+      else if (OFFX.test(file.name)){ f.kind = 'doc'; f.text = await readOffice(file); }
       else if (TEXTX.test(file.name) || /^text\//.test(file.type) || file.type === 'application/json'){ f.text = clip(await file.text()); }
       else throw new Error('Tipo de archivo no compatible: ' + f.name);
       f.state = 'ok';
     }catch(e){
-      f.state = 'err'; toast(f.kind === 'pdf' && !/compatible/.test(e.message || '') ? 'No pude leer el PDF «' + f.name + '». Puede estar dañado o protegido con contraseña.' : f.kind === 'img' && !/compatible/.test(e.message || '') ? 'No pude abrir la imagen «' + f.name + '».' : e.message);
+      f.state = 'err'; toast(f.kind === 'pdf' && !/compatible/.test(e.message || '') ? 'No pude leer el PDF «' + f.name + '». Puede estar dañado o protegido con contraseña.' : f.kind === 'img' && !/compatible/.test(e.message || '') ? 'No pude abrir la imagen «' + f.name + '».' : f.kind === 'doc' && !/navegador|texto|dañado/.test(e.message || '') ? 'No pude leer «' + f.name + '». Guárdalo como PDF y súbelo otra vez.' : e.message);
       setTimeout(() => { const i = files.indexOf(f); if (i > -1){ files.splice(i, 1); renderTray(); } }, 2200);
     }
     renderTray();
@@ -137,6 +206,7 @@ function apiMsgs(chat, vision, o = {}){
   }).filter(Boolean);
   while (h.length && h[0].role !== 'user') h.shift();
   const sys = [];
+  if (!o.naive) sys.push(qualitySystem(saver));   /* v3.4 · calidad: piensa, revisa la lógica y no inventa */
   if (saver) sys.push('Responde en el idioma del usuario, de forma clara y breve, sin relleno.');
   { const cs = o.naive ? '' : codeSystem(chat, saver); if (cs) sys.push(cs); }   /* v2.4 · SynthCode: manual de programación cuando pides código */
   { const ef = effortHint(); if (ef && !o.naive) sys.push(ef); }   /* v2.3.1 · esfuerzo */

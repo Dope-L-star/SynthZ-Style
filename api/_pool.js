@@ -174,6 +174,56 @@ async function plan(model){
 export const quotaKey = who => 'q:' + who + ':' + today();
 export async function usedToday(who){ return +(await redis('GET', quotaKey(who))) || 0; }
 
+/* ---------- v3.4 · fotos para las IAs que ven ----------
+   El navegador manda la foto como «image_url» (data:image/…;base64). Solo viajan las de los 2 últimos mensajes tuyos (máx. 4);
+   las demás quedan como «[imagen]». Con fotos, responde una IA que sí ve: Gemini Flash, Llama 4, Mistral Small/Medium, Pixtral… */
+const IMG_PRE = /^data:image\/(jpeg|png|webp|gif);base64,/, IMG_LEN = 2_500_000, IMG_MAX = 4;
+export const VISION_RX = /gemini|gemma-3(?!n)|llama-4|pixtral|mistral-(small|medium)|[-_/]vl\b|-vl-|vision|qwen2\.5-vl|kimi-vl/i;
+const VIS_ORDER = ['google', 'groq', 'mistral', 'openrouter'];
+const txtLen = m => typeof m.content === 'string' ? m.content.length : m.content[0].text.length;
+export function normMsgs(messages){
+  const list = (Array.isArray(messages) ? messages : []).filter(m => m && ['user', 'assistant', 'system'].includes(m.role) && (typeof m.content === 'string' || Array.isArray(m.content))).slice(-24);
+  let left = IMG_MAX; const lastUsers = new Set(list.map((m, i) => m.role === 'user' ? i : -1).filter(i => i >= 0).slice(-2));
+  const out = new Array(list.length);
+  for (let i = list.length - 1; i >= 0; i--){       /* de la más nueva a la más vieja: las fotos recientes tienen prioridad */
+    const m = list[i];
+    if (typeof m.content === 'string'){ out[i] = { role:m.role, content:m.content.slice(0, 12000) }; continue; }
+    let text = '', dropped = 0; const imgs = [];
+    for (const p of m.content){
+      if (!p || typeof p !== 'object') continue;
+      if (p.type === 'text' && typeof p.text === 'string') text += (text ? '\n' : '') + p.text;
+      else if (p.type === 'image_url'){
+        const u = p.image_url && (typeof p.image_url === 'string' ? p.image_url : p.image_url.url);
+        if (m.role === 'user' && lastUsers.has(i) && left > 0 && typeof u === 'string' && u.length <= IMG_LEN && IMG_PRE.test(u.slice(0, 40))){ imgs.push(u); left--; }
+        else dropped++;
+      }
+    }
+    text = text.slice(0, 12000) + (dropped ? '\n[' + dropped + ' imagen(es) adjunta(s) antes]' : '');
+    out[i] = imgs.length ? { role:m.role, content:[{ type:'text', text:text.trim() || 'Mira la imagen.' }, ...imgs.map(url => ({ type:'image_url', image_url:{ url } }))] } : { role:m.role, content:text };
+  }
+  return { msgs:out, nImg:IMG_MAX - left };
+}
+/* con fotos: la IA pedida si ve, y si no (o falla) las mejores que ven de cada proveedor */
+async function visionPlan(model){
+  const cat = await models(false), want = cat.list.find(m => m.id === model);
+  const alts = [];
+  for (const p of VIS_ORDER){
+    const vs = cat.list.filter(m => m.prov === p && VISION_RX.test(m.mid));
+    const m = vs.find(x => /gemini.*flash(?!-lite)/i.test(x.mid)) || vs.find(x => !/lite|gemma-3-(1|4)b/i.test(x.mid)) || vs[0];
+    if (m) alts.push(m);
+  }
+  const first = want && VIS_ORDER.includes(want.prov) && VISION_RX.test(want.mid) ? want : null;
+  return first ? [first, ...alts.filter(a => a.prov !== first.prov)].slice(0, 3) : alts.slice(0, 3);
+}
+/* v3.4 · la IA que revisa las respuestas: la que mejor razona entre las gratis (con fotos, una que ve) */
+const REVIEW_PREF = ['groq:openai/gpt-oss-120b', 'google:gemini-flash-latest', 'google:gemini-2.5-flash', 'ollama:gpt-oss:120b', 'groq:llama-3.3-70b-versatile', 'mistral:mistral-medium-latest', 'groq:qwen/qwen3-32b'];
+export async function reviewerModel(withImg){
+  const cat = await models(false);
+  if (withImg){ const v = await visionPlan(''); return v[0] ? v[0].id : ''; }
+  for (const id of REVIEW_PREF){ if (cat.list.some(m => m.id === 'sz:' + id)) return 'sz:' + id; }
+  return 'sz:auto';
+}
+
 /* ---------- conversar (con streaming) ---------- */
 const est = s => Math.ceil(String(s || '').length / 4);
 /* cuánto puede escribir cada IA en una sola respuesta (antes eran 1.200: por eso las respuestas largas se cortaban) */
@@ -181,17 +231,19 @@ const OUT_MAX = { groq:6000, mistral:6000, openrouter:6000, google:8000, ollama:
 const outTok = (prov, asked) => Math.max(64, Math.min(OUT_MAX[prov] || 3500, Math.round(+asked) || 4096));
 /* v3.0 · free: el equipo (Prime, ZFlow y Symmetrix) usa todo sin límite de EnerX para probar (pedido de Sammuel, 27 oct).
    Lo suyo no cuenta para el límite de su conexión (así no le quita a nadie que esté en la misma red) y su batería se ve llena */
-export async function chat({ who, ipKey, messages, model, maxTokens, system, stream = true, onDone, free = false }){
+export async function chat({ who, ipKey, messages, model, maxTokens, system, stream = true, onDone, free = false, temperature = .6 }){
   const { dayLimit } = await settings();
   const [used, usedIp] = free ? [0, 0] : (await pipe([['GET', quotaKey(who)], ['GET', quotaKey(ipKey)]])).map(x => +x || 0);
   if (used >= dayLimit) throw err(429, 'Llegaste al límite de hoy. Se renueva a medianoche. Si quieres seguir ya, conecta Puter (gratis, opcional).', 'sz_limit');
   if (usedIp >= dayLimit * 3) throw err(429, 'Desde esta conexión ya se usó mucho hoy. Se renueva a medianoche, o conecta Puter (gratis, opcional).', 'sz_limit_ip');
-  let msgs = (Array.isArray(messages) ? messages : []).filter(m => m && ['user', 'assistant', 'system'].includes(m.role) && typeof m.content === 'string').slice(-24).map(m => ({ role:m.role, content:m.content.slice(0, 12000) }));
-  while (msgs.length > 1 && msgs.reduce((s, m) => s + m.content.length, 0) > 48000) msgs = msgs.slice(1);
+  let { msgs, nImg } = normMsgs(messages);
+  while (msgs.length > 1 && msgs.reduce((s, m) => s + txtLen(m), 0) > 48000) msgs = msgs.slice(1);
   if (!msgs.length || msgs[msgs.length - 1].role !== 'user') throw err(400, 'Escribe un mensaje.', 'sz_empty');
   if (system) msgs = [{ role:'system', content:system }, ...msgs.filter(m => m.role !== 'system')];
-  const inTok = msgs.reduce((s, m) => s + est(m.content), 0);
-  const steps = await plan(model || 'sz:auto');
+  nImg = msgs.reduce((n, m) => n + (Array.isArray(m.content) ? m.content.length - 1 : 0), 0);
+  const inTok = msgs.reduce((s, m) => s + est(typeof m.content === 'string' ? m.content : m.content[0].text), 0) + nImg * 1000;
+  const steps = nImg ? await visionPlan(model) : await plan(model || 'sz:auto');
+  if (nImg && !steps.length) throw err(400, 'Ahora mismo ninguna IA conectada puede ver imágenes. Elige una IA que diga «ve fotos» o envía tu pregunta sin la imagen.', 'sz_novision');
   if (!steps.length) throw err(503, 'Las IAs están descansando un momento. Mientras tanto, puedes conectar Puter.', 'sz_off');
   const d = today(), t0 = Date.now(), tried = [];
   for (const m of steps){
@@ -200,7 +252,7 @@ export async function chat({ who, ipKey, messages, model, maxTokens, system, str
       let up;
       try{
         const base = await baseOf(k);
-        const body = { model:m.mid, messages:msgs, stream, max_tokens:outTok(m.prov, maxTokens), temperature:.6 };
+        const body = { model:m.mid, messages:msgs, stream, max_tokens:outTok(m.prov, maxTokens), temperature };
         if (stream && (m.prov === 'groq' || m.prov === 'mistral')) body.stream_options = { include_usage:true };
         if (stream && m.prov === 'openrouter') body.usage = { include:true };
         if (m.prov === 'siliconflow') body.enable_thinking = false;
@@ -218,7 +270,7 @@ export async function chat({ who, ipKey, messages, model, maxTokens, system, str
         if (s === 402 || ((s === 401 || s === 403) && PAY_RX.test(txt))) await markPay(k, s, txt);
         const ttl = s === 429 ? (PLAN_RX.test(txt) ? 1800 : 60) : s === 401 || s === 403 || s === 402 ? 3600 : 120;
         /* alerta: si el modelo ya no existe, se esconde para todos 6 h y la lista se rehace */
-        if (s === 404 || (s === 400 && /model/i.test(txt))) await pipe([['HSET', 'pool:badm', m.id, String(Date.now())], ['DEL', 'pool:models'], ['LPUSH', 'evl', JSON.stringify({ t:Date.now(), kind:'error', who:'Servidor', rank:'Alerta', sub:'', page:'ia', detail:'Modelo sin servicio: ' + m.name + ' (' + m.prov + ')' })], ['LTRIM', 'evl', '0', '299']]).catch(() => {});
+        if (s === 404 || (s === 400 && !nImg && /model/i.test(txt))) await pipe([['HSET', 'pool:badm', m.id, String(Date.now())], ['DEL', 'pool:models'], ['LPUSH', 'evl', JSON.stringify({ t:Date.now(), kind:'error', who:'Servidor', rank:'Alerta', sub:'', page:'ia', detail:'Modelo sin servicio: ' + m.name + ' (' + m.prov + ')' })], ['LTRIM', 'evl', '0', '299']]).catch(() => {});
         await pipe([['SET', 'pk:down:' + k.id, (s ? classify(s) : 'sin respuesta') + (txt ? ' · ' + provSaid(txt) : ''), 'EX', String(ttl)], ['HINCRBY', 'st:' + d, 'err', '1']]);
         continue;
       }

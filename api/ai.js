@@ -3,7 +3,7 @@
    POST { messages, model?, maxTokens? } → respuesta en vivo (streaming), con el gasto al final
    Sin cuenta también funciona: se cuenta por dispositivo y por conexión. */
 import { route, body, json, fail, auth, sha, redis, pipe, today, ipOf, limit, str, roleOf } from './_lib.js';
-import { models, chat, settings, usedToday, PROV, IMG, pickKeys, markPay, clearPay, outage, classify, searchWith, searchWiki, PAY_RX } from './_pool.js';
+import { models, chat, reviewerModel, settings, usedToday, PROV, IMG, pickKeys, markPay, clearPay, outage, classify, searchWith, searchWiki, PAY_RX } from './_pool.js';
 
 /* v2.0 · imágenes con Pollinations: solo con cuenta, con su propio límite diario (no gasta Puter ni tu límite de chat).
    Solo gasta el saldo que ya esté cargado en Pollinations: nunca cobra a una tarjeta. */
@@ -71,6 +71,48 @@ async function makeImage(req, me, b){
   throw Object.assign(new Error('No pude crear la imagen ahora. Intenta en un rato.'), { status:503, code:'img_down' });
 }
 
+/* ---------- v3.4 · revisión de calidad ----------
+   Otra IA (la que mejor razona entre las gratis) lee la pregunta, las fotos y el borrador de la respuesta.
+   Si está bien dice OK; si tiene errores de lógica, cálculos, datos o le falta algo, devuelve la respuesta corregida completa.
+   Las instrucciones viven aquí (no en el navegador) para que nadie las cambie. */
+const REVIEW_SYS = [
+  'Eres el revisor de calidad de SymphorIA, un experto exigente en lógica, matemáticas, ciencia, programación y redacción.',
+  'Otra IA escribió un BORRADOR de respuesta para una persona. Compruébalo en silencio, paso a paso:',
+  '1) ¿Responde exactamente lo que la persona pidió, completo, sin irse por las ramas?',
+  '2) ¿Hay errores de lógica, de cálculo, datos inventados o dudosos, contradicciones, pasos que faltan o código que no funcionaría? Rehaz tú mismo cada cálculo.',
+  '3) Si hay imágenes: ¿lo que dice de ellas coincide con lo que realmente se ve?',
+  '4) ¿Se entiende? Orden claro, Markdown limpio (títulos cortos, listas, tablas si ayudan), ejemplos donde sirvan, sin relleno.',
+  '5) ¿Está en el mismo idioma que usó la persona?',
+  'FORMATO DE SALIDA OBLIGATORIO:',
+  '· Si el borrador está bien (o solo tiene detalles menores de estilo), escribe solo: OK',
+  '· Si tiene un error real o le falta algo importante, escribe en la primera línea: MEJORAR',
+  '  En la segunda línea: «NOTA: » y en máximo 12 palabras qué corregiste, en el idioma de la persona.',
+  '  Después, la respuesta final COMPLETA y corregida, lista para mostrarla tal cual a la persona.',
+  'En la respuesta corregida: conserva todo lo que estaba bien, el tono y el formato; no la acortes salvo para quitar errores o relleno; si había código, déjalo completo y corregido.',
+  'Nunca menciones el borrador, la revisión, a otra IA ni a ti mismo. Si dudas de si algo está mal, no lo cambies: responde OK.'
+].join('\n');
+const cut = (s, n) => { s = String(s || ''); return s.length > n ? s.slice(0, n) + '\n…(recortado)' : s; };
+async function review(who, ipKey, b, free){
+  const draft = cut(b.draft, 16000), q = cut(b.q, 8000);
+  if (draft.length < 20 || q.length < 1) throw Object.assign(new Error('Nada que revisar.'), { status:400, code:'rv_empty' });
+  const imgs = (Array.isArray(b.imgs) ? b.imgs : []).filter(u => typeof u === 'string' && /^data:image\/(jpeg|png|webp);base64,/.test(u.slice(0, 40))).slice(0, 4);
+  const ctx = Array.isArray(b.ctx) ? b.ctx.slice(-6).map(m => (m && m.role === 'assistant' ? 'IA: ' : 'Persona: ') + cut(m && m.content, 900)).join('\n') : '';
+  const packet = (ctx ? '## Conversación anterior (resumida)\n' + ctx + '\n\n' : '') + '## Lo que pidió la persona ahora\n' + q + (imgs.length ? '\n(Adjuntó ' + imgs.length + ' imagen(es): están abajo.)' : '')
+    + '\n\n## BORRADOR de la respuesta\n<<<\n' + draft + '\n>>>\n\nRevisa el borrador y responde con el FORMATO DE SALIDA OBLIGATORIO.';
+  const content = imgs.length ? [{ type:'text', text:packet }, ...imgs.map(url => ({ type:'image_url', image_url:{ url } }))] : packet;
+  const model = await reviewerModel(imgs.length > 0);
+  const r = await chat({ who, ipKey, messages:[{ role:'user', content }], system:REVIEW_SYS, model, maxTokens:Math.min(7000, Math.ceil(draft.length / 3) + 900), stream:false, free, temperature:.2 });
+  const out = String(r.text || '').replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+  const base = { by:r.meta.name, used:r.used, limit:r.limit };
+  if (!/^\W{0,3}MEJORAR\b/i.test(out)) return Object.assign(base, { verdict:'ok' });
+  let rest = out.replace(/^\W{0,3}MEJORAR\W{0,3}\s*/i, ''), note = '';
+  const nm = /^\W{0,3}NOTA\W{0,3}\s*:?\s*(.{0,160})\n/i.exec(rest); if (nm){ note = nm[1].replace(/[*_]+/g, '').trim(); rest = rest.slice(nm[0].length); }
+  rest = rest.replace(/^\s*<<<\s*\n?|\n?\s*>>>\s*$/g, '').trim();
+  /* una corrección mucho más corta que el borrador casi siempre es un corte: mejor quedarse con el borrador */
+  if (rest.length < 20 || (draft.length > 500 && rest.length < draft.length * .45)) return Object.assign(base, { verdict:'ok' });
+  return Object.assign(base, { verdict:'fix', text:rest, note });
+}
+
 /* sin cuenta: solo unos pocos mensajes al día (por dispositivo y, para que no se salte, también por conexión) */
 const GUEST_MAX = Math.max(1, Math.min(50, +process.env.SYNTHZ_GUEST_MSGS || 5));
 const gKey = w => 'gm:' + w + ':' + today();
@@ -93,7 +135,7 @@ export default route({
     return json({ provs:cat.provs.map(p => ({ id:p, name:PROV[p].name })), models:cat.list.map(m => ({ id:m.id, name:m.name, prov:m.prov, ctx:m.ctx })), limit:set.dayLimit, used:me && roleOf(me) !== 'user' ? 0 : await usedToday(who), team:!!(me && roleOf(me) !== 'user'), guest:g ? { used:Math.max(g.used, Math.min(g.usedIp, GUEST_MAX)), max:GUEST_MAX } : null, alert, alertN, img:me ? { max:roleOf(me) !== 'user' ? 5000 : set.imgDay, used:+(await redis('GET', 'img:' + me.sub + ':' + today())) || 0 } : null });
   },
   async POST(req){
-    const b = await body(req, 600000), { who, ipKey, me } = await whoOf(req); let guest = null;
+    const b = await body(req, 6_000_000), { who, ipKey, me } = await whoOf(req); let guest = null;
     if (b.action === 'image') return makeImage(req, me, b);
     if (b.action === 'search') return webSearch(req, me, who, b);
     if (!me){
@@ -104,13 +146,15 @@ export default route({
       if (!isNew && (+n || 0) >= PER_TURN) throw guestErr();
       guest = { turn, isNew, ipNew:!(+inIp) };
     }
-    const r = await chat({ who, ipKey, messages:b.messages, model:typeof b.model === 'string' ? b.model : 'sz:auto', maxTokens:b.maxTokens, stream:true, free:!!(me && roleOf(me) !== 'user') });
+    const free = !!(me && roleOf(me) !== 'user');
+    const r = b.action === 'review' ? await review(who, ipKey, b, free) : await chat({ who, ipKey, messages:b.messages, model:typeof b.model === 'string' ? b.model : 'sz:auto', maxTokens:b.maxTokens, stream:true, free });
     let gu = '';
     if (guest){
       const tk = 'gt:' + who + ':' + guest.turn;
       const pr = await pipe([['SADD', gKey(who), guest.turn], ['EXPIRE', gKey(who), '172800'], ['SADD', gKey(ipKey), guest.turn], ['EXPIRE', gKey(ipKey), '172800'], ['INCR', tk], ['EXPIRE', tk, '172800'], ['SCARD', gKey(who)]]);
       gu = (+pr[6] || 0) + '/' + GUEST_MAX;
     }
+    if (b.action === 'review') return json(Object.assign(r, { guest:gu }));
     return new Response(r.stream, { status:200, headers:{ 'content-type':'text/event-stream; charset=utf-8', 'cache-control':'no-store',
       'x-sz-model':r.meta.model, 'x-sz-name':encodeURIComponent(r.meta.name), 'x-sz-prov':r.meta.provName, 'x-sz-fallback':r.meta.fallback ? '1' : '0', 'x-sz-used':String(r.used), 'x-sz-limit':String(r.limit), 'x-sz-guest':gu,
       'access-control-expose-headers':'x-sz-model,x-sz-name,x-sz-prov,x-sz-fallback,x-sz-used,x-sz-limit,x-sz-guest' } });
