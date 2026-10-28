@@ -1,5 +1,5 @@
 {
-  "buildCommand": "node build.mjs --dist",
+  "buildCommand": "node vercel-portal/armar.mjs",
   "outputDirectory": "dist",
   "headers": [
     {
@@ -118,6 +118,11 @@
     {
       "source": "/pulso",
       "destination": "/pulsem.html",
+      "permanent": false
+    },
+    {
+      "source": "/:ruta((?!api/|v/|portal\\.css$|portal\\.js$|sw\\.js$|icon\\.svg$|og-synthz\\.jpg$|robots\\.txt$).+)",
+      "destination": "https://synthz.pages.dev/:ruta",
       "permanent": false
     }
   ],

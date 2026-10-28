@@ -850,15 +850,8 @@ function trStr(s){
   const m = TR.map; if (!m || !s || !/\p{L}{2}/u.test(s)) return s;
   const k = s.replace(/\s+/g, ' ').trim(); if (!k) return s;
   if (m[k] != null) return s.match(/^\s*/)[0] + m[k] + s.match(/\s*$/)[0];
-  let r = TR.rx ? s.replace(TR.rx, x => m[x] ?? x) : s;
-  TR_RULES.forEach(([rx, to]) => { r = r.replace(rx, to); });
-  return r;
+  return TR.rx ? s.replace(TR.rx, x => m[x] ?? x) : s;
 }
-/* números con su palabra («7 líneas», «hace 5 min»…), que el diccionario no puede tener uno por uno */
-const TR_RULES = [[/\b1 línea\b/g, '1 line'], [/(\d[\d.,]*) líneas\b/g, '$1 lines'], [/(\d[\d.,]*) palabras\b/g, '$1 words'], [/\b1 palabra\b/g, '1 word'],
-  [/\bhace (\d+) (min|h|d)\b/g, '$1 $2 ago'], [/\bhace (\d+) días\b/g, '$1 days ago'], [/(\d[\d.,]*) mensajes\b/g, '$1 messages'], [/\b1 mensaje\b/g, '1 message'],
-  [/(\d[\d.,]*) archivos\b/g, '$1 files'], [/(\d[\d.,]*) chats\b/g, '$1 chats'], [/(\d[\d.,]*) respuestas\b/g, '$1 answers'], [/(\d[\d.,]*) votos\b/g, '$1 votes'], [/(\d[\d.,]*) diapositivas\b/g, '$1 slides'],
-  [/\bescribiendo\b/g, 'typing'], [/\bahora\b(?=$|[ ·])/g, 'now']];
 const trSkip = el => !el || !!el.closest(TR_SKIP);
 /* TR.done guarda por nodo [original, lo que pusimos]; si la página cambia el texto después, el nuevo pasa a ser el original */
 function trSet(n, key, cur, put){

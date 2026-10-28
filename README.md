@@ -3,12 +3,19 @@ SynthZ AI Page made by Sammuel.
 Is free IA for all of u.
 SO MANY IA'S OMG.
 
+## 👉 La nueva página: **[synthz.pages.dev](https://synthz.pages.dev)**
+
+[![Así se ve la nueva página de SynthZ](.github/readme/synthz.gif)](https://synthz.pages.dev)
+
+SynthZ se mudó a Cloudflare (gratis). [synthz-style.vercel.app](https://synthz-style.vercel.app) ahora solo muestra este video y el link a la página nueva.
+
 ## Qué es
-SynthZ (portada) y SynthFlow (el chat): chatea gratis con cientos de IA, compáralas a ciegas y trabaja con tu equipo. Página estática + funciones de Vercel en `api/` + Redis (Upstash).
+SynthZ (portada) y SynthFlow (el chat): chatea gratis con cientos de IA, compáralas a ciegas y trabaja con tu equipo. Página estática en Cloudflare Pages + funciones de Vercel en `api/` (Cloudflare se las pasa con `functions/api/`) + Redis (Upstash).
 
 ## Cómo se trabaja
 - Se editan las piezas de `src/` y luego `node build.mjs` arma `core.js`, `chat.js`, `chat.css`… (ver `src/LEEME.md`).
-- Vercel corre `node build.mjs --dist`: copia solo lo público a `dist/` y minifica el JS y el CSS. El repo queda legible.
+- Cloudflare Pages corre `npm ci && node cloudflare/preparar.mjs` en cada push a `main` (salida `cloudflare/public`): arma `dist/` con `node build.mjs --dist`, minifica y traduce las cabeceras de `vercel.json`. Ver `cloudflare/LEEME.md`.
+- Vercel corre `node vercel-portal/armar.mjs`: solo la página del video con el link, y las funciones de `api/`.
 - Pruebas (necesitan `playwright`): `node t/humo/humo.mjs`, `node t/portada/calidad.mjs`, `node t/alias/contrato.mjs`. GitHub las corre solas en cada Pull Request.
 - Nada se pasa a `main` sin revisar antes la vista previa de Vercel de la rama.
 
