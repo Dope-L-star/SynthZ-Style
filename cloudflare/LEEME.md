@@ -1,6 +1,15 @@
 # SymphorIA en Cloudflare Pages (gratis, symphoria.pages.dev)
 
-La página completa vive en Cloudflare Pages. `/api/*` lo atiende `functions/api/[[path]].js` (en la raíz del repo), que lo reenvía a https://synthz-style.vercel.app: las funciones de `api/` siguen en Vercel sin cambios. Vercel ya solo muestra la página del video (`vercel-portal/`) con el link a la nueva.
+La página completa vive en Cloudflare Pages. `/api/*` lo atiende `functions/api/[[path]].js` (en la raíz del repo), que corre las mismas funciones de `api/` dentro de Cloudflare. Mientras Pages no tenga `KV_REST_API_URL`, sigue reenviando a https://synthz-style.vercel.app como antes.
+
+## Pasar la API a Cloudflare (una sola vez)
+1. Pages → symphoria → Settings → Runtime → Compatibility flags: `nodejs_compat` (Production y Preview) y Compatibility date `2025-09-01` o más nueva.
+2. Settings → Variables and Secrets (Production), tipo Secret: `KV_REST_API_URL` y `KV_REST_API_TOKEN` (los mismos de Vercel; se ven en la consola de Upstash → la base → REST API). Si algún día pones `SYNTHZ_SECRET`, `SUPABASE_SECRET_KEY`, `GOOGLE_CLIENT_ID`, etc., van aquí también.
+3. Deployments → último de producción → Retry deployment.
+4. Comprueba: `/api/health` ya no trae la cabecera `x-vercel-id`.
+
+Ojo: la base de Redis se creó desde Vercel (Marketplace de Upstash). No borres esa integración en Vercel o se borra la base.
+Ojo 2: el plan gratis de Workers da 10 ms de CPU por petición; crear cuenta y entrar con contraseña (scrypt) gastan ~150 ms. Si fallan con «Error 1102», hace falta Workers Paid (5 USD/mes). Vercel ya solo muestra la página del video (`vercel-portal/`) con el link a la nueva.
 
 ## Conectar (una sola vez, en el panel de Cloudflare)
 Workers & Pages → Create → Pages → Connect to Git → `Dope-L-star/SynthZ-Style`:
