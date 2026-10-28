@@ -23,6 +23,7 @@ const isMobile = () => matchMedia('(max-width:760px)').matches;
 const isTablet = () => matchMedia('(max-width:1100px) and (min-width:761px)').matches;
 let query = '';
 const busy = {};                 /* id del modelo -> 'think' | 'write' */
+let live = null;                 /* v3.3 · la respuesta que se está escribiendo ahora: si algo repinta el chat, vuelve a aparecer */
 let gen = 0, cmpRun = 0, stick = true, loading = false;
 
 /* ---------- catálogo en vivo ---------- */
@@ -1296,7 +1297,7 @@ function renderMsgs(){
   parkComposer();
   lane.innerHTML = '';
   if (mode === 'cmp'){ setFresh(false); if (cmpLast) lane.appendChild(cmpLast.node); else lane.appendChild(emptyEl()); jump(); return; }
-  const chat = chatArr(), thinking = Object.keys(busy).find(k => busy[k] === 'think' && k === selId());
+  const chat = chatArr(), thinking = Object.keys(busy).find(k => busy[k] === 'think' && (k === selId() || agentOn()));
   const fresh = !chat.length && !thinking;
   if (fresh){ const e = emptyEl(); lane.appendChild(e); if (!isMobile()){ const hc = $('.hcomp', e); if (hc) hc.appendChild(composer); } }
   setFresh(fresh);
@@ -1307,7 +1308,8 @@ function renderMsgs(){
     else if (m.role === 'user'){ const u = userEl(m.content, m.files); u.style.animation = 'none'; lane.appendChild(u); if (m.agent) lane.appendChild(agentSumEl(m.agent)); srcs = m.sources && m.sources.length ? m.sources : null; if (srcs) lane.appendChild(sourcesEl(m)); }
     else { const b = botEl(m.model || selId()); b.style.animation = 'none'; b._raw = m.content; b._ck = ck0; b._ci = i; b.dataset.ci = i; if (m.work) b.insertBefore(SZ.workSaved(m.work), $('.body', b)); $('.body', b).innerHTML = md(m.content); if (m.imgId) imgFill($('.body', b), m); b._sources = srcs; finishBot(b, m.meta, i === chat.length - 1, m.cont, m.star); if (!isFix(chat[i + 1])) ckIdle(b); lane.appendChild(b); }
   });
-  if (thinking) lane.appendChild(thinkEl(thinking));
+  if (live && live.chat === chat && live.el){ $$('.m.last', lane).forEach(x => x.classList.remove('last')); lane.appendChild(live.el); }   /* v3.3 · la respuesta en vivo no se pierde al repintar */
+  else if (thinking) lane.appendChild(thinkEl(thinking));
   if (fresh){ msgsEl.scrollTop = 0; requestAnimationFrame(() => { msgsEl.scrollTop = 0; }); } else jump();
 }
 function showErr(err, o){ if (err && err.aborted) return; showErr2(err, o || {}); }
@@ -2025,7 +2027,9 @@ function agentChoice(pick){
 async function agentPlan(text){
   const keys = TOPICS.map(t => t[0]).join(', ');
   const sys = 'Eres el planificador de SynthFlow. Lees el pedido de una persona y lo mejoras para que otra IA lo entienda mejor. Responde SOLO con JSON válido y nada más: {"tema":"<una de: ' + keys + '>","internet":<true si para responder bien hacen falta datos actuales de internet (noticias, precios, fechas recientes, resultados, algo de hoy); si no, false>,"dificultad":"<muy_simple si es un saludo, una pregunta de una línea con respuesta corta, traducir o corregir una frase corta; si no, normal>","pedido":"<el pedido mejorado, en el mismo idioma de la persona, claro, con el contexto que dio y el formato de respuesta que le sirve; no inventes datos; máximo 120 palabras>"}';
-  const r = await SZ.askStream(SZ.SZ_P, [{ role:'system', content:sys }, { role:'user', content:text.slice(0, 4000) }], { model:'sz:auto', _noFall:true });
+  /* v3.3 · el plan nunca deja a SuperiorSynth colgado: si tarda más de 12 s (una IA que piensa mucho), sigue con tu pedido tal cual */
+  const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 12000);
+  let r; try{ r = await SZ.askStream(SZ.SZ_P, [{ role:'system', content:sys }, { role:'user', content:text.slice(0, 4000) }], { model:'sz:auto', _noFall:true, maxTokens:600, signal:ctl.signal }); }finally{ clearTimeout(tm); }
   const m = String((r && r.text) || '').match(/\{[\s\S]*\}/); if (!m) throw new Error('sin plan');
   const j = JSON.parse(m[0]); if (!j || typeof j.pedido !== 'string' || j.pedido.trim().length < 4) throw new Error('sin plan');
   return { tema:TOPIC[j.tema] ? j.tema : null, web:j.internet === true, simple:j.dificultad === 'muy_simple', pedido:j.pedido.trim().slice(0, 4000) };
@@ -2048,6 +2052,9 @@ async function send(){
     /* el agente ve que pides una imagen: la crea el creador de imágenes */
     if (IMG_RX.test(text) && SZ.ACC.ready){ toast('SuperiorSynth vio que quieres una imagen: la crea el creador de imágenes.'); return createImage(text); }
     agentBusy = true; inp.readOnly = true; sendBtn.disabled = true;
+    /* v3.3 · pase lo que pase (error, cambio de chat), la caja vuelve a quedar libre: antes un fallo a mitad dejaba SuperiorSynth mudo */
+    const unlock = () => { agentBusy = false; inp.readOnly = false; sendBtn.disabled = false; };
+    try{
     try{ localStorage.setItem('synthz:sent', String(sentN() + 1)); }catch(e){}
     try{ frustration(text, false); }catch(e){}
     const chat = chatArr(), msg = { role:'user', content:text }, g0 = gen;
@@ -2070,7 +2077,7 @@ async function send(){
     await SZ.sleepRaw(750);
     card.set(3, 'Le paso tu pedido a ' + info(pick).name);
     await SZ.sleepRaw(600); card.stop();
-    agentBusy = false; inp.readOnly = false; sendBtn.disabled = false;
+    unlock();
     if (g0 !== gen){ card.el.remove(); return; }                /* cambiaste de chat mientras tanto */
     if (!same) msg.ask = plan.pedido;
     if (plan.web || needsWeb(text)){ card.el.remove(); await webPrep(msg, plan.pedido || text); if (g0 !== gen) return; }
@@ -2081,6 +2088,8 @@ async function send(){
     await runSolo(err => { ok = false; chat.pop(); save(); renderMsgs(); showErr(err); inp.value = text; autoGrow(); updateHint(); });
     if (ok && g0 === gen) agentChoice(pick);
     if (ok && g0 === gen && MEM_RX.test(text)) memOffer(text);
+    }catch(e){ console.error('[superiorsynth]', e); $$('.agrun', lane).forEach(x => x.remove()); renderMsgs(); toast('SuperiorSynth tuvo un problema. Tu mensaje quedó guardado: vuelve a intentarlo.'); }
+    finally{ unlock(); }
     return;
   }
   const th0 = ckey(), m0 = selId(), at0 = Date.now(), needed = needsConn();
@@ -2146,14 +2155,15 @@ async function runSolo(onFail, o = {}){
   const W = works[mid];
   busy[mid] = 'think'; renderMsgs(); renderNow();
   let el = null, rv = null;
-  const here = () => g === gen && mode === 'solo' && mid === selId();
+  /* v3.3 · la respuesta se ve mientras sigas en ESA conversación (en SuperiorSynth la IA elegida puede cambiar en la lista mientras escribe) */
+  const here = () => g === gen && mode === 'solo' && st().chats[ckey()] === chat;
   const mount = () => {
     if (el || !here()) return;
     busy[mid] = 'write'; renderNow();
     const t = $('.think-wrap', lane); if (t) t.remove();
     const e = $('.empty', lane); if (e) e.remove();
     $$('.m.last', lane).forEach(x => x.classList.remove('last'));
-    el = botEl(mid); el.classList.add('writing'); el.insertBefore(W.el, $('.body', el)); lane.appendChild(el); stick = true;
+    el = botEl(mid); el.classList.add('writing'); el.insertBefore(W.el, $('.body', el)); lane.appendChild(el); stick = true; live = { el, chat };
     const body = $('.body', el), tk = $('.tk', el);
     rv = SZ.mkReveal(body, (s, n) => { tk.textContent = fmt(Math.ceil(s / 5.5)); el.style.setProperty('--p', n ? (s / n).toFixed(3) : 0); follow(); });
   };
@@ -2192,6 +2202,7 @@ async function runSolo(onFail, o = {}){
     const msg = { role:'assistant', content:r.text, work, meta:metaOf(r) + SZ.coinNote(mid, r) + tail + who + (r.via ? ' · vía ' + r.via + ' (prueba de SymphorIA)' : ''), model:mid, cont: !!(r.cut || r.finish === 'length') || undefined };
     chat.push(msg); touchThread(); save();
     if (here()){
+      if (el && !el.isConnected){ lane.appendChild(el); }   /* algo repintó la conversación mientras escribía: la respuesta vuelve a su sitio */
       mount(); rv.push(r.text);
       await rv.end();
       el.classList.remove('writing'); el.style.removeProperty('--p'); el._raw = r.text; el._ck = ckey(); el._ci = chat.length - 1; el.dataset.ci = el._ci;
@@ -2209,7 +2220,7 @@ async function runSolo(onFail, o = {}){
     if (el) el.remove();
     if (err && err.gone) hideBadModel(mid, err);
     if (g === gen && onFail) onFail(err);
-  }finally{ clearTimeout(slowT); if (g === gen){ delete busy[mid]; renderNow(); if (!el){ const t = $('.think-wrap', lane); if (t) t.remove(); } } }
+  }finally{ clearTimeout(slowT); if (live && live.chat === chat) live = null; if (g === gen){ delete busy[mid]; renderNow(); if (!el){ const t = $('.think-wrap', lane); if (t) t.remove(); } } }
 }
 /* una IA que falló por culpa del modelo (ya no existe o no tiene servidores) se esconde y se cambia por otra que sí funcione */
 function hideBadModel(id, err){
@@ -2632,7 +2643,6 @@ function tourStep(anim, dir){
   SZ.swapDir(b, dir || 1, set);
 }
 function openHelp(){ SZ.helpGuide({ extra:[['Ver la Guía Asistida', () => runGuide()], ['Conectar mi Puter', () => openConnect()], ['Ver mi límite de hoy', () => coinModal('panel')]] }); }
-$('#helpBtn').addEventListener('click', () => openGuide());
 $('#guideTop').addEventListener('click', () => openGuide());
 function openTour(){
   if (tourEl) return; tourI = 0; tourPick = null;
@@ -2862,7 +2872,7 @@ async function runGuide(o = {}){
       const x = $('#cfgm [data-close]'); if (x) x.click();
       await gWait(400);
     }
-    await gPoint(gT('#guideTop', '#guideTop') || gT('#helpBtn', '#helpBtn'), 'Y si te pierdes, la Guía rápida siempre está aquí: la ves completa o solo lo que quieras. También puedes preguntarme lo que sea con mi bolita.', { mood:'guino' });
+    await gPoint(gT('#guideTop', '#guideTop'), 'Y si te pierdes, la Guía rápida siempre está aquí: la ves completa o solo lo que quieras. También puedes preguntarme lo que sea con mi bolita.', { mood:'guino' });
     H.unspot(); H.quiet();
 
     /* 4 · comparar 2 IA (ejemplo animado: no gasta nada) */
@@ -3323,7 +3333,7 @@ async function worry(){
   await wSay('Ay… te veo un poquito perdido 😟', 'preocupada'); if (!alive()) return;
   await zz(SZ.reduce ? 200 : 700); if (!alive()) return;
   /* con su manita: primero se señala a ella, luego la Guía (se nota el esfuerzo) */
-  const me = $('.wme', w), gd = [$('#guideTop'), $('#helpBtn')].find(n => n && n.getClientRects().length && n.getBoundingClientRect().width);
+  const me = $('.wme', w), gd = [$('#guideTop')].find(n => n && n.getClientRects().length && n.getBoundingClientRect().width);
   try{
     H2.show({ x:innerWidth * .55, y:innerHeight * .45 });
     wSay('Tranqui, aquí estoy yo. Si tienes dudas o necesitas ayuda, pregúntame sin pena…', 'senalando');
@@ -3373,6 +3383,7 @@ function bestUsable(strict){
 /* si el modelo elegido no se puede usar pero hay otro conectado, cambia solo */
 function fixModel(quiet){
   if (mode !== 'solo' || !cat.list.length) return false;
+  if (Object.keys(busy).length) return false;   /* v3.3 · nunca cambia la IA mientras una está respondiendo */
   const cur = selId(), missing = !idx.has(cur);
   if (/^pu:/.test(cur) && !window.__puterBlocked && !cat.list.some(m => /^pu:/.test(m.id))) return false;
   if (!missing && st().pinned === cur) return false;
@@ -4482,7 +4493,7 @@ function paintMode(){
     else if (k === 'cfg') SZ.cfgModal();
     else if (k === 'favs') showChats('favs');
     else if (k === 'energy') coinModal('panel');
-    else if (k === 'guide'){ const h = $('#helpBtn'); if (h) h.click(); }
+    else if (k === 'guide'){ openGuide(); }
     else if (k === 'help') location.href = 'ayuda.html';
     if (k !== 'new' && k !== 'favs') moreOn(false);
     if (isMobile() && k !== 'favs') closeChatsSheet();

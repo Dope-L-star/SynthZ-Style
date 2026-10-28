@@ -201,7 +201,7 @@ async function runGuide(o = {}){
       const x = $('#cfgm [data-close]'); if (x) x.click();
       await gWait(400);
     }
-    await gPoint(gT('#guideTop', '#guideTop') || gT('#helpBtn', '#helpBtn'), 'Y si te pierdes, la Guía rápida siempre está aquí: la ves completa o solo lo que quieras. También puedes preguntarme lo que sea con mi bolita.', { mood:'guino' });
+    await gPoint(gT('#guideTop', '#guideTop'), 'Y si te pierdes, la Guía rápida siempre está aquí: la ves completa o solo lo que quieras. También puedes preguntarme lo que sea con mi bolita.', { mood:'guino' });
     H.unspot(); H.quiet();
 
     /* 4 · comparar 2 IA (ejemplo animado: no gasta nada) */

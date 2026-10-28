@@ -993,7 +993,7 @@ html.nocur #cd,html.nocur #cr,html.nocur #cl{display:none !important}
 .kbdh{font-style:normal}
 @media (max-width:900px){
   .top{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;grid-template-areas:"menu now help ths acc" "title title title title title";align-items:center;gap:10px 8px;padding:10px 14px}
-  .top>.menu{grid-area:menu}.top>.title{grid-area:title;min-width:0}.top>#helpBtn{grid-area:help}.top>.thb{grid-area:ths}.top>.now{grid-area:now;min-width:0;flex:none}.top>#accBtn{grid-area:acc}
+  .top>.menu{grid-area:menu}.top>.title{grid-area:title;min-width:0}.top>.thb{grid-area:ths}.top>.now{grid-area:now;min-width:0;flex:none}.top>#accBtn{grid-area:acc}
   .now{overflow:hidden}
   .now-chip{max-width:100%;min-width:0}
   .now-chip.idle{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-flex}
@@ -1105,9 +1105,6 @@ html.noanim .pdot2{animation:none}
 .rme .sy.wait{background:#f2b36b;animation:blink2 .9s ease-in-out infinite}
 .rme .sy.bad{background:#ff8f7a}
 .rme.out .av-me{background:rgba(255,255,255,.08);color:var(--soft);box-shadow:none;border:1px dashed rgba(255,255,255,.25)}
-.rguide{display:flex;flex-direction:column;align-items:center;gap:2px;width:48px;margin:6px 0 0;padding:6px 0 4px;border-radius:14px;color:var(--mute);font-size:10.5px;transition:color .3s,background .3s}
-.rguide svg{width:17px;height:17px}
-.rguide:hover{color:var(--text);background:rgba(255,255,255,.06)}
 /* etiqueta flotante con la barrita cerrada */
 .rail:not(.open) [data-tip]:hover::after{content:attr(data-tip);position:absolute;left:calc(100% + 12px);top:50%;translate:0 -50%;padding:6px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(18,19,26,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:var(--text);font-size:12.5px;white-space:nowrap;pointer-events:none;animation:tipin .35s cubic-bezier(.22,1,.36,1) both;z-index:5}
 @keyframes tipin{from{opacity:0;transform:translateX(-6px)}}
@@ -1933,7 +1930,7 @@ html.simple{--serif:'Instrument Serif',Georgia,'Times New Roman',serif}
 html.simple{--sbg:#252422;--sside:#1d1c1a;--scard:#2f2e2b;--sline:rgba(255,255,255,.085);--stext:#f2efe8;--ssoft:#c8c4b8;--smute:#9a968b;--sacc:#d9a066;--sacc-rgb:217,160,102;
   --gold:#d9a066;--gold-rgb:217,160,102;--wine:#c07a5a;--wine-rgb:192,122,90;--text:var(--stext);--soft:var(--ssoft);--mute:var(--smute);--line:var(--sline)}
 html.simple,html.simple body,html.simple .shell,html.simple .main,html.simple .msgs{background:var(--sbg) !important}
-html.simple .aurora,html.simple .grain,html.simple #glow,html.simple .corner,html.simple #szBot,html.simple #betaBot,html.simple #szBotB,html.simple .guideb,html.simple #hexR,html.simple .tpanel,html.simple .rguide{display:none !important}
+html.simple .aurora,html.simple .grain,html.simple #glow,html.simple .corner,html.simple #szBot,html.simple #betaBot,html.simple #szBotB,html.simple .guideb,html.simple #hexR,html.simple .tpanel{display:none !important}
 html.simple *{text-shadow:none !important}
 /* barra y lista de chats */
 html.simple .rin,html.simple .rail.open .rin,html.simple .chats{background:var(--sside) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;border-color:var(--sline) !important;box-shadow:none !important}
