@@ -963,6 +963,16 @@ html.noanim .nwbang{animation:none}
 #szMaint .mt-send:disabled{opacity:.4}
 #szMaint .mt-exit{background:none;border:1px dashed rgba(255,255,255,.25);color:rgba(243,236,226,.7);border-radius:12px;padding:8px 14px;font:inherit;font-size:13px;cursor:pointer}
 #szMaint .mt-exit:hover{border-color:rgba(var(--gold-rgb),.6);color:var(--gold)}
+#szMaint .mt-acct{width:100%;display:grid;gap:10px;justify-items:center}
+#szMaint .mt-login{position:relative;overflow:hidden;border:0;border-radius:999px;padding:12px 30px;font:inherit;font-size:15px;font-weight:600;color:#1a1306;cursor:pointer;background:linear-gradient(120deg,var(--gold),#ffe9b0 50%,var(--gold));background-size:220% 100%;animation:mtSheen 3.2s ease-in-out infinite,mtIn .6s both;box-shadow:0 10px 30px -10px rgba(var(--gold-rgb),.7);transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+#szMaint .mt-login:hover{transform:translateY(-2px) scale(1.04)}
+#szMaint .mt-login:active{transform:scale(.97)}
+#szMaint .mt-login[hidden],#szMaint .mt-pulsem[hidden],#szMaint .mt-auth[hidden]{display:none}
+#szMaint .mt-auth{width:100%;max-width:360px;padding:14px;border-radius:20px;background:rgba(22,18,24,.82);border:1px solid rgba(255,255,255,.1);text-align:left}
+#szMaint .mt-pulsem{display:grid;gap:2px;justify-items:center;text-decoration:none;color:#1a1306;border-radius:18px;padding:12px 26px;font-weight:600;background:linear-gradient(120deg,var(--gold),#ffe9b0 50%,var(--gold));background-size:220% 100%;animation:mtSheen 3.2s ease-in-out infinite,mtPing 2.4s ease-out infinite,mtIn .6s both}
+#szMaint .mt-pulsem small{font-weight:400;font-size:12px;opacity:.75}
+@keyframes mtSheen{0%,100%{background-position:0 0}50%{background-position:100% 0}}
+@media (prefers-reduced-motion:reduce){#szMaint .mt-login,#szMaint .mt-pulsem{animation:none}}
 html.mt-on,html.mt-on body{overflow:hidden!important}
 html.mt-on #szBot{display:none!important}
 @keyframes mtFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
