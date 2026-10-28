@@ -26,6 +26,17 @@ for (const [target, dir] of Object.entries(map)){
   if (check){ console.log('  CAMBIÓ  ' + target + '  → corre «node build.mjs»'); bad++; continue; }
   writeFileSync(path, out); console.log('  armado  ' + target + '  (' + parts.length + ' piezas)');
 }
+/* api/_alias-textos.js es el mismo alias-textos.json como módulo JS: el esbuild de Cloudflare Pages (wrangler 3) no entiende «import … with { type:'json' }» */
+{
+  const J = join(here, 'alias-textos.json'), M = join(here, 'api/_alias-textos.js');
+  if (existsSync(J)){
+    const out = '/* Generado por «node build.mjs» desde alias-textos.json; no se edita a mano. */\nexport default ' + JSON.stringify(JSON.parse(readFileSync(J, 'utf8'))) + ';\n';
+    let cur = ''; try{ cur = readFileSync(M, 'utf8'); }catch(e){}
+    if (cur === out) console.log('  igual   api/_alias-textos.js');
+    else if (check){ console.log('  CAMBIÓ  api/_alias-textos.js  → corre «node build.mjs»'); bad++; }
+    else { writeFileSync(M, out); console.log('  armado  api/_alias-textos.js'); }
+  }
+}
 if (bad) process.exit(1);
 
 /* v2.9.1 · dist/: solo lo que se publica (sin src/, pruebas, notas .md ni la configuración), con JS y CSS minificados.
