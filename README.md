@@ -1,5 +1,11 @@
 # SymphorIA
 
+## 👉 La página: **[symphoria.pages.dev](https://symphoria.pages.dev)**
+
+[![Así se ve SymphorIA](.github/readme/synthz.gif)](https://symphoria.pages.dev)
+
+SynthZ ahora es SymphorIA y vive en Cloudflare Pages (gratis). [synthz-style.vercel.app](https://synthz-style.vercel.app) solo muestra el video y el link a la página nueva.
+
 SymphorIA es una página para hablar gratis con varias inteligencias artificiales desde un solo lugar, compararlas y guardar tus chats. Hecha en Colombia por Sammuel.
 
 - **SynthFlow** (`chat.html`): el chat. Tiene Proyectos y Sintéticos (lo que la IA crea se abre al lado, como en Claude), permite comparar IAs y tiene modo agente.
@@ -11,7 +17,7 @@ SymphorIA es una página para hablar gratis con varias inteligencias artificiale
 
 ## Cómo está hecha
 
-No usa framework: es JavaScript y CSS sin dependencias en el navegador. Las funciones del servidor viven en `api/`.
+No usa framework: es JavaScript y CSS sin dependencias en el navegador. Las funciones del servidor viven en `api/` y guardan los datos en Upstash Redis.
 
 | Carpeta o archivo | Qué es |
 | --- | --- |
@@ -50,10 +56,12 @@ GitHub corre todas estas pruebas en cada PR (`.github/workflows`).
 
 ## Publicar
 
-- Vercel publica `main` solo: corre `node build.mjs --dist` y sirve `dist/` con las funciones de `api/`. Cada rama tiene su vista previa.
-- Las variables del servidor se ponen en Vercel, nunca en el código. Las importantes son `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `SYNTHZ_SECRET`, `SYNTHZ_SETUP_CODE` (de 20 caracteres o más), `GOOGLE_CLIENT_ID` y las de Supabase. Los límites (`SYNTHZ_GUEST_MSGS`, `SYNTHZ_IMG_GLOBAL`, `SYNTHZ_ALIAS_*`…) son opcionales.
+- **Cloudflare Pages** publica `main` solo: corre `npm ci && node cloudflare/preparar.mjs`, que arma `dist/` con `node build.mjs --dist` y pasa las cabeceras de `vercel.json` (CSP y demás) al formato de Cloudflare. Las funciones de `api/` corren dentro de Pages con `functions/api/`. Detalles en `cloudflare/LEEME.md`.
+- **Vercel** corre `node vercel-portal/armar.mjs`: solo la página del video con el link a la nueva.
+- Las variables del servidor se ponen en el panel, nunca en el código. Las importantes son `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `SYNTHZ_SECRET`, `SYNTHZ_SETUP_CODE` (de 20 caracteres o más), `GOOGLE_CLIENT_ID` y las de Supabase. Los límites (`SYNTHZ_GUEST_MSGS`, `SYNTHZ_IMG_GLOBAL`, `SYNTHZ_ALIAS_*`…) son opcionales.
 - Las llaves de las IAs no van en variables: el equipo las agrega desde Pulsem y se reparten entre todos.
-- La seguridad de las páginas (CSP y demás cabeceras) está en `vercel.json`. Los Sintéticos se abren en `sintetico.html`, aislados, para que la CSP no dañe sus vistas previas.
+- Los Sintéticos se abren en `sintetico.html`, aislados, para que la CSP no dañe sus vistas previas.
+- Nada se pasa a `main` sin revisar antes la vista previa de la rama.
 
 ## Reglas del repo
 
