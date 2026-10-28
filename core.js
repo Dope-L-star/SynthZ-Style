@@ -2926,7 +2926,7 @@ function securityModal(){
 }
 /* ---------- configuración ---------- */
 const lowEnd = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
-const miniPage = kind => '<div class="mp ' + kind + '"><i class="bl"></i><i class="bl"></i><i class="bl"></i><div class="gl"></div><div class="nv"><i></i><b></b><b></b><b></b></div><div class="h1"></div><div class="h2"></div><div class="cds"><b></b><b></b><b></b></div><span class="cu"></span><em>así se verá</em></div>';
+const miniPage = kind => '<div class="mp ' + kind + '"><i class="bl"></i><i class="bl"></i><i class="bl"></i><div class="gl"></div><div class="nv"><img class="lg" src="media/v30/symphoria.svg" alt="" draggable="false"><i></i><b></b><b></b><b></b></div><div class="h1"></div><div class="h2"></div><div class="cds"><b></b><b></b><b></b></div><span class="cu"></span><em>así se verá</em></div>';
 function cfgChooser(box, cur, onPick){
   const paint = sel => {
     box.innerHTML = '<div class="cfgo"><button type="button" data-v="visual" aria-pressed="' + (sel === 'visual') + '"><b>Más bonito</b><span>Con todos los efectos: vidrio, fondo que se mueve, cursor propio y animaciones.</span></button>'
@@ -5910,6 +5910,9 @@ function plansModal(){
    La capa de animaciones vive en movimiento.css / movimiento.js (src/movimiento*). Aquí solo va lo que SynthonIA cuenta y las novedades. */
 WHATSNEW.v = '3.1';
 WHATSNEW.items.unshift(
+  ['guia', LANG === 'en'
+    ? 'Where to tap is easy to see now: «Start free», the Next and Show me buttons of the guide and «Connect Puter» have a light flowing around their edge. And the «this is how it will look» preview in Settings moves again, with the new design.'
+    : 'Ahora se ve dónde tocar: «Empezar gratis», los botones de Siguiente y Muéstrame de la guía y «Conectar Puter» tienen una luz que corre por su borde. Y la vista previa «así se verá» de Ajustes se mueve otra vez, con el diseño nuevo.'],
   ['portada', LANG === 'en'
     ? 'Animations are back everywhere: blocks glide in as you scroll, cards glow under your pointer, buttons ripple when you tap them, and windows and lists come in one after another.'
     : 'Volvieron las animaciones en todo: los bloques entran al bajar, las tarjetas brillan bajo tu puntero, los botones dejan una onda al tocarlos y las ventanas y listas entran una tras otra.'],

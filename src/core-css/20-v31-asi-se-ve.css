@@ -1,0 +1,30 @@
+/* v3.1 · «así se verá» en Ajustes: la miniatura vuelve a moverse, con el diseño de SymphorIA y su logo pequeñito.
+   Se había apagado porque .bl (lista de bloqueadores, core 00) y el vidrio de v2.9 pintaban encima de sus manchas de luz. */
+.mp.mp{background:radial-gradient(120% 90% at 50% 0%,#141030,#07060f 70%);border-color:rgba(var(--wine-rgb,255,61,154),.28);box-shadow:0 10px 30px -18px rgba(var(--wine-rgb,255,61,154),.7)}
+.mp.mp .bl{display:block;margin:0;filter:blur(18px);opacity:.75;animation:mpf2 6s ease-in-out infinite alternate}
+.mp.mp .bl:nth-child(1){background:var(--accent,#3de0ff)}
+.mp.mp .bl:nth-child(2){background:var(--wine,#ff3d9a);animation-delay:-2s}
+.mp.mp .bl:nth-child(3){background:#7b3ff2;animation-delay:-4s}
+@keyframes mpf2{0%{translate:0 0;scale:1}50%{translate:18px 10px;scale:1.15}100%{translate:-10px 14px;scale:.95}}
+.mp.mp .gl{background:rgba(7,6,15,.28)}
+.mp.mp .nv .lg{width:16px;height:16px;flex:none;filter:drop-shadow(0 0 5px rgba(var(--wine-rgb,255,61,154),.7));animation:mplg 5s ease-in-out infinite}
+@keyframes mplg{0%,100%{rotate:0deg;scale:1}50%{rotate:-8deg;scale:1.12}}
+.mp.mp .nv i{width:44px;height:7px;background:linear-gradient(90deg,#3de0ff,#7b3ff2,#ff3d9a,#ff7a45);background-size:200% 100%;animation:mpsh 4s linear infinite}
+.mp.mp .h1{background:linear-gradient(90deg,#fff 30%,rgba(var(--accent-rgb,61,224,255),.9) 50%,#fff 70%);background-size:220% 100%;animation:mpsh 3.6s linear infinite}
+.mp.mp .h2{background:linear-gradient(90deg,#3de0ff,#7b3ff2,#ff3d9a);opacity:.85}
+@keyframes mpsh{to{background-position:-200% 0}}
+.mp.mp .cds b{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.16);box-shadow:0 0 16px -4px rgba(var(--wine-rgb,255,61,154),.45);animation:mpcd 3.4s cubic-bezier(.34,1.56,.64,1) infinite}
+.mp.mp .cds b:nth-child(2){animation-delay:.25s}
+.mp.mp .cds b:nth-child(3){animation-delay:.5s}
+@keyframes mpcd{0%,70%,100%{translate:0 0}80%{translate:0 -5px}}
+.mp.mp .cu{animation:mpc2 3.4s ease-in-out infinite}
+@keyframes mpc2{0%,100%{translate:0 0;scale:1}45%{translate:-40px 14px;scale:1}52%{translate:-40px 14px;scale:.7}60%{translate:-40px 14px;scale:1}}
+.mp.mp em{background:rgba(7,6,15,.6);border:1px solid rgba(var(--accent-rgb,61,224,255),.35);color:#e8f6ff}
+/* Más rápido: igual de clara pero quieta y sin vidrio */
+.mp.mp.speed{background:#0e0d16;box-shadow:none;border-color:var(--line)}
+.mp.mp.speed .nv .lg,.mp.mp.speed .nv i,.mp.mp.speed .h1,.mp.mp.speed .cds b{animation:none;filter:none}
+.mp.mp.speed .nv i{background:#7b3ff2}
+.mp.mp.speed .h1{background:rgba(255,255,255,.85)}
+.mp.mp.speed .h2{background:#9aa3c7;opacity:1}
+.mp.mp.speed .cds b{background:#1a1924;border-color:#2a2936;box-shadow:none}
+html.noanim .mp.mp,html.noanim .mp.mp *{animation:none!important}

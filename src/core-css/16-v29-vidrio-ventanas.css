@@ -19,7 +19,7 @@ html:not(.simple) :is(.szm,#sx,#acc,#conn,#tour,#blk,#szGate,#drv){background:rg
     -webkit-backdrop-filter:blur(26px) saturate(160%) !important;backdrop-filter:blur(26px) saturate(160%) !important}
 }
 /* dentro del vidrio, las cajitas son vidrio también (nada de bloques negros) */
-html:not(.simple) .tcard :is(.lbar,.sxsave,.bl,.cfgsw,.cfg-row,.acc-box):not(.mp){background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.12)}
+html:not(.simple) .tcard :is(.lbar,.sxsave,.bl,.cfgsw,.cfg-row,.acc-box):not(.mp,.mp *){background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.12)}
 
 /* «Tu límite de hoy»: más compacto y con la letra de la página (antes un número gigante en otra letra) */
 #sx .tcard{padding:24px 24px 18px}
