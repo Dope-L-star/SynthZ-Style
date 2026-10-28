@@ -23,7 +23,7 @@ section{padding-top:clamp(64px,10vh,112px);padding-bottom:clamp(64px,10vh,112px)
 @keyframes navgoin{from{opacity:0;transform:scale(.7)}}
 @media (max-width:1180px){#nav .navgo .ng-l{display:none}#nav .navgo .ng-s{display:inline}#nav .navgo{padding:0 14px}}
 @media (max-width:480px){#nav.go .pill-total{display:none}#nav .navgo{min-height:36px;padding:0 13px;font-size:14px}}
-@media (prefers-reduced-motion:reduce){.hask .hsug,.hsug-i,#nav.go .navgo{animation:none;opacity:1}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .hask .hsug,html.noanim .hsug-i,html.noanim #nav.go .navgo{animation:none;opacity:1}
 @media (max-width:360px){#nav.go .beta-tag{display:none}}
 /* una sección que no se ve no gasta: sus animaciones quedan en pausa hasta que vuelve (index 13) */
 .secoff *,.secoff *::before,.secoff *::after{animation-play-state:paused !important}

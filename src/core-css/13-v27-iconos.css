@@ -39,5 +39,5 @@
 @keyframes gieyes{0%,40%,48%,100%{transform:scaleY(1)}44%{transform:scaleY(.12)}}
 @keyframes gipie{to{transform:translate(1.6px,-1.6px)}}
 @keyframes giink{0%{stroke-dasharray:1 1;stroke-dashoffset:1}60%,100%{stroke-dasharray:1 1;stroke-dashoffset:0}}
-@media (prefers-reduced-motion:reduce){.gi *{animation:none !important}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .gi *{animation:none !important}
 html.noanim .gi *{animation:none !important}

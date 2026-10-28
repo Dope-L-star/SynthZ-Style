@@ -70,7 +70,7 @@ html.noglass .ap-card{-webkit-backdrop-filter:blur(18px) saturate(170%) brightne
 .ap-acts .btn{flex:1;max-width:240px;min-height:48px;border-radius:999px;font-weight:600}
 .ap-acts .ap-go{background:var(--grad);color:#fff;border:0;box-shadow:0 10px 34px -10px rgba(255,61,154,.75),inset 0 1px 0 rgba(255,255,255,.4)}
 @media (min-width:700px){.appp{align-items:center}}
-@media (prefers-reduced-motion:reduce){.ap-card{transition:none}.ap-hero *{animation:none !important}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .ap-card{transition:none}html.noanim .ap-hero *{animation:none !important}
 html.noanim .ap-hero *{animation:none !important}
 /* v2.6: con los pasos a la vista, el dibujo se achica para que todo quepa sin bajar */
 .ap-card:has(.ap-steps) .ap-hero{height:min(18dvh,140px);transition:height .4s ease}

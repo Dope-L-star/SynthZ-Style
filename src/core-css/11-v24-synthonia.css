@@ -106,5 +106,5 @@ html.noanim .szface .fwr path,html.noanim .szface .fwl path{animation:none}
 @keyframes sybconf{0%{opacity:0;transform:translate(0,-12px) rotate(0)}12%{opacity:1}85%{opacity:1}100%{opacity:0;transform:translate(var(--dx,0px),170px) rotate(560deg)}}
 @keyframes sybtb{0%,100%{opacity:.25;transform:scale(.7)}50%{opacity:1;transform:scale(1)}}
 @keyframes sybwow{0%,40%,100%{transform:none}8%{transform:scale(1.35) rotate(-10deg)}16%{transform:scale(.94) rotate(6deg)}24%{transform:rotate(-2deg)}}
-@media (prefers-reduced-motion:reduce){.szbody *{animation:none !important;transition:none !important}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .szbody *{animation:none !important;transition:none !important}
 html.noanim .szface .fx,html.noanim .szface .fe,html.noanim .szbody *{animation:none !important}

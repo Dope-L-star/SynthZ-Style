@@ -18,14 +18,18 @@ const CFG = (() => {
      Primera visita: modo rápido. Quien ya tenía SymphorIA: se le apagan solo esas dos cosas una vez (las vuelve a encender en Ajustes). */
   let fresh = false; try{ fresh = localStorage.getItem('synthz:cfg') === null; }catch(e){}
   const phone = (() => { try{ return matchMedia('(pointer:coarse)').matches && Math.min(screen.width, screen.height) <= 820; }catch(e){ return false; } })();
-  if (phone && fresh) c = Object.assign(cfgPreset('speed'), { perf:'speed', anim:true, lite:1 });
-  else if (phone && !c.lite){ c = Object.assign({}, cfgPreset(c.perf), c, { glass:false, bg:false, cursor:false, lite:1 }); try{ localStorage.setItem('synthz:cfg', JSON.stringify(Object.assign({ v:2 }, c))); }catch(e){} }
+  /* v3.1 · Sammuel (28 oct): la página se ve completa también en el celular (vidrio, fondo animado y animaciones); si va lenta,
+     está el modo más rápido en Ajustes. Solo el cursor propio sigue apagado en pantallas táctiles (no hay puntero que seguir).
+     A quien v2.3 le apagó el vidrio y el fondo sola (lite:1), se le devuelven una vez. */
+  if (phone && fresh) c = Object.assign(cfgPreset('visual'), { perf:'visual', cursor:false, lite:2 });
+  else if (phone && c.lite !== 2){ c = Object.assign({}, c, cfgPreset('visual'), { perf:'visual', cursor:false, lite:2 }); try{ localStorage.setItem('synthz:cfg', JSON.stringify(Object.assign({ v:2 }, c))); }catch(e){} }
   return Object.assign({ v:2, perf:'visual', intro:'session', sound:true }, cfgPreset(c.perf), c);
 })();
 const PERF = CFG.perf === 'speed';
-/* v2.9.1 · lo que la persona eligió en su sistema manda: «reducir movimiento» y «reducir transparencia» */
-const osPref = q => { try{ return matchMedia(q).matches; }catch(e){ return false; } };
-const OS_RM = osPref('(prefers-reduced-motion: reduce)'), OS_RT = osPref('(prefers-reduced-transparency: reduce)');
+/* v3.1 · manda Ajustes (Animaciones, Vidrio, Modo rápido), no el sistema: con los «efectos visuales» de Windows apagados,
+   Chrome pide «reducir movimiento» y «reducir transparencia», y la página se quedaba sin animaciones ni vidrio (28 oct).
+   Quien no quiera movimiento o vidrio lo apaga en Ajustes, o usa el modo más rápido. */
+const OS_RM = false, OS_RT = false;
 const reduce = !CFG.anim || OS_RM;
 function cfgClasses(){ const r = document.documentElement; r.classList.toggle('nocur', !CFG.cursor); if (!CFG.cursor) r.classList.remove('cursor-on'); r.classList.toggle('noglass', !CFG.glass || OS_RT); r.classList.toggle('rtr', OS_RT); r.classList.toggle('nobg', !CFG.bg); r.classList.toggle('noanim', !CFG.anim || OS_RM); r.classList.remove('perf'); r.classList.toggle('pmode', CFG.perf === 'speed');
   /* v2.3 · solo en SynthFlow: estilo Simple, color del tema y barra del celular a la izquierda */
@@ -1506,20 +1510,27 @@ function glassIcon(m, cls){
 }
 
 /* =====================================================================
-   Carga de las IA: un cuadradito de 8×8 píxeles de vidrio que va armando 10 dibujos
+   Carga de las IA: un cuadradito de 8×8 píxeles de vidrio que va armando 16 dibujos
    mientras la IA trabaja, y al lado lo que está haciendo (con flechita para ver el detalle)
    ===================================================================== */
+/* v3.1 · dibujos nuevos (Sammuel, 28 oct): más variados y livianos, de contorno, sin llenar todo el cuadro */
 const PIXART = [
-  ['Corazón', '.11..11.|11111111|11111111|11111111|.111111.|..1111..|...11...|........'],
-  ['Rayo', '....111.|...111..|..111...|.111111.|...111..|..111...|.111....|.1......'],
-  ['Estrella', '...11...|...11...|11111111|.111111.|..1111..|.111111.|.11..11.|11....11'],
-  ['Idea', '..1111..|.111111.|.112211.|.112211.|..1111..|..2222..|..2222..|...22...'],
-  ['Cohete', '...11...|..1111..|..1221..|..1111..|.111111.|11.11.11|...22...|..2..2..'],
-  ['Gatito', '1......1|11....11|11111111|12111121|11111111|1112 111|.111111.|..1111..'],
-  ['Nota', '...11111|...11111|...1...1|...1...1|...1...1|.111.111|1111.111|.11...1.'],
-  ['Planeta', '........|..1111..|.111111.|22222222|.111111.|..1111..|........|........'],
-  ['SynthonIA', '..1111..|.111111.|11211211|11111111|12111121|11222211|.111111.|..1111..'],
-  ['Z', '11111111|11111111|.....111|....111.|...111..|..111...|11111111|11111111']
+  ['Invasor', '........|..1..1..|.111111.|11211211|11111111|.1.11.1.|1......1|........'],
+  ['Corazón', '........|.11..11.|1..11..1|12.....1|.1....1.|..1..1..|...11...|........'],
+  ['Destello', '...1....|...1....|..121...|1112111.|..121...|...1....|...1...2|......2.'],
+  ['Nota', '....111.|....1.11|....1...|....1...|..111...|.1221...|..11....|........'],
+  ['Luna', '...111..|..11...2|.11.....|.11...2.|.11.....|..11....|...111..|........'],
+  ['Flor', '..1.1...|.12121..|..1.1...|...2....|...2.1..|.1.22...|..12....|...2....'],
+  ['Llave', '.111....|1...1...|1...1...|.111....|...2....|...22...|...2....|...22...'],
+  ['Hongo', '..1111..|.1.22.1.|1.2..2.1|11111111|..1..1..|..1..1..|..1111..|........'],
+  ['Poción', '...22...|...11...|..1..1..|.1....1.|1.2222.1|1.2222.1|.1....1.|..1111..'],
+  ['SynthonIA', '....2...|....1...|.111111.|1......1|1.2..2.1|1......1|.111111.|........'],
+  ['Cohete', '...11...|..1..1..|..1.21..|..1..1..|.11..11.|1.1..1.1|..2..2..|...22...'],
+  ['Gatito', '1.....1.|11...11.|1.111.1.|1.....1.|1.2.2.1.|1..1..1.|.11111..|........'],
+  ['Diamante', '........|..1111..|.1.22.1.|11111111|.1....1.|..1..1..|...11...|........'],
+  ['Planeta', '........|........|...111..|..1...1.|22222222|..1...1.|...111..|........'],
+  ['Sonrisa', '..1111..|.1....1.|1.2..2.1|1......1|1.1..1.1|1..11..1|.1....1.|..1111..'],
+  ['Café', '..2.2...|...2.2..|.11111..|.1...111|.1...1.1|.1...111|..111...|........']
 ].map(([n, s]) => [n, s.split('|').join('').replace(/ /g, '.')]);
 const WORDS = ['Leyendo tu mensaje', 'Pensando', 'Sopesando ideas', 'Aclarando', 'Ordenando las ideas', 'Buscando las palabras', 'Revisando', 'Casi listo'];
 const pixelGrid = () => '<span class="pxg" aria-hidden="true">' + '<i></i>'.repeat(64) + '</span>';
@@ -2916,7 +2927,7 @@ function securityModal(){
 }
 /* ---------- configuración ---------- */
 const lowEnd = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
-const miniPage = kind => '<div class="mp ' + kind + '"><i class="bl"></i><i class="bl"></i><i class="bl"></i><div class="gl"></div><div class="nv"><i></i><b></b><b></b><b></b></div><div class="h1"></div><div class="h2"></div><div class="cds"><b></b><b></b><b></b></div><span class="cu"></span><em>así se verá</em></div>';
+const miniPage = kind => '<div class="mp ' + kind + '"><i class="bl"></i><i class="bl"></i><i class="bl"></i><div class="gl"></div><div class="nv"><img class="lg" src="media/v30/symphoria.svg" alt="" draggable="false"><i></i><b></b><b></b><b></b></div><div class="h1"></div><div class="h2"></div><div class="cds"><b></b><b></b><b></b></div><span class="cu"></span><em>así se verá</em></div>';
 function cfgChooser(box, cur, onPick){
   const paint = sel => {
     box.innerHTML = '<div class="cfgo"><button type="button" data-v="visual" aria-pressed="' + (sel === 'visual') + '"><b>Más bonito</b><span>Con todos los efectos: vidrio, fondo que se mueve, cursor propio y animaciones.</span></button>'
@@ -5911,6 +5922,34 @@ function plansModal(){
   $('[data-close]', o).addEventListener('click', close); o.addEventListener('pointerdown', e => { if (e.target === o) close(); });
   addEventListener('keydown', function k(e){ if (e.key === 'Escape'){ close(); removeEventListener('keydown', k); } });
 }
+/* ===== v3.1 · Movimiento: SynthonIA sabe por qué todo se mueve, cómo apagarlo y qué cambió =====
+   La capa de animaciones vive en movimiento.css / movimiento.js (src/movimiento*). Aquí solo va lo que SynthonIA cuenta y las novedades. */
+WHATSNEW.v = '3.1';
+WHATSNEW.items.unshift(
+  ['guia', LANG === 'en'
+    ? 'Where to tap is easy to see now: «Start free», the Next and Show me buttons of the guide and «Connect Puter» have a light flowing around their edge. And the «this is how it will look» preview in Settings moves again, with the new design.'
+    : 'Ahora se ve dónde tocar: «Empezar gratis», los botones de Siguiente y Muéstrame de la guía y «Conectar Puter» tienen una luz que corre por su borde. Y la vista previa «así se verá» de Ajustes se mueve otra vez, con el diseño nuevo.'],
+  ['portada', LANG === 'en'
+    ? 'Animations are back everywhere: blocks glide in as you scroll, cards glow under your pointer, buttons ripple when you tap them, and windows and lists come in one after another.'
+    : 'Volvieron las animaciones en todo: los bloques entran al bajar, las tarjetas brillan bajo tu puntero, los botones dejan una onda al tocarlos y las ventanas y listas entran una tras otra.'],
+  ['ajustes', LANG === 'en'
+    ? 'Your Settings decide now, not your computer: if Windows has its visual effects off, ' + BRAND() + ' still looks complete. To make it calmer, turn off Animations or use the faster mode in Settings.'
+    : 'Ahora mandan tus Ajustes, no tu computador: aunque Windows tenga apagados sus efectos visuales, ' + BRAND() + ' se ve completa. Si la quieres más tranquila, apaga Animaciones o usa el modo más rápido en Ajustes.']
+);
+BOT_FAQ.push(
+  { k:'animacion animaciones movimiento mueve moverse brillo onda efecto efectos transicion transiciones smooth suave animation animations motion moving glow ripple effects transition',
+    a:'Todo se mueve a propósito: los bloques entran al bajar, las tarjetas brillan bajo tu puntero, los botones dejan una onda al tocarlos, los íconos saltan y las ventanas entran en cascada. Solo se mueve lo que no pesa (posición y transparencia), así va fluido hasta en el celular. Si prefieres calma: Ajustes › «Animaciones», o el modo «Más rápido».',
+    en:'Everything moves on purpose: blocks glide in as you scroll, cards glow under your pointer, buttons ripple when you tap them, icons hop and windows cascade in. Only light things move (position and transparency), so it stays smooth even on phones. If you prefer calm: Settings › «Animations», or the «Faster» mode.', pre:openCfg(), go:['#cfgBtn', '[data-tab="cfg"]'] },
+  { k:'apagar quitar animaciones lento lag laguea tranquilo marea mareo quieto rapido turn off disable animations slow laggy calm dizzy still faster',
+    a:'Para que no se mueva nada: Ajustes › «Animaciones» apagado. Si tu equipo va lento, elige «Más rápido» arriba en Ajustes: quita vidrio, fondo animado y efectos pesados de una vez.',
+    en:'To stop everything moving: Settings › «Animations» off. If your device is slow, pick «Faster» at the top of Settings: it removes glass, animated background and heavy effects at once.', pre:openCfg(), go:['#cfgBtn', '[data-tab="cfg"]'] },
+  { k:'windows sistema efectos visuales reducir movimiento transparencia accesibilidad por que no se movia simplona fea system visual effects reduce motion transparency accessibility why plain',
+    a:'Antes, si Windows (o tu celular) tenía apagados los efectos visuales, ' + BRAND() + ' también apagaba sus animaciones y su vidrio, y se veía simplona. Desde la versión 3.1 mandan tus Ajustes de aquí, no los del sistema: así la ves completa, y la calmas tú cuando quieras.',
+    en:'Before, if Windows (or your phone) had its visual effects off, ' + BRAND() + ' also turned off its animations and glass, and looked plain. Since version 3.1 your Settings here decide, not the system\'s: you see it complete, and you calm it down whenever you want.' },
+  { k:'next nextjs react tecnologia hecha como esta hecha framework migracion migrar technology built how made migration',
+    a:BRAND() + ' se está pasando a Next.js (React) por partes, sin romper nada: Términos y Privacidad ya están hechas así, y las demás páginas siguen el mismo camino una por una. Para ti no cambia nada: mismas direcciones, misma cuenta, más rápida de mantener y de mejorar.',
+    en:BRAND() + ' is moving to Next.js (React) step by step, without breaking anything: Terms and Privacy are already built that way, and the other pages follow one by one. Nothing changes for you: same addresses, same account, quicker to maintain and improve.' }
+);
 /* ===== v1.4 · eventos especiales: a las 50, 100 y 500 visitas la página «se hackea» y das un logro ===== */
 const EV = (() => {
   const K = 'synthz:visits', A = 'synthz:ach';

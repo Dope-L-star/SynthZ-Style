@@ -1,9 +1,9 @@
 
 /* ===== v2.9.1 · accesibilidad: respeta lo que la persona eligió en su celular o PC =====
-   · «Reducir transparencia» (iPhone, Mac, Windows): el vidrio pasa a fondo sólido y se lee igual de bien.
-     core (00) le pone a la página .rtr y .noglass; aquí también va por @media, por si el JS tarda.
+   · v3.1: «reducir transparencia» y «reducir movimiento» ya no se toman del sistema (Windows los activa al apagar sus efectos
+     y la página quedaba sin animaciones ni vidrio). Las reglas siguen, pero solo con html.rtr / html.noanim, que pone Ajustes.
    · «Aumentar contraste»: bordes y letras más fuertes.
-   · «Reducir movimiento»: se apagan las animaciones (core 00 también apaga las de JS).
+   · Animaciones apagadas en Ajustes (html.noanim): se apagan también las de CSS.
    · Teclado: todo lo que se puede enfocar muestra un anillo visible. */
 
 /* --- reducir transparencia --- */
@@ -11,9 +11,7 @@ html.rtr:not(.simple) :is(.tcard,.amenu,.ctxm,.navdrop,.navfly,#szBotP,.szdisc,.
   background:#15122a !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;border-color:rgba(255,255,255,.24) !important}
 html.rtr:not(.simple) :is(.szm,#sx,#acc,#conn,#tour,#blk,#szGate,#drv){background:rgba(4,3,14,.86) !important}
 html.rtr *,html.rtr *::before,html.rtr *::after{-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
-@media (prefers-reduced-transparency:reduce){
-  html:not(.simple) :is(.tcard,.amenu,.ctxm,.navdrop,.navfly,#szBotP,.szdisc,.lqg,.ap-card){background:#15122a !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
-}
+/* antes @media (prefers-reduced-transparency:reduce): ahora lo decide Ajustes */html.rtr:not(.simple) :is(.tcard,.amenu,.ctxm,.navdrop,.navfly,#szBotP,.szdisc,.lqg,.ap-card){background:#15122a !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
 
 /* el estilo Simple ya es plano y tiene su paleta cálida (como Claude): «reducir transparencia» y «más contraste»
    no lo pintan de morado; solo quitan lo que quede de vidrio y, con más contraste, marcan los bordes */
@@ -33,10 +31,7 @@ html.rtr.simple :is(.szm,#sx,#acc,#conn,#tour,#blk,#szGate,#drv){background:rgba
 }
 
 /* --- reducir movimiento --- */
-@media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;scroll-behavior:auto !important}
-  .au8-ss,.iz-cm{display:none !important}
-}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim *,html.noanim *::before,html.noanim *::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;scroll-behavior:auto !important}html.noanim .au8-ss,html.noanim .iz-cm{display:none !important}
 
 /* --- teclado: anillo de foco visible (antes 9 sitios lo quitaban sin reemplazo) --- */
 :root{--focus-ring:#8fd8ff}

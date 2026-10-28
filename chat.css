@@ -1610,7 +1610,7 @@ html.enter:not(.go) .chats{opacity:0;translate:-18px 0;--td:.08s}
 html.noglass .rin,html.noglass .rail.open .rin,html.noglass #side.side,html.noglass .amenu,html.noglass .chats{background:#14151b !important}
 html.noanim .rin,html.noanim .rl,html.noanim .rword,html.noanim .chats,html.noanim #side.side,html.noanim .chead .back,html.noanim .rcoin{transition-duration:.01s !important;transition-delay:0s !important}
 html.noanim .greet .w,html.noanim .greet em,html.noanim .tchip,html.noanim .rcard,html.noanim .cmp-card.arrive,html.noanim .thi,html.noanim .fvi,html.noanim .texs button{animation:none !important}
-@media (prefers-reduced-motion:reduce){ .greet .w,.greet em,.tchip,.rcard,.cmp-card.arrive{animation-duration:.01s !important} }
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .greet .w,html.noanim .greet em,html.noanim .tchip,html.noanim .rcard,html.noanim .cmp-card.arrive{animation-duration:.01s !important}
 
 /* ===== v16: Guía Asistida (paneles, barra de progreso y ejemplo de comparar) ===== */
 #szgHud{position:fixed;left:50%;top:14px;z-index:9745;display:flex;align-items:center;gap:12px;padding:7px 8px 7px 12px;border-radius:999px;border:1px solid rgba(var(--gold-rgb),.3);background:rgba(18,16,20,.8);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 18px 50px -16px rgba(0,0,0,.8);opacity:0;transform:translate(-50%,-16px);filter:blur(6px);transition:opacity .5s ease,transform .6s cubic-bezier(.22,1,.36,1),filter .5s ease;max-width:calc(100vw - 24px)}
@@ -1848,7 +1848,7 @@ body:not(.fresh) .composer #cPick,body:not(.fresh) .composer #cCmp{display:none!
 @keyframes ssBeat{0%,70%,100%{transform:scale(1)}78%{transform:scale(1.18)}86%{transform:scale(.96)}93%{transform:scale(1.06)}}
 @keyframes ssTw{0%,100%{opacity:.25;transform:scale(.6)}50%{opacity:1;transform:scale(1.15)}}
 html.noanim .ssi .ssi-s,html.noanim .ssi .ssi-k{animation:none}
-@media (prefers-reduced-motion:reduce){.ssi .ssi-s,.ssi .ssi-k{animation:none}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .ssi .ssi-s,html.noanim .ssi .ssi-k{animation:none}
 .ssmount{display:inline-flex;align-items:center;justify-content:center}
 
 /* barra lateral (PC): el botón con su ícono */
@@ -2184,7 +2184,7 @@ html:not(.simple) .composer .cpk3.on{border-color:rgba(255,122,69,.55);backgroun
 .cvp-code .hn{color:#f7c98b}
 .cvp-code .hf{color:#9ecbff}
 html.noanim .ckbar,html.noanim .ckbar .ck-ic.spin svg{animation:none}
-@media (prefers-reduced-motion:reduce){.ckbar,.ckbar .ck-ic.spin svg{animation:none}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .ckbar,html.noanim .ckbar .ck-ic.spin svg{animation:none}
 /* ===== v2.6 · SynthCode con los colores «Noche Synth» y el vidrio de la v2.6 ===== */
 .ckbar{background:rgba(255,255,255,.035);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 .ckbar.run,.ckbar.warn{border-color:rgba(255,200,87,.32)}
@@ -2348,7 +2348,7 @@ body.pjon .tabbar{position:relative;z-index:31}
   .pj-side{order:0}
 }
 html.noanim .pjv,html.noanim .pjc,html.noanim .pj-menu{animation:none}
-@media (prefers-reduced-motion:reduce){.pjv,.pjc,.pj-menu{animation:none}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .pjv,html.noanim .pjc,html.noanim .pj-menu{animation:none}
 
 /* v2.9.1 · «Sintéticos»: la etiquetita en el lienzo de lo que la IA crea y se puede ver en vivo */
 .cvp-syn{display:inline-block;padding:1px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:linear-gradient(120deg,rgba(141,76,255,.28),rgba(255,61,154,.22));color:#fff;font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;vertical-align:1px}

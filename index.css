@@ -1162,7 +1162,7 @@ html.szlive #szBot,html.szlive #betaBot{opacity:0 !important;pointer-events:none
 #szTip::after{content:"";position:absolute;left:var(--ax,50%);width:10px;height:10px;margin-left:-5px;background:rgba(22,13,50,.94);border:1px solid rgba(255,255,255,.18);rotate:45deg}
 #szTip[data-up="1"]::after{bottom:-6px;border-top:0;border-left:0}
 #szTip[data-up="0"]::after{top:-6px;border-bottom:0;border-right:0}
-@media (prefers-reduced-motion:reduce){#szTip{transition:none}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim #szTip{transition:none}
 /* «Pregúntale lo que sea» en la portada: un cuadro de vidrio con flecha, como en ChatGPT o Claude */
 .hask{position:relative;display:flex;align-items:center;gap:8px;width:min(520px,100%);margin:22px 0 4px;padding:6px 6px 6px 20px;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.03)),rgba(20,12,44,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 18px 50px -20px rgba(123,63,242,.6);transition:border-color .3s,box-shadow .3s}
 .hask:focus-within{border-color:rgba(61,224,255,.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 4px rgba(61,224,255,.14),0 18px 50px -20px rgba(123,63,242,.7)}
@@ -1176,7 +1176,7 @@ html.szlive #szBot,html.szlive #betaBot{opacity:0 !important;pointer-events:none
 @keyframes hnudge{25%{translate:-6px 0}50%{translate:5px 0}75%{translate:-3px 0}}
 .hask+.cta{margin-top:16px}
 @media (max-width:760px){.hask{margin:18px auto 2px}}
-@media (prefers-reduced-motion:reduce){.hask.nudge{animation:none}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .hask.nudge{animation:none}
 .hask input{text-overflow:ellipsis}
 /* «¿Qué IA es mejor para…?» */
 .bestfor{margin-top:22px;padding:30px clamp(18px,3vw,36px);border-radius:28px;text-align:center}
@@ -1254,7 +1254,7 @@ main div.ready.lqg{background:linear-gradient(90deg,rgba(12,7,30,.62),rgba(12,7,
 @keyframes uscbo{0%,44%{opacity:0;transform:scale(.3)}54%,90%{opacity:1;transform:scale(1)}98%,100%{opacity:0;transform:scale(.6)}}
 @keyframes uscsteam{0%{transform:translateY(2px);opacity:0}40%{opacity:.9}100%{transform:translateY(-5px);opacity:0}}
 @keyframes uscbeam{50%{opacity:.62}}
-@media (prefers-reduced-motion:reduce){.uscene *{animation:none !important}.uscene .usc-page,.uscene .usc-bug .bo{opacity:0}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .uscene *{animation:none !important}html.noanim .uscene .usc-page,html.noanim .uscene .usc-bug .bo{opacity:0}
 html.noanim .uscene *{animation:none !important}
 /* en las escenas el pedestal queda fuera del cuadro: no se dibuja (menos trabajo para el teléfono) */
 .uscene .syb-shadow,.uscene .syb-glow{display:none}
@@ -1283,7 +1283,7 @@ section{padding-top:clamp(64px,10vh,112px);padding-bottom:clamp(64px,10vh,112px)
 @keyframes navgoin{from{opacity:0;transform:scale(.7)}}
 @media (max-width:1180px){#nav .navgo .ng-l{display:none}#nav .navgo .ng-s{display:inline}#nav .navgo{padding:0 14px}}
 @media (max-width:480px){#nav.go .pill-total{display:none}#nav .navgo{min-height:36px;padding:0 13px;font-size:14px}}
-@media (prefers-reduced-motion:reduce){.hask .hsug,.hsug-i,#nav.go .navgo{animation:none;opacity:1}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .hask .hsug,html.noanim .hsug-i,html.noanim #nav.go .navgo{animation:none;opacity:1}
 @media (max-width:360px){#nav.go .beta-tag{display:none}}
 /* una sección que no se ve no gasta: sus animaciones quedan en pausa hasta que vuelve (index 13) */
 .secoff *,.secoff *::before,.secoff *::after{animation-play-state:paused !important}
@@ -1320,3 +1320,12 @@ html.noanim .sy-spark{display:none}
 @media (max-width:460px){.sy-roots{grid-template-columns:1fr}}
 html[data-scheme="light"] .sy-eq,html[data-scheme="light"] .sy-root h3,html[data-scheme="light"] .sy-root b{color:#1b1035}
 #nav .cfgb.langb{font:600 12px/1 var(--mono);letter-spacing:.04em;width:auto;min-width:36px;padding:0 9px}
+/* ===== v3.1 · el botón de idioma (ES/EN) de la portada vive abajo a la derecha, al lado del logo de Claude =====
+   Sammuel (28 oct): en la barra de arriba se veía feo. En SynthFlow sigue donde estaba (Ajustes y menú «⋯»). */
+.langdock{position:fixed;right:34px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:40;display:inline-grid;place-items:center;
+  min-width:34px;height:24px;padding:0 9px;border-radius:999px;font:600 11px/1 var(--mono);letter-spacing:.06em;color:rgba(255,255,255,.78);cursor:pointer;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  transition:color .25s,border-color .25s,box-shadow .25s,background .25s}
+.langdock:hover,.langdock:focus-visible{color:#fff;border-color:rgba(61,224,255,.6);background:rgba(61,224,255,.1);box-shadow:0 0 18px -4px rgba(61,224,255,.55)}
+.langdock:focus-visible{outline:2px solid rgba(61,224,255,.8);outline-offset:2px}
+html.rtr .langdock{background:#15122a}

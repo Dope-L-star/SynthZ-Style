@@ -18,14 +18,18 @@ const CFG = (() => {
      Primera visita: modo rápido. Quien ya tenía SymphorIA: se le apagan solo esas dos cosas una vez (las vuelve a encender en Ajustes). */
   let fresh = false; try{ fresh = localStorage.getItem('synthz:cfg') === null; }catch(e){}
   const phone = (() => { try{ return matchMedia('(pointer:coarse)').matches && Math.min(screen.width, screen.height) <= 820; }catch(e){ return false; } })();
-  if (phone && fresh) c = Object.assign(cfgPreset('speed'), { perf:'speed', anim:true, lite:1 });
-  else if (phone && !c.lite){ c = Object.assign({}, cfgPreset(c.perf), c, { glass:false, bg:false, cursor:false, lite:1 }); try{ localStorage.setItem('synthz:cfg', JSON.stringify(Object.assign({ v:2 }, c))); }catch(e){} }
+  /* v3.1 · Sammuel (28 oct): la página se ve completa también en el celular (vidrio, fondo animado y animaciones); si va lenta,
+     está el modo más rápido en Ajustes. Solo el cursor propio sigue apagado en pantallas táctiles (no hay puntero que seguir).
+     A quien v2.3 le apagó el vidrio y el fondo sola (lite:1), se le devuelven una vez. */
+  if (phone && fresh) c = Object.assign(cfgPreset('visual'), { perf:'visual', cursor:false, lite:2 });
+  else if (phone && c.lite !== 2){ c = Object.assign({}, c, cfgPreset('visual'), { perf:'visual', cursor:false, lite:2 }); try{ localStorage.setItem('synthz:cfg', JSON.stringify(Object.assign({ v:2 }, c))); }catch(e){} }
   return Object.assign({ v:2, perf:'visual', intro:'session', sound:true }, cfgPreset(c.perf), c);
 })();
 const PERF = CFG.perf === 'speed';
-/* v2.9.1 · lo que la persona eligió en su sistema manda: «reducir movimiento» y «reducir transparencia» */
-const osPref = q => { try{ return matchMedia(q).matches; }catch(e){ return false; } };
-const OS_RM = osPref('(prefers-reduced-motion: reduce)'), OS_RT = osPref('(prefers-reduced-transparency: reduce)');
+/* v3.1 · manda Ajustes (Animaciones, Vidrio, Modo rápido), no el sistema: con los «efectos visuales» de Windows apagados,
+   Chrome pide «reducir movimiento» y «reducir transparencia», y la página se quedaba sin animaciones ni vidrio (28 oct).
+   Quien no quiera movimiento o vidrio lo apaga en Ajustes, o usa el modo más rápido. */
+const OS_RM = false, OS_RT = false;
 const reduce = !CFG.anim || OS_RM;
 function cfgClasses(){ const r = document.documentElement; r.classList.toggle('nocur', !CFG.cursor); if (!CFG.cursor) r.classList.remove('cursor-on'); r.classList.toggle('noglass', !CFG.glass || OS_RT); r.classList.toggle('rtr', OS_RT); r.classList.toggle('nobg', !CFG.bg); r.classList.toggle('noanim', !CFG.anim || OS_RM); r.classList.remove('perf'); r.classList.toggle('pmode', CFG.perf === 'speed');
   /* v2.3 · solo en SynthFlow: estilo Simple, color del tema y barra del celular a la izquierda */

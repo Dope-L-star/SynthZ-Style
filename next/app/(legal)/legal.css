@@ -1,0 +1,21 @@
+/* Estilo de Términos y Privacidad (igual que las páginas .html de antes) */
+:root{--bg:#0b0c10;--text:#ecebe7;--soft:#c9c8c3;--mute:#8d8c88;--line:rgba(255,255,255,.1);--gold:#e6b65f;--rose:#c9566c}
+*{box-sizing:border-box}html{background:var(--bg)}
+body{margin:0;background:radial-gradient(900px 500px at 10% -10%,rgba(143,176,255,.12),transparent 60%),radial-gradient(800px 500px at 100% 0,rgba(201,86,108,.12),transparent 60%),var(--bg);color:var(--soft);font:16px/1.7 Figtree,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#f3d79e}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:14px;padding:14px clamp(16px,4vw,40px);background:rgba(11,12,16,.72);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+.logo{display:inline-flex;align-items:center;gap:6px;font:700 24px/1 "Chakra Petch",system-ui,sans-serif;color:var(--text);text-decoration:none}
+.logo img{height:30px;width:30px}
+.gS{color:transparent;background:linear-gradient(160deg,#9b5cff,#ff3d9a 55%,#ff7a45);-webkit-background-clip:text;background-clip:text}
+.top nav{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.top nav a{padding:7px 14px;border-radius:999px;border:1px solid var(--line);color:var(--soft);text-decoration:none;font-size:14px}
+.top nav a[aria-current]{background:rgba(255,255,255,.08);color:var(--text)}
+main{max-width:780px;margin:0 auto;padding:clamp(28px,6vw,64px) 16px 80px}
+h1{font:700 clamp(36px,6.4vw,58px)/1.05 "Bricolage Grotesque",system-ui,sans-serif;color:var(--text);margin:0 0 10px;letter-spacing:-.01em}
+.sub{color:var(--mute);margin:0 0 32px}
+.card{padding:22px clamp(18px,3vw,28px);margin:0 0 16px;border-radius:22px;border:1px solid var(--line);background:rgba(255,255,255,.035);backdrop-filter:blur(12px)}
+h2{font:650 24px/1.2 "Bricolage Grotesque",system-ui,sans-serif;color:var(--text);margin:0 0 8px}
+p{margin:0 0 10px}ul{margin:0 0 10px;padding-left:20px}li{margin:4px 0}
+b{color:var(--text);font-weight:600}
+.tldr{border-color:rgba(230,182,95,.35);background:rgba(230,182,95,.06)}
+footer{max-width:780px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:13px}

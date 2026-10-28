@@ -57,6 +57,6 @@ html,body{background:var(--sb-bg)}
 @keyframes sb-sway{from{transform:translate3d(-1.5%,0,0)}to{transform:translate3d(1.5%,-16px,0)}}
 html.nobg .sb-root{display:none}
 html.noanim .sb-root *,html.pmode .sb-root *{animation:none !important}
-@media (prefers-reduced-motion:reduce){.sb-root *{animation:none !important}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .sb-root *{animation:none !important}
 /* en el celular: sin cintas borrosas ni burbujas (pesan), solo brillos y estrellas */
 @media (max-width:760px){.rb-glow,.sb-bubble{display:none}}

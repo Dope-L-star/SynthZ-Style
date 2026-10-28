@@ -15,7 +15,7 @@ html.au8on .secbg{display:none}
 html.au8on .sb-root[data-kind="chat"]{display:none}
 html.simple .au8{display:none}
 html.nobg .au8-tw,html.noanim .au8-tw,html.pmode .au8-tw{animation:none;opacity:.55}
-@media (prefers-reduced-motion:reduce){.au8-tw{animation:none}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .au8-tw{animation:none}
 
 /* conversación (SynthFlow con mensajes): una ola de noche sube desde la caja de escribir y la deja calma;
    por su borde corre un filo de aurora. En un chat nuevo la ola baja y se va por donde vino. */
@@ -51,5 +51,5 @@ html.noanim .au8-wash,html.noanim .au8-edge{transition:none}
 @keyframes au8-ss{0%{opacity:0;translate:0 0}1.5%{opacity:1}8%{opacity:0;translate:-240px 120px}100%{opacity:0;translate:-240px 120px}}
 html.nobg .au8 *,html.noanim .au8 *,html.pmode .au8 *{animation:none !important}
 html.nobg .au8-ss,html.noanim .au8-ss,html.pmode .au8-ss{display:none}
-@media (prefers-reduced-motion:reduce){.au8 *{animation:none !important}.au8-ss{display:none}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .au8 *{animation:none !important}html.noanim .au8-ss{display:none}
 @media (max-width:760px){.au8-gx{left:74%;top:16%;width:46vw}.au8-pl{left:24%;top:80%;width:44vw}}

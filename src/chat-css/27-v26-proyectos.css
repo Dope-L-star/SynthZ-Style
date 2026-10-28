@@ -148,4 +148,4 @@ body.pjon .tabbar{position:relative;z-index:31}
   .pj-side{order:0}
 }
 html.noanim .pjv,html.noanim .pjc,html.noanim .pj-menu{animation:none}
-@media (prefers-reduced-motion:reduce){.pjv,.pjc,.pj-menu{animation:none}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .pjv,html.noanim .pjc,html.noanim .pj-menu{animation:none}

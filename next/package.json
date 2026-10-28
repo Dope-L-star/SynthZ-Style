@@ -1,0 +1,14 @@
+{
+  "name": "symphoria-next",
+  "private": true,
+  "description": "SymphorIA en Next.js (export estático). Lo arma next/armar.mjs; ver next/LEEME.md.",
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev"
+  },
+  "dependencies": {
+    "next": "16.4.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  }
+}

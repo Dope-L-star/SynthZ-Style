@@ -8,7 +8,7 @@
 @keyframes ssBeat{0%,70%,100%{transform:scale(1)}78%{transform:scale(1.18)}86%{transform:scale(.96)}93%{transform:scale(1.06)}}
 @keyframes ssTw{0%,100%{opacity:.25;transform:scale(.6)}50%{opacity:1;transform:scale(1.15)}}
 html.noanim .ssi .ssi-s,html.noanim .ssi .ssi-k{animation:none}
-@media (prefers-reduced-motion:reduce){.ssi .ssi-s,.ssi .ssi-k{animation:none}}
+/* antes @media (prefers-reduced-motion:reduce): ahora lo decide Ajustes */html.noanim .ssi .ssi-s,html.noanim .ssi .ssi-k{animation:none}
 .ssmount{display:inline-flex;align-items:center;justify-content:center}
 
 /* barra lateral (PC): el botón con su ícono */
