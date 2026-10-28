@@ -37,6 +37,8 @@ function cfgClasses(){ const r = document.documentElement; r.classList.toggle('n
   r.classList.toggle('simple', simple); if (simple){ r.classList.add('noglass', 'nobg'); } r.classList.toggle('navleft', chat && CFG.nav === 'left');
   /* v2.9.2 · tamaño de SynthFlow: compacto (por defecto) o normal; el CSS (chat-css 29) lo achica con zoom:var(--ui-z) */
   r.classList.toggle('compact', chat && CFG.size !== 'normal');
+  /* v3.2 · atajos de la lista de chats: ninguno (por defecto), solo Sintéticos, solo Proyectos o los dos; siempre siguen en la barrita de íconos */
+  const lk = CFG.links || 'none'; r.classList.toggle('lk-proj', chat && (lk === 'proj' || lk === 'both')); r.classList.toggle('lk-syn', chat && (lk === 'syn' || lk === 'both'));
   if (chat && !simple && THEMES.some(t => t[0] === CFG.theme && !t[3])) r.dataset.theme = CFG.theme; else delete r.dataset.theme; }
 cfgClasses();
 function saveCfg(){ try{ localStorage.setItem('synthz:cfg', JSON.stringify(CFG)); }catch(e){} }
@@ -2984,6 +2986,7 @@ function cfgModal(tab){
     + '<div class="cfglbl">Estilo de SynthFlow</div><div class="cfgseg" id="cfgUi"><button type="button" data-ui="full" aria-pressed="' + (draft.ui !== 'simple') + '">SynthFlow</button><button type="button" data-ui="simple" aria-pressed="' + (draft.ui === 'simple') + '">Simple</button></div><p class="cnote">Simple: solo tus chats, la caja de escribir y las respuestas, con un diseño tranquilo y sin efectos.</p>'
     + '<div class="cfglbl">Idioma · Language</div><div class="cfgseg notr" id="cfgLang">' + LANGS.map(([id, nm]) => '<button type="button" data-lang="' + id + '" lang="' + id + '" aria-pressed="' + (lang() === id) + '">' + nm + '</button>').join('') + '</div>'
     + '<div class="cfglbl">Tamaño de SynthFlow</div><div class="cfgseg" id="cfgSz"><button type="button" data-sz="compact" aria-pressed="' + (draft.size !== 'normal') + '">Compacto</button><button type="button" data-sz="normal" aria-pressed="' + (draft.size === 'normal') + '">Normal</button></div><p class="cnote">Compacto: todo un poco más pequeño, para ver más chat en la pantalla. Normal: el tamaño grande de antes.</p>'
+    + (document.getElementById('composer') ? '<div class="cfglbl">Atajos en tus chats</div><div class="cfgseg cfgseg4" id="cfgLk">' + [['none', 'Ninguno'], ['syn', 'Sintéticos'], ['proj', 'Proyectos'], ['both', 'Los dos']].map(([v, l]) => '<button type="button" data-lk2="' + v + '" aria-pressed="' + ((draft.links || 'none') === v) + '">' + l + '</button>').join('') + '</div><p class="cnote">Qué va arriba de tu lista de chats, junto a «Nuevo chat». Proyectos y Sintéticos siempre están en la barrita de íconos de la izquierda.</p>' : '')
     + '<div class="cfglbl">Color de SynthFlow</div><div class="cfgth" id="cfgTh">' + THEMES.map(([id, nm, c1, lock, c2]) => '<button type="button" data-th="' + id + '" aria-pressed="' + ((draft.theme || 'synthz') === id) + '"' + (lock ? ' disabled aria-disabled="true"' : '') + ' style="--t1:' + c1 + ';--t2:' + c2 + '"><i></i><span>' + esc(nm) + '</span>' + (lock ? '<em>Pronto</em>' : '') + '</button>').join('') + '</div><p class="cnote" id="cfgThN"></p>'
     + (matchMedia('(pointer:coarse), (max-width:820px)').matches ? '<div class="cfglbl">Barra del celular</div><div class="cfgseg" id="cfgNav"><button type="button" data-nav="bottom" aria-pressed="' + (draft.nav !== 'left') + '">Abajo</button><button type="button" data-nav="left" aria-pressed="' + (draft.nav === 'left') + '">A la izquierda</button></div><p class="cnote">A la izquierda: la barra se esconde y la abres con el botón ☰ de arriba.</p>' : '')
     + '<div class="cfglbl">Detalles</div><div id="cfgRows">' + CFG_PAGE.map(row).join('') + '</div>'
@@ -3006,6 +3009,7 @@ function cfgModal(tab){
   thNote();
   $$('[data-ui]', o).forEach(b => b.addEventListener('click', () => { draft.ui = b.dataset.ui; $$('[data-ui]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); thNote(); }));
   $$('[data-lang]', o).forEach(b => b.addEventListener('click', () => { setLang(b.dataset.lang); $$('[data-lang]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));   /* el idioma cambia al instante, sin «Guardar» */
+  $$('[data-lk2]', o).forEach(b => b.addEventListener('click', () => { draft.links = b.dataset.lk2; $$('[data-lk2]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
   $$('[data-sz]', o).forEach(b => b.addEventListener('click', () => { draft.size = b.dataset.sz; $$('[data-sz]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
   $$('[data-th]', o).forEach(b => b.addEventListener('click', () => { if (b.disabled) return; draft.theme = b.dataset.th; $$('[data-th]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
   $$('[data-nav]', o).forEach(b => b.addEventListener('click', () => { draft.nav = b.dataset.nav; $$('[data-nav]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
@@ -5949,6 +5953,30 @@ BOT_FAQ.push(
   { k:'next nextjs react tecnologia hecha como esta hecha framework migracion migrar technology built how made migration',
     a:BRAND() + ' se está pasando a Next.js (React) por partes, sin romper nada: Términos y Privacidad ya están hechas así, y las demás páginas siguen el mismo camino una por una. Para ti no cambia nada: mismas direcciones, misma cuenta, más rápida de mantener y de mejorar.',
     en:BRAND() + ' is moving to Next.js (React) step by step, without breaking anything: Terms and Privacy are already built that way, and the other pages follow one by one. Nothing changes for you: same addresses, same account, quicker to maintain and improve.' }
+);
+/* ===== v3.2 · barra de escribir, lista de chats y barra Simple: SynthonIA lo cuenta y lo explica ===== */
+WHATSNEW.v = '3.2';
+WHATSNEW.items.unshift(
+  ['chat', LANG === 'en'
+    ? 'Tidier chat list: on top only «New chat» and search, and below all your chats. Projects and Synthetics stay in the icon bar; if you want them on top too, pick them in Settings › «Shortcuts in your chats».'
+    : 'Lista de chats más limpia: arriba solo «Nuevo chat» y buscar, y debajo todos tus chats. Proyectos y Sintéticos siguen en la barrita de íconos; si los quieres arriba también, elígelos en Ajustes › «Atajos en tus chats».'],
+  ['chat', LANG === 'en'
+    ? 'The Simple style now has a sidebar like Claude\'s: Create, Projects, Synthetics, Customize and More on top, your recent chats in the middle, and your account and a magnifier to search at the bottom.'
+    : 'El estilo Simple ahora tiene una barra como la de Claude: Crear, Proyectos, Sintéticos, Personalización y Más arriba, tus chats recientes en medio, y abajo tu cuenta y una lupa para buscar.'],
+  ['chat', LANG === 'en'
+    ? 'The writing box is lighter: «Short answers», Internet and Image are now little bubbles next to the «+» (hover to see the name, tap to turn off). And the EnerX battery is smaller.'
+    : 'La caja de escribir quedó más liviana: «Respuestas cortas», Internet e Imagen ahora son bolitas junto al «+» (pasa el puntero para ver el nombre, tócalas para apagar). Y la batería EnerX es más pequeña.'],
+  ['chat', LANG === 'en'
+    ? 'Every new chat greets you with a different phrase. And if you don\'t know what «FlowIA» means, tap the button under the greeting: it is explained there.'
+    : 'Cada chat nuevo te saluda con una frase distinta. Y si no sabes qué significa «FlowIA’r», toca el botón debajo del saludo: ahí te lo explicamos.']
+);
+BOT_FAQ.push(
+  { k:'flow flowia flowiar flowiando flowiamos que significa que es significado palabra ingles what does mean meaning word',
+    a:'«Flow» (se dice «flou») es una palabra en inglés que significa fluir, como el agua de un río: cuando todo sale fácil, sin trabarse. «IA» es la inteligencia artificial. «FlowIA’r» es un verbo que inventamos uniendo las dos: hacer lo que necesitas (escribir, estudiar, crear, programar) de forma fácil, con ayuda de la IA. «¿Qué quieres FlowIA’r hoy?» = «¿Qué quieres hacer hoy con ayuda de la IA?».',
+    en:'«Flow» means flowing, like water in a river: when everything goes easy, without getting stuck. «IA» is how Spanish says AI (artificial intelligence). «FlowIA» is a word we made up by joining them: doing what you need (write, study, create, code) the easy way, with the help of AI. «What do you want to FlowIA today?» = «What would you like to do today with the help of AI?».' },
+  { k:'proyectos sinteticos barra lista chats arriba quitar poner atajos projects synthetics sidebar list shortcuts top remove add',
+    a:'Arriba de tu lista de chats solo van «Nuevo chat» y buscar. Si quieres también Proyectos, Sintéticos o los dos, elígelo en Ajustes › Página › «Atajos en tus chats». Siempre los tienes en la barrita de íconos de la izquierda.',
+    en:'Above your chat list there are only «New chat» and search. If you also want Projects, Synthetics or both, choose it in Settings › Page › «Shortcuts in your chats». They are always in the icon bar on the left.', pre:openCfg(), go:['#cfgBtn', '[data-tab="cfg"]'] }
 );
 /* ===== v1.4 · eventos especiales: a las 50, 100 y 500 visitas la página «se hackea» y das un logro ===== */
 const EV = (() => {

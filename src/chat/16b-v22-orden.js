@@ -26,16 +26,18 @@ addEventListener('synthz-saver', () => { $$('#sxSw, #saverBtn').forEach(x => x.s
     new MutationObserver(mark).observe(document.body, { attributes:true, attributeFilter:['class'] }); mark();
   }
 }
-/* chips de lo que está encendido (imagen, internet, cortas): se ven en la caja y se apagan con un toque */
+/* chips de lo que está encendido (imagen, internet, cortas): se apagan con un toque.
+   v3.2 (Sammuel, 28 oct): ya no van en una fila aparte debajo de la caja; son bolitas junto al «+» que muestran su nombre al pasar el puntero. */
 {
   const host = document.createElement('div'); host.className = 'onchips'; host.id = 'onChips';
-  const ci = $('.comp-in'); if (ci) ci.appendChild(host);
+  const aw = $('.comp-in .attw'); if (aw) aw.appendChild(host); else { const ci = $('.comp-in'); if (ci) ci.appendChild(host); }
   const paint = () => {
     const L = [];
-    if (imgMode) L.push(['img', '🎨 Crear imagen']);
-    if (webOn) L.push(['web', '🌐 Internet']);
-    if (st().sx.saver) L.push(['saver', '🍃 Cortas']);
-    host.innerHTML = L.map(([k, t]) => '<button type="button" class="onchip" data-off="' + k + '" data-tip="Apagar">' + t + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg></button>').join('');
+    if (imgMode) L.push(['img', '🎨', 'Crear imagen']);
+    if (webOn) L.push(['web', '🌐', 'Internet']);
+    if (st().sx.saver) L.push(['saver', '🍃', 'Respuestas cortas']);
+    const have = $$('[data-off]', host).map(b => b.dataset.off).join(), want = L.map(x => x[0]).join(); if (have === want) return;
+    host.innerHTML = L.map(([k, ic, t]) => '<button type="button" class="onchip" data-off="' + k + '" data-tip="' + t + ' · toca para apagar" aria-label="' + t + ': encendido. Toca para apagar"><i aria-hidden="true">' + ic + '</i><span class="oc-l">' + t + '</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>').join('');
   };
   host.addEventListener('click', e => { const b = e.target.closest('[data-off]'); if (!b) return; const k = b.dataset.off; if (k === 'img') setImgMode(false); else if (k === 'web') setWeb(false); else setSaver(false); paint(); });
   new MutationObserver(paint).observe(document.body, { attributes:true, attributeFilter:['class'] });

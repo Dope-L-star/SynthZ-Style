@@ -167,7 +167,9 @@ function finishBot(el, meta, last, cont, starred){
   $$('.acts .act', el).forEach(b => { if (!b.title) b.title = b.textContent.trim(); if (!b.getAttribute('aria-label')) b.setAttribute('aria-label', b.textContent.trim()); });
   el.classList.toggle('last', !!last);
 }
-/* ---------- saludo: el principal la primera vez y tras 12 h; en cada chat nuevo, otro ---------- */
+/* ---------- saludo: al entrar siempre «¿Qué quieres FlowIA’r hoy?»; en cada chat nuevo, otra frase que no se repite ----------
+   v3.2 (Sammuel, 28 oct): las frases van saliendo de una bolsa barajada que se guarda; ninguna se repite hasta usarlas todas,
+   y al volver a barajar la última nunca sale primero. La única que se repite es la de entrada. */
 const GREET = [
   ['¿Qué quieres ', 'FlowIA’r', ' hoy?'],
   ['Suelta la idea, la ', 'FlowIAmos', '.'],
@@ -178,9 +180,39 @@ const GREET = [
   ['¿Escribimos, programamos ', 'o soñamos', '?'],
   ['Modo Flow: ', 'activado', '. ¿Qué sigue?'],
   ['¿En qué te ', 'ayudo', ' hoy?'],
-  ['Cuéntame, ¿qué tienes ', 'en mente', '?']
+  ['Cuéntame, ¿qué tienes ', 'en mente', '?'],
+  ['Hoy es buen día para ', 'aprender algo', '.'],
+  ['¿Qué te da ', 'curiosidad', ' hoy?'],
+  ['Pregunta sin miedo: ', 'aquí nada es tonto', '.'],
+  ['Lo difícil, ', 'lo hacemos fácil', '.'],
+  ['¿Arrancamos con ', 'una idea loca', '?'],
+  ['Dime qué necesitas y ', 'lo armamos', '.'],
+  ['¿Qué quieres ', 'entender mejor', '?'],
+  ['De la idea al resultado, ', 'sin enredos', '.'],
+  ['¿Un texto, un plan ', 'o un código', '?'],
+  ['Hagamos que ', 'fluya', '.'],
+  ['Tu idea merece ', 'un buen comienzo', '.'],
+  ['¿Qué tarea te ', 'quito de encima', ' hoy?'],
+  ['Escribe como hablas: ', 'yo te entiendo', '.'],
+  ['¿Practicamos ', 'otro idioma', '?'],
+  ['¿Organizamos ', 'tu semana', '?'],
+  ['Una pregunta puede ', 'cambiarlo todo', '.'],
+  ['¿Qué vamos a ', 'inventar', ' ahora?'],
+  ['Tranqui, ', 'paso a paso', '.'],
+  ['¿Le damos forma a ', 'ese proyecto', '?'],
+  ['La página en blanco ', 'ya no asusta', '.'],
+  ['¿Qué historia ', 'contamos', ' hoy?'],
+  ['Tú pones el reto, ', 'yo las ideas', '.'],
+  ['¿Resolvemos ', 'esa duda', ' de una vez?'],
+  ['Menos vueltas, ', 'más Flow', '.'],
+  ['¿Qué quieres ', 'mejorar', ' hoy?'],
+  ['Varias IA, ', 'una sola caja', '.'],
+  ['¿Estudiamos ', 'juntos', '?'],
+  ['Tu próxima gran idea ', 'empieza aquí', '.'],
+  ['¿Algo para explicar, ', 'crear o arreglar', '?'],
+  ['A ver, ', 'sorpréndeme', '.']
 ];
-/* v3.0 · los mismos saludos en inglés (mismo orden) */
+/* los mismos saludos en inglés (la clave es la frase en español) */
 const GREET_EN = {
   '¿Qué quieres FlowIA’r hoy?':['What do you want to ', 'FlowIA', ' today?'],
   '¿Qué quieres FlowIA’r?':['What do you want to ', 'FlowIA', '?'],
@@ -192,14 +224,79 @@ const GREET_EN = {
   '¿Escribimos, programamos o soñamos?':['Shall we write, code ', 'or dream', '?'],
   'Modo Flow: activado. ¿Qué sigue?':['Flow mode: ', 'on', '. What\'s next?'],
   '¿En qué te ayudo hoy?':['How can I ', 'help', ' today?'],
-  'Cuéntame, ¿qué tienes en mente?':['Tell me, what do you have ', 'in mind', '?']
+  'Cuéntame, ¿qué tienes en mente?':['Tell me, what do you have ', 'in mind', '?'],
+  'Hoy es buen día para aprender algo.':['Today is a good day to ', 'learn something', '.'],
+  '¿Qué te da curiosidad hoy?':['What are you ', 'curious', ' about today?'],
+  'Pregunta sin miedo: aquí nada es tonto.':['Ask freely: ', 'no silly questions', ' here.'],
+  'Lo difícil, lo hacemos fácil.':['The hard stuff, ', 'made easy', '.'],
+  '¿Arrancamos con una idea loca?':['Shall we start with ', 'a wild idea', '?'],
+  'Dime qué necesitas y lo armamos.':['Tell me what you need and ', 'we\'ll build it', '.'],
+  '¿Qué quieres entender mejor?':['What would you like to ', 'understand better', '?'],
+  'De la idea al resultado, sin enredos.':['From idea to result, ', 'no hassle', '.'],
+  '¿Un texto, un plan o un código?':['A text, a plan ', 'or some code', '?'],
+  'Hagamos que fluya.':['Let\'s make it ', 'flow', '.'],
+  'Tu idea merece un buen comienzo.':['Your idea deserves ', 'a great start', '.'],
+  '¿Qué tarea te quito de encima hoy?':['Which task can I ', 'take off your plate', ' today?'],
+  'Escribe como hablas: yo te entiendo.':['Write like you talk: ', 'I\'ll get it', '.'],
+  '¿Practicamos otro idioma?':['Shall we practice ', 'another language', '?'],
+  '¿Organizamos tu semana?':['Shall we plan ', 'your week', '?'],
+  'Una pregunta puede cambiarlo todo.':['One question can ', 'change everything', '.'],
+  '¿Qué vamos a inventar ahora?':['What shall we ', 'invent', ' now?'],
+  'Tranqui, paso a paso.':['No rush, ', 'step by step', '.'],
+  '¿Le damos forma a ese proyecto?':['Shall we shape ', 'that project', '?'],
+  'La página en blanco ya no asusta.':['The blank page ', 'isn\'t scary', ' anymore.'],
+  '¿Qué historia contamos hoy?':['What story shall we ', 'tell', ' today?'],
+  'Tú pones el reto, yo las ideas.':['You bring the challenge, ', 'I bring ideas', '.'],
+  '¿Resolvemos esa duda de una vez?':['Shall we settle ', 'that question', ' for good?'],
+  'Menos vueltas, más Flow.':['Less fuss, ', 'more Flow', '.'],
+  '¿Qué quieres mejorar hoy?':['What do you want to ', 'improve', ' today?'],
+  'Varias IA, una sola caja.':['Many AIs, ', 'one single box', '.'],
+  '¿Estudiamos juntos?':['Shall we ', 'study together', '?'],
+  'Tu próxima gran idea empieza aquí.':['Your next big idea ', 'starts here', '.'],
+  '¿Algo para explicar, crear o arreglar?':['Something to explain, ', 'create or fix', '?'],
+  'A ver, sorpréndeme.':['Go on, ', 'surprise me', '.']
 };
-const GKEY = 'synthz:greet';
-let greetI = 0;
-try{ const g = JSON.parse(localStorage.getItem(GKEY) || 'null'); greetI = g && Date.now() - (g.seen || 0) < 12 * 3600e3 && GREET[g.i] ? g.i : 0; }catch(e){}
-function saveGreet(){ try{ localStorage.setItem(GKEY, JSON.stringify({ i:greetI, seen:Date.now() })); }catch(e){} }
-saveGreet();
-function nextGreet(){ let n = greetI; while (n === greetI) n = 1 + Math.floor(Math.random() * (GREET.length - 1)); greetI = n; saveGreet(); }
+const GBAG = 'synthz:greetBag';
+let greetI = 0;   /* al entrar, siempre la de entrada */
+function nextGreet(){
+  let bag = []; try{ bag = JSON.parse(localStorage.getItem(GBAG) || '[]'); }catch(e){}
+  bag = Array.isArray(bag) ? bag.filter(i => i > 0 && GREET[i]) : [];
+  if (!bag.length){
+    bag = GREET.map((_, i) => i).slice(1);
+    for (let i = bag.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [bag[i], bag[j]] = [bag[j], bag[i]]; }
+    if (bag[0] === greetI) bag.push(bag.shift());
+  }
+  greetI = bag.shift();
+  try{ localStorage.setItem(GBAG, JSON.stringify(bag)); }catch(e){}
+}
+/* «¿Qué es FlowIA’r?»: un botoncito bajo el saludo que lo explica para quien no sabe inglés ni conoce la página */
+function flowWhatHtml(){
+  return '<button type="button" class="flowq notr" id="flowQ" aria-expanded="false" aria-controls="flowW">'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>'
+    + (SZ.lang() === 'en' ? 'What does «FlowIA» mean?' : '¿Qué significa «FlowIA’r»?') + '</button>';
+}
+function flowWhatCard(){
+  const en = SZ.lang() === 'en';
+  return en
+    ? '<b class="flw-tt">FlowIA = Flow + IA</b>'
+      + '<p><i>🌊</i><span><b>Flow</b> (say «flo») is an English word: it means <em>flowing</em>, like water in a river. When everything goes easy, without getting stuck, people say you are «in the flow».</span></p>'
+      + '<p><i>🤖</i><span><b>IA</b> is how Spanish says <em>AI</em>: artificial intelligence, programs that understand what you write and answer you.</span></p>'
+      + '<p><i>✨</i><span><b>FlowIA</b> (say «flo-ee-ah») is a word we made up by joining them: doing what you need (write, study, create, code) <em>the easy way, with the help of AI</em>.</span></p>'
+      + '<p class="fw-ex">«What do you want to FlowIA today?» = «What would you like to do today with the help of AI?»</p>'
+    : '<b class="flw-tt">FlowIA’r = Flow + IA</b>'
+      + '<p><i>🌊</i><span><b>Flow</b> (se dice «flou») es una palabra en inglés que significa <em>fluir</em>, como el agua de un río. Cuando todo sale fácil, sin trabarse, se dice que estás «en flow».</span></p>'
+      + '<p><i>🤖</i><span><b>IA</b> es la <em>inteligencia artificial</em>: programas que entienden lo que escribes y te responden.</span></p>'
+      + '<p><i>✨</i><span><b>FlowIA’r</b> (se dice «flou-ia-ar») es un verbo que inventamos uniendo las dos: hacer lo que necesitas (escribir, estudiar, crear, programar) <em>de forma fácil, con ayuda de la IA</em>.</span></p>'
+      + '<p class="fw-ex">«¿Qué quieres FlowIA’r hoy?» = «¿Qué quieres hacer hoy con ayuda de la IA?»</p>';
+}
+document.addEventListener('click', e => {
+  const q = e.target.closest && e.target.closest('#flowQ'); if (!q) return;
+  let w = $('#flowW');
+  if (w){ q.setAttribute('aria-expanded', 'false'); w.classList.remove('on'); setTimeout(() => w.remove(), 260); return; }
+  w = document.createElement('div'); w.id = 'flowW'; w.className = 'floww notr'; w.setAttribute('role', 'note'); w.innerHTML = flowWhatCard();
+  q.after(w); q.setAttribute('aria-expanded', 'true'); requestAnimationFrame(() => w.classList.add('on'));
+  SZ.SND && SZ.SND.tap && SZ.SND.tap();
+});
 function greetHtml(g){
   if (SZ.lang() === 'en') g = GREET_EN[g.join('')] || g;
   let i = 0;

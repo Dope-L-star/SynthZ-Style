@@ -1,0 +1,118 @@
+/* ===== v3.2 · barra de escribir, lista de chats y barra Simple (pedido de Sammuel, 28 oct) ===== */
+
+/* ---------- lo encendido (🍃 cortas, 🌐 internet, 🎨 imagen): bolitas junto al «+», ya no una fila aparte ----------
+   Se ve solo el ícono con un aro suave; al pasar el puntero (o con el teclado) se abre su nombre y la ×. */
+.composer .attw .onchips,.composer.big .attw .onchips{grid-area:auto;display:flex;flex-wrap:nowrap;align-items:center;gap:4px}
+.composer .attw .onchips:empty{display:none}
+.attw .onchip{position:relative;display:inline-flex;align-items:center;gap:0;height:30px;min-width:30px;padding:0 7px;border-radius:999px;font-size:12.5px;color:#f3dcae;background:rgba(var(--gold-rgb),.1);border:1px solid rgba(var(--gold-rgb),.32);box-shadow:0 0 0 0 rgba(var(--gold-rgb),.35);transition:background .25s,gap .35s cubic-bezier(.22,1,.36,1),padding .35s cubic-bezier(.22,1,.36,1);animation:ocIn .5s cubic-bezier(.22,1.4,.36,1) both,ocRing 2.6s ease-out .5s 2}
+.attw .onchip i{font-style:normal;font-size:14px;line-height:1}
+.attw .onchip .oc-l{max-width:0;overflow:hidden;white-space:nowrap;opacity:0;transition:max-width .4s cubic-bezier(.22,1,.36,1),opacity .25s}
+.attw .onchip svg{width:0;height:12px;opacity:0;transition:width .3s,opacity .2s}
+.attw .onchip:hover,.attw .onchip:focus-visible{gap:6px;padding:0 9px 0 8px;background:rgba(var(--gold-rgb),.2)}
+.attw .onchip:hover .oc-l,.attw .onchip:focus-visible .oc-l{max-width:150px;opacity:1}
+.attw .onchip:hover svg,.attw .onchip:focus-visible svg{width:12px;opacity:.75}
+.attw .onchip[data-off="web"]{color:#bfefff;background:rgba(61,224,255,.1);border-color:rgba(61,224,255,.32)}
+.attw .onchip[data-off="img"]{color:#ffd0ea;background:rgba(255,61,154,.1);border-color:rgba(255,61,154,.32)}
+@keyframes ocIn{from{transform:scale(.4) rotate(-25deg);opacity:0}}
+@keyframes ocRing{0%{box-shadow:0 0 0 0 rgba(var(--gold-rgb),.45)}100%{box-shadow:0 0 0 9px rgba(var(--gold-rgb),0)}}
+html.noanim .attw .onchip{animation:none}
+html.simple .attw .onchip{background:transparent !important;border-color:var(--sline) !important;color:var(--ssoft) !important;box-shadow:none;animation:none}
+/* la fila de botones no se parte en dos y respira igual a los lados */
+.composer.big .comp-in{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"f f f" "a p s"}
+.composer.big .cpick{min-width:0}
+
+/* ---------- «¿Qué significa FlowIA’r?» bajo el saludo ---------- */
+.flowq{display:inline-flex;align-items:center;gap:7px;margin:-6px auto 0;padding:5px 12px 5px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--soft);font-size:12.5px;transition:color .25s,background .25s,border-color .25s}
+.flowq svg{width:14px;height:14px;color:#3de0ff}
+.flowq:hover,.flowq[aria-expanded="true"]{color:var(--text);background:rgba(61,224,255,.08);border-color:rgba(61,224,255,.4)}
+.floww{width:min(100%,560px);margin:-4px auto 2px;padding:14px 16px 12px;border-radius:18px;border:1px solid var(--lg-edge,rgba(255,255,255,.14));background:var(--lg-bg,rgba(255,255,255,.05)),rgba(20,12,44,.25);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);text-align:left;font-size:13.5px;line-height:1.5;color:var(--soft);opacity:0;transform:translateY(-6px) scale(.98);transition:opacity .3s,transform .4s cubic-bezier(.22,1,.36,1)}
+.floww.on{opacity:1;transform:none}
+.floww .flw-tt{display:block;margin-bottom:6px;font-size:14.5px;color:var(--text);letter-spacing:.01em}
+.floww p{display:flex;gap:10px;margin:6px 0}
+.floww p i{font-style:normal;flex:none;width:22px;text-align:center}
+.floww p b{color:var(--text)}
+.floww em{font-style:normal;color:#9fe8ff}
+.floww .fw-ex{display:block;margin:10px 0 0;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.05);font-size:13px;color:var(--text)}
+html.simple .flowq{border-color:var(--sline);background:transparent}
+html.simple .flowq svg{color:var(--sacc)}
+html.simple .floww{background:var(--scard) !important;border-color:var(--sline) !important;backdrop-filter:none;-webkit-backdrop-filter:none}
+html.simple .floww em{color:var(--sacc)}
+@media (max-width:760px){.flowq{margin-top:-4px;font-size:12px}.floww{font-size:13px}}
+
+/* Ajustes › Atajos en tus chats: 4 opciones en una fila (2 y 2 en el celular) */
+.cfgseg.cfgseg4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:480px){.cfgseg.cfgseg4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ---------- lista de chats: Proyectos y Sintéticos solo si la persona los pide (Ajustes › Atajos en tus chats) ---------- */
+html:not(.lk-proj) #cProj,html:not(.lk-syn) #cSyn{display:none !important}
+.chats .cproj{margin-top:6px}
+
+/* ---------- EnerX más pequeña: una fila, ya no una tarjeta alta ---------- */
+#sideFoot .sxfoot.gauge.gbatt{display:grid !important;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"b t v" "b s s";align-items:center;justify-items:stretch;gap:1px 10px;padding:7px 12px;border-radius:14px;text-align:left}
+#sideFoot .sxfoot.gauge.gbatt .lbatt{grid-area:b;display:block;width:30px;height:20px;margin:0}
+#sideFoot .sxfoot.gauge.gbatt .gz-t{grid-area:t;text-align:left;min-width:0;font-size:11px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#sideFoot .sxfoot.gauge.gbatt .gz-n{display:contents}
+#sideFoot .sxfoot.gauge.gbatt .gz-n b{grid-area:v;font-size:13.5px;line-height:1.2;white-space:nowrap}
+#sideFoot .sxfoot.gauge.gbatt .gz-n small{grid-area:s;text-align:left;min-width:0;font-size:10.5px;line-height:1.3;white-space:normal}
+
+/* ---------- modo Simple: la barra como la de Claude ---------- */
+.snav,.sfoot,.chats .sn-h{display:none}
+html.simple .chats .sn-h{display:block}
+html.simple .snav{display:flex;flex-direction:column;gap:1px;margin:0 0 4px}
+html.simple .sfoot{display:flex;align-items:center;gap:6px;margin:6px -6px 0;padding:8px 6px 0;border-top:1px solid var(--sline)}
+html.simple .chats .chead,html.simple #cNew,html.simple #cProj,html.simple #cSyn,html.simple #cSeg{display:none !important}
+html.simple .chats .cin:not(.sfind) #cSearch{display:none !important}
+html.simple .chats #cSearch{margin:2px 0 6px;animation:snDrop .3s cubic-bezier(.22,1,.36,1)}
+@keyframes snDrop{from{opacity:0;transform:translateY(-6px)}}
+/* arriba: el orbe de SynthFlow y el botón para cerrar la barra */
+.sn-top{display:flex;align-items:center;justify-content:space-between;gap:8px;height:44px;margin:0 0 8px;padding:0 2px 0 6px}
+.sn-logo{display:flex;align-items:center;min-width:0;color:var(--stext)}
+.sn-logo .flw-w{display:inline-flex;align-items:center;gap:8px;font-size:17px;font-weight:600}
+.sn-logo .sforb{width:24px;height:24px}
+.sn-x,.sf-find{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;color:var(--ssoft);transition:background .2s,color .2s}
+.sn-x svg,.sf-find svg{width:19px;height:19px}
+.sn-x:hover,.sf-find:hover,.sf-find[aria-pressed="true"]{background:rgba(255,255,255,.07);color:var(--stext)}
+/* las opciones: ícono, nombre; cada una con su tinte suave al pasar (para que no sea una copia exacta) */
+.sn-i{position:relative;display:flex;align-items:center;gap:11px;width:100%;min-height:38px;padding:0 10px;border-radius:10px;color:var(--ssoft);font-size:14.5px;text-align:left;transition:background .2s,color .2s}
+.sn-i .sn-ic{display:grid;place-items:center;width:24px;height:24px;flex:none;border-radius:8px;transition:background .25s,color .25s,transform .35s cubic-bezier(.22,1.4,.36,1)}
+.sn-i .sn-ic svg{width:18px;height:18px}
+.sn-i .sn-t{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.sn-i:hover,.sn-i.on{background:rgba(255,255,255,.055);color:var(--stext)}
+.sn-i:hover .sn-ic{transform:translateX(1px) scale(1.06)}
+.sn-i[data-sn="new"] .sn-ic{background:var(--sacc);color:#1f1a14;border-radius:50%}
+.sn-i[data-sn="new"] .sn-ic svg{width:15px;height:15px;stroke-width:2.4}
+.sn-i[data-sn="new"]:hover .sn-ic{transform:rotate(90deg) scale(1.05)}
+.sn-i[data-sn="proj"]:hover .sn-ic,.sn-i[data-sn="proj"].on .sn-ic{color:#8fd3c8}
+.sn-i[data-sn="syn"]:hover .sn-ic,.sn-i[data-sn="syn"].on .sn-ic{color:#c3a6ff}
+.sn-i[data-sn="cfg"]:hover .sn-ic{color:#e8c27a}
+.sn-i.on::before{content:"";position:absolute;left:-4px;top:10px;bottom:10px;width:3px;border-radius:3px;background:var(--sacc)}
+.sn-more .sn-chev{display:grid;place-items:center;width:18px;height:18px;color:var(--smute);transition:transform .3s cubic-bezier(.22,1,.36,1)}
+.sn-more .sn-chev svg{width:15px;height:15px}
+.snav.mopen .sn-more .sn-chev{transform:rotate(180deg)}
+.sn-sub{display:flex;flex-direction:column;gap:1px;margin:0 0 2px 14px;padding-left:10px;border-left:1px solid var(--sline)}
+.sn-sub[hidden]{display:none}
+.sn-sub .sn-i{min-height:34px;font-size:13.5px;animation:snDrop .3s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(var(--d) * 35ms)}
+.sn-sub .sn-ic svg{width:16px;height:16px}
+.sn-h{margin:14px 10px 4px;font-size:12px;font-weight:500;color:var(--smute);letter-spacing:.01em}
+html.noanim .sn-sub .sn-i,html.noanim .chats #cSearch{animation:none}
+/* abajo: tu cuenta y la lupa */
+.sf-acc{flex:1;min-width:0;display:flex;align-items:center;gap:10px;height:44px;padding:0 8px;border-radius:12px;color:var(--stext);text-align:left;transition:background .2s}
+.sf-acc:hover{background:rgba(255,255,255,.06)}
+.sf-av{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,.08)}
+.sf-av>*{width:100%;height:100%;display:grid;place-items:center}
+.sf-av img{width:100%;height:100%;object-fit:cover}
+.sf-n{flex:1;min-width:0;display:flex;align-items:baseline;gap:6px;overflow:hidden;white-space:nowrap}
+.sf-n b{flex:0 1 auto;min-width:3ch;font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis}
+.sf-n small{flex:0 100 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:12.5px;color:var(--smute)}
+.sf-n small::before{content:"· "}
+.sf-chev{display:grid;place-items:center;color:var(--smute)}
+.sf-chev svg{width:14px;height:14px}
+/* en Simple, la EnerX va tranquila y plana arriba de tu cuenta */
+html.simple #sideFoot{padding-top:6px}
+html.simple #sideFoot .sxfoot.gauge.gbatt{background:transparent !important;border:1px solid var(--sline) !important;box-shadow:none !important}
+/* con la lista abierta, la barrita de íconos se esconde: una sola barra, como en Claude */
+@media (min-width:761px){
+  html.simple .shell:not(.nochats) .rail{display:none}
+  html.simple .chats{--cw:288px}
+}
+@media (max-width:760px){.attw .onchip{height:26px;min-width:26px;padding:0 5px}.attw .onchip i{font-size:12.5px}}

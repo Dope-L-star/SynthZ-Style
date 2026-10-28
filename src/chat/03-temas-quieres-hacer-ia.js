@@ -112,12 +112,12 @@ function emptyEl(){
   const ex = showEx();
   if (agentOn()){
     e.classList.add('aghello');
-    e.innerHTML = '<p class="agbadge">' + AG_ICO + 'Modo SuperiorSynth activado</p><h1 class="greet">' + greetHtml(['¿Qué quieres ', 'FlowIA’r', '?']) + '</h1>'
+    e.innerHTML = '<p class="agbadge">' + AG_ICO + 'Modo SuperiorSynth activado</p><h1 class="greet">' + greetHtml(['¿Qué quieres ', 'FlowIA’r', '?']) + '</h1>' + flowWhatHtml()
       + (ex ? '<div class="hexs hexr" id="hexR" aria-label="Ideas para empezar">' + exRowHtml() + '</div>' : '')
       + '<p class="hsub2">Cuéntame qué necesitas. SuperiorSynth entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso.</p><div class="hcomp"></div>';
     return e;
   }
-  let h = '<h1 class="greet">' + greetHtml(GREET[greetI] || GREET[0]) + '</h1>'
+  let h = '<h1 class="greet">' + greetHtml(GREET[greetI] || GREET[0]) + '</h1>' + flowWhatHtml()
     + (ex ? '<div class="hexs hexr" id="hexR" aria-label="Ideas para empezar">' + exRowHtml() + '</div>' : '')
     + '<p class="hsub2">Escribe lo que necesitas y da detalles: qué quieres, para qué es y cómo te sirve la respuesta. Ya hay una IA lista para empezar; si prefieres otra, la cambias abajo.</p>';
   h += '<div class="hcomp"></div>' + topicsHtml() + '<div class="tpanel" id="tPanel">' + (curTopic ? topicPanelHtml(curTopic) : '') + '</div>'

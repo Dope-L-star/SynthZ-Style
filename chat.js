@@ -501,7 +501,7 @@ function renderNow(){
 function renderFoot(){
   const left = SZ.msgsLeft(), lv = SZ.limLvl();
   /* v3.0 · «Medidor del día» como batería: la pila se descarga mientras chateas y se carga a medianoche */
-  const k = Math.max(0, 1 - SZ.limPct()), g = SZ.isGuestQ(), big = g ? Math.max(0, (SZ.SZQ.guest.max || 5) - (SZ.SZQ.guest.used || 0)) + '' : Math.round(k * 100) + ' %', of = g ? 'de ' + (SZ.SZQ.guest.max || 5) + ' mensajes de prueba' : SZ.SZQ.team ? 'sin límite · equipo' : k > 0 ? 'de EnerX · se carga a medianoche' : 'sin EnerX · se carga a medianoche';
+  const k = Math.max(0, 1 - SZ.limPct()), g = SZ.isGuestQ(), big = g ? Math.max(0, (SZ.SZQ.guest.max || 5) - (SZ.SZQ.guest.used || 0)) + '' : Math.round(k * 100) + ' %', of = g ? 'de ' + (SZ.SZQ.guest.max || 5) + ' mensajes de prueba' : SZ.SZQ.team ? 'sin límite · equipo' : k > 0 ? 'se carga a medianoche' : 'sin EnerX · se carga a medianoche';
   $('#sideFoot').innerHTML = '<button class="sxfoot lim gauge gbatt ' + lv + '" id="sxBtn" type="button" title="Tu EnerX de hoy (tu batería): toca para ver el detalle">'
     + '<span class="gz-t">EnerX de hoy</span>' + SZ.limRing(40)
     + '<span class="gz-n"><b>' + esc(big) + '</b><small>' + esc(of) + '</small></span><span class="sr">' + esc(SZ.limTxt()) + '</span></button>';
@@ -678,7 +678,9 @@ function finishBot(el, meta, last, cont, starred){
   $$('.acts .act', el).forEach(b => { if (!b.title) b.title = b.textContent.trim(); if (!b.getAttribute('aria-label')) b.setAttribute('aria-label', b.textContent.trim()); });
   el.classList.toggle('last', !!last);
 }
-/* ---------- saludo: el principal la primera vez y tras 12 h; en cada chat nuevo, otro ---------- */
+/* ---------- saludo: al entrar siempre «¿Qué quieres FlowIA’r hoy?»; en cada chat nuevo, otra frase que no se repite ----------
+   v3.2 (Sammuel, 28 oct): las frases van saliendo de una bolsa barajada que se guarda; ninguna se repite hasta usarlas todas,
+   y al volver a barajar la última nunca sale primero. La única que se repite es la de entrada. */
 const GREET = [
   ['¿Qué quieres ', 'FlowIA’r', ' hoy?'],
   ['Suelta la idea, la ', 'FlowIAmos', '.'],
@@ -689,9 +691,39 @@ const GREET = [
   ['¿Escribimos, programamos ', 'o soñamos', '?'],
   ['Modo Flow: ', 'activado', '. ¿Qué sigue?'],
   ['¿En qué te ', 'ayudo', ' hoy?'],
-  ['Cuéntame, ¿qué tienes ', 'en mente', '?']
+  ['Cuéntame, ¿qué tienes ', 'en mente', '?'],
+  ['Hoy es buen día para ', 'aprender algo', '.'],
+  ['¿Qué te da ', 'curiosidad', ' hoy?'],
+  ['Pregunta sin miedo: ', 'aquí nada es tonto', '.'],
+  ['Lo difícil, ', 'lo hacemos fácil', '.'],
+  ['¿Arrancamos con ', 'una idea loca', '?'],
+  ['Dime qué necesitas y ', 'lo armamos', '.'],
+  ['¿Qué quieres ', 'entender mejor', '?'],
+  ['De la idea al resultado, ', 'sin enredos', '.'],
+  ['¿Un texto, un plan ', 'o un código', '?'],
+  ['Hagamos que ', 'fluya', '.'],
+  ['Tu idea merece ', 'un buen comienzo', '.'],
+  ['¿Qué tarea te ', 'quito de encima', ' hoy?'],
+  ['Escribe como hablas: ', 'yo te entiendo', '.'],
+  ['¿Practicamos ', 'otro idioma', '?'],
+  ['¿Organizamos ', 'tu semana', '?'],
+  ['Una pregunta puede ', 'cambiarlo todo', '.'],
+  ['¿Qué vamos a ', 'inventar', ' ahora?'],
+  ['Tranqui, ', 'paso a paso', '.'],
+  ['¿Le damos forma a ', 'ese proyecto', '?'],
+  ['La página en blanco ', 'ya no asusta', '.'],
+  ['¿Qué historia ', 'contamos', ' hoy?'],
+  ['Tú pones el reto, ', 'yo las ideas', '.'],
+  ['¿Resolvemos ', 'esa duda', ' de una vez?'],
+  ['Menos vueltas, ', 'más Flow', '.'],
+  ['¿Qué quieres ', 'mejorar', ' hoy?'],
+  ['Varias IA, ', 'una sola caja', '.'],
+  ['¿Estudiamos ', 'juntos', '?'],
+  ['Tu próxima gran idea ', 'empieza aquí', '.'],
+  ['¿Algo para explicar, ', 'crear o arreglar', '?'],
+  ['A ver, ', 'sorpréndeme', '.']
 ];
-/* v3.0 · los mismos saludos en inglés (mismo orden) */
+/* los mismos saludos en inglés (la clave es la frase en español) */
 const GREET_EN = {
   '¿Qué quieres FlowIA’r hoy?':['What do you want to ', 'FlowIA', ' today?'],
   '¿Qué quieres FlowIA’r?':['What do you want to ', 'FlowIA', '?'],
@@ -703,14 +735,79 @@ const GREET_EN = {
   '¿Escribimos, programamos o soñamos?':['Shall we write, code ', 'or dream', '?'],
   'Modo Flow: activado. ¿Qué sigue?':['Flow mode: ', 'on', '. What\'s next?'],
   '¿En qué te ayudo hoy?':['How can I ', 'help', ' today?'],
-  'Cuéntame, ¿qué tienes en mente?':['Tell me, what do you have ', 'in mind', '?']
+  'Cuéntame, ¿qué tienes en mente?':['Tell me, what do you have ', 'in mind', '?'],
+  'Hoy es buen día para aprender algo.':['Today is a good day to ', 'learn something', '.'],
+  '¿Qué te da curiosidad hoy?':['What are you ', 'curious', ' about today?'],
+  'Pregunta sin miedo: aquí nada es tonto.':['Ask freely: ', 'no silly questions', ' here.'],
+  'Lo difícil, lo hacemos fácil.':['The hard stuff, ', 'made easy', '.'],
+  '¿Arrancamos con una idea loca?':['Shall we start with ', 'a wild idea', '?'],
+  'Dime qué necesitas y lo armamos.':['Tell me what you need and ', 'we\'ll build it', '.'],
+  '¿Qué quieres entender mejor?':['What would you like to ', 'understand better', '?'],
+  'De la idea al resultado, sin enredos.':['From idea to result, ', 'no hassle', '.'],
+  '¿Un texto, un plan o un código?':['A text, a plan ', 'or some code', '?'],
+  'Hagamos que fluya.':['Let\'s make it ', 'flow', '.'],
+  'Tu idea merece un buen comienzo.':['Your idea deserves ', 'a great start', '.'],
+  '¿Qué tarea te quito de encima hoy?':['Which task can I ', 'take off your plate', ' today?'],
+  'Escribe como hablas: yo te entiendo.':['Write like you talk: ', 'I\'ll get it', '.'],
+  '¿Practicamos otro idioma?':['Shall we practice ', 'another language', '?'],
+  '¿Organizamos tu semana?':['Shall we plan ', 'your week', '?'],
+  'Una pregunta puede cambiarlo todo.':['One question can ', 'change everything', '.'],
+  '¿Qué vamos a inventar ahora?':['What shall we ', 'invent', ' now?'],
+  'Tranqui, paso a paso.':['No rush, ', 'step by step', '.'],
+  '¿Le damos forma a ese proyecto?':['Shall we shape ', 'that project', '?'],
+  'La página en blanco ya no asusta.':['The blank page ', 'isn\'t scary', ' anymore.'],
+  '¿Qué historia contamos hoy?':['What story shall we ', 'tell', ' today?'],
+  'Tú pones el reto, yo las ideas.':['You bring the challenge, ', 'I bring ideas', '.'],
+  '¿Resolvemos esa duda de una vez?':['Shall we settle ', 'that question', ' for good?'],
+  'Menos vueltas, más Flow.':['Less fuss, ', 'more Flow', '.'],
+  '¿Qué quieres mejorar hoy?':['What do you want to ', 'improve', ' today?'],
+  'Varias IA, una sola caja.':['Many AIs, ', 'one single box', '.'],
+  '¿Estudiamos juntos?':['Shall we ', 'study together', '?'],
+  'Tu próxima gran idea empieza aquí.':['Your next big idea ', 'starts here', '.'],
+  '¿Algo para explicar, crear o arreglar?':['Something to explain, ', 'create or fix', '?'],
+  'A ver, sorpréndeme.':['Go on, ', 'surprise me', '.']
 };
-const GKEY = 'synthz:greet';
-let greetI = 0;
-try{ const g = JSON.parse(localStorage.getItem(GKEY) || 'null'); greetI = g && Date.now() - (g.seen || 0) < 12 * 3600e3 && GREET[g.i] ? g.i : 0; }catch(e){}
-function saveGreet(){ try{ localStorage.setItem(GKEY, JSON.stringify({ i:greetI, seen:Date.now() })); }catch(e){} }
-saveGreet();
-function nextGreet(){ let n = greetI; while (n === greetI) n = 1 + Math.floor(Math.random() * (GREET.length - 1)); greetI = n; saveGreet(); }
+const GBAG = 'synthz:greetBag';
+let greetI = 0;   /* al entrar, siempre la de entrada */
+function nextGreet(){
+  let bag = []; try{ bag = JSON.parse(localStorage.getItem(GBAG) || '[]'); }catch(e){}
+  bag = Array.isArray(bag) ? bag.filter(i => i > 0 && GREET[i]) : [];
+  if (!bag.length){
+    bag = GREET.map((_, i) => i).slice(1);
+    for (let i = bag.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [bag[i], bag[j]] = [bag[j], bag[i]]; }
+    if (bag[0] === greetI) bag.push(bag.shift());
+  }
+  greetI = bag.shift();
+  try{ localStorage.setItem(GBAG, JSON.stringify(bag)); }catch(e){}
+}
+/* «¿Qué es FlowIA’r?»: un botoncito bajo el saludo que lo explica para quien no sabe inglés ni conoce la página */
+function flowWhatHtml(){
+  return '<button type="button" class="flowq notr" id="flowQ" aria-expanded="false" aria-controls="flowW">'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>'
+    + (SZ.lang() === 'en' ? 'What does «FlowIA» mean?' : '¿Qué significa «FlowIA’r»?') + '</button>';
+}
+function flowWhatCard(){
+  const en = SZ.lang() === 'en';
+  return en
+    ? '<b class="flw-tt">FlowIA = Flow + IA</b>'
+      + '<p><i>🌊</i><span><b>Flow</b> (say «flo») is an English word: it means <em>flowing</em>, like water in a river. When everything goes easy, without getting stuck, people say you are «in the flow».</span></p>'
+      + '<p><i>🤖</i><span><b>IA</b> is how Spanish says <em>AI</em>: artificial intelligence, programs that understand what you write and answer you.</span></p>'
+      + '<p><i>✨</i><span><b>FlowIA</b> (say «flo-ee-ah») is a word we made up by joining them: doing what you need (write, study, create, code) <em>the easy way, with the help of AI</em>.</span></p>'
+      + '<p class="fw-ex">«What do you want to FlowIA today?» = «What would you like to do today with the help of AI?»</p>'
+    : '<b class="flw-tt">FlowIA’r = Flow + IA</b>'
+      + '<p><i>🌊</i><span><b>Flow</b> (se dice «flou») es una palabra en inglés que significa <em>fluir</em>, como el agua de un río. Cuando todo sale fácil, sin trabarse, se dice que estás «en flow».</span></p>'
+      + '<p><i>🤖</i><span><b>IA</b> es la <em>inteligencia artificial</em>: programas que entienden lo que escribes y te responden.</span></p>'
+      + '<p><i>✨</i><span><b>FlowIA’r</b> (se dice «flou-ia-ar») es un verbo que inventamos uniendo las dos: hacer lo que necesitas (escribir, estudiar, crear, programar) <em>de forma fácil, con ayuda de la IA</em>.</span></p>'
+      + '<p class="fw-ex">«¿Qué quieres FlowIA’r hoy?» = «¿Qué quieres hacer hoy con ayuda de la IA?»</p>';
+}
+document.addEventListener('click', e => {
+  const q = e.target.closest && e.target.closest('#flowQ'); if (!q) return;
+  let w = $('#flowW');
+  if (w){ q.setAttribute('aria-expanded', 'false'); w.classList.remove('on'); setTimeout(() => w.remove(), 260); return; }
+  w = document.createElement('div'); w.id = 'flowW'; w.className = 'floww notr'; w.setAttribute('role', 'note'); w.innerHTML = flowWhatCard();
+  q.after(w); q.setAttribute('aria-expanded', 'true'); requestAnimationFrame(() => w.classList.add('on'));
+  SZ.SND && SZ.SND.tap && SZ.SND.tap();
+});
 function greetHtml(g){
   if (SZ.lang() === 'en') g = GREET_EN[g.join('')] || g;
   let i = 0;
@@ -1154,12 +1251,12 @@ function emptyEl(){
   const ex = showEx();
   if (agentOn()){
     e.classList.add('aghello');
-    e.innerHTML = '<p class="agbadge">' + AG_ICO + 'Modo SuperiorSynth activado</p><h1 class="greet">' + greetHtml(['¿Qué quieres ', 'FlowIA’r', '?']) + '</h1>'
+    e.innerHTML = '<p class="agbadge">' + AG_ICO + 'Modo SuperiorSynth activado</p><h1 class="greet">' + greetHtml(['¿Qué quieres ', 'FlowIA’r', '?']) + '</h1>' + flowWhatHtml()
       + (ex ? '<div class="hexs hexr" id="hexR" aria-label="Ideas para empezar">' + exRowHtml() + '</div>' : '')
       + '<p class="hsub2">Cuéntame qué necesitas. SuperiorSynth entiende tu pedido, lo mejora, elige la IA que más sabe de eso y te muestra cada paso.</p><div class="hcomp"></div>';
     return e;
   }
-  let h = '<h1 class="greet">' + greetHtml(GREET[greetI] || GREET[0]) + '</h1>'
+  let h = '<h1 class="greet">' + greetHtml(GREET[greetI] || GREET[0]) + '</h1>' + flowWhatHtml()
     + (ex ? '<div class="hexs hexr" id="hexR" aria-label="Ideas para empezar">' + exRowHtml() + '</div>' : '')
     + '<p class="hsub2">Escribe lo que necesitas y da detalles: qué quieres, para qué es y cómo te sirve la respuesta. Ya hay una IA lista para empezar; si prefieres otra, la cambias abajo.</p>';
   h += '<div class="hcomp"></div>' + topicsHtml() + '<div class="tpanel" id="tPanel">' + (curTopic ? topicPanelHtml(curTopic) : '') + '</div>'
@@ -3421,6 +3518,7 @@ function setSaver(on){
   st().sx.saver = on; save();
   $$('#sxSw, #saverBtn').forEach(x => x.setAttribute('aria-pressed', String(on)));
   updateHint(); toast(on ? 'Modo ahorro activado.' : 'Modo ahorro desactivado.');
+  try{ dispatchEvent(new Event('synthz-saver')); }catch(e){}   /* v3.2 · la bolita 🍃 junto al «+» aparece al instante */
 }
 $('#saverBtn').setAttribute('aria-pressed', String(st().sx.saver));
 $('#saverBtn').addEventListener('click', () => setSaver(!st().sx.saver));
@@ -4172,16 +4270,18 @@ addEventListener('synthz-saver', () => { $$('#sxSw, #saverBtn').forEach(x => x.s
     new MutationObserver(mark).observe(document.body, { attributes:true, attributeFilter:['class'] }); mark();
   }
 }
-/* chips de lo que está encendido (imagen, internet, cortas): se ven en la caja y se apagan con un toque */
+/* chips de lo que está encendido (imagen, internet, cortas): se apagan con un toque.
+   v3.2 (Sammuel, 28 oct): ya no van en una fila aparte debajo de la caja; son bolitas junto al «+» que muestran su nombre al pasar el puntero. */
 {
   const host = document.createElement('div'); host.className = 'onchips'; host.id = 'onChips';
-  const ci = $('.comp-in'); if (ci) ci.appendChild(host);
+  const aw = $('.comp-in .attw'); if (aw) aw.appendChild(host); else { const ci = $('.comp-in'); if (ci) ci.appendChild(host); }
   const paint = () => {
     const L = [];
-    if (imgMode) L.push(['img', '🎨 Crear imagen']);
-    if (webOn) L.push(['web', '🌐 Internet']);
-    if (st().sx.saver) L.push(['saver', '🍃 Cortas']);
-    host.innerHTML = L.map(([k, t]) => '<button type="button" class="onchip" data-off="' + k + '" data-tip="Apagar">' + t + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg></button>').join('');
+    if (imgMode) L.push(['img', '🎨', 'Crear imagen']);
+    if (webOn) L.push(['web', '🌐', 'Internet']);
+    if (st().sx.saver) L.push(['saver', '🍃', 'Respuestas cortas']);
+    const have = $$('[data-off]', host).map(b => b.dataset.off).join(), want = L.map(x => x[0]).join(); if (have === want) return;
+    host.innerHTML = L.map(([k, ic, t]) => '<button type="button" class="onchip" data-off="' + k + '" data-tip="' + t + ' · toca para apagar" aria-label="' + t + ': encendido. Toca para apagar"><i aria-hidden="true">' + ic + '</i><span class="oc-l">' + t + '</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>').join('');
   };
   host.addEventListener('click', e => { const b = e.target.closest('[data-off]'); if (!b) return; const k = b.dataset.off; if (k === 'img') setImgMode(false); else if (k === 'web') setWeb(false); else setSaver(false); paint(); });
   new MutationObserver(paint).observe(document.body, { attributes:true, attributeFilter:['class'] });
@@ -4305,6 +4405,85 @@ function paintMode(){
     mo.observe(lane, { childList:true });
   });
 })();
+/* ===== v3.2 · la barra de chats al estilo Claude en el modo Simple (pedido de Sammuel, 28 oct) =====
+   Solo en Simple: arriba Crear, Proyectos, Sintéticos, Personalización y Más; en medio tus chats («Recientes»);
+   abajo tu cuenta y una lupa para buscar. La barrita de íconos se esconde mientras la lista está abierta.
+   En el estilo SynthFlow no cambia nada de esto (lo de arriba de la lista lo eligen en Ajustes › Atajos en tus chats). */
+{
+  const cin = $('#chats .cin'), head = $('#chats .chead');
+  const I = {
+    new:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+    proj:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5V18a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-6.5L9.6 5.6A2 2 0 0 0 8 5H6a2 2 0 0 0-2 2.5z"/></svg>',
+    syn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="12" height="14" rx="2.5"/><path d="M8.5 5V4.5A1.5 1.5 0 0 1 10 3h8.5A2 2 0 0 1 20.5 5v11A1.5 1.5 0 0 1 19 17.5h-.5"/><path d="M7.5 10l-1.5 2 1.5 2M11.5 10l1.5 2-1.5 2"/></svg>',
+    cfg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7" width="17" height="12.5" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7"/><path d="M3.5 12.5h17"/></svg>',
+    more:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/></svg>',
+    star:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9 6.8 19.7l1-5.9L3.5 9.7l5.9-.8z"/></svg>',
+    guide:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01"/></svg>',
+    help:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5zM13 4h5.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H13z"/></svg>',
+    batt:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7.5" width="16" height="9" rx="2.2"/><path d="M21 10.5v3"/><path d="M6 10.5v3M9 10.5v3" stroke-width="2.2"/></svg>',
+    find:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg>',
+    side:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><path d="M9.5 4.5v15"/></svg>',
+    chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10l5 5 5-5"/></svg>'
+  };
+  const item = (k, ic, t, extra) => '<button type="button" class="sn-i" data-sn="' + k + '" style="--d:' + extra + '"><span class="sn-ic" aria-hidden="true">' + ic + '</span><span class="sn-t">' + t + '</span></button>';
+  const nav = document.createElement('nav'); nav.className = 'snav'; nav.id = 'sNav'; nav.setAttribute('aria-label', 'Menú de SynthFlow');
+  nav.innerHTML = '<div class="sn-top"><a class="sn-logo" href="index.html" aria-label="Volver a SymphorIA">' + SZ.flowWord() + '</a><button type="button" class="sn-x" data-sn="hide" aria-label="Cerrar la barra" data-tip="Cerrar la barra">' + I.side + '</button></div>'
+    + item('new', I.new, 'Crear', 0) + item('proj', I.proj, 'Proyectos', 1) + item('syn', I.syn, 'Sintéticos', 2) + item('cfg', I.cfg, 'Personalización', 3)
+    + '<button type="button" class="sn-i sn-more" data-sn="more" aria-expanded="false" aria-controls="snMore" style="--d:4"><span class="sn-ic" aria-hidden="true">' + I.more + '</span><span class="sn-t">Más</span><span class="sn-chev" aria-hidden="true">' + I.chev + '</span></button>'
+    + '<div class="sn-sub" id="snMore" hidden>' + item('favs', I.star, 'Mensajes favoritos', 0) + item('energy', I.batt, 'Tu EnerX de hoy', 1) + item('guide', I.guide, 'Guía de SynthFlow', 2) + item('help', I.help, 'Centro de ayuda', 3) + '</div>';
+  head.after(nav);
+  const rh = document.createElement('p'); rh.className = 'sn-h'; rh.textContent = 'Recientes'; $('#thList').before(rh);
+  const foot = document.createElement('div'); foot.className = 'sfoot'; foot.id = 'sFoot';
+  foot.innerHTML = '<button type="button" class="sf-acc" id="sAcc"></button><button type="button" class="sf-find" id="sFind" aria-label="Buscar en tus chats" data-tip="Buscar en tus chats" aria-pressed="false">' + I.find + '</button>';
+  cin.appendChild(foot);
+
+  /* tu cuenta: copia lo que muestra el botón de cuenta de la barrita (foto, nombre y plan) */
+  const accPaint = () => {
+    const A = SZ.ACC || {}, u = A.user || {}, sa = $('#sAcc');
+    const plan = A.ready ? (SZ.ROLE_NAME && SZ.ROLE_NAME[u.role || 'user']) || 'Synther' : 'Gratis';
+    const av = A.ready && SZ.myAvatar ? SZ.myAvatar() : '<span class="av-me" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span>';
+    const nm = A.ready ? SZ.accName() : 'Entrar';
+    sa.innerHTML = '<span class="sf-av">' + av + '</span><span class="sf-n"><b></b><small></small></span><span class="sf-chev" aria-hidden="true">' + I.chev + '</span>';
+    $('.sf-n b', sa).textContent = nm.slice(0, 22); $('.sf-n small', sa).textContent = A.ready ? plan : 'Gratis';
+    sa.setAttribute('aria-label', A.ready ? 'Tu cuenta: ' + nm : 'Entrar a tu cuenta');
+  };
+  accPaint();
+  const ab = $('#accBtn'); if (ab) new MutationObserver(accPaint).observe(ab, { childList:true, subtree:true, attributes:true, attributeFilter:['class'] });
+  $('#sAcc').addEventListener('click', () => accModal());
+
+  /* la lupa muestra la búsqueda arriba de los chats (y la esconde si está vacía) */
+  const cs = $('#cSearch'), q = $('#thQ');
+  const findOn = on => { cin.classList.toggle('sfind', on); $('#sFind').setAttribute('aria-pressed', String(on)); if (on) setTimeout(() => q.focus(), 60); };
+  $('#sFind').addEventListener('click', () => { const on = !cin.classList.contains('sfind'); if (!on && q.value){ q.value = ''; q.dispatchEvent(new Event('input', { bubbles:true })); } findOn(on); });
+  q.addEventListener('keydown', e => { if (e.key === 'Escape' && root.classList.contains('simple') && !q.value) findOn(false); });
+
+  const more = $('#snMore'), mb = $('[data-sn="more"]', nav);
+  const moreOn = on => { more.hidden = !on; mb.setAttribute('aria-expanded', String(on)); nav.classList.toggle('mopen', on); };
+  nav.addEventListener('click', e => {
+    const b = e.target.closest('[data-sn]'); if (!b) return;
+    const k = b.dataset.sn; SZ.SND && SZ.SND.tap && SZ.SND.tap();
+    if (k === 'more'){ moreOn(more.hidden); return; }
+    if (k === 'hide'){ $('#chatsClose').click(); return; }
+    if (k === 'new') newChat();
+    else if (k === 'proj') pjOpen('list');
+    else if (k === 'syn') synOpen();
+    else if (k === 'cfg') SZ.cfgModal();
+    else if (k === 'favs') showChats('favs');
+    else if (k === 'energy') coinModal('panel');
+    else if (k === 'guide'){ const h = $('#helpBtn'); if (h) h.click(); }
+    else if (k === 'help') location.href = 'ayuda.html';
+    if (k !== 'new' && k !== 'favs') moreOn(false);
+    if (isMobile() && k !== 'favs') closeChatsSheet();
+  });
+  /* el que está abierto se marca, como en Claude */
+  const mark = () => {
+    const on = { proj:document.body.classList.contains('pjon'), syn:!$('#synv') || $('#synv').hidden ? false : true };
+    $$('.sn-i[data-sn]', nav).forEach(b => b.classList.toggle('on', !!on[b.dataset.sn]));
+  };
+  new MutationObserver(mark).observe(document.body, { attributes:true, attributeFilter:['class'] });
+  const sv = $('#synv'); if (sv) new MutationObserver(mark).observe(sv, { attributes:true, attributeFilter:['hidden'] });
+  mark();
+}
 /* ---------- arranque ---------- */
 const wantModel = params.get('model');
 if (wantModel && /^(pu|or):[\w.\/:@-]{2,120}$/.test(wantModel)){ st().model.openrouter = wantModel; save(); }

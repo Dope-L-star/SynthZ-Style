@@ -97,6 +97,7 @@ function setSaver(on){
   st().sx.saver = on; save();
   $$('#sxSw, #saverBtn').forEach(x => x.setAttribute('aria-pressed', String(on)));
   updateHint(); toast(on ? 'Modo ahorro activado.' : 'Modo ahorro desactivado.');
+  try{ dispatchEvent(new Event('synthz-saver')); }catch(e){}   /* v3.2 · la bolita 🍃 junto al «+» aparece al instante */
 }
 $('#saverBtn').setAttribute('aria-pressed', String(st().sx.saver));
 $('#saverBtn').addEventListener('click', () => setSaver(!st().sx.saver));
