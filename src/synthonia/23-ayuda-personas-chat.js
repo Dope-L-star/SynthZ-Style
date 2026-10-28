@@ -51,7 +51,7 @@ async function botTeamSay(text){
 function botSyncSoon(){ clearTimeout(BOT.poll); BOT.poll = setTimeout(botSync, 1500); }
 async function botSync(){
   clearTimeout(BOT.poll);
-  if (!ACC.ready || !SESS){ BOT.poll = setTimeout(botSync, 30000); return; }
+  if (!ACC.ready || !B.SESS){ BOT.poll = setTimeout(botSync, 30000); return; }
   try{
     const d = await helpApi();
     const prev = BOT.help, mine = d.mine;

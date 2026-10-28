@@ -48,6 +48,7 @@ const TOPIC_STEPS = {
   }
 };
 async function runTopics(list){
+  await SZ.synReady;
   list = (list || []).filter(k => TOPIC_STEPS[k]);
   if (G || !list.length) return;
   closeSide(); closeChatsSheet(); if (tourEl) closeTour(false);

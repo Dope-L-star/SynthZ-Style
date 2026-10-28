@@ -1,19 +1,19 @@
 /* ===== v3.2 · barra de escribir, lista de chats y barra Simple: SynthonIA lo cuenta y lo explica ===== */
 WHATSNEW.v = '3.2';
 WHATSNEW.items.unshift(
-  ['chat', LANG === 'en'
+  ['chat', B.LANG === 'en'
     ? 'Tidier chat list: on top only «New chat» and search, and below all your chats. Projects and Synthetics stay in the icon bar; if you want them on top too, pick them in Settings › «Shortcuts in your chats».'
     : 'Lista de chats más limpia: arriba solo «Nuevo chat» y buscar, y debajo todos tus chats. Proyectos y Sintéticos siguen en la barrita de íconos; si los quieres arriba también, elígelos en Ajustes › «Atajos en tus chats».'],
-  ['chat', LANG === 'en'
+  ['chat', B.LANG === 'en'
     ? 'The Simple style now has a sidebar like Claude\'s: Create, Projects, Synthetics, Customize and More on top, your recent chats in the middle, and your account and a magnifier to search at the bottom.'
     : 'El estilo Simple ahora tiene una barra como la de Claude: Crear, Proyectos, Sintéticos, Personalización y Más arriba, tus chats recientes en medio, y abajo tu cuenta y una lupa para buscar.'],
-  ['chat', LANG === 'en'
+  ['chat', B.LANG === 'en'
     ? 'The writing box is lighter: «Short answers», Internet and Image are now little bubbles next to the «+» (hover to see the name, tap to turn off). And the EnerX battery is smaller.'
     : 'La caja de escribir quedó más liviana: «Respuestas cortas», Internet e Imagen ahora son bolitas junto al «+» (pasa el puntero para ver el nombre, tócalas para apagar). Y la batería EnerX es más pequeña.'],
-  ['chat', LANG === 'en'
+  ['chat', B.LANG === 'en'
     ? 'Every new chat greets you with a different phrase. And if you don\'t know what «FlowIA» means, tap the button under the greeting: it is explained there.'
     : 'Cada chat nuevo te saluda con una frase distinta. Y si no sabes qué significa «FlowIA’r», toca el botón debajo del saludo: ahí te lo explicamos.'],
-  ['synthonia', LANG === 'en'
+  ['synthonia', B.LANG === 'en'
     ? 'If you leave the page alone for 2 minutes I fall asleep in the middle of the screen. A minute and a half later I wake up and play with the page: I hang from titles, exercise, juggle… When you come back I get a fright, run to my corner and say «Oh, you\'re back!».'
     : 'Si dejas la página quieta 2 minutos me duermo en la mitad de la pantalla. Un minuto y medio después me despierto y juego con la página: me cuelgo de los títulos, hago ejercicio, malabares… Cuando vuelves me asusto, corro a mi rincón y te digo «¡Ah, volviste!».']
 );

@@ -111,6 +111,7 @@ function gRestore(s){
 async function waitCatalog(ms){ const t0 = Date.now(); while (!cat.list.length && Date.now() - t0 < ms){ await gWait(250); } }
 
 async function runGuide(o = {}){
+  await SZ.synReady;   /* v3.4 · SynthonIA llega en su propio archivo: la guía la espera */
   if (G) return;
   const pre = o.topic && TOPIC[o.topic] ? o.topic : null;   /* v3.0: vienes de «Empieza en SynthFlow»: ya elegiste tema e IA */
   closeSide(); closeChatsSheet(); if (tourEl) closeTour(false);

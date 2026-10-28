@@ -361,7 +361,7 @@ SPOSE.estira = { L:[4, 212, 98, 'wave'], R:[4, 212, 98, 'wave'] };
 const SZIDLE = (() => {
   const FAST = /[?&]siesta=rapida/.test(location.search);
   const T_SLEEP = FAST ? 4000 : 120000, T_NAP = FAST ? 6000 : 90000;
-  const L2 = (es, en) => LANG === 'en' ? en : es, pickOne = a => a[Math.floor(Math.random() * a.length)];
+  const L2 = (es, en) => B.LANG === 'en' ? en : es, pickOne = a => a[Math.floor(Math.random() * a.length)];
   const NOPE = '#szIdle,#szBot,#szBotB,#szBotP,#szRoam,#intro,#portal,.p8,.sy-svg,.lbatt,#langBtn,[data-mv-no],.szm,#cur,#curDot';
   const STOP = { stop:1 };
   let state = 'off', gen = 0, ov = null, pos = null, act = null, fig = null, say = null, P = { x:0, y:0, s:1, r:0 }, S = 240, lastAct = '', home = null, moved = [], played = {};
