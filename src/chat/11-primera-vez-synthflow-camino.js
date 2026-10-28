@@ -82,7 +82,7 @@ function bflowClick(e){
   if (t.closest('[data-bskip]')){ bflowClose(true); return; }
   if (t.closest('[data-ball]')){ bflowClose(true); setTimeout(() => openSide('set'), 520); return; }
   const st1 = t.closest('[data-bstart]'); if (st1){ const id = st1.closest('.bf-rec').dataset.id; bflowClose(true, () => { pickMode = 'set'; pickModel(id, null); const x = TOPIC[BF0].ex[0]; if (x) setTimeout(() => useText(x[1], x[2]), 300); if (isLocked()) setTimeout(() => { lockNudge(); openConnect(); }, 900); }); return; }
-  if (t.closest('[data-bcmp]')){ const ids = [...BF.sel]; bflowClose(true, () => startCompare(ids)); return; }
+  if (t.closest('[data-bcmp]')){ const ids = [...BF.sel]; bflowClose(true, () => startCompare(ids), true); return; }
 }
 function bflowChange(e){
   const c = e.target.closest('[data-bck]'); if (!c) return;
@@ -91,13 +91,16 @@ function bflowChange(e){
   bPaintGo();
 }
 let BF0 = null;
-function bflowClose(toChat, then){
+function bflowClose(toChat, then, compareTo){
   const o = $('#bflow'); if (!o) return;
   BF0 = BF && BF.topic; BF = null;
   try{ localStorage.setItem('synthz:tour', '1'); localStorage.setItem('synthz:bflow', '1'); }catch(e){}
   if (toChat){ $('.bf-steps', o).innerHTML = '<li class="done"><b>✓</b><span>' + esc(BF0 && TOPIC[BF0] ? TOPIC[BF0].l : 'Qué quieres hacer') + '</span></li><li class="done"><b>✓</b><span>Elige tu IA</span></li><li class="on"><b>3</b><span>Chatea</span></li>'; }
   o.classList.add('bye');
-  setTimeout(() => { o.remove(); root.classList.remove('bflowing'); if (then) then(); else if (matchMedia('(pointer: fine)').matches) inp.focus(); }, SZ.reduce ? 10 : 620);
+  /* v3.0: la primera vez, al llegar al chat arranca sola la guía (sin repetir el tema ni la IA que ya elegiste) */
+  let guided = true; try{ guided = !!localStorage.getItem('synthz:guide'); }catch(e){}
+  const autoGuide = toChat && !guided && !compareTo;
+  setTimeout(() => { o.remove(); root.classList.remove('bflowing'); if (then) then(); else if (!autoGuide && matchMedia('(pointer: fine)').matches) inp.focus(); if (autoGuide) setTimeout(() => runGuide({ topic:BF0 }), 900); }, SZ.reduce ? 10 : 620);
 }
 function openGuide(){ SZ.guideAsk({ full:runGuide, pick:list => runTopics(list), read:openHelp }); }
 window.SynthFlowGuide = { run:runGuide, end:() => endGuide(false), on:() => !!G };
