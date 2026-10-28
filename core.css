@@ -978,6 +978,10 @@ html.noanim #szMaint .mt-bg i,html.noanim #szMaint .mt-face{animation:none}
 html{-webkit-tap-highlight-color:transparent}
 @media (hover:none){button,a,label,summary,[role=button],[role=tab]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}}
 :focus:not(:focus-visible){outline:none}
+/* el cursor propio de la página queda debajo del aviso: aquí siempre el cursor normal del sistema */
+html.mt-on #szMaint,html.mt-on #szMaint *{cursor:auto!important}
+html.mt-on #szMaint :is(button,a,[role=button]):not(:disabled){cursor:pointer!important}
+html.mt-on #szMaint :is(input,textarea){cursor:text!important}
 /* v2.3 · Seguridad y acceso: cómo entras a tu cuenta */
 .sacc{display:grid;gap:8px;margin:10px 0 4px}
 .sa-r{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.025)}
