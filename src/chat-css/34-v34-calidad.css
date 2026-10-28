@@ -1,0 +1,13 @@
+/* v3.4 · revisión de calidad: la etiqueta debajo de cada respuesta revisada (con el color del tema) */
+.qrev{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin:10px 0 2px;font-size:12.5px;line-height:1.35;color:var(--muted,#a7a49c)}
+.qrev svg{width:15px;height:15px;flex:none}
+.qrev.run span{background:linear-gradient(90deg,currentColor 0%,rgba(var(--gold-rgb),1) 50%,currentColor 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:qshim 1.8s linear infinite}
+.qspin{width:13px;height:13px;border-radius:50%;border:2px solid rgba(var(--gold-rgb),.25);border-top-color:rgba(var(--gold-rgb),.95);animation:qspin .8s linear infinite;flex:none}
+.qrev.ok{color:color-mix(in srgb,rgba(var(--gold-rgb),1) 55%,var(--text,#eee))}
+.qrev.fix{color:rgba(var(--gold-rgb),1)}
+.qrev.fix span{color:var(--text,#eee);opacity:.85}
+.qrev .qrev-o{font-size:12px;margin-left:2px}
+@keyframes qspin{to{transform:rotate(360deg)}}
+@keyframes qshim{to{background-position:-200% 0}}
+html.noanim .qspin,html.noanim .qrev.run span{animation:none}
+html.simple .qrev.ok,html.simple .qrev.fix{color:var(--sacc,#d9a066)}

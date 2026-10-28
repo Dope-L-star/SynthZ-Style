@@ -1081,10 +1081,13 @@ function fixWithAI(el, r, auto){
   if (!budgetOk()) return;
   const msg = { role:'user', content:fixPrompt(r), fix:{ n:r.hard.length + r.soft.length, auto:!!auto } };
   chat.push(msg); touchThread(); save(); renderMsgs();
-  runSolo(err => {
+  const failed = err => {
     const i = chat.lastIndexOf(msg); if (i > -1) chat.splice(i, 1); save(); renderMsgs();
     if (!(err && err.aborted)) toast(auto ? 'No pude pedirle el arreglo a la IA ahora. Toca «Arreglar con la IA» para intentarlo otra vez.' : (err && err.message) || 'No pude pedir el arreglo. Intenta otra vez.');
-  });
+  };
+  /* v3.4 · con SuperiorSynth el proyecto no se detiene: si la IA falla, el arreglo lo sigue otra IA experta en código */
+  if (agentOn()) runExpert('codigo').then(x => { if (!x.ok) failed(x.err); });
+  else runSolo(failed);
 }
 /* tu mensaje de arreglo se ve como una notita, no como un muro de texto */
 function fixNoteEl(m){
@@ -1317,7 +1320,7 @@ function renderMsgs(){
   chat.forEach((m, i) => {
     if (isFix(m)){ lane.appendChild(fixNoteEl(m)); srcs = null; }
     else if (m.role === 'user'){ const u = userEl(m.content, m.files); u.style.animation = 'none'; lane.appendChild(u); if (m.agent) lane.appendChild(agentSumEl(m.agent)); srcs = m.sources && m.sources.length ? m.sources : null; if (srcs) lane.appendChild(sourcesEl(m)); }
-    else { const b = botEl(m.model || selId()); b.style.animation = 'none'; b._raw = m.content; b._ck = ck0; b._ci = i; b.dataset.ci = i; if (m.work) b.insertBefore(SZ.workSaved(m.work), $('.body', b)); $('.body', b).innerHTML = md(m.content); if (m.imgId) imgFill($('.body', b), m); b._sources = srcs; finishBot(b, m.meta, i === chat.length - 1, m.cont, m.star); if (!isFix(chat[i + 1])) ckIdle(b); lane.appendChild(b); }
+    else { const b = botEl(m.model || selId()); b.style.animation = 'none'; b._raw = m.content; b._ck = ck0; b._ci = i; b.dataset.ci = i; if (m.work) b.insertBefore(SZ.workSaved(m.work), $('.body', b)); $('.body', b).innerHTML = md(m.content); if (m.imgId) imgFill($('.body', b), m); b._sources = srcs; finishBot(b, m.meta, i === chat.length - 1, m.cont, m.star); revBadge(b, m); if (!isFix(chat[i + 1])) ckIdle(b); lane.appendChild(b); }
   });
   if (live && live.chat === chat && live.el){ $$('.m.last', lane).forEach(x => x.classList.remove('last')); lane.appendChild(live.el); }   /* v3.3 · la respuesta en vivo no se pierde al repintar */
   else if (thinking) lane.appendChild(thinkEl(thinking));
@@ -1573,14 +1576,16 @@ function flyStar(from){
 
 /* ---------- archivos: imágenes, PDF y texto/código ---------- */
 const files = []; let fid = 0;
-const TEXTX = /\.(txt|md|markdown|csv|tsv|json|jsonl|xml|html?|css|scss|js|mjs|jsx|ts|tsx|py|java|c|h|cpp|hpp|cs|go|rs|rb|php|sh|bat|sql|yml|yaml|toml|ini|log|tex|swift|kt|r|lua|vue|svelte)$/i;
+const TEXTX = /\.(txt|md|markdown|csv|tsv|json|jsonl|xml|html?|css|scss|less|js|cjs|mjs|jsx|ts|tsx|py|ipynb|java|c|h|cpp|hpp|cs|go|rs|rb|php|sh|bat|ps1|sql|yml|yaml|toml|ini|cfg|conf|env|log|tex|swift|kt|kts|dart|scala|pl|r|lua|vue|svelte|astro|graphql|gql|proto|srt|vtt|rtf|svg|gradle|properties)$/i;
+/* v3.4 · Word, Excel, PowerPoint y OpenDocument: se sacan sus textos en el navegador (son un .zip con XML adentro) */
+const OFFX = /\.(docx|xlsx|pptx|odt|ods|odp)$/i;
 const CAP = 40000, clip = t => t.length > CAP ? t.slice(0, CAP) + '\n…(archivo recortado)' : t;
 function readImg(file){
   return new Promise((ok, no) => {
     const url = URL.createObjectURL(file), im = new Image();
     im.onload = () => {
       const mk = max => { const s = Math.min(1, max / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.max(1, Math.round(im.width * s)); c.height = Math.max(1, Math.round(im.height * s)); const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height); return c; };
-      const r = { dataUrl: mk(1568).toDataURL('image/jpeg', .85), thumb: mk(96).toDataURL('image/jpeg', .7) };
+      const r = { dataUrl: mk(1280).toDataURL('image/jpeg', .84), thumb: mk(96).toDataURL('image/jpeg', .7) };   /* v3.4 · 1280 px: se ve igual de bien y viaja más rápido */
       URL.revokeObjectURL(url); ok(r);
     };
     im.onerror = () => { URL.revokeObjectURL(url); no(new Error('No pude leer la imagen ' + file.name + '.')); };
@@ -1604,8 +1609,71 @@ async function readPdf(file){
     const tc = await (await pdf.getPage(i)).getTextContent();
     t += '\n--- página ' + i + ' ---\n' + tc.items.map(x => x.str).join(' ');
   }
-  if (t.replace(/--- página \d+ ---/g, '').trim().length < 20) throw new Error('Ese PDF parece escaneado (sin texto). Prueba subiéndolo como imagen.');
+  /* v3.4 · PDF escaneado (sin texto): sus primeras páginas se mandan como fotos, así una IA que ve lo puede leer */
+  if (t.replace(/--- página \d+ ---/g, '').trim().length < 20){
+    const pics = [];
+    for (let i = 1; i <= Math.min(pdf.numPages, 4); i++){
+      const pg = await pdf.getPage(i), v0 = pg.getViewport({ scale:1 }), k = Math.min(2, 1280 / Math.max(v0.width, v0.height)), vp = pg.getViewport({ scale:k });
+      const c = document.createElement('canvas'); c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+      const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+      await pg.render({ canvasContext:g, viewport:vp }).promise; pics.push(c.toDataURL('image/jpeg', .8));
+    }
+    if (!pics.length) throw new Error('Ese PDF está vacío.');
+    return { scanned:true, pics, pages:pdf.numPages };
+  }
   return clip(t.trim());
+}
+/* lector mínimo de .zip (sin librerías): lee el índice del final y descomprime con DecompressionStream */
+async function zipOpen(buf){
+  const dv = new DataView(buf), td = new TextDecoder();
+  let e = buf.byteLength - 22; while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+  if (e < 0) throw new Error('El archivo está dañado.');
+  const n = dv.getUint16(e + 10, true), ent = {}; let p = dv.getUint32(e + 16, true);
+  for (let i = 0; i < n && p + 46 <= buf.byteLength; i++){
+    const nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true);
+    ent[td.decode(new Uint8Array(buf, p + 46, nl))] = { m:dv.getUint16(p + 10, true), cs:dv.getUint32(p + 20, true), lo:dv.getUint32(p + 42, true) };
+    p += 46 + nl + xl + cl;
+  }
+  const read = async name => {
+    const x = ent[name]; if (!x) return '';
+    const at = x.lo + 30 + dv.getUint16(x.lo + 26, true) + dv.getUint16(x.lo + 28, true), raw = new Uint8Array(buf, at, x.cs);
+    if (x.m === 0) return td.decode(raw);
+    if (x.m !== 8 || typeof DecompressionStream === 'undefined') throw new Error('Tu navegador no puede abrir este archivo. Guárdalo como PDF y súbelo otra vez.');
+    return new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+  };
+  return { names:Object.keys(ent), read };
+}
+const xmlTxt = x => x.replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(+d)).replace(/&amp;/g, '&');
+const byNum = (a, b) => (+(a.match(/(\d+)\.xml$/) || [])[1] || 0) - (+(b.match(/(\d+)\.xml$/) || [])[1] || 0);
+async function readOffice(file){
+  const z = await zipOpen(await file.arrayBuffer()), ext = file.name.split('.').pop().toLowerCase();
+  let t = '';
+  if (ext === 'docx'){
+    const x = await z.read('word/document.xml');
+    t = xmlTxt(x.replace(/<w:tab\/>/g, '\t').replace(/<w:br[^>]*\/>/g, '\n').replace(/<\/w:p>/g, '\n').replace(/<\/w:tc>/g, ' | ').replace(/<\/w:tr>/g, '\n'));
+  } else if (ext === 'pptx'){
+    const sl = z.names.filter(n => /^ppt\/slides\/slide\d+\.xml$/.test(n)).sort(byNum);
+    for (let i = 0; i < sl.length && t.length < CAP; i++) t += '\n--- diapositiva ' + (i + 1) + ' ---\n' + xmlTxt((await z.read(sl[i])).replace(/<\/a:p>/g, '\n'));
+  } else if (ext === 'xlsx'){
+    const ss = [...(await z.read('xl/sharedStrings.xml')).matchAll(/<si>([\s\S]*?)<\/si>/g)].map(m => xmlTxt(m[1]));
+    const sh = z.names.filter(n => /^xl\/worksheets\/sheet\d+\.xml$/.test(n)).sort(byNum);
+    for (let i = 0; i < sh.length && t.length < CAP; i++){
+      t += '\n--- hoja ' + (i + 1) + ' ---\n';
+      for (const row of (await z.read(sh[i])).matchAll(/<row[^>]*>([\s\S]*?)<\/row>/g)){
+        const cells = [...row[1].matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)].map(c => {
+          const ty = (/\bt="(\w+)"/.exec(c[1]) || [])[1], v = (/<v>([\s\S]*?)<\/v>/.exec(c[2] || '') || [])[1];
+          return ty === 's' ? (ss[+v] || '') : ty === 'inlineStr' ? xmlTxt((/<is>([\s\S]*?)<\/is>/.exec(c[2] || '') || [])[1] || '') : v != null ? xmlTxt(v) : '';
+        });
+        if (cells.some(Boolean)) t += cells.join('\t') + '\n';
+        if (t.length > CAP) break;
+      }
+    }
+  } else {
+    t = xmlTxt((await z.read('content.xml')).replace(/<\/text:(p|h)>/g, '\n').replace(/<text:tab\/>/g, '\t').replace(/<\/table:table-cell>/g, '\t').replace(/<\/table:table-row>/g, '\n'));
+  }
+  t = t.replace(/\n{3,}/g, '\n\n').trim();
+  if (t.length < 2) throw new Error('No encontré texto en «' + file.name + '».');
+  return clip(t);
 }
 function renderTray(){
   $('#tray').innerHTML = files.map(f => '<span class="fc ' + f.state + '" data-id="' + f.id + '">' + (f.thumb ? '<img src="' + esc(f.thumb) + '" alt="">' : (SZ.fileIco(f.name.split('.').pop()) ? '<i class="ic img">' + SZ.fileIco(f.name.split('.').pop()) + '</i>' : '<i class="ic">' + esc((f.name.split('.').pop() || 'file').slice(0, 4)) + '</i>')) + '<b>' + esc(f.name) + '</b><button class="x" type="button" aria-label="Quitar archivo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>').join('');
@@ -1617,12 +1685,16 @@ async function addFiles(list){
     const f = { id:++fid, name:file.name || 'archivo', state:'load', kind:'text' }; files.push(f); renderTray();
     try{
       if (/^image\//.test(file.type)){ f.kind = 'img'; Object.assign(f, await readImg(file)); }
-      else if (/\.pdf$/i.test(file.name) || file.type === 'application/pdf'){ f.kind = 'pdf'; f.text = await readPdf(file); }
+      else if (/\.pdf$/i.test(file.name) || file.type === 'application/pdf'){
+        f.kind = 'pdf'; const p = await readPdf(file);
+        if (p && p.scanned){ f.kind = 'img'; f.dataUrl = p.pics[0]; f.dataUrls = p.pics; f.thumb = p.pics[0]; f.scan = p.pages; } else f.text = p;
+      }
+      else if (OFFX.test(file.name)){ f.kind = 'doc'; f.text = await readOffice(file); }
       else if (TEXTX.test(file.name) || /^text\//.test(file.type) || file.type === 'application/json'){ f.text = clip(await file.text()); }
       else throw new Error('Tipo de archivo no compatible: ' + f.name);
       f.state = 'ok';
     }catch(e){
-      f.state = 'err'; toast(f.kind === 'pdf' && !/compatible/.test(e.message || '') ? 'No pude leer el PDF «' + f.name + '». Puede estar dañado o protegido con contraseña.' : f.kind === 'img' && !/compatible/.test(e.message || '') ? 'No pude abrir la imagen «' + f.name + '».' : e.message);
+      f.state = 'err'; toast(f.kind === 'pdf' && !/compatible/.test(e.message || '') ? 'No pude leer el PDF «' + f.name + '». Puede estar dañado o protegido con contraseña.' : f.kind === 'img' && !/compatible/.test(e.message || '') ? 'No pude abrir la imagen «' + f.name + '».' : f.kind === 'doc' && !/navegador|texto|dañado/.test(e.message || '') ? 'No pude leer «' + f.name + '». Guárdalo como PDF y súbelo otra vez.' : e.message);
       setTimeout(() => { const i = files.indexOf(f); if (i > -1){ files.splice(i, 1); renderTray(); } }, 2200);
     }
     renderTray();
@@ -1668,6 +1740,7 @@ function apiMsgs(chat, vision, o = {}){
   }).filter(Boolean);
   while (h.length && h[0].role !== 'user') h.shift();
   const sys = [];
+  if (!o.naive) sys.push(qualitySystem(saver));   /* v3.4 · calidad: piensa, revisa la lógica y no inventa */
   if (saver) sys.push('Responde en el idioma del usuario, de forma clara y breve, sin relleno.');
   { const cs = o.naive ? '' : codeSystem(chat, saver); if (cs) sys.push(cs); }   /* v2.4 · SynthCode: manual de programación cuando pides código */
   { const ef = effortHint(); if (ef && !o.naive) sys.push(ef); }   /* v2.3.1 · esfuerzo */
@@ -2008,6 +2081,34 @@ function lightPick(){
   for (const rx of LIGHT){ const m = L.find(x => rx.test(x.id)); if (m) return m.id; }
   return null;
 }
+/* v3.4 · SuperiorSynth sigue aunque una IA se rompa: corre la respuesta y, si la IA falla, pasa el MISMO trabajo a otra
+   IA experta en ese tema (nunca reintenta con la que falló). Hasta 3 IAs distintas; devuelve { ok, cur, err }. */
+async function runExpert(tema, o = {}){
+  const g0 = gen, tl = tema && TOPIC[tema] ? TOPIC[tema].l.toLowerCase() : '';
+  let cur = selId(), lastErr = null; const tried = [cur];
+  for (let n = 0; ; n++){
+    lastErr = null;
+    await runSolo(err => { lastErr = err; }, Object.assign({}, o, { noRescue:true }));
+    if (!lastErr) return { ok:true, cur };
+    const next = lastErr.aborted || lastErr.guest || g0 !== gen || n >= 2 ? null : agentNext(tema, tried, lastErr);
+    if (!next) return { ok:false, err:lastErr, cur };
+    tried.push(next);
+    toast(info(cur).name + ' falló. Sigo con ' + info(next).name + (tl ? ', que sabe de ' + tl : '') + ': tu trabajo continúa.');
+    try{ SZ.BOT.react && SZ.BOT.react('slow'); }catch(e){}
+    if (o.onSwap) try{ o.onSwap(next); }catch(e){}
+    cur = next; st().model.openrouter = next; save(); paintSel(); renderTop(false); paintAccent();
+  }
+}
+/* v3.4 · la siguiente IA experta cuando la elegida falló: otra del mismo tema, nunca una que ya falló.
+   Si falló por límite, también se salta las del mismo proveedor (tendrían el mismo límite). */
+function agentNext(tema, tried, err){
+  const prov = id => /^sz:/.test(id) ? 'sz' : String(id).split(':')[0];
+  const lastP = prov(tried[tried.length - 1]);
+  const ok = m => m && !m.stub && !tried.includes(m.id) && connected(m.id) && !SZ.isBad(m.id) && !(err && err.limit && prov(m.id) === lastP);
+  const L = tema ? recommendTop(tema, 15) : [];
+  const m = L.find(ok) || [info(APODEX), bestUsable(true), bestUsable(false)].find(ok) || cat.list.find(ok);
+  return m ? m.id : null;
+}
 function agentPick(tema){
   const L = tema ? recommendTop(tema, 10).filter(m => connected(m.id)) : [];
   const top = L.find(m => (info(m.id).spend || 1) < 3) || L[0];   /* no gasta tu Puter en las IA que más consumen si hay otra experta */
@@ -2095,9 +2196,13 @@ async function send(){
     if (wantsDeck(text)) msg.deck = true;
     msg.agent = { pick, name:info(pick).name, tl:light ? 'cosas sencillas (gasta menos)' : tl, ask:same ? '' : plan.pedido };
     st().model.openrouter = pick; save(); paintSel(); renderTop(false); paintAccent();
-    let ok = true;
-    await runSolo(err => { ok = false; chat.pop(); save(); renderMsgs(); showErr(err); inp.value = text; autoGrow(); updateHint(); });
-    if (ok && g0 === gen) agentChoice(pick);
+    /* v3.4 · si la IA falla, SuperiorSynth NO reintenta con la misma (siempre volvería a fallar): pasa el trabajo a otra IA
+       experta en ese tema y sigue sola, sin que tengas que hacer nada. Hasta 3 IAs distintas; solo si todas fallan ves el error. */
+    const rx = await runExpert(plan.tema, { onSwap:next => { msg.agent = Object.assign({}, msg.agent, { pick:next, name:info(next).name }); } });
+    const ok = rx.ok, cur = rx.cur, lastErr = rx.err;
+    if (!ok){ chat.pop(); save(); renderMsgs(); showErr(lastErr); inp.value = text; autoGrow(); updateHint(); if (g0 === gen && !(lastErr && lastErr.aborted)) setTimeout(() => rescue(cur, lastErr), 900); }
+    const pickF = cur;
+    if (ok && g0 === gen) agentChoice(pickF);
     if (ok && g0 === gen && MEM_RX.test(text)) memOffer(text);
     }catch(e){ console.error('[superiorsynth]', e); $$('.agrun', lane).forEach(x => x.remove()); renderMsgs(); toast('SuperiorSynth tuvo un problema. Tu mensaje quedó guardado: vuelve a intentarlo.'); }
     finally{ unlock(); }
@@ -2107,14 +2212,21 @@ async function send(){
   if (!(await ensureConn())) return;
   /* si la ventanita de Puter tardó o cambiaste de chat o de IA mientras tanto, no envío solo: tu texto sigue en la caja */
   if (needed && (ckey() !== th0 || selId() !== m0 || Date.now() - at0 > 15000 || inp.value.trim() !== text)){ toast('¡Listo! Revisa tu mensaje y toca enviar.'); inp.focus(); return; }
-  if (ready.some(f => f.kind === 'img') && !info(selId()).vision){ toast('Este modelo no ve imágenes. Activa el filtro "Visión" y elige otro.'); openSide(); return; }
+  /* v3.4 · si la IA elegida no ve fotos, ya no te bloquea: esta respuesta la da una que sí ve (antes salía «Este modelo no ve imágenes» y no podías enviar) */
+  if (ready.some(f => f.kind === 'img') && !info(selId()).vision){
+    const v = visionPick();
+    if (!v){ toast('Ninguna de tus IAs conectadas ve fotos ahora. Conecta Puter o envía tu pregunta sin la imagen.'); return; }
+    const was = info(selId()).name;
+    st().model.openrouter = v.id; save(); paintSel(); renderTop(false); paintAccent();
+    toast(was + ' no ve fotos: te responde ' + v.name + ', que sí las ve.');
+  }
   try{ localStorage.setItem('synthz:sent', String(sentN() + 1)); }catch(e){}
   try{ frustration(text, false); }catch(e){}
   const chat = chatArr(), sent = files.splice(0).filter(f => f.state === 'ok');
   inp.value = ''; autoGrow(); updateHint(); renderTray();
   const msg = { role:'user', content:text };
   if (sent.length) msg.files = sent.map(f => ({ name:f.name, kind:f.kind, text:f.text, thumb:f.thumb }));
-  const imgs = sent.filter(f => f.kind === 'img').map(f => f.dataUrl);
+  const imgs = sent.filter(f => f.kind === 'img').flatMap(f => f.dataUrls || [f.dataUrl]);
   if (imgs.length) Object.defineProperty(msg, '_imgs', { value:imgs, enumerable:false, writable:true });
   if (text && wantsDeck(text)) msg.deck = true;
   chat.push(msg); touchThread(); save();
@@ -2124,6 +2236,11 @@ async function send(){
   if (okSent && text && MEM_RX.test(text)) memOffer(text);
 }
 
+/* v3.4 · la mejor IA conectada que ve fotos: primero la Automática de SymphorIA (elige sola una que ve), luego cualquiera de la lista */
+function visionPick(){
+  if (szOn()) return info('sz:auto');
+  return cat.list.find(m => m.vision && connected(m.id) && !SZ.isBad(m.id)) || null;
+}
 /* ---------- v1.3 · SynthonIA te rescata cuando una IA falla o cuando notas que no te entiende ---------- */
 const TOPIC_RX = [['codigo', /c[oó]digo|program|funci[oó]n|javascript|python|html|css|sql|bug|error de|script/i], ['mate', /ecuaci|matem|calcul|derivad|integral|\d+\s*[x×*+\/-]\s*\d+/i], ['estudiar', /explica|estudi|examen|tarea|aprend|resum/i], ['correo', /correo|email|e-mail/i], ['marketing', /marketing|publicidad|anuncio|vender|ventas|campa[ñn]a/i], ['redes', /instagram|tiktok|reel|post|redes/i], ['idiomas', /traduc|ingl[eé]s|franc[eé]s|idioma/i], ['negocios', /negocio|emprend|empresa|cliente/i], ['ideas', /idea|nombre para|lluvia de/i], ['escribir', /escrib|texto|carta|historia|poema|redact/i]];
 function guessTopic(t){ const f = TOPIC_RX.find(([k, rx]) => TOPIC[k] && rx.test(t)); return f ? f[0] : null; }
@@ -2220,13 +2337,14 @@ async function runSolo(onFail, o = {}){
       $('.body', el).innerHTML = md(r.text);
       { const u = [...chat].reverse().find(x => x.role === 'user'); el._sources = u && u.sources && u.sources.length ? u.sources : null; }
       finishBot(el, msg.meta, true, msg.cont); follow();
+      qualityAfter(el, chat, msg, mid, r);   /* v3.4 · otra IA revisa la lógica y, si hace falta, la corrige */
       if (!r.aborted) synAuto(el);
       if (!r.aborted) codeAfter(el, chat);   /* v2.4 · la página se prueba sola y, si tiene errores, la IA la arregla */
       if (SZ.BOT.react && !r.aborted && !G) SZ.BOT.react('done', { cool:180000 });
     }
   }catch(err){
     if (rv) rv.skip();
-    if (g === gen && !(err && err.aborted)) setTimeout(() => rescue(mid, err), 900);
+    if (g === gen && !(err && err.aborted) && !o.noRescue) setTimeout(() => rescue(mid, err), 900);
     W.finish({ error:!(err && err.aborted), aborted:err && err.aborted });
     if (el) el.remove();
     if (err && err.gone) hideBadModel(mid, err);
@@ -2263,6 +2381,93 @@ async function regen(){
   await runSolo(err => { chat.push(last); save(); renderMsgs(); showErr(err, { regen:true }); }, { fresh:true });
 }
 
+/* ---------- v3.4 · Calidad de las respuestas (pedido de Sammuel, 28 oct) ----------
+   Dos pasos, para que todas las IAs respondan con lógica y se entiendan:
+   1) qualitySystem(): unas instrucciones cortas de «experto» que viajan con cada mensaje (las pone apiMsgs).
+   2) qualityAfter(): cuando termina la respuesta, otra IA (la que mejor razona entre las gratis; con fotos, una que ve)
+      la revisa: lógica, cálculos, datos, que responda lo pedido y lo que se ve en las fotos.
+      Si está bien → «✓ Revisada». Si tiene errores → la respuesta se cambia por la corregida («✨ Mejorada» · Ver original).
+      Tiene 28 s como máximo; si tarda más o falla, se queda la respuesta de antes (nunca se pierde nada).
+   Se apaga en Ajustes › IAs y memoria › «Revisión de calidad». Las instrucciones del revisor viven en el servidor (api/ai.js). */
+function qualitySystem(saver){
+  if (saver) return 'Piensa en silencio antes de responder; revisa cálculos y lógica. No inventes datos.';
+  return 'Responde como un experto de primer nivel en el tema. Antes de escribir, piensa en silencio qué pide de verdad la persona y cuál es la mejor respuesta.'
+    + ' Empieza por la respuesta directa (sin saludos ni relleno) y luego explica lo necesario en orden lógico, paso a paso cuando ayude.'
+    + ' Rehaz cada cálculo antes de darlo y comprueba que no te contradigas. No inventes datos, citas, enlaces ni funciones: si algo no lo sabes o depende de información que no tienes, dilo claro.'
+    + ' Si la pregunta se puede entender de varias formas, elige la más probable, dilo en una frase y responde.'
+    + ' Usa Markdown limpio: títulos cortos, listas, tablas cuando compares y bloques de código con su lenguaje.'
+    + ' Si hay imágenes o archivos, básate en lo que de verdad se ve o dice en ellos y menciona detalles concretos.'
+    + ' Responde siempre en el idioma en que te escribe la persona.';
+}
+const REV_MS = 28000;
+/* las IAs de primer nivel no necesitan que otra más pequeña las revise */
+const REV_SKIP = /claude-(opus|sonnet|fable)|gpt-5(?![\w.-]*(nano|mini|lite))|gpt-6|gemini-[\d.]+-pro|grok-[4-9]|\bo[34]\b/i;
+const revOn = () => SZ.CFG.review !== false;
+function revWanted(mid, msg, r){
+  if (!revOn() || G || trialOn || mode !== 'solo' || !szOn() || !r || r.aborted || msg.cont) return false;
+  if (REV_SKIP.test(mid) || REV_SKIP.test(r.real || '')) return false;
+  const t = msg.content || '';
+  if (t.length < 160 || /^\(La IA devolvió una respuesta vacía\.\)$/.test(t)) return false;   /* un saludo o un «sí» no necesita revisión */
+  if (/```html/i.test(t) && t.length > 4000) return false;                                 /* las páginas ya las prueba SynthCode */
+  return true;
+}
+function revPacket(chat, msg){
+  const i = chat.lastIndexOf(msg), u = [...chat.slice(0, i)].reverse().find(x => x.role === 'user');
+  if (!u) return null;
+  let q = String(u.ask || u.content || '');
+  let room = 9000;
+  (u.files || []).forEach(f => { if (f.text && room > 0){ const s = f.text.slice(0, Math.min(6000, room)); room -= s.length; q += '\n\n[Archivo adjunto: ' + f.name + ']\n' + s; } });
+  const ui = chat.lastIndexOf(u);
+  const ctx = chat.slice(Math.max(0, ui - 4), ui).filter(m => typeof m.content === 'string' && !m.imgId).map(m => ({ role:m.role, content:m.content.slice(0, 900) }));
+  return { q:q.trim() || 'Mira la imagen.', imgs:(u._imgs || []).slice(0, 4), ctx };
+}
+function revChip(el, cls, html){
+  let c = $('.qrev', el);
+  if (!c){ c = document.createElement('div'); const meta = $('.meta', el); if (meta) meta.before(c); else el.appendChild(c); }
+  c.className = 'qrev ' + cls; c.innerHTML = html; return c;
+}
+const REV_ICO = { ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  fix:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>' };
+/* lo que se ve debajo de una respuesta ya revisada (también al volver a abrir el chat) */
+function revBadge(el, m){
+  if (!m || !m.rev) return;
+  if (m.rev === 'ok') revChip(el, 'ok', REV_ICO.ok + '<span>Revisada: la lógica está bien</span>');
+  else revChip(el, 'fix', REV_ICO.fix + '<span>Mejorada en la revisión' + (m.revNote ? ': ' + esc(m.revNote) : '') + '</span>' + (m.orig ? '<button type="button" class="lnk qrev-o" aria-pressed="false">Ver original</button>' : ''));
+}
+async function qualityAfter(el, chat, msg, mid, r){
+  if (!revWanted(mid, msg, r)) return;
+  const pk = revPacket(chat, msg); if (!pk) return;
+  const g0 = gen, draft = msg.content;
+  revChip(el, 'run', '<i class="qspin" aria-hidden="true"></i><span>Revisando la lógica de la respuesta…</span>');
+  const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), REV_MS); ctls.add(ctl);
+  let d = null;
+  try{
+    const res = await fetch('/api/ai', { method:'POST', headers:SZ.szHeaders(), signal:ctl.signal, body:JSON.stringify({ action:'review', q:pk.q, imgs:pk.imgs, ctx:pk.ctx, draft, turn:SZ.turnNow() }) });
+    d = await res.json().catch(() => null); if (!res.ok) d = null;
+  }catch(e){ d = null; }
+  finally{ clearTimeout(tm); ctls.delete(ctl); }
+  if (d && d.limit) try{ SZ.szqSet({ used:+d.used || 0, limit:+d.limit }); }catch(e){}
+  /* si cambiaste de chat, la respuesta se borró o ya llegó otra encima, no se toca nada */
+  const alive = chat.includes(msg) && msg.content === draft;
+  if (!d || !alive || !d.verdict){ const c = $('.qrev', el); if (c) c.remove(); return; }
+  if (d.verdict === 'ok'){ msg.rev = 'ok'; save(); if (g0 === gen && el.isConnected) revBadge(el, msg); return; }
+  msg.rev = 'fix'; msg.orig = draft; msg.revNote = String(d.note || '').slice(0, 140); msg.revBy = d.by || ''; msg.content = d.text;
+  touchThread(); save();
+  if (g0 !== gen || !el.isConnected) return;
+  const body = $('.body', el);
+  el._raw = d.text; body.innerHTML = md(d.text); codeButtons(body); if (el._sources) citeLinks(body, el._sources);
+  body.animate([{ opacity:.35, filter:'blur(3px)' }, { opacity:1, filter:'blur(0)' }], { duration:520, easing:'cubic-bezier(.22,1,.36,1)' });
+  revBadge(el, msg);
+  try{ SZ.BOT.react && SZ.BOT.react('done', { cool:120000 }); }catch(e){}
+}
+/* «Ver original» ↔ «Ver mejorada» */
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('.qrev-o'); if (!b) return;
+  const el = b.closest('.m'), m = el && chatArr()[+el.dataset.ci]; if (!m || !m.orig) return;
+  const showO = b.getAttribute('aria-pressed') !== 'true', body = $('.body', el);
+  body.innerHTML = md(showO ? m.orig : m.content); codeButtons(body);
+  b.setAttribute('aria-pressed', String(showO)); b.textContent = showO ? 'Ver mejorada' : 'Ver original';
+});
 /* ---------- comparar: las respuestas llegan en orden, sin cajas vacías, y puedes sumar IA después ---------- */
 /* «Esta tiene más Flow»: cada respuesta trae una carita buena de SynthonIA, distinta a las demás */
 function flowBtn(C){ const f = SZ.randomGoodFace(C.faces); C.faces.add(f); return '<button class="flowb" type="button" title="Sigue la conversación con esta IA"><i aria-hidden="true">' + SZ.face(f, 24) + '</i>Esta tiene más Flow</button>'; }
@@ -3884,7 +4089,7 @@ function pjPageHtml(p){
     + '<section class="pj-card" id="pjFiles"><div class="pj-ch"><h3>Archivos</h3><span class="pj-fb"><button type="button" class="lnk" data-pa="paste">Pegar texto</button><button type="button" class="btn sm ghost" data-pa="upload">' + PJ_PLUS + 'Subir</button></span></div>'
     + '<div class="pj-cap" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '" aria-label="Capacidad usada"><i style="width:' + Math.max(pct, size ? 2 : 0) + '%"></i></div><small class="pj-muted">' + (size ? 'Usas ' + (pct < 1 ? 'menos del 1 %' : 'el ' + pct + ' %') + ' del espacio · ' + pjNum(size) + ' de ' + pjNum(PJ_MAX) + ' caracteres. En cada mensaje la IA lee lo que más se relaciona con tu pregunta (hasta unas 1.300 palabras, que cuentan en tu límite).' : 'PDF, Word en texto, código, notas… La IA los usa como fuente en cada chat del proyecto.') + '</small>'
     + ((p.files || []).length ? '<ul class="pj-fl">' + p.files.map(f => '<li><span class="pj-fi">' + esc((f.name.split('.').pop() || 'txt').slice(0, 4).toUpperCase()) + '</span><span class="pj-fn"><b>' + esc(f.name) + '</b><small>' + (f.text ? pjNum(f.text.length) + ' caracteres' : 'Guardado en otro equipo') + '</small></span><button type="button" class="pj-fx" data-fdel="' + esc(f.id) + '" aria-label="Quitar ' + esc(f.name) + '">' + PJ_X + '</button></li>').join('') + '</ul>' : '')
-    + '<input type="file" id="pjFileIn" multiple hidden accept=".pdf,.txt,.md,.csv,.tsv,.json,.xml,.html,.css,.js,.ts,.jsx,.tsx,.py,.java,.c,.cpp,.cs,.go,.rs,.php,.rb,.sql,.yml,.yaml,.log"></section>'
+    + '<input type="file" id="pjFileIn" multiple hidden accept=".pdf,.docx,.xlsx,.pptx,.odt,.ods,.odp,.txt,.md,.csv,.tsv,.json,.xml,.html,.css,.js,.ts,.jsx,.tsx,.py,.java,.c,.cpp,.cs,.go,.rs,.php,.rb,.sql,.yml,.yaml,.log"></section>'
     + '</aside></div>';
 }
 
@@ -3949,6 +4154,7 @@ async function pjAddFiles(p, list){
       let t;
       if (/\.pdf$/i.test(file.name) || file.type === 'application/pdf'){ toast('Leyendo «' + file.name + '»…'); const lib = await loadPdf(), pdf = await lib.getDocument({ data:new Uint8Array(await file.arrayBuffer()) }).promise; t = ''; for (let i = 1; i <= Math.min(pdf.numPages, 300) && t.length < PJ_MAX; i++){ const tc = await (await pdf.getPage(i)).getTextContent(); t += '\n--- página ' + i + ' ---\n' + tc.items.map(x => x.str).join(' '); } if (t.replace(/--- página \d+ ---/g, '').trim().length < 20) throw new Error('«' + file.name + '» parece escaneado (sin texto que leer).'); }
       else if (TEXTX.test(file.name) || /^text\//.test(file.type) || file.type === 'application/json') t = await file.text();
+      else if (OFFX.test(file.name)) t = await readOffice(file);   /* v3.4 · Word, Excel y PowerPoint también */
       else throw new Error('Tipo de archivo no compatible: ' + file.name);
       if (!pjAddText(p, file.name, t.trim())) break;
     }catch(err){ toast(err.message || 'No pude leer «' + file.name + '».'); }

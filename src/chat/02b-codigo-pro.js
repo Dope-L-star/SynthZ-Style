@@ -239,10 +239,13 @@ function fixWithAI(el, r, auto){
   if (!budgetOk()) return;
   const msg = { role:'user', content:fixPrompt(r), fix:{ n:r.hard.length + r.soft.length, auto:!!auto } };
   chat.push(msg); touchThread(); save(); renderMsgs();
-  runSolo(err => {
+  const failed = err => {
     const i = chat.lastIndexOf(msg); if (i > -1) chat.splice(i, 1); save(); renderMsgs();
     if (!(err && err.aborted)) toast(auto ? 'No pude pedirle el arreglo a la IA ahora. Toca «Arreglar con la IA» para intentarlo otra vez.' : (err && err.message) || 'No pude pedir el arreglo. Intenta otra vez.');
-  });
+  };
+  /* v3.4 · con SuperiorSynth el proyecto no se detiene: si la IA falla, el arreglo lo sigue otra IA experta en código */
+  if (agentOn()) runExpert('codigo').then(x => { if (!x.ok) failed(x.err); });
+  else runSolo(failed);
 }
 /* tu mensaje de arreglo se ve como una notita, no como un muro de texto */
 function fixNoteEl(m){

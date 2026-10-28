@@ -1849,7 +1849,7 @@ function szqSet(o){ Object.assign(SZQ, o); try{ dispatchEvent(new CustomEvent('s
 const szHeaders = () => { const h = { 'content-type':'application/json', 'x-sz-device':DEVH }; if (SESS) h.authorization = 'Bearer ' + SESS; return h; };
 const SZ_VEND = [[/llama|meta/i, 'meta-llama'], [/gemma|gemini/i, 'google'], [/mistral|mixtral|codestral|ministral|magistral|devstral|pixtral|open-mi/i, 'mistralai'], [/qwen|qwq/i, 'qwen'], [/deepseek/i, 'deepseek'], [/gpt-oss|openai/i, 'openai'], [/kimi|moonshot/i, 'moonshotai'], [/glm|z-ai/i, 'z-ai'], [/nemotron|nvidia/i, 'nvidia'], [/phi-|microsoft/i, 'microsoft'], [/granite|ibm/i, 'ibm'], [/hermes|nous/i, 'nousresearch']];
 const szVendor = (mid, prov) => (SZ_VEND.find(([rx]) => rx.test(mid)) || [0, prov])[1];
-const SZ_AUTO = { id:'sz:auto', name:'Automática', vendor:'synthz', vlabel:'Elige sola la mejor', ctx:0, free:true, created:4e9, vision:false, reasoning:true, tools:false, desc:'Elige sola la mejor IA que esté libre en este momento. Si una se llena, pasa a otra sin que hagas nada.' };
+const SZ_AUTO = { id:'sz:auto', name:'Automática', vendor:'synthz', vlabel:'Elige sola la mejor', ctx:0, free:true, created:4e9, vision:true, reasoning:true, tools:false, desc:'Elige sola la mejor IA que esté libre en este momento. Si una se llena, pasa a otra sin que hagas nada.' };
 /* ---------- límite de hoy: se muestra en mensajes (más fácil que contar «tokens») ---------- */
 const MSG_TOK = 800;
 /* sin cuenta: unos pocos mensajes de prueba al día; luego hay que entrar (gratis) */
@@ -1883,6 +1883,8 @@ function limBar(o = {}){
   const k = 1 - limPct();
   return '<div class="lbar ' + limLvl() + '"><div class="lb-h"><b>' + (o.title || t('enerx.today')) + '</b><span>' + limTxt() + '</span></div><div class="lb-t"><i style="transform:scaleX(' + k.toFixed(3) + ')"></i></div>' + (o.small === false ? '' : '<small>' + (isGuestQ() ? t('enerx.guest', { n:SZQ.guest.max || 5 }) + ' ' : '') + t('enerx.small') + (o.puter ? ' ' + t('enerx.puter') : '') + '</small>') + '</div>';
 }
+/* v3.4 · las IAs conectadas que ven fotos (el servidor usa la misma lista: api/_pool.js VISION_RX). Automática también: con fotos elige sola una que ve */
+const SZ_VISION = /gemini|gemma-3(?!n)|llama-4|pixtral|mistral-(small|medium)|[-_/]vl\b|-vl-|vision|qwen2\.5-vl|kimi-vl/i;
 async function szCatalog(){
   let r; try{ r = await fetch('/api/ai', { headers:szHeaders() }); }catch(e){ throw Object.assign(new Error('net'), { net:true }); }
   const d = await r.json().catch(() => ({}));
@@ -1892,7 +1894,7 @@ async function szCatalog(){
   if (!arr.length) return [];
   const out = arr.filter(m => m && typeof m.id === 'string' && /^sz:/.test(m.id) && !/allam|infron|openrouter\/(free|auto)|models?[-_ ]router/i.test(m.id) && !/free models router|router/i.test(String(m.name || ''))).map(m => {
     const mid = m.id.split(':').slice(2).join(':'), vendor = szVendor(mid, m.prov);
-    return { id:m.id, name:String(m.name || mid).replace(/\s*\(free\)\s*$/i, ''), vendor, vlabel:vendorLabel(vendor) + ' · SymphorIA', ctx:num(m.ctx), free:true, created:0, vision:false,
+    return { id:m.id, name:String(m.name || mid).replace(/\s*\(free\)\s*$/i, ''), vendor, vlabel:vendorLabel(vendor) + ' · SymphorIA', ctx:num(m.ctx), free:true, created:0, vision:['google', 'groq', 'mistral', 'openrouter'].includes(m.prov) && SZ_VISION.test(mid),
       reasoning:/gpt-oss|qwen3|qwq|r1|reason|think|magistral|kimi|deepseek/i.test(mid), tools:false, desc:'Gratis: no necesitas cuenta ni nada.' };
   });
   return [SZ_AUTO, ...out];
@@ -2942,7 +2944,7 @@ function cfgChooser(box, cur, onPick){
 const CFG_ROWS = [['cursor', 'Cursor ' + BRAND(), 'El cursor de vidrio con viento.'], ['smooth', 'Desplazamiento suave', 'La ruedita baja la página sin saltos.'], ['bg', 'Fondo animado', 'Los colores se mueven y giran al bajar.'], ['glass', 'Efecto vidrio', 'Ventanas y paneles que parecen de vidrio.'], ['anim', 'Animaciones', 'Escritura letra por letra, golpe de cristal y agua.'], ['favAnim', 'Icono animado', 'El péndulo (o el destello de Flow) en el icono de la pestaña.'], ['sound', 'Sonidos', 'La voz de SynthonIA, las teclas, las transiciones y los avisos. Apágalos si te molestan.'], ['beginner', 'Modo principiante', 'Las IA te responden con palabras sencillas, paso a paso y con ejemplos.']];
 /* v2.2 · Ajustes con 2 pestañas: «Página» (cómo se ve y se siente) e «IAs y memoria» (cómo te responden y qué recuerdan de ti) */
 const CFG_PAGE = CFG_ROWS.filter(r => r[0] !== 'beginner');
-const CFG_IA = [['beginner', 'Modo principiante', 'Te responden con palabras sencillas, paso a paso y con ejemplos.'], ['autoWeb', 'Buscar en internet cuando haga falta', 'Si preguntas por algo de hoy (precios, noticias, el clima…), la IA busca sola y te muestra sus fuentes.'], ['saver', 'Respuestas cortas', 'Respuestas más breves: gastas menos de tu límite de hoy.']];
+const CFG_IA = [['beginner', 'Modo principiante', 'Te responden con palabras sencillas, paso a paso y con ejemplos.'], ['autoWeb', 'Buscar en internet cuando haga falta', 'Si preguntas por algo de hoy (precios, noticias, el clima…), la IA busca sola y te muestra sus fuentes.'], ['saver', 'Respuestas cortas', 'Respuestas más breves: gastas menos de tu límite de hoy.'], ['review', 'Revisión de calidad', 'Otra IA revisa la lógica de cada respuesta y la corrige si encuentra errores. Tarda unos segundos más.']];
 const memSt0 = () => state.mem || (state.mem = { on:true, t:0, items:[] });
 function memTouch(){ const m = memSt0(); m.t = Date.now(); save(); try{ if (ACC.ready) accPush(); }catch(e){} }
 function memAddCore(text){
@@ -2973,7 +2975,7 @@ function memPanel(host){
 const cfgLinks = [];
 function cfgModal(tab){
   if ($('#cfgm')) return;
-  const draft = Object.assign({ autoWeb:true }, CFG); draft.saver = !!(state.sx && state.sx.saver);
+  const draft = Object.assign({ autoWeb:true, review:true }, CFG); draft.saver = !!(state.sx && state.sx.saver);
   const o = document.createElement('div'); o.id = 'cfgm'; o.className = 'szm';
   const row = ([k, t, s]) => '<div class="cfgrow"><p>' + t + '<small>' + s + '</small></p><button class="cfgsw" type="button" role="switch" data-k="' + k + '" aria-checked="' + !!draft[k] + '" aria-pressed="' + !!draft[k] + '" aria-label="' + t + '"></button></div>';
   const IN = [['always', 'Cada vez'], ['session', 'Una vez por visita'], ['never', 'Nunca']];
@@ -3089,8 +3091,8 @@ async function askStream(p, messages, opts = {}, onDelta){
   };
   const model0 = String(opts.model || state.model[p.id] || '');
   /* sin créditos de Puter: pasa sola a las IAs conectadas (el único aviso es «Usaste el saldo de este mes de Puter: sigo con las IAs conectadas») */
-  const flat = ms => ms.map(m => typeof m.content === 'string' ? m : { role:m.role, content:(m.content || []).map(x => x.type === 'text' ? x.text : '[imagen]').join('\n') });
-  const fallSz = () => { puterOutNote(); return askStream(SZ_P, flat(messages), Object.assign({}, opts, { model:'sz:auto', _noFall:true }), onDelta).then(r => Object.assign(r, { swapped:true })); };
+  /* v3.4 · las fotos ya viajan a las IAs conectadas (antes se cambiaban por «[imagen]» y el servidor las botaba) */
+  const fallSz = () => { puterOutNote(); return askStream(SZ_P, messages, Object.assign({}, opts, { model:'sz:auto', _noFall:true }), onDelta).then(r => Object.assign(r, { swapped:true })); };
   if (/^pu:/.test(model0)){
     if (!window.puter) throw new Error('No pude abrir Puter. Revisa tu internet o apaga el bloqueador de anuncios para esta página.');
     if (!puter.auth.isSignedIn()) throw Object.assign(new Error('Conecta tu cuenta de Puter para usar esta IA.'), { needLogin:true });
@@ -3132,7 +3134,7 @@ async function askStream(p, messages, opts = {}, onDelta){
   const viaTeam = !viaTrial && !viaGroq && p.id === 'openrouter' && !state.keys.openrouter && !!state.useTeam && !!SESS;
   const key = state.keys[p.id];
   if (!key && !viaTeam && !viaTrial && !viaSz) throw new Error('Falta la llave de ' + p.name + '.');
-  const body = viaSz ? { messages:flat(messages), model:model0, turn:opts.turn || (TURN && Date.now() - TURN.at < 120000 ? TURN.id : turnId(messages)) } : viaGroq ? { model:model0.replace(/^gq:/, ''), messages, stream:true, stream_options:{ include_usage:true } } : { model:model0.replace(/^or:/, ''), messages, stream:true, usage:{ include:true } };
+  const body = viaSz ? { messages, model:model0, turn:opts.turn || (TURN && Date.now() - TURN.at < 120000 ? TURN.id : turnId(messages)) } : viaGroq ? { model:model0.replace(/^gq:/, ''), messages, stream:true, stream_options:{ include_usage:true } } : { model:model0.replace(/^or:/, ''), messages, stream:true, usage:{ include:true } };
   if (viaTeam) body.teamId = state.useTeam;
   if (opts.maxTokens) body.max_tokens = opts.maxTokens;
   if (opts.effort && p.id === 'openrouter' && !viaSz && !viaGroq && !viaTrial) body.reasoning = { effort:opts.effort };   /* v2.3.1 · esfuerzo: OpenRouter lo ignora en las IA que no razonan */
@@ -6336,4 +6338,6 @@ window.SZ = { I18N, LANGS, t, lang, setLang, onLang, i18nApply, root, $, $$, cla
   get state(){ return state; }, set state(v){ state = v; normalize(); },
   normalize, cleanUsage, cleanChats, cleanStrMap, save, total, addUsage, resetUsage, estAll, todayEst, todayReq, providerBalance, balanceHtml, splitHtml, syncNote, helpGuide, smoothDetails, szPrompt, swapDir, swapDir, face, FACE_GOOD, randomGoodFace, welcomeBack, wasAway, accSignOutAll, accClaim, ROLE_NAME, trialGet, trialSet, trialStart, legacyRow, cleanLedger, mergeLedger, DEV, hooks, toast, hydrateIcons, md, countTo,
   BRAND, SPACE, AURORA, isFlow, flowWord, flowOrb, LOGO_Z, fileIco, gIcon, giFill, giFile, zMark, synBody, synSet, SPOSE, charify, typeIn, showAll, getJSON, parseModels, loadCatalog, fetchCatalog, vendorLabel, vendorColor, burst, friendly, netMsg, fetchModels, refreshModels, verify, ask, metaOf, history, S, mirrorType, thud, portalOut, portalBack, portalArrive, portalFill, portalReveal, waterIn, ctxMenu, SXC, coins, ACC, accHooks, accStart, accPush, accSignOut, accName, accHandle, securityModal, recoveryPanel, MARK_HTML, expertOf, EXP_LABEL, surveyModal, surveyPicks, surveyScore, orGuide, profileModal, puterLogo, PUTER_LOGO, api, accConfig, accDelete, saveProfile, avatarHtml, myAvatar, grad, tint, TINTS, loadGsi, SESS_get:() => SESS, CFG, PERF, saveCfg, cfgModal, cfgChooser, applyCfg, smoothWheel, orbitBg, authBox, isBlocked, lowEnd, askStream, mkReveal, reveals, chatsReady, IDB, provOf, totalAll, todayAll, BRANDS, brandOf, glassIcon, PIXART, pixelRun, pixelGrid, workView, workSaved, mdLoad, MDLIB, SZ_P, SZQ, SZ_AUTO, szqSet, msgsLeft, msgsTotal, coinsOf, coinsLeft, coinsTotal, coinsFmt, coinsShort, coinNote, limTxt, limShort, limLvl, limPct, limRing, battPct, limBar, szCatalog, szHeaders, guestGate, guestFull, isGuestQ, setTurn, puterOut, puterOutNote, TEL, telEv, telBeat, DEVH, szConfirm, cfgPreset, CFG_KEYS, cfgClasses, SND, HAND, feedbackModal, guideChooser, DRIVE, isBad, markBad, markGood, modelGone, badReady, GROQ_P, BOT:BOTAPI, EV, lipSync, ballFace, guideAsk, GTOPICS, whatsNew, signedish, cfgLinks, memAddCore, memPanel, menuOpen, menuClose, MICO, appInstall, appPromo, appStandalone, appPhone, plansModal, planOf };
+/* v3.4 · el «turno» del mensaje actual: la revisión de calidad viaja en el mismo turno (no cuenta como otro mensaje sin cuenta) */
+window.SZ.turnNow = () => TURN && Date.now() - TURN.at < 600000 ? TURN.id : '';
 })();

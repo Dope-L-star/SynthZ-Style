@@ -1,0 +1,9 @@
+/* v3.4 · los interruptores (Ajustes, Cuenta, Respuestas cortas…) se pintan con el color del tema que eligió la persona.
+   Antes eran verde fijo y el efecto vidrio (16-v29) los dejaba sin color al prenderse. Va con !important para ganarle a ese vidrio. */
+:is(.cfgsw,.sxsw)[aria-pressed="true"],
+html:not(.simple) .tcard :is(.cfgsw,.sxsw)[aria-pressed="true"]{
+  background:linear-gradient(135deg,rgba(var(--gold-rgb),.95),rgba(var(--wine-rgb),.8)) !important;
+  border-color:rgba(var(--gold-rgb),.7) !important;box-shadow:0 0 14px -4px rgba(var(--gold-rgb),.75),inset 0 0 0 1px rgba(255,255,255,.18) !important}
+:is(.cfgsw,.sxsw)[aria-pressed="true"]::after{transform:translateX(18px)}
+/* estilo Simple: su propio acento */
+html.simple :is(.cfgsw,.sxsw)[aria-pressed="true"]{background:var(--sacc,#d9a066) !important;border-color:var(--sacc,#d9a066) !important;box-shadow:none !important}
