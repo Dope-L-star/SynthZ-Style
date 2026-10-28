@@ -116,3 +116,4 @@ html.simple #sideFoot .sxfoot.gauge.gbatt{background:transparent !important;bord
   html.simple .chats{--cw:288px}
 }
 @media (max-width:760px){.attw .onchip{height:26px;min-width:26px;padding:0 5px}.attw .onchip i{font-size:12.5px}}
+.hex small{text-transform:uppercase}

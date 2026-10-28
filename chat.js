@@ -781,8 +781,20 @@ function nextGreet(){
   try{ localStorage.setItem(GBAG, JSON.stringify(bag)); }catch(e){}
 }
 /* «¿Qué es FlowIA’r?»: un botoncito bajo el saludo que lo explica para quien no sabe inglés ni conoce la página */
+/* v3.2 · quién lo ve (Sammuel, 28 oct): sin cuenta (prueba) sale siempre; con cuenta, una sola vez
+   (durante esa visita se queda aunque abras chats nuevos). Lleva el borde de luz (.mv-edge) para que se note. */
+function flowQOn(){
+  try{
+    const acc = !!((SZ.ACC && SZ.ACC.ready) || (SZ.signedish && SZ.signedish()));
+    if (!acc) return true;
+    if (sessionStorage.getItem('synthz:flowqNow')) return true;
+    if (localStorage.getItem('synthz:flowq')) return false;
+    localStorage.setItem('synthz:flowq', '1'); sessionStorage.setItem('synthz:flowqNow', '1'); return true;
+  }catch(e){ return true; }
+}
 function flowWhatHtml(){
-  return '<button type="button" class="flowq notr" id="flowQ" aria-expanded="false" aria-controls="flowW">'
+  if (!flowQOn()) return '';
+  return '<button type="button" class="flowq notr mv-edge" id="flowQ" aria-expanded="false" aria-controls="flowW">'
     + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>'
     + (SZ.lang() === 'en' ? 'What does «FlowIA» mean?' : '¿Qué significa «FlowIA’r»?') + '</button>';
 }
@@ -1191,14 +1203,14 @@ const EXK = ['marketing', 'estudiar', 'codigo', 'escribir', 'negocios', 'ideas',
 let exSeed = Math.floor(Math.random() * EXK.length);
 function examplesHtml(){
   const ks = [0, 1, 2].map(i => EXK[(exSeed + i * 4) % EXK.length]);
-  return '<div class="hexs">' + ks.map((k, i) => { const T = TOPIC[k], x = T.ex[0]; return '<button type="button" class="hex" data-hex="' + k + '" style="--i:' + i + '"><small>' + esc(T.l.toUpperCase()) + '</small><span>' + esc(x[0]) + '</span></button>'; }).join('') + '</div>';
+  return '<div class="hexs">' + ks.map((k, i) => { const T = TOPIC[k], x = T.ex[0]; return '<button type="button" class="hex" data-hex="' + k + '" style="--i:' + i + '"><small>' + esc(T.l) + '</small><span>' + esc(x[0]) + '</span></button>'; }).join('') + '</div>';
 }
 /* v1.3: los ejemplos van debajo del saludo, cambian solos y desaparecen cuando ya usaste el chat más de 5 veces */
 const sentN = () => { let n = 0; try{ n = +localStorage.getItem('synthz:sent') || 0; }catch(e){} if (!n){ try{ n = Object.values(st().chats || {}).filter(a => Array.isArray(a) && a.some(m => m.role === 'user')).length; }catch(e){} } return n; };
 const showEx = () => sentN() <= 5;
 function exRowHtml(){
   const ks = [0, 1, 2].map(i => EXK[(exSeed + i * 4) % EXK.length]);
-  return ks.map((k, i) => { const T = TOPIC[k], x = T.ex[0]; return '<button type="button" class="hex hxs" data-hex="' + k + '" style="--i:' + i + '"><small>' + esc(T.l.toUpperCase()) + '</small><span>' + esc(x[0]) + '</span></button>'; }).join('');
+  return ks.map((k, i) => { const T = TOPIC[k], x = T.ex[0]; return '<button type="button" class="hex hxs" data-hex="' + k + '" style="--i:' + i + '"><small>' + esc(T.l) + '</small><span>' + esc(x[0]) + '</span></button>'; }).join('');
 }
 setInterval(() => {
   const r = document.getElementById('hexR'); if (!r || document.hidden || root.classList.contains('idle-sleep') || r.matches(':hover') || r.contains(document.activeElement)) return;
