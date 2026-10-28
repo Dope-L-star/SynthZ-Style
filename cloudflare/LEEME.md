@@ -13,6 +13,8 @@ Workers & Pages → Create → Pages → Connect to Git → `Dope-L-star/SynthZ-
 
 Desde ahí cada push a `main` se publica solo, y cada rama tiene su vista previa.
 
+La primera build de `main` falla mientras `cloudflare/preparar.mjs` no esté en main; la vista previa de la rama del PR sí construye. Al fusionar, Pages publica la producción sola.
+
 ## A mano (opcional, con Wrangler)
 ```
 npm ci
