@@ -4,7 +4,8 @@
   "description": "SymphorIA en Next.js (export estático). Lo arma next/armar.mjs; ver next/LEEME.md.",
   "scripts": {
     "build": "next build",
-    "dev": "next dev"
+    "dev": "next dev",
+    "test:migration": "node verificar-migracion.mjs"
   },
   "dependencies": {
     "next": "16.4.2",

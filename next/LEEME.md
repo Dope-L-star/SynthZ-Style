@@ -1,23 +1,70 @@
-# SymphorIA en Next.js
+# SymphorIA en Next.js / React + Cloudflare Pages
 
-El paso a Next.js va **por partes**, sin romper nada de lo que ya funciona (api/ en Vercel, sesión por cookie, CSP, Sintéticos, ES/EN, modo compacto, temas, EnerX).
+## Rutas y renderizado
 
-- `node next/armar.mjs` (desde la raíz) arma todo: `build.mjs --dist` → copia `dist/` a `next/public/` → `next build` con `output: 'export'` → **`next/out/`**, la página completa y estática.
-- Cloudflare Pages publica `next/out` (lo hace `cloudflare/preparar.mjs`). `/api/…` no pasa por Next: lo sirve la función de Cloudflare / Vercel, con las mismas rutas.
-- Las páginas que todavía no pasaron a React se sirven tal cual desde `public/` (mismos nombres `.html`).
+Estas rutas salen de `app/` como páginas React (Next App Router):
 
-## Ya en React (app/)
-| Página | Archivo |
+| URL de producción | Componente de página |
 |---|---|
-| Términos (`/terminos.html`) | `app/(legal)/terminos/page.jsx` + `contenido/terminos.jsx` (React de verdad) |
-| Privacidad (`/privacidad.html`) | `app/(legal)/privacidad/page.jsx` + `contenido/privacidad.jsx` (React de verdad) |
-| Pulsem (`/pulsem.html`) | `app/(panel)/pulsem/page.jsx`: Next arma la página y su código de siempre (core.js + pulsem.js) la hace funcionar; el siguiente paso es pasar sus tarjetas a componentes |
+| `/` y `/index.html` | `app/(site)/page.jsx` |
+| `/chat.html` (SynthFlow) | `app/(site)/chat/page.jsx` |
+| `/alias.html` (A.L.I.A.S.) | `app/(site)/alias/page.jsx` |
+| `/ayuda.html` | `app/(site)/ayuda/page.jsx` |
+| `/offline.html` | `app/(site)/offline/page.jsx` |
+| `/pulsem.html` | `app/(panel)/pulsem/page.jsx` |
+| `/privacidad.html` y `/terminos.html` | componentes React propios |
 
-`(legal)` y `(panel)` son grupos con su propio marco (`layout.jsx`): cada uno trae solo sus estilos.
+Las páginas principales tienen su estructura renderizada como elementos de React mediante `ReactTree.jsx`; ya no dependen de `dangerouslySetInnerHTML` para inyectar todo el cuerpo de la página. Los árboles JSON versionados están en `contenido/arboles-react/` y conservan los IDs/clases/data-attributes que consumen los módulos existentes. Se generaron desde las páginas fuente con `python next/generar-arboles-react.py` (requiere `beautifulsoup4`, solo para desarrollo).
 
-Al pasar otra página: crear `app/(grupo)/<nombre>/page.jsx` (sale como `out/<nombre>.html`), agregar el nombre a `HECHAS` en `armar.mjs` y borrar el `.html` viejo de la raíz cuando ya no se use.
+`LegacyRuntime` sigue cargando en orden los motores JS actuales —`core.js`, `chat.js`, `index.js`, `alias.js`, `pulsem.js` y módulos auxiliares— para preservar autenticación, streaming, historial, Puter/OpenRouter, adjuntos, comparación y herramientas. Eso es un puente de compatibilidad, no una reescritura terminada de cada módulo a hooks. La migración de estado y efectos internos a React hooks debe hacerse módulo por módulo y no eliminarse este puente hasta que sus flujos pasen pruebas de navegador.
 
-Orden propuesto: A.L.I.A.S. → portada → SynthFlow (el más grande; va al final, por piezas).
+`/sintetico.html` queda deliberadamente como documento aislado con una CSP `sandbox` y un protocolo `postMessage` específico. No se debe colocar en el mismo árbol React que ejecuta la app: la separación evita que el HTML generado por una IA comparta el entorno privilegiado de SynthFlow.
 
-## Animaciones
-Todas las páginas (las de siempre y las de Next) cargan la misma capa: `movimiento.css` / `movimiento.js` (piezas en `src/movimiento*`).
+## Pruebas de estructura
+
+```bash
+node build.mjs --check
+node next/verificar-migracion.mjs
+```
+
+Si modificas alguno de los documentos fuente (`index.html`, `chat.html`, etc.), regenera los árboles JSON antes de compilar:
+
+```bash
+python next/generar-arboles-react.py
+node next/verificar-migracion.mjs
+```
+
+La comprobación detecta árboles desactualizados, IDs perdidos o duplicados, cambios en los cuerpos fuente y scripts/event handlers inline que no deberían ejecutarse.
+
+## Build de producción en local
+
+Desde la raíz del repositorio:
+
+```bash
+npm ci
+node build.mjs --check
+node next/verificar-migracion.mjs
+node cloudflare/preparar.mjs
+```
+
+El último comando ejecuta la exportación Next y genera `cloudflare/public/` con `_headers`, `_redirects` y recursos estáticos. Requiere conexión al registro npm para instalar dependencias de Next/React.
+
+## Cloudflare Pages
+
+- **Root directory:** vacío (raíz del repositorio).
+- **Build command:** `npm ci && node cloudflare/preparar.mjs`.
+- **Build output directory:** `cloudflare/public`.
+- **Environment variable:** `NODE_VERSION=22`.
+
+No usar `out` como directorio de salida para este pipeline personalizado: `cloudflare/preparar.mjs` copia `next/out` y genera las reglas de Pages que necesita este proyecto. Las Pages Functions se conservan en el directorio raíz `functions/`.
+
+## Pruebas funcionales pendientes
+
+En una vista previa con los servicios configurados: envío y streaming, detener/reintentar, cambio de IA y modo, login/cierre/Google, historial/favoritos, adjuntos, comparación, búsqueda web, Sintéticos, A.L.I.A.S., idioma inglés, modo compacto, Pulsem y accesibilidad móvil. No publicar sobre la versión estable hasta completarlas.
+
+
+## Microsoft Clarity
+
+El adaptador React está incluido, pero permanece apagado. Microsoft declara que Clarity no debe usarse en webs/apps dirigidas a menores de 18 años; los términos actuales de SymphorIA permiten usuarios de 13–17 años con permiso adulto. No cambies esta configuración para el despliegue actual. Para una variante exclusivamente para adultos, revisa antes términos y privacidad y configura consentimiento; luego establece ambas variables `NEXT_PUBLIC_CLARITY_ENABLED=true` y `NEXT_PUBLIC_CLARITY_AUDIENCE_18_PLUS=true`. El proyecto Clarity es `z5es3kuqoz`; el panel Pulsem no instala el tracker.
+
+El árbol React en `contenido/arboles-react/` conserva el marcado y los IDs originales, mientras `LegacyRuntime` carga los módulos interactivos antiguos. Esto protege funcionalidad durante la migración, pero no significa que todo el comportamiento ya esté reescrito con hooks de React.

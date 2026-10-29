@@ -1,0 +1,31 @@
+/* Root layout del sitio público. Las páginas son rutas React con export estático. */
+import ClarityConsent from '../../componentes/ClarityConsent';
+export const metadata = {
+  metadataBase: new URL('https://symphoria.pages.dev'),
+  title: 'SymphorIA · Tu IA en una sola mesa',
+  description: 'Tu espacio para explorar la inteligencia artificial. Pregunta, crea, programa y compara modelos desde un solo lugar.',
+  icons: { icon: '/media/v30/fav-s.png' },
+  manifest: '/synthflow.webmanifest',
+  appleWebApp: { capable: true, title: 'SynthFlow', statusBarStyle: 'black-translucent' },
+};
+
+export const viewport = { width: 'device-width', initialScale: 1, colorScheme: 'dark' };
+
+export default function SiteLayout({ children }) {
+  return (
+    <html lang="es">
+      <head>
+        <link rel="icon" id="favi" href="/media/v30/fav-s.png" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://js.puter.com" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Chakra+Petch:wght@500;600;700&family=Figtree:wght@300..800&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" />
+        <link rel="manifest" href="/synthflow.webmanifest" />
+        <link rel="apple-touch-icon" href="/media/app/sf-apple-180.png?v=29" />
+        <meta name="theme-color" content="#0b0820" />
+        <link rel="stylesheet" href="/clarity-consent.css" />
+      </head>
+      <body>{children}<ClarityConsent /></body>
+    </html>
+  );
+}

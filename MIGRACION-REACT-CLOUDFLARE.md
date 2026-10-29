@@ -1,0 +1,66 @@
+# Migración React + Cloudflare: antes/después y QA
+
+## Antes
+
+- Cada ruta interactiva (`index.html`, `chat.html`, `alias.html`, `ayuda.html`, `offline.html`, `pulsem.html`) se servía como documento HTML independiente.
+- El chat usa una arquitectura madura de módulos y selectores DOM, con IDs `data-*` compartidos entre `src/chat/` y el marcado.
+- El estilo Glass y las animaciones ya eran parte del diseño; la migración debe conservar el aspecto de SynthFlow y no sustituirlo por una plantilla genérica.
+
+## Después de esta etapa
+
+- Las rutas salen del App Router de Next.js y React.
+- El marcado de las seis páginas principales se transformó en árboles de elementos React estáticos, en `next/contenido/arboles-react/`, y `ReactTree.jsx` crea los elementos. Se conservaron IDs, clases, atributos de datos y jerarquía visible necesaria para los estilos y manejadores existentes.
+- Los atributos inline de evento se retiran del árbol y las dos acciones que estaban presentes (`onclick="location.reload()"` y `onerror="this.remove()"`) se traducen a `data-legacy-*` con listeners delegados controlados. No se evalúa código arbitrario guardado en atributos HTML.
+- Las páginas legales continúan como componentes React propios. `/sintetico.html` permanece aislado a propósito por su CSP y sandbox.
+- `LegacyRuntime` mantiene por ahora la lógica heredada del chat, cuentas, proveedores IA, streaming, historial, herramientas, alias y Pulsem. Esto conserva compatibilidad, pero significa que la migración completa de toda la lógica JS a hooks/context todavía no está terminada. Debe hacerse progresivamente y cubrirse con pruebas de extremo a extremo.
+
+## Pruebas de migración
+
+Ejecutar desde la raíz:
+
+```bash
+node build.mjs --check
+node next/verificar-migracion.mjs
+```
+
+Se comprueba que cada página fuente coincide con el módulo de referencia, que el hash del árbol React está actualizado, que no se perdieron ni duplicaron IDs, que no quedaron scripts/event handlers inline y que se conserva el documento aislado de Sintéticos. Si se edita una página HTML, regenerar con `python next/generar-arboles-react.py` (solo hace falta `beautifulsoup4` en desarrollo) y repetir los tests.
+
+## Build Cloudflare Pages
+
+- Root directory: vacío, raíz del repositorio.
+- Build command: `npm ci && node cloudflare/preparar.mjs`.
+- Build output directory: `cloudflare/public`.
+- `NODE_VERSION=22`.
+
+`cloudflare/preparar.mjs` ejecuta la exportación estática de Next, copia `next/out` a `cloudflare/public` y genera las reglas `_headers` y `_redirects`. Las funciones Pages se mantienen en `functions/` en la raíz.
+
+## Resultados en este entorno
+
+- `node build.mjs --check`: debe mostrar todos los bundles JS/CSS sincronizados con sus piezas fuente.
+- `node next/verificar-migracion.mjs`: debe pasar la paridad de árbol React, IDs y acciones seguras.
+- La captura comparativa «antes/después» se adjunta como referencia visual de la capa de Glass/estilo y la prueba estática revisa layout desktop/mobile, controles críticos y overflow horizontal.
+- El build integrado `next build`/Cloudflare no se pudo ejecutar aquí: el registro npm respondió `EAI_AGAIN` para `registry.npmjs.org`. No se marca como éxito; Cloudflare CI debe instalar las dependencias y construir en un runner con red.
+- La prueba visual offline de `chat.html` no sustituye una prueba E2E de streaming/autenticación en servicios reales. Esa lista sigue pendiente en Preview.
+
+## Checklist antes de producción
+
+- [ ] `npm ci && node cloudflare/preparar.mjs` finaliza con código 0.
+- [ ] Las rutas `/`, `/chat.html`, `/alias.html`, `/ayuda.html`, `/offline.html`, `/pulsem.html`, `/privacidad.html` y `/terminos.html` devuelven 200.
+- [ ] SynthFlow: enviar, recibir streaming, parar/reintentar y cambiar de modelo.
+- [ ] Login, cierre de sesión, Google, cuenta y persistencia de chats.
+- [ ] Historial, favoritos, adjuntos, comparación, búsqueda web, Sintéticos y A.L.I.A.S.
+- [ ] Selector IA, esfuerzo, menú de modo, ajustes, idioma, modo compacto, Pulsem y vista móvil.
+- [ ] Sin errores de consola ni solicitudes locales 404; verificar CSP de `/sintetico.html`.
+- [ ] No reemplazar el despliegue estable antes de completar la lista.
+
+## Analítica y privacidad (Microsoft Clarity)
+
+Se añadió una integración React opcional para el proyecto `z5es3kuqoz`, con consentimiento previo, API Consent V2 y configuración para rechazar/revocar. **Se publica apagada por defecto.** La documentación oficial de Microsoft dice que Clarity no debe usarse en sitios o aplicaciones dirigidas a personas menores de 18 años. Los términos actuales de SymphorIA permiten el uso por personas de 13–17 con permiso de un adulto; por eso no se debe activar en este producto con la audiencia actual. La integración solo se podría habilitar en una edición exclusivamente para mayores de 18 años, tras revisar los términos, la política de privacidad y el consentimiento.
+
+Para una edición elegible de adultos, establece durante el build de Cloudflare Pages las dos variables `NEXT_PUBLIC_CLARITY_ENABLED=true` y `NEXT_PUBLIC_CLARITY_AUDIENCE_18_PLUS=true`. `NEXT_PUBLIC_CLARITY_PROJECT_ID` tiene por defecto `z5es3kuqoz`. El consentimiento no se concede automáticamente; los datos de publicidad quedan denegados. No actives esas variables en este despliegue tal como está configurado hoy. El panel interno Pulsem no carga el tracker.
+
+Se marcan `#msgs`, `#thList`, `#sideFoot`, `#accBtn`, `#launch`, `#usagePanel`, `#vPlan` y `#vResult` con `data-clarity-mask="true"`, porque contienen mensajes, títulos de chats o resultados personales. Las cajas de texto también se enmascaran de forma predeterminada por Clarity. La prueba `node next/verificar-migracion.mjs` verifica que no se pierdan estas marcas.
+
+## Qué está realmente migrado a React
+
+Las ocho rutas de interfaz están en App Router: las seis páginas principales se renderizan con elementos creados por React y árboles verificados, y Privacidad/Términos son componentes JSX. **La lógica interactiva completa aún no ha pasado a hooks/context**: chat, autenticación, proveedores, streaming, historial, A.L.I.A.S. y Pulsem siguen usando módulos JavaScript antiguos cargados mediante `LegacyRuntime` para conservar compatibilidad. No se debe describir este estado como una reescritura React 100% terminada. La conversión de esos módulos debe hacerse por subsistema y con pruebas E2E reales.

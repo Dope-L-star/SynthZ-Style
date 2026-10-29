@@ -8,6 +8,9 @@ Workers & Pages → Create → Pages → Connect to Git → `Dope-L-star/SynthZ-
 - Production branch: `main`
 - Build command: `npm ci && node cloudflare/preparar.mjs`
 - Build output directory: `cloudflare/public`
+- Node version: variable `NODE_VERSION=22`.
+
+El builder personalizado valida los árboles React, ensambla las piezas `src/`, corre `next build` con export estático y copia `next/out/` a `cloudflare/public/` para añadir `_headers` y `_redirects`. Por eso el output no es `out` directamente. `functions/` tiene que permanecer en la raíz del repositorio.
 - Root directory: vacío (raíz del repo)
 - Variable de entorno: `NODE_VERSION` = `22`
 
