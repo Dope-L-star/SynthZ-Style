@@ -3,7 +3,7 @@ import { inlineStyle } from '../../contenido/legado/index';
 import reactTree from '../../contenido/arboles-react/index.json';
 
 export const metadata = {
-  title: 'SymphorIA · tu IA gratuita en una mesa',
+  title: 'SymphorIA · Diseña a la velocidad del pensamiento. En sintonía con la IA.',
   description: 'SymphorIA: pregunta, crea, programa y compara modelos de inteligencia artificial desde un solo lugar.',
   alternates: { canonical: '/' },
   openGraph: { title: 'SymphorIA · En sintonía con la IA', type: 'website', url: '/' },
