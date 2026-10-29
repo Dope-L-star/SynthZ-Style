@@ -10,17 +10,22 @@ const PLANS = [
   { id:'orquesta', n:'Orquesta', p:'US$8,99 por persona', c:'#ffd27a', L:['Para equipos (desde 3 personas)', 'Lo de Syntonia para cada persona', 'Chats y panel de equipo', 'A.L.I.A.S. con 100 veces más pasos y búsquedas', 'Hoy lo usan Prime, ZFlow y Symmetrix, sin límites, para probar todo'] }
 ];
 let szTeam = false; try{ szTeam = localStorage.getItem('synthz:team') === '1'; }catch(e){}
+/* v3.5 · Prime y ZFlow pueden regalarle (o quitarle) Aurora y Oro negro a una cuenta en Pulsem › Usuarios: llega en /api/ai › perks */
+let szPerk = {}; try{ szPerk = JSON.parse(localStorage.getItem('synthz:perks') || '{}') || {}; }catch(e){}
+const themeOn = id => id in szPerk ? !!szPerk[id] : szTeam;
 const planOf = () => szTeam ? 'orquesta' : 'chispa';
 /* el equipo estrena los colores de pago (Aurora y Oro negro): se quita el «Pronto» y se vuelve a pintar el tema */
 function planPerks(){
-  THEMES.forEach(t => { if (t[0] === 'aurora' || t[0] === 'oro') t[3] = szTeam ? 0 : 1; });
+  THEMES.forEach(t => { if (t[0] === 'aurora' || t[0] === 'oro') t[3] = themeOn(t[0]) ? 0 : 1; });
   try{ cfgClasses(); }catch(e){}
 }
 planPerks();
 addEventListener('synthz-szq', e => {
   const d = e.detail || {}; if (d.team == null) return;
-  const t = !!d.team; if (t === szTeam) return;
-  szTeam = t; try{ t ? localStorage.setItem('synthz:team', '1') : localStorage.removeItem('synthz:team'); }catch(er){}
+  const t = !!d.team, f = d.perks && d.perks.f, p = f ? { aurora:!!f.aurora, oro:!!f.oro } : {};
+  if (t === szTeam && JSON.stringify(p) === JSON.stringify(szPerk)) return;
+  szTeam = t; szPerk = p;
+  try{ t ? localStorage.setItem('synthz:team', '1') : localStorage.removeItem('synthz:team'); f ? localStorage.setItem('synthz:perks', JSON.stringify(p)) : localStorage.removeItem('synthz:perks'); }catch(er){}
   planPerks();
 });
 function plansModal(){

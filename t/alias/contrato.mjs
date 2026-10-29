@@ -64,6 +64,7 @@ function execCmd(cmd) {
   if (key) sweep(key);
   if (op === 'PING') return 'PONG';
   if (op === 'GET') return store.has(key) ? store.get(key) : null;
+  if (op === 'MGET') return cmd.slice(1).map(k => { sweep(String(k)); return store.has(String(k)) ? store.get(String(k)) : null; });
   if (op === 'SET') {
     const { nx, ex } = flagsOf(cmd, 3);
     if (nx && store.has(key)) return null;
