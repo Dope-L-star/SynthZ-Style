@@ -802,46 +802,89 @@ function botMatch(q){
   BOT_FAQ.forEach((f, i) => { if (f.need && !w.includes(f.need)) return; let sc = 0, rk = 0; w.forEach((x, j) => { const h = hit(KS[i], x); sc += h; rk += h / df[j]; }); if (rk > br){ br = rk; bs = sc; best = f; } });
   return bs >= Math.max(.6, w.length * .32) ? best : null;
 }
-const BOT = { el:null, panel:null, open:false, hist:[], help:null, poll:0, seen:0, team:null, inbox:[], cur:null, mode:'chat', teamSeen:{} };
+const BOT = { el:null, panel:null, open:false, hist:[], help:null, poll:0, seen:0, team:null, inbox:[], cur:null, mode:'chat', teamSeen:{}, positionCleanup:null, betaCleanup:null, betaPut:null };
 /* v2.6: en la portada no hay bolita; la ventanita y las frases salen de donde esté parada SynthonIA */
 const botAt = () => { const a = BOT.anchor && BOT.anchor(); return a && a.getClientRects().length ? a : BOT.el; };
 const vis = sel => (Array.isArray(sel) ? sel : [sel]).map(x => $(x)).find(n => n && n.getClientRects().length && n.getBoundingClientRect().width > 0) || null;
+function botAvatarClick(e){
+  const b = BOT.el; if (!b || b._skip) return;
+  BOT.lostN = 0; b.classList.remove('g1', 'g2');
+  /* según dónde la toques, hace una cara distinta */
+  const z = e && e.detail ? botZone(e) : '';
+  if (z === 'eye'){ SND.blip('auch'); botFace('auch', true); botBubble('¡Ay! Ese es mi ojo.', 2200); setTimeout(() => botFace('feliz', true), 1900); return; }
+  if (z === 'top'){ botFace('sorprendida', true); botBubble('¡Uy, mi antena! Me haces cosquillas.', 2200); setTimeout(() => botFace('feliz', true), 1900); return; }
+  if (z === 'cheek'){ botFace('encantada', true); setTimeout(() => botFace('feliz'), 1600); }
+  else if (z === 'mouth'){ botFace('riendo', true); setTimeout(() => botFace('feliz'), 1600); }
+  botToggle();
+}
+function botReactUnmount(){
+  const b = BOT.el;
+  if (!b || b.dataset.reactComponent !== 'synthonia-avatar') return;
+  if (BOT.open) botClose();
+  try{ BOT.positionCleanup && BOT.positionCleanup(); }catch(e){}
+  try{ BOT.betaCleanup && BOT.betaCleanup(); }catch(e){}
+  BOT.positionCleanup = null; BOT.betaCleanup = null; BOT.betaPut = null; BOT.el = null;
+}
 function botMount(){
   if (BOT.el || !document.body) return;
   try{ if (sessionStorage.getItem('synthz:bothide') === '1') return; }catch(e){}
-  const b = document.createElement('button'); b.id = 'szBot'; b.type = 'button'; b.setAttribute('aria-label', 'SynthonIA'); b.dataset.tip = 'SynthonIA';
-  b.innerHTML = '<span class="bf">' + face('feliz', 40) + '</span><i class="bdot" hidden></i>';
+  try{ BOT.positionCleanup && BOT.positionCleanup(); }catch(e){}
+  BOT.positionCleanup = null;
+
+  /* En SynthFlow el botón visible ya lo ha renderizado React. En páginas antiguas
+     se conserva el montaje previo como fallback, sin duplicar IDs. */
+  const existing = document.getElementById('szBot');
+  const reactOwned = !!(existing && existing.dataset.reactComponent === 'synthonia-avatar');
+  const b = existing || document.createElement('button');
+  b.id = 'szBot'; b.type = 'button'; b.setAttribute('aria-label', 'SynthonIA'); b.dataset.tip = 'SynthonIA';
+  const bf = $('.bf', b);
+  if (bf) bf.innerHTML = face('feliz', 40);
+  else b.innerHTML = '<span class="bf" aria-hidden="true">' + face('feliz', 40) + '</span><i class="bdot" hidden></i>';
+
   const mLogo = $('#mLogo');
   if (isFlow() && mLogo && matchMedia('(max-width:760px)').matches){
-    b.classList.add('inhead'); mLogo.after(b);
-    /* justo a la derecha del logo «SynthFlow», en la misma línea */
-    const put = () => { const h = mLogo.offsetParent; if (h && getComputedStyle(h).position === 'static') h.style.position = 'relative'; b.style.left = (mLogo.offsetLeft + mLogo.offsetWidth + 10) + 'px'; b.style.top = (mLogo.offsetTop + (mLogo.offsetHeight - 40) / 2) + 'px'; };
-    put(); addEventListener('resize', put); if (document.fonts) document.fonts.ready.then(put);
+    b.classList.add('inhead');
+    if (reactOwned){
+      /* No mover un nodo que pertenece al árbol React. Posición equivalente, anclada
+         al logo mediante coordenadas de viewport para que siga siendo responsive. */
+      const put = () => {
+        const r = mLogo.getBoundingClientRect();
+        b.style.position = 'fixed'; b.style.right = 'auto'; b.style.bottom = 'auto';
+        b.style.left = Math.max(4, Math.min(innerWidth - 44, r.right + 10)) + 'px';
+        b.style.top = Math.max(4, Math.min(innerHeight - 44, r.top + (r.height - 40) / 2)) + 'px';
+        if (BOT.betaPut) requestAnimationFrame(BOT.betaPut);
+      };
+      const onViewport = () => put();
+      put(); addEventListener('resize', onViewport); addEventListener('scroll', onViewport, { passive:true });
+      BOT.positionCleanup = () => { removeEventListener('resize', onViewport); removeEventListener('scroll', onViewport); };
+      if (document.fonts) document.fonts.ready.then(put);
+    } else {
+      mLogo.after(b);
+      /* Fallback legado para páginas HTML no migradas a React. */
+      const put = () => { const h = mLogo.offsetParent; if (h && getComputedStyle(h).position === 'static') h.style.position = 'relative'; b.style.left = (mLogo.offsetLeft + mLogo.offsetWidth + 10) + 'px'; b.style.top = (mLogo.offsetTop + (mLogo.offsetHeight - 40) / 2) + 'px'; };
+      put(); addEventListener('resize', put); BOT.positionCleanup = () => removeEventListener('resize', put); if (document.fonts) document.fonts.ready.then(put);
+    }
   }
   else {
-    document.body.appendChild(b);
+    if (!reactOwned){
+      /* Fallback: en SynthFlow React suministra el host; en páginas aún antiguas va al body. */
+      const reactHost = isFlow() ? document.getElementById('synthonIA-react-host') : null;
+      (reactHost || document.body).appendChild(b);
+    }
     try{ const pos = JSON.parse(localStorage.getItem('synthz:botpos') || 'null'); if (pos && pos.x > 0 && pos.y > 0){ b.style.right = 'auto'; b.style.bottom = 'auto'; b.style.left = Math.min(innerWidth - 70, pos.x) + 'px'; b.style.top = Math.min(innerHeight - 70, pos.y) + 'px'; } }catch(e){}
   }
   BOT.el = b;
   requestAnimationFrame(() => { b.classList.add('on'); betaBot(); });
-  /* se puede arrastrar (en computador); un toque la abre */
+  /* Se puede arrastrar (en computador); React conserva el control del nodo y del clic. */
   let drag = null;
-  b.addEventListener('pointerdown', e => { if (b.classList.contains('inhead') || e.button) return; drag = { x:e.clientX, y:e.clientY, l:b.getBoundingClientRect().left, t:b.getBoundingClientRect().top, moved:false }; b.setPointerCapture(e.pointerId); });
-  b.addEventListener('pointermove', e => { if (!drag) return; if (BOT.betaPut) requestAnimationFrame(BOT.betaPut); const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (!drag.moved && Math.hypot(dx, dy) < 6) return; drag.moved = true; b.classList.add('drag'); b.style.right = 'auto'; b.style.bottom = 'auto'; b.style.left = clamp(drag.l + dx, 6, innerWidth - 66) + 'px'; b.style.top = clamp(drag.t + dy, 6, innerHeight - 66) + 'px'; if (BOT.open) botPlace(); });
-  b.addEventListener('pointerup', () => { if (BOT.betaPut) setTimeout(BOT.betaPut, 50); if (!drag) return; const m = drag.moved; drag = null; b.classList.remove('drag'); if (m){ const r = b.getBoundingClientRect(); try{ localStorage.setItem('synthz:botpos', JSON.stringify({ x:r.left, y:r.top })); }catch(e){} b._skip = true; setTimeout(() => { b._skip = false; }, 50); } });
-  b.addEventListener('click', e => {
-    if (b._skip) return;
-    BOT.lostN = 0; b.classList.remove('g1', 'g2');
-    /* según dónde la toques, hace una cara distinta */
-    const z = e.detail ? botZone(e) : '';
-    if (z === 'eye'){ SND.blip('auch'); botFace('auch', true); botBubble('¡Ay! Ese es mi ojo.', 2200); setTimeout(() => botFace('feliz', true), 1900); return; }
-    if (z === 'top'){ botFace('sorprendida', true); botBubble('¡Uy, mi antena! Me haces cosquillas.', 2200); setTimeout(() => botFace('feliz', true), 1900); return; }
-    if (z === 'cheek'){ botFace('encantada', true); setTimeout(() => botFace('feliz'), 1600); }
-    else if (z === 'mouth'){ botFace('riendo', true); setTimeout(() => botFace('feliz'), 1600); }
-    botToggle();
-  });
+  if (b.dataset.synthoniaPointerBound !== '1') b.addEventListener('pointerdown', e => { if (b.classList.contains('inhead') || e.button) return; drag = { x:e.clientX, y:e.clientY, l:b.getBoundingClientRect().left, t:b.getBoundingClientRect().top, moved:false }; b.setPointerCapture(e.pointerId); });
+  if (b.dataset.synthoniaPointerBound !== '1') b.addEventListener('pointermove', e => { if (!drag) return; if (BOT.betaPut) requestAnimationFrame(BOT.betaPut); const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (!drag.moved && Math.hypot(dx, dy) < 6) return; drag.moved = true; b.classList.add('drag'); b.style.right = 'auto'; b.style.bottom = 'auto'; b.style.left = clamp(drag.l + dx, 6, innerWidth - 66) + 'px'; b.style.top = clamp(drag.t + dy, 6, innerHeight - 66) + 'px'; if (BOT.open) botPlace(); });
+  if (b.dataset.synthoniaPointerBound !== '1') b.addEventListener('pointerup', () => { if (BOT.betaPut) setTimeout(BOT.betaPut, 50); if (!drag) return; const m = drag.moved; drag = null; b.classList.remove('drag'); if (m){ const r = b.getBoundingClientRect(); try{ localStorage.setItem('synthz:botpos', JSON.stringify({ x:r.left, y:r.top })); }catch(e){} b._skip = true; setTimeout(() => { b._skip = false; }, 50); } });
+  if (b.dataset.synthoniaPointerBound !== '1') b.dataset.synthoniaPointerBound = '1';
+  if (!reactOwned && !b.dataset.synthoniaClickBound){ b.addEventListener('click', botAvatarClick); b.dataset.synthoniaClickBound = '1'; }
   setTimeout(botSync, 1200);
 }
+
 /* v1.4: la carita cambia suave (una se desvanece y la otra aparece), y si está «pegada» (triste) no cambia */
 function botZone(e){
   const r = BOT.el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
@@ -1291,7 +1334,7 @@ async function botClick(e){
   const b = t.closest('[data-b]'); if (!b) return;
   const k = b.dataset.b;
   if (k === 'min') botClose();
-  else if (k === 'hide'){ botClose(); try{ sessionStorage.setItem('synthz:bothide', '1'); }catch(er){} const el = BOT.el; BOT.el = null; if (el){ el.classList.remove('on'); setTimeout(() => el.remove(), 400); } toast('SynthonIA se escondió hasta que vuelvas a abrir la página.'); }
+  else if (k === 'hide'){ botClose(); try{ sessionStorage.setItem('synthz:bothide', '1'); }catch(er){} const el = BOT.el; if (el && el.dataset.reactComponent === 'synthonia-avatar'){ el.classList.remove('on'); /* Deja BOT.el vivo hasta que React procese la retirada y el motor limpie listeners de posición. */ setTimeout(() => dispatchEvent(new Event('symphoria:hide-synthonIA')), 400); } else { BOT.el = null; if (el) setTimeout(() => el.remove(), 400); } toast('SynthonIA se escondió hasta que vuelvas a abrir la página.'); }
   else if (k === 'team') botTeam();
   else if (k === 'fb'){ botClose(); feedbackModal(); }
   else if (k === 'ia'){ BOT.mode = 'chat'; botRender(); }
@@ -1339,18 +1382,34 @@ function betaBot(){
   let t = document.getElementById('betaBot');
   if (!t){ t = betaMk(); t.id = 'betaBot'; t.classList.add('bb'); (b.classList.contains('inhead') ? b.parentNode : document.body).appendChild(t); }
   const put = () => {
-    const r = b.getBoundingClientRect(); if (!r.width) return;
+    const r = b.getBoundingClientRect(); if (!b.isConnected || !t.isConnected || !r.width) return;
+    const w = t.offsetWidth || 46, h = t.offsetHeight || 18;
+    if (b.dataset.reactComponent === 'synthonia-avatar'){
+      /* React owns both controls: keep BETA fixed to the avatar's real viewport box,
+         even when the avatar sits beside the mobile logo. */
+      t.style.position = 'fixed'; t.style.zIndex = '9599';
+      const candidate = r.left - w - 10 < 8 ? r.right + 10 : r.left - w - 10;
+      const left = Math.max(8, Math.min(innerWidth - w - 8, candidate));
+      const top = Math.max(8, Math.min(innerHeight - h - 8, r.top + r.height / 2 - h / 2));
+      t.style.left = left.toFixed(0) + 'px'; t.style.top = top.toFixed(0) + 'px'; t.style.visibility = 'visible';
+      return;
+    }
     if (b.classList.contains('inhead')){ t.style.position = 'absolute'; t.style.zIndex = '3'; t.style.left = (b.offsetLeft + b.offsetWidth + 8) + 'px'; t.style.top = (b.offsetTop + b.offsetHeight / 2 - t.offsetHeight / 2) + 'px'; return; }
-    const w = t.offsetWidth || 46, h = t.offsetHeight || 18, left = r.left - w - 10 < 8 ? r.right + 10 : r.left - w - 10;
-    t.style.left = left.toFixed(0) + 'px'; t.style.top = (r.top + r.height / 2 - h / 2).toFixed(0) + 'px';
+    const left = r.left - w - 10 < 8 ? r.right + 10 : r.left - w - 10;
+    t.style.left = left.toFixed(0) + 'px'; t.style.top = (r.top + r.height / 2 - h / 2) + 'px';
   };
   BOT.betaPut = put; put(); requestAnimationFrame(put); setTimeout(put, 700); setTimeout(put, 1600);
-  if (!t._w){ t._w = 1; addEventListener('resize', put); if (document.fonts) document.fonts.ready.then(put); }
+  if (!t._w){
+    t._w = 1;
+    const onResize = () => put(); addEventListener('resize', onResize);
+    BOT.betaCleanup = () => { removeEventListener('resize', onResize); t._w = 0; };
+    if (document.fonts) document.fonts.ready.then(put);
+  }
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(betaTags, 400)); else setTimeout(betaTags, 400);
 addEventListener('synthz-ready-bot', botMount);
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(botMount, 900)); else setTimeout(botMount, 900);
-const BOTAPI = { anchor:fn => { BOT.anchor = fn; }, open:botOpen, close:botClose, mount:botMount, say:botSay, sync:botSync, team:botTeam, chatOpen, chatClose, match:q => { const f = botMatch(q); return f ? BOT_FAQ.indexOf(f) : -1; }, get el(){ return BOT.el; } };
+const BOTAPI = { anchor:fn => { BOT.anchor = fn; }, open:botOpen, close:botClose, mount:botMount, unmount:botReactUnmount, activate:botAvatarClick, say:botSay, sync:botSync, team:botTeam, chatOpen, chatClose, match:q => { const f = botMatch(q); return f ? BOT_FAQ.indexOf(f) : -1; }, get el(){ return BOT.el; } };
 /* ---------- Guía: elegir cómo aprender (Asistida con SynthonIA o Lectura) ---------- */
 function guideChooser(o = {}){
   if ($('#szGch')) return;
@@ -1554,7 +1613,9 @@ addEventListener('pointerdown', e => {
     if (kind === 'done' && !o.text && Math.random() > .25) return;
     said[kind] = now; lastTalk = now;
     const M = {
-      slow:['pensando', 'Esta IA se está tomando su tiempo… ⏳ Si se demora mucho, prueba la «Automática».'],
+      /* v3.6 · si ya estás en la Automática no te dice que la pruebes (Sammuel, 29 oct) */
+      slow:['pensando', o.auto ? B.LANG === 'en' ? 'This is taking a bit… ⏳ Automatic is already looking for the best free AI for you.' : 'Esto está tardando un poco… ⏳ La «Automática» ya está buscando la mejor IA libre para ti.'
+        : B.LANG === 'en' ? 'This AI is taking its time… ⏳ If it takes too long, try «Automatic».' : 'Esta IA se está tomando su tiempo… ⏳ Si se demora mucho, prueba la «Automática».'],
       done:['feliz', ['¡Listo! ¿Te sirvió?', '¡Eso tiene mucho Flow! ✨', 'Si quieres otra versión, toca «Otra vez».'][Math.floor(Math.random() * 3)]],
       limit:['preocupada', 'Te queda poco de tu límite de hoy. Si se acaba, puedes seguir con Puter, que te da la versión pro de las IAs más usadas.'],
       lost:['confundida', '¿Te ayudo a encontrar algo? Tócame y pregúntame. 🙂']

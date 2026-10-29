@@ -11,12 +11,10 @@ export default function Layout({ children }){
   return (
     <html lang="es">
       <head>
+        <link rel="icon" id="favi" href="/media/v30/fav-s.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Chakra+Petch:wght@500;600;700&family=Figtree:wght@300..800&family=IBM+Plex+Mono:wght@400;500&display=swap" />
-        <link rel="stylesheet" href="/pulsem.css" />
-        <link rel="stylesheet" href="/core.css" />
-        <link rel="stylesheet" href="/movimiento.css" />
       </head>
       <body>{children}</body>
     </html>

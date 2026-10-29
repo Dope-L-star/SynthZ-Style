@@ -62,6 +62,8 @@ function gtPaint(el){
 /* cps = letras por segundo; max = segundos máximos que puede tardar */
 function typeIn(el, o = {}){
   const cps = o.cps || 70, max = o.max || 4, delay = o.delay || 0, onFrame = o.onFrame;
+  /* v3.6 · en inglés, un texto que se escribe letra por letra se traduce antes (después el traductor ya no lo reconoce, Sammuel 29 oct) */
+  if (LANG === 'en' && !el._chars && !el.children.length && !trSkip(el)){ const s = el.textContent, e = trStr(s); if (e !== s) el.textContent = e; }
   const p = new Promise(res => {
     const chars = charify(el), n = chars.length;
     if (!n){ res(); return; }

@@ -1,0 +1,86 @@
+/* v3.6 · Apple-inspired glass polish for SynthFlow.
+   Enhances depth and specular highlights without changing layout, controls or brand colors. */
+html:not(.simple):not(.noglass) .chats.chats{
+  background:
+    radial-gradient(120% 55% at 0 0,rgba(255,255,255,.07),transparent 58%),
+    linear-gradient(180deg,rgba(22,22,30,.62),rgba(12,12,20,.54));
+  -webkit-backdrop-filter:blur(22px) saturate(155%);
+  backdrop-filter:blur(22px) saturate(155%);
+  border-right-color:rgba(255,255,255,.17);
+  box-shadow:inset -1px 0 0 rgba(255,255,255,.035),12px 0 44px -38px rgba(0,0,0,.85);
+}
+html:not(.simple):not(.noglass) .rail .rin,
+html:not(.simple):not(.noglass) .rail.open .rin{
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  -webkit-backdrop-filter:blur(22px) saturate(145%);
+  backdrop-filter:blur(22px) saturate(145%);
+  box-shadow:inset -1px 0 0 rgba(255,255,255,.12);
+}
+html:not(.simple):not(.noglass) .composer .comp-in{
+  border:1px solid rgba(255,255,255,.22)!important;
+  background-color:rgba(18,17,26,.46)!important;
+  background-image:
+    radial-gradient(115% 115% at 4% 0,rgba(255,255,255,.115),transparent 55%),
+    linear-gradient(140deg,rgba(255,255,255,.075),rgba(255,255,255,.025) 56%,rgba(255,255,255,.065))!important;
+  -webkit-backdrop-filter:blur(22px) saturate(165%);
+  backdrop-filter:blur(22px) saturate(165%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 -1px 0 rgba(255,255,255,.055),0 24px 72px -42px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.018);
+  transition:border-color .28s ease,box-shadow .36s cubic-bezier(.22,1,.36,1),background-color .28s ease;
+}
+html:not(.simple):not(.noglass) .composer .comp-in:focus-within{
+  border-color:rgba(180,192,255,.48)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.27),0 0 0 3px rgba(149,163,255,.08),0 0 36px -18px rgba(157,143,255,.5),0 24px 72px -42px rgba(0,0,0,.9);
+}
+html:not(.simple):not(.noglass) .composer .comp-in>.field,
+html:not(.simple):not(.noglass) .composer .comp-in>.field:focus-within{
+  background:transparent!important;
+  box-shadow:none!important;
+}
+html:not(.simple):not(.noglass) :is(.cpk,.cpk2,.cpk3,.agpill,.composer .attach){
+  border-color:rgba(255,255,255,.17)!important;
+  background-image:linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.018))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.085),0 3px 10px -8px rgba(0,0,0,.8);
+  transition:transform .24s cubic-bezier(.22,1,.36,1),border-color .24s ease,background-color .24s ease,box-shadow .24s ease;
+}
+html:not(.simple):not(.noglass) :is(.cpk,.cpk2,.cpk3,.agpill,.composer .attach):hover{
+  border-color:rgba(255,255,255,.29)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 7px 18px -14px rgba(0,0,0,.9);
+  transform:translateY(-1px);
+}
+html:not(.simple):not(.noglass) :is(.amenu,.ctxm,#side.side){
+  border-color:rgba(255,255,255,.23)!important;
+  background-image:radial-gradient(120% 65% at 0 0,rgba(255,255,255,.105),transparent 55%),linear-gradient(145deg,rgba(32,31,40,.9),rgba(16,16,23,.84))!important;
+  -webkit-backdrop-filter:blur(28px) saturate(160%);
+  backdrop-filter:blur(28px) saturate(160%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2),inset 0 -1px 0 rgba(255,255,255,.045),0 26px 90px -32px rgba(0,0,0,.88);
+}
+html:not(.simple):not(.noglass) .m.user .bub{
+  background-image:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.045))!important;
+  background-color:rgba(255,255,255,.055)!important;
+  border-color:rgba(255,255,255,.22)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2),inset 0 -1px 0 rgba(255,255,255,.04),0 12px 38px -28px rgba(0,0,0,.9)!important;
+}
+html:not(.simple):not(.noglass) :is(.amenu:not([hidden]),.ctxm:not([hidden])){
+  animation:sf-glass-menu-in .26s cubic-bezier(.22,1,.36,1) both;
+}
+html:not(.simple):not(.noglass) #side.side.open{
+  border-color:rgba(255,255,255,.25)!important;
+}
+html:not(.simple):not(.noglass) :is(.cpk,.cpk2,.cpk3,.agpill,.composer .attach,.amenu button,.ctxm button):focus-visible{
+  outline:2px solid rgba(190,201,255,.86);
+  outline-offset:3px;
+}
+@keyframes sf-glass-menu-in{
+  from{opacity:0;transform:translateY(7px) scale(.985);filter:blur(4px)}
+  to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+}
+html.noanim :is(.chats,.rail .rin,.composer .comp-in,.cpk,.cpk2,.cpk3,.agpill,.composer .attach,.amenu,.ctxm,#side.side){transition:none!important;animation:none!important}
+html.noanim :is(.cpk,.cpk2,.cpk3,.agpill,.composer .attach):hover{transform:none!important}
+html.simple :is(.chats,.rail .rin,.composer .comp-in,.cpk,.cpk2,.cpk3,.agpill,.composer .attach,.amenu,.ctxm,#side.side){backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background-image:none!important;box-shadow:none!important}
+@media(prefers-reduced-motion:reduce){
+  html:not(.simple):not(.noglass) :is(.cpk,.cpk2,.cpk3,.agpill,.composer .attach,.amenu,.ctxm){animation:none;transition:none}
+  html:not(.simple):not(.noglass) :is(.cpk,.cpk2,.cpk3,.agpill,.composer .attach):hover{transform:none}
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  html:not(.simple):not(.noglass) :is(.chats,.rail .rin,.composer .comp-in,.amenu,.ctxm,#side.side){background-color:rgba(19,18,26,.94)!important}
+}

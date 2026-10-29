@@ -159,6 +159,8 @@ Object.assign(I18N.es, {
   'enerx.small': 'Gratis. Tu {enerx} (tu batería) baja un poco con cada mensaje (lo que escribes y lo que te responde). A medianoche se carga al 100 %.',
   'enerx.hint': 'Tu {enerx} de hoy (tu batería): toca para ver el detalle',
   'enerx.guestLeft': 'Te quedan {n} mensajes de prueba',
+  'enerx.spent': 'Usaste 1 mensaje de prueba. Te quedan {n}.',
+  'enerx.spent0': 'Usaste tu último mensaje de prueba.',
   'enerx.guestShort': '{n} de prueba',
   'enerx.rest': 'Las IAs gratis están descansando',
   'enerx.restShort': 'Descansando',
@@ -188,6 +190,8 @@ Object.assign(I18N.en, {
   'enerx.small': 'Free. Your {enerx} (your battery) drops a little with each message (what you write and what you get back). At midnight it recharges to 100 %.',
   'enerx.hint': "Today's {enerx} (your battery): tap for details",
   'enerx.guestLeft': '{n} trial messages left',
+  'enerx.spent': 'You used 1 trial message. {n} left.',
+  'enerx.spent0': 'You used your last trial message.',
   'enerx.guestShort': '{n} trial',
   'enerx.rest': 'The free AIs are resting',
   'enerx.restShort': 'Resting',
@@ -773,7 +777,7 @@ Object.assign(I18N.es,{
  "ix.lk3d":"El chat con todas las IAs",
  "ix.lk4":"Descargar la app SynthFlow",
  "ix.lk4d":"Se instala desde aquí: pantalla completa y a un toque",
- "ix.title":"SymphorIA · tu IA gratuita en una mesa",
+ "ix.title":"SymphorIA · Diseña a la velocidad del pensamiento. En sintonía con la IA.",
  "ix.metaDesc":"SymphorIA: tu espacio para explorar la IA. Pregunta, crea, programa y compara modelos desde un solo lugar. Totalmente gratis.",
  "beta.title":"Estamos en beta: cuéntanos qué mejorar",
  "beta.tip":"Cuéntanos qué mejorar",
@@ -813,7 +817,7 @@ Object.assign(I18N.en,{
  "ix.lk3d":"The chat with every AI",
  "ix.lk4":"Download the SynthFlow app",
  "ix.lk4d":"Installs from here: full screen, one tap away",
- "ix.title":"SymphorIA · your free AI, all at one table",
+ "ix.title":"SymphorIA · Design at the speed of thought. In tune with AI.",
  "ix.metaDesc":"SymphorIA: your space to explore AI. Ask, create, code and compare models from one place. Completely free.",
  "beta.title":"We're in beta: tell us what to improve",
  "beta.tip":"Tell us what to improve",
@@ -1704,6 +1708,8 @@ function gtPaint(el){
 /* cps = letras por segundo; max = segundos máximos que puede tardar */
 function typeIn(el, o = {}){
   const cps = o.cps || 70, max = o.max || 4, delay = o.delay || 0, onFrame = o.onFrame;
+  /* v3.6 · en inglés, un texto que se escribe letra por letra se traduce antes (después el traductor ya no lo reconoce, Sammuel 29 oct) */
+  if (LANG === 'en' && !el._chars && !el.children.length && !trSkip(el)){ const s = el.textContent, e = trStr(s); if (e !== s) el.textContent = e; }
   const p = new Promise(res => {
     const chars = charify(el), n = chars.length;
     if (!n){ res(); return; }
@@ -3110,6 +3116,11 @@ if (document.getElementById('cm')){
 /* ---------- respuestas en vivo (streaming) ---------- */
 let ridN = 0;
 const newRid = () => DEV + ':' + Date.now().toString(36) + ':' + (++ridN);
+/* v3.6 · avisa cada vez que se gasta un mensaje de prueba (sin cuenta o la prueba guiada), con lo que queda de verdad según el servidor */
+function spentNote(before, after){
+  if (!(before > after)) return;
+  try{ toast(after > 0 ? t('enerx.spent', { n:after }) : t('enerx.spent0')); }catch(e){}
+}
 async function askStream(p, messages, opts = {}, onDelta){
   const sig = opts.signal, t0 = performance.now(); let acc = '', ttft = 0, usage = null, fin = '', cut = '', via = '', provX = '', real = '';
   /* lo que la IA «piensa» (campo reasoning o etiquetas <think>) se separa de la respuesta y se muestra aparte */
@@ -3177,7 +3188,9 @@ async function askStream(p, messages, opts = {}, onDelta){
   const viaTeam = !viaTrial && !viaGroq && p.id === 'openrouter' && !state.keys.openrouter && !!state.useTeam && !!SESS;
   const key = state.keys[p.id];
   if (!key && !viaTeam && !viaTrial && !viaSz) throw new Error('Falta la llave de ' + p.name + '.');
-  const body = viaSz ? { messages, model:model0, turn:opts.turn || (TURN && Date.now() - TURN.at < 120000 ? TURN.id : turnId(messages)) } : viaGroq ? { model:model0.replace(/^gq:/, ''), messages, stream:true, stream_options:{ include_usage:true } } : { model:model0.replace(/^or:/, ''), messages, stream:true, usage:{ include:true } };
+  /* v3.6 · el mismo «turn» que el mensaje que escribiste (10 min): «Continúa» y el arreglo automático del código no gastan otro mensaje de prueba */
+  const turn = opts.turn || (TURN && Date.now() - TURN.at < 600000 ? TURN.id : turnId(messages));
+  const body = viaSz ? { messages, model:model0, turn } : viaGroq ? { model:model0.replace(/^gq:/, ''), messages, stream:true, stream_options:{ include_usage:true } } : { model:model0.replace(/^or:/, ''), messages, stream:true, usage:{ include:true } };
   if (viaTeam) body.teamId = state.useTeam;
   if (opts.maxTokens) body.max_tokens = opts.maxTokens;
   if (opts.effort && p.id === 'openrouter' && !viaSz && !viaGroq && !viaTrial) body.reasoning = { effort:opts.effort };   /* v2.3.1 · esfuerzo: OpenRouter lo ignora en las IA que no razonan */
@@ -3186,7 +3199,7 @@ async function askStream(p, messages, opts = {}, onDelta){
   if (sig){ if (sig.aborted) ctl.abort(); else sig.addEventListener('abort', () => ctl.abort(), { once:true }); }
   let res; bump();
   try{ res = viaSz ? await fetch('/api/ai', { method:'POST', headers:szHeaders(), body:JSON.stringify(body), signal:ctl.signal })
-     : viaTrial ? await fetch('/api/trial', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify({ action:'chat', token:(trialGet() || {}).token || '', messages }), signal:ctl.signal })
+     : viaTrial ? await fetch('/api/trial', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify({ action:'chat', token:(trialGet() || {}).token || '', messages, turn }), signal:ctl.signal })
      : viaTeam ? await fetch('/api/chat', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer ' + SESS }, body:JSON.stringify(body), signal:ctl.signal })
                      : await fetch(p.url + '/chat/completions', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer ' + key }, body:JSON.stringify(body), signal:ctl.signal }); }
   catch(e){ clearTimeout(idle); if (sig && sig.aborted) throw Object.assign(new Error('Detenido.'), { aborted:true }); throw new Error(e && e.name === 'AbortError' ? p.name + ' tardó demasiado en responder. Intenta de nuevo.' : netMsg(p)); }
@@ -3203,8 +3216,8 @@ async function askStream(p, messages, opts = {}, onDelta){
     else telEv('error', 'IAs conectadas ' + res.status + ' ' + code);
     throw Object.assign(new Error(typeof data.error === 'string' ? data.error : 'La IA no respondió. Intenta de nuevo en un momento.'), { status:res.status, sz:code || 'sz_err', limit:/^sz_limit/.test(code) || code === 'sz_guest', guest:code === 'sz_guest', raw:code, gone:code === 'sz_model' && model0 !== 'sz:auto', switchTo:code === 'sz_down' || code === 'sz_off' ? 'pu' : null });
   }
-  if (viaSz){ try{ real = decodeURIComponent(res.headers.get('x-sz-name') || ''); }catch(e){ real = ''; } const u = +res.headers.get('x-sz-used'), l = +res.headers.get('x-sz-limit'), gq = /^(\d+)\/(\d+)$/.exec(res.headers.get('x-sz-guest') || ''); if (l) szqSet(Object.assign({ on:true, used:u || 0, limit:l }, gq ? { guest:{ used:+gq[1], max:+gq[2] } } : {})); }
-  if (viaTrial){ const t = trialGet() || {}; const l = res.headers.get('x-trial-left'); if (l != null){ t.left = +l; trialSet(t); } via = res.headers.get('x-trial-provider') || ''; }
+  if (viaSz){ try{ real = decodeURIComponent(res.headers.get('x-sz-name') || ''); }catch(e){ real = ''; } const u = +res.headers.get('x-sz-used'), l = +res.headers.get('x-sz-limit'), gq = /^(\d+)\/(\d+)$/.exec(res.headers.get('x-sz-guest') || ''); const g0 = SZQ.guest && !signedish() ? guestLeft() : null; if (l) szqSet(Object.assign({ on:true, used:u || 0, limit:l }, gq ? { guest:{ used:+gq[1], max:+gq[2] } } : {})); if (gq && g0 != null) spentNote(g0, guestLeft()); }
+  if (viaTrial){ const t = trialGet() || {}; const l = res.headers.get('x-trial-left'), l0 = t.left; if (l != null){ t.left = +l; trialSet(t); if (res.headers.get('x-trial-spent') !== '0' && l0 != null) spentNote(+l0, +l); } via = res.headers.get('x-trial-provider') || ''; }
   if (!res.ok){ clearTimeout(idle); const data = await res.json().catch(() => ({})); if (viaTeam && typeof data.error === 'string') throw Object.assign(new Error('Equipo: ' + data.error), { status:res.status, switchTo:res.status === 429 ? 'pu' : null }); const raw = data && data.error ? String(data.error.message || data.error) : ''; throw Object.assign(new Error(friendly(res.status, data, p)), { status:res.status, raw, gone:modelGone(res.status, raw), switchTo: p.id === 'openrouter' && (res.status === 429 || res.status === 402) ? 'pu' : null }); }
   if (!/event-stream/.test(res.headers.get('content-type') || '') || !res.body){
     clearTimeout(idle); const data = await res.json().catch(() => ({}));

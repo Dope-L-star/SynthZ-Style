@@ -103,6 +103,7 @@ function bflowClose(toChat, then, compareTo){
   setTimeout(() => { o.remove(); root.classList.remove('bflowing'); if (then) then(); else if (!autoGuide && matchMedia('(pointer: fine)').matches) inp.focus(); if (autoGuide) setTimeout(() => runGuide({ topic:BF0 }), 900); }, SZ.reduce ? 10 : 620);
 }
 function openGuide(){ SZ.guideAsk({ full:runGuide, pick:list => runTopics(list), read:openHelp }); }
+window.SymphoriaOpenGuide = openGuide; /* puente del botón Guía React al selector original */
 window.SynthFlowGuide = { run:runGuide, end:() => endGuide(false), on:() => !!G };
 addEventListener('keydown', e => {
   if (e.key === 'Escape' && tourEl) closeTour(false);

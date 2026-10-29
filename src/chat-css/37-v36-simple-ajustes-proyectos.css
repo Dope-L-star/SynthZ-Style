@@ -1,0 +1,61 @@
+/* ===== v3.6 · estilo Simple: Ajustes como los de Claude (menú a la izquierda, filas planas) y Proyectos con el fondo y la UI de Simple (Sammuel, 29 oct) ===== */
+/* --- Ajustes --- */
+html.simple #cfgm .cfgcard{background:var(--sbg) !important;border:1px solid var(--sline) !important;border-radius:16px !important;box-shadow:0 30px 80px -30px rgba(0,0,0,.75) !important;color:var(--stext)}
+html.simple #cfgm .cfgcard::before,html.simple #cfgm .cfgcard::after{display:none !important}
+html.simple #cfgm .cfghead h3{font-family:var(--serif,Georgia,serif);font-weight:400;font-size:28px !important;letter-spacing:-.01em;color:var(--stext)}
+html.simple #cfgm .cfgtabs{background:transparent;border:0;padding:0;gap:2px}
+html.simple #cfgm .cfgtabs .pill{display:none}
+html.simple #cfgm .cfgtabs button{border-radius:8px;padding:8px 12px;font-family:var(--sans,inherit);font-size:14px;color:var(--ssoft);text-align:left}
+html.simple #cfgm .cfgtabs button:hover{background:rgba(255,255,255,.04);color:var(--stext)}
+html.simple #cfgm .cfgtabs button[aria-selected="true"]{background:rgba(255,255,255,.07);color:var(--stext)}
+html.simple #cfgm .cfglbl{font-family:var(--sans,inherit);font-size:15px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--stext);margin:22px 0 10px;padding-top:18px;border-top:1px solid var(--sline)}
+html.simple #cfgm .cfgpane > .cfglbl:first-child{margin-top:0;padding-top:0;border-top:0}
+html.simple #cfgm .cnote{color:var(--smute);font-size:13px}
+html.simple #cfgm .mp{display:none}
+html.simple #cfgm :is(.cfgo button,.cfgseg button,.cfgth button,.cfglk,.cfgrow){background:transparent !important;border:1px solid var(--sline) !important;box-shadow:none !important;color:var(--ssoft)}
+html.simple #cfgm :is(.cfgo button,.cfgseg button,.cfgth button)[aria-pressed="true"]{background:rgba(255,255,255,.06) !important;border-color:rgba(var(--sacc-rgb),.7) !important;color:var(--stext)}
+html.simple #cfgm .cfgo b{font-family:var(--sans,inherit);font-weight:600;font-size:14.5px;color:var(--stext)}
+html.simple #cfgm .cfgo span{color:var(--smute)}
+html.simple #cfgm .cfgo .rec{background:rgba(var(--sacc-rgb),.16);color:var(--sacc);box-shadow:none}
+html.simple #cfgm .cfgrow{border:0 !important;border-bottom:1px solid var(--sline) !important;border-radius:0 !important;padding:12px 0}
+html.simple #cfgm .cfgrow p{color:var(--stext)}
+html.simple #cfgm .cfgrow small{color:var(--smute)}
+html.simple #cfgm .cfgfoot{border-top:1px solid var(--sline)}
+html.simple #cfgm .cfgfoot #cfgOk{background:var(--stext) !important;color:#1d1c1a !important;border:0 !important;box-shadow:none !important}
+/* computador: título y menú a la izquierda, lo de cada pestaña a la derecha */
+@media (min-width:760px){
+  html.simple #cfgm .cfgcard{width:min(94vw,820px) !important;max-height:min(86vh,720px);display:grid !important;grid-template-columns:190px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;column-gap:28px;padding:24px 24px 16px !important}
+  html.simple #cfgm .cfghead{display:contents}
+  html.simple #cfgm .cfghead h3{grid-column:1;grid-row:1;margin:0 0 14px}
+  html.simple #cfgm .cfgtabs{grid-column:1;grid-row:2;align-self:start;display:flex;flex-direction:column;width:100%}
+  html.simple #cfgm .cfgbody{grid-column:2;grid-row:1 / 3;padding-top:6px}
+  html.simple #cfgm .cfgfoot{grid-column:1 / -1;grid-row:3}
+}
+
+/* --- Proyectos --- */
+html.simple .pjv{background:var(--sbg) !important}
+html.simple .pjv h1{font-family:var(--serif,Georgia,serif);font-weight:400;letter-spacing:-.01em;color:var(--stext)}
+html.simple .pj-lh p,html.simple .pj-ht p{color:var(--ssoft)}
+html.simple .pj-newb{background:var(--stext) !important;color:#1d1c1a !important;box-shadow:none !important;filter:none !important}
+html.simple .pj-newb:hover{background:#fff !important}
+html.simple .pjv :is(.pj-back,.pj-close,.pj-q,.pj-sort select,.pj-arch,.pj-ex,.pj-more,.pj-f input,.pj-f textarea,.pj-ta){background:transparent !important;border-color:var(--sline) !important;box-shadow:none !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
+html.simple .pj-sort select{background:var(--scard) !important}
+html.simple .pjv :is(.pj-back,.pj-close,.pj-ex,.pj-more):hover{background:rgba(255,255,255,.05) !important;color:var(--stext)}
+html.simple .pj-arch[aria-pressed="true"]{background:rgba(var(--sacc-rgb),.12) !important;border-color:rgba(var(--sacc-rgb),.45) !important;color:var(--sacc)}
+html.simple .pj-empty{background:transparent;border-color:var(--sline)}
+html.simple .pj-big{background:var(--scard) !important;color:var(--sacc) !important;box-shadow:inset 0 0 0 1px var(--sline) !important}
+html.simple :is(.pjc,.pj-card,.pj-side){background:var(--scard) !important;border-color:var(--sline) !important;box-shadow:none !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
+html.simple .pjc::before{display:none}
+html.simple .pjc:hover{border-color:rgba(255,255,255,.16) !important}
+html.simple :is(.pjc-ic,.pj-ic){color:var(--ssoft);background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px var(--sline)}
+html.simple .pj-ask{background:var(--scard) !important;border:1px solid var(--sline) !important;box-shadow:none !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
+html.simple .pj-ask::before,html.simple .pj-ask::after{display:none !important}
+html.simple .pj-ask .send{background:var(--sacc) !important;color:#1d1c1a !important;box-shadow:none !important}
+html.simple .pj-chat,html.simple .pj-chats{border-color:var(--sline)}
+html.simple .pj-chat:hover{background:rgba(255,255,255,.04)}
+html.simple .pj-cap i{background:var(--sacc)}
+html.simple .pj-fl li{background:transparent;border-color:var(--sline)}
+html.simple .pj-fi{background:rgba(255,255,255,.05);color:var(--ssoft)}
+html.simple .pj-tag{background:rgba(var(--sacc-rgb),.12);color:var(--sacc)}
+html.simple .pj-menu{background:#2a2927 !important;border-color:var(--sline) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
+html.simple .pj-sh{color:var(--smute)}

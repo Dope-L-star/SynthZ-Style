@@ -39,18 +39,34 @@ function betaBot(){
   let t = document.getElementById('betaBot');
   if (!t){ t = betaMk(); t.id = 'betaBot'; t.classList.add('bb'); (b.classList.contains('inhead') ? b.parentNode : document.body).appendChild(t); }
   const put = () => {
-    const r = b.getBoundingClientRect(); if (!r.width) return;
+    const r = b.getBoundingClientRect(); if (!b.isConnected || !t.isConnected || !r.width) return;
+    const w = t.offsetWidth || 46, h = t.offsetHeight || 18;
+    if (b.dataset.reactComponent === 'synthonia-avatar'){
+      /* React owns both controls: keep BETA fixed to the avatar's real viewport box,
+         even when the avatar sits beside the mobile logo. */
+      t.style.position = 'fixed'; t.style.zIndex = '9599';
+      const candidate = r.left - w - 10 < 8 ? r.right + 10 : r.left - w - 10;
+      const left = Math.max(8, Math.min(innerWidth - w - 8, candidate));
+      const top = Math.max(8, Math.min(innerHeight - h - 8, r.top + r.height / 2 - h / 2));
+      t.style.left = left.toFixed(0) + 'px'; t.style.top = top.toFixed(0) + 'px'; t.style.visibility = 'visible';
+      return;
+    }
     if (b.classList.contains('inhead')){ t.style.position = 'absolute'; t.style.zIndex = '3'; t.style.left = (b.offsetLeft + b.offsetWidth + 8) + 'px'; t.style.top = (b.offsetTop + b.offsetHeight / 2 - t.offsetHeight / 2) + 'px'; return; }
-    const w = t.offsetWidth || 46, h = t.offsetHeight || 18, left = r.left - w - 10 < 8 ? r.right + 10 : r.left - w - 10;
-    t.style.left = left.toFixed(0) + 'px'; t.style.top = (r.top + r.height / 2 - h / 2).toFixed(0) + 'px';
+    const left = r.left - w - 10 < 8 ? r.right + 10 : r.left - w - 10;
+    t.style.left = left.toFixed(0) + 'px'; t.style.top = (r.top + r.height / 2 - h / 2) + 'px';
   };
   BOT.betaPut = put; put(); requestAnimationFrame(put); setTimeout(put, 700); setTimeout(put, 1600);
-  if (!t._w){ t._w = 1; addEventListener('resize', put); if (document.fonts) document.fonts.ready.then(put); }
+  if (!t._w){
+    t._w = 1;
+    const onResize = () => put(); addEventListener('resize', onResize);
+    BOT.betaCleanup = () => { removeEventListener('resize', onResize); t._w = 0; };
+    if (document.fonts) document.fonts.ready.then(put);
+  }
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(betaTags, 400)); else setTimeout(betaTags, 400);
 addEventListener('synthz-ready-bot', botMount);
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(botMount, 900)); else setTimeout(botMount, 900);
-const BOTAPI = { anchor:fn => { BOT.anchor = fn; }, open:botOpen, close:botClose, mount:botMount, say:botSay, sync:botSync, team:botTeam, chatOpen, chatClose, match:q => { const f = botMatch(q); return f ? BOT_FAQ.indexOf(f) : -1; }, get el(){ return BOT.el; } };
+const BOTAPI = { anchor:fn => { BOT.anchor = fn; }, open:botOpen, close:botClose, mount:botMount, unmount:botReactUnmount, activate:botAvatarClick, say:botSay, sync:botSync, team:botTeam, chatOpen, chatClose, match:q => { const f = botMatch(q); return f ? BOT_FAQ.indexOf(f) : -1; }, get el(){ return BOT.el; } };
 /* ---------- Guía: elegir cómo aprender (Asistida con SynthonIA o Lectura) ---------- */
 function guideChooser(o = {}){
   if ($('#szGch')) return;
