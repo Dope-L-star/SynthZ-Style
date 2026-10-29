@@ -2437,6 +2437,7 @@ function revBadge(el, m){
 async function qualityAfter(el, chat, msg, mid, r){
   if (!revWanted(mid, msg, r)) return;
   const pk = revPacket(chat, msg); if (!pk) return;
+  if (SZ.isGuestQ() && !SZ.turnNow()) return;   /* sin el mensaje que la pidió, la revisión costaría otro mensaje de prueba: no se hace */
   const g0 = gen, draft = msg.content;
   revChip(el, 'run', '<i class="qspin" aria-hidden="true"></i><span>Revisando la lógica de la respuesta…</span>');
   const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), REV_MS); ctls.add(ctl);
@@ -2447,6 +2448,8 @@ async function qualityAfter(el, chat, msg, mid, r){
   }catch(e){ d = null; }
   finally{ clearTimeout(tm); ctls.delete(ctl); }
   if (d && d.limit) try{ SZ.szqSet({ used:+d.used || 0, limit:+d.limit }); }catch(e){}
+  /* v3.6 · sin cuenta, la revisión cuenta en el mismo mensaje: igual se pinta lo que dice el servidor */
+  if (d && /^\d+\/\d+$/.test(String(d.guest || ''))) try{ const [u, m] = String(d.guest).split('/'); SZ.szqSet({ guest:{ used:+u, max:+m } }); }catch(e){}
   /* si cambiaste de chat, la respuesta se borró o ya llegó otra encima, no se toca nada */
   const alive = chat.includes(msg) && msg.content === draft;
   if (!d || !alive || !d.verdict){ const c = $('.qrev', el); if (c) c.remove(); return; }
@@ -2859,7 +2862,10 @@ function tourStep(anim, dir){
   SZ.swapDir(b, dir || 1, set);
 }
 function openHelp(){ SZ.helpGuide({ extra:[['Ver la Guía Asistida', () => runGuide()], ['Conectar mi Puter', () => openConnect()], ['Ver mi límite de hoy', () => coinModal('panel')]] }); }
-$('#guideTop').addEventListener('click', () => openGuide());
+/* En la edición estática antigua, el HTML aún no contiene el componente cliente React.
+   Solo ahí se instala el listener vanilla; en Next, GuideButton marca el nodo y gestiona el clic. */
+const guideButton = $('#guideTop');
+if (guideButton && guideButton.dataset.reactComponent !== 'guide') guideButton.addEventListener('click', () => openGuide());
 function openTour(){
   if (tourEl) return; tourI = 0; tourPick = null;
   tourEl = document.createElement('div'); tourEl.id = 'tour';
@@ -3367,6 +3373,7 @@ function bflowClose(toChat, then, compareTo){
   setTimeout(() => { o.remove(); root.classList.remove('bflowing'); if (then) then(); else if (!autoGuide && matchMedia('(pointer: fine)').matches) inp.focus(); if (autoGuide) setTimeout(() => runGuide({ topic:BF0 }), 900); }, SZ.reduce ? 10 : 620);
 }
 function openGuide(){ SZ.guideAsk({ full:runGuide, pick:list => runTopics(list), read:openHelp }); }
+window.SymphoriaOpenGuide = openGuide; /* puente del botón Guía React al selector original */
 window.SynthFlowGuide = { run:runGuide, end:() => endGuide(false), on:() => !!G };
 addEventListener('keydown', e => {
   if (e.key === 'Escape' && tourEl) closeTour(false);

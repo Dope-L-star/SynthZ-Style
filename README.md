@@ -50,3 +50,33 @@ La versión en `next/` usa Next.js App Router con export estático para Cloudfla
 ### Microsoft Clarity (variante futura solo adultos)
 
 Clarity permanece apagado en el build actual. La integración requiere consentimiento explícito y los cinco flags de release para una futura edición realmente dirigida a mayores de 18 años. Lee `next/CLARITY-ADULT-RELEASE.md` antes de configurarla. Las flags no son verificación de edad; no se activa Clarity mientras los términos, la política y la elegibilidad de la audiencia no se hayan cambiado y probado.
+
+
+### Corrección importante de SynthFlow
+
+El runtime React repone `data-brand="flow"` en `document.documentElement` antes de cargar los scripts del chat. Esto conserva la detección de SynthFlow usada por SynthonIA y por el botón BETA, y limpia la marca al abandonar la ruta. Hay una comprobación de regresión en `next/verificar-migracion.mjs`. Microsoft Clarity permanece desactivado; esta corrección no cambia su configuración.
+
+
+### Guía rápida y SynthonIA en React
+
+`#guideTop` ya es el componente cliente `GuideButton`. La bolita `#szBot` y el botón BETA también se renderizan como nodos React; el motor existente conserva las expresiones, el audio, la manita y el panel mediante un adaptador para no romper la experiencia. Los clics tempranos en la guía quedan en cola hasta que los módulos estén listos. Consulta `next/GUIA-REACT-SYNTHONIA.md`. Ejecuta `npm run test:guide --prefix next` para las diez pruebas de regresión. Clarity sigue desactivado.
+
+
+### Reparación Guide/SynthonIA React
+
+- `next/GUIA-REACT-SYNTHONIA.md` documenta el botón Guía rápida, el selector original y los controles React de SynthonIA/BETA.
+- Validación: `node next/verificar-migracion.mjs`, `npm run test:guide --prefix next` (11 pruebas), `npm run test:clarity --prefix next` (10 pruebas).
+- Clarity sigue desactivado; el build de Next y el E2E real requieren ejecutarse en un entorno con las dependencias instaladas y navegador disponible.
+
+
+### Analítica compatible con la audiencia actual (opcional)
+
+La alternativa preparada es **Cloudflare Web Analytics manual**, limitada a visitas y rendimiento de páginas/Core Web Vitals. No hay replay de sesiones, mapas de calor, eventos personalizados ni IDs de usuario; el código de SymphorIA no envía prompts, mensajes, títulos de chat ni datos de cuenta. El beacon no se carga hasta que la persona acepta; rechazo y revocación se respetan. Por defecto está desactivado y Microsoft Clarity sigue desactivado.
+
+Guía de configuración y privacidad: `next/CLOUDFLARE-WEB-ANALYTICS-PRIVACIDAD.md`. Pruebas: `npm run test:privacy-analytics`.
+
+**No actives la inserción automática de Web Analytics en Cloudflare Pages**: puede inyectar el beacon al margen del consentimiento de la app. Usa el token del snippet manual y las variables `NEXT_PUBLIC_CF_WEB_ANALYTICS_ENABLED=true`, `NEXT_PUBLIC_CF_WEB_ANALYTICS_PRIVACY_REVIEWED=true` y `NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN=<token>`. Antes de habilitar, revisa la política de privacidad y despliega una vista previa. Las tres variables deben configurarse en el entorno de build; habilitar solo el dashboard de Cloudflare no respeta este flujo de consentimiento.
+
+### Sobre el ZIP de fuente
+
+El paquete fuente omite `cloudflare/public` porque es un artefacto generado y no se reconstruyó en este entorno. El build configurado lo recrea con `node cloudflare/preparar.mjs`; no publiques un directorio `cloudflare/public` antiguo por carga manual. Antes de producción, ejecuta ese build con las dependencias instaladas y completa la lista manual de `evidencia/QA-ANALITICA-PRIVACIDAD.md`.

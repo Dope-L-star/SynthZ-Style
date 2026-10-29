@@ -10,6 +10,48 @@ import { useEffect } from 'react';
 export default function LegacyRuntime({ page, scripts = [], puter = false }) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
+    // La página antigua chat.html llevaba <html data-brand="flow">.
+    // Al mover su body a React, ese atributo del elemento raíz quedó fuera del árbol
+    // ReactTree. core.js usa document.documentElement.dataset.brand para distinguir
+    // SynthFlow de SymphorIA; debe restablecerse ANTES de descargar core.js/synthonia.js.
+    const root = document.documentElement;
+    const previousBrand = root.getAttribute('data-brand');
+    if (page === 'chat') root.dataset.brand = 'flow';
+    else if (root.dataset.brand === 'flow') root.removeAttribute('data-brand');
+
+    const attemptGuide = () => {
+      if (page !== 'chat') return false;
+      const opener = window.SymphoriaOpenGuide;
+      if (typeof opener === 'function') {
+        window.__symphoriaGuideQueued = false;
+        opener();
+        return true;
+      }
+      // Do not call SynthFlowGuide.run() here: it skips the original chooser.
+      // Keep the request queued until chat.js exposes the exact openGuide flow.
+      window.__symphoriaGuideQueued = true;
+      return false;
+    };
+    const onGuideRequest = () => { window.__symphoriaGuideQueued = true; attemptGuide(); };
+    const onSynthonIAReady = () => { if (window.__symphoriaGuideQueued) attemptGuide(); };
+    if (page === 'chat') {
+      window.addEventListener('symphoria:guide-request', onGuideRequest);
+      window.addEventListener('synthz-synthonia', onSynthonIAReady);
+    }
+
+    const cleanupBrand = () => {
+      // No sobrescribir una marca que otra ruta haya establecido entretanto.
+      if (page === 'chat') {
+        window.removeEventListener('symphoria:guide-request', onGuideRequest);
+        window.removeEventListener('synthz-synthonia', onSynthonIAReady);
+      }
+      if (page === 'chat' && root.dataset.brand === 'flow') {
+        if (previousBrand === null) root.removeAttribute('data-brand');
+        else root.setAttribute('data-brand', previousBrand);
+      }
+    };
+
     // Acciones de compatibilidad que antes venían en atributos inline del HTML.
     // Se delegan una sola vez y nunca se evalúa código JavaScript recibido como texto.
     if (!window.__symphoriaReactDelegates) {
@@ -25,7 +67,7 @@ export default function LegacyRuntime({ page, scripts = [], puter = false }) {
     }
     const key = `${window.location.pathname}:${page}`;
     window.__symphoriaLegacyBoots ||= Object.create(null);
-    if (window.__symphoriaLegacyBoots[key]) return;
+    if (window.__symphoriaLegacyBoots[key]) return cleanupBrand;
     window.__symphoriaLegacyBoots[key] = true;
 
     const load = (src, { async = false, onload, onerror } = {}) => new Promise((resolve) => {
@@ -90,7 +132,21 @@ export default function LegacyRuntime({ page, scripts = [], puter = false }) {
 
       for (const src of scripts) {
         await load(new URL(src, window.location.origin + '/').href);
+        // Let core.js load SynthonIA through its own retry-aware loader before chat.js
+        // initializes the walkthrough. Never inject synthonia.js a second time.
+        if (page === 'chat' && new URL(src, window.location.origin + '/').pathname.endsWith('/core.js')) {
+          const ready = window.SZ?.synReady;
+          if (ready && typeof ready.then === 'function') {
+            await Promise.race([
+              ready.catch(() => false),
+              new Promise((resolve) => window.setTimeout(() => resolve(false), 5000))
+            ]);
+          }
+        }
       }
+      // A fast click during initial script loading is queued globally so React StrictMode
+      // remounts cannot strand the request in the first effect instance.
+      if (window.__symphoriaGuideQueued) attemptGuide();
 
       // ayuda.js se escribió originalmente para cargarse durante el parseo.
       // Como su script se monta desde React, se emite su evento de inicialización una vez.
@@ -106,7 +162,7 @@ export default function LegacyRuntime({ page, scripts = [], puter = false }) {
     };
 
     void run();
-    return undefined;
+    return cleanupBrand;
   }, [page, puter, scripts]);
 
   return null;

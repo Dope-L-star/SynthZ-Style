@@ -54,6 +54,7 @@ function revBadge(el, m){
 async function qualityAfter(el, chat, msg, mid, r){
   if (!revWanted(mid, msg, r)) return;
   const pk = revPacket(chat, msg); if (!pk) return;
+  if (SZ.isGuestQ() && !SZ.turnNow()) return;   /* sin el mensaje que la pidió, la revisión costaría otro mensaje de prueba: no se hace */
   const g0 = gen, draft = msg.content;
   revChip(el, 'run', '<i class="qspin" aria-hidden="true"></i><span>Revisando la lógica de la respuesta…</span>');
   const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), REV_MS); ctls.add(ctl);
@@ -64,6 +65,8 @@ async function qualityAfter(el, chat, msg, mid, r){
   }catch(e){ d = null; }
   finally{ clearTimeout(tm); ctls.delete(ctl); }
   if (d && d.limit) try{ SZ.szqSet({ used:+d.used || 0, limit:+d.limit }); }catch(e){}
+  /* v3.6 · sin cuenta, la revisión cuenta en el mismo mensaje: igual se pinta lo que dice el servidor */
+  if (d && /^\d+\/\d+$/.test(String(d.guest || ''))) try{ const [u, m] = String(d.guest).split('/'); SZ.szqSet({ guest:{ used:+u, max:+m } }); }catch(e){}
   /* si cambiaste de chat, la respuesta se borró o ya llegó otra encima, no se toca nada */
   const alive = chat.includes(msg) && msg.content === draft;
   if (!d || !alive || !d.verdict){ const c = $('.qrev', el); if (c) c.remove(); return; }

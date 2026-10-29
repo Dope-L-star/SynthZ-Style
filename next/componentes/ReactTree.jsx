@@ -1,4 +1,5 @@
 import { createElement } from 'react';
+import GuideButton from './GuideButton';
 
 /*
  * Renderiza un árbol de HTML convertido a datos en elementos React reales.
@@ -112,6 +113,12 @@ function renderNode(node, key) {
   const props = { ...propsFrom(node.attrs), key };
   if (VOID.has(rawTag)) return createElement(tag, props);
   const children = (node.children || []).map((child, i) => renderNode(child, `${key}.${i}`));
+  // This control is now genuinely event-bound by React; its guide engine remains
+  // available through the compatibility bridge until that subsystem is fully migrated.
+  if (rawTag === 'button' && node.attrs?.id === 'guideTop') {
+    const { key: reactKey, ...attributes } = props;
+    return createElement(GuideButton, { ...attributes, key: reactKey }, children);
+  }
   return createElement(tag, props, children);
 }
 

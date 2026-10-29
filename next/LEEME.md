@@ -73,3 +73,16 @@ Para la futura variante adulta, consulta `next/CLARITY-ADULT-RELEASE.md`. El bui
 El proyecto configurado es `z5es3kuqoz`; antes de producción confirma en Clarity que pertenece exclusivamente al dominio adulto. Si se compartió con otro sitio/audiencia, crea un proyecto separado. El panel privado Pulsem no monta el tracker. Consent V2 se encola antes de insertar el script; Clarity no se carga hasta que la persona acepta la analítica y puede retirar el consentimiento desde «Privacidad».
 
 El árbol React en `contenido/arboles-react/` conserva el marcado y los IDs originales, mientras `LegacyRuntime` carga los módulos interactivos antiguos. Esto protege funcionalidad durante la migración, pero no significa que todo el comportamiento ya esté reescrito con hooks de React.
+
+
+## Guía y SynthonIA en React
+
+Consulta `GUIA-REACT-SYNTHONIA.md`. La guía rápida se conecta a `openGuide` y mantiene `SZ.guideAsk`; SynthonIA y BETA son botones renderizados por React y el motor existente se limita a aportar su comportamiento. Ejecuta `npm run test:guide --prefix next` además de los controles de migración y Clarity. Las pruebas visuales end-to-end y `next build` todavía deben ejecutarse en una vista previa real.
+
+### Analítica de privacidad mínima
+
+```bash
+node --test next/tests/cloudflare-analytics.test.mjs
+```
+
+Ver `next/CLOUDFLARE-WEB-ANALYTICS-PRIVACIDAD.md` para preparar Cloudflare Web Analytics con consentimiento explícito. Microsoft Clarity permanece desactivado.

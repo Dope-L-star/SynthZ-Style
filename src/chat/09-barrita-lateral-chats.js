@@ -108,7 +108,10 @@ function tourStep(anim, dir){
   SZ.swapDir(b, dir || 1, set);
 }
 function openHelp(){ SZ.helpGuide({ extra:[['Ver la Guía Asistida', () => runGuide()], ['Conectar mi Puter', () => openConnect()], ['Ver mi límite de hoy', () => coinModal('panel')]] }); }
-$('#guideTop').addEventListener('click', () => openGuide());
+/* En la edición estática antigua, el HTML aún no contiene el componente cliente React.
+   Solo ahí se instala el listener vanilla; en Next, GuideButton marca el nodo y gestiona el clic. */
+const guideButton = $('#guideTop');
+if (guideButton && guideButton.dataset.reactComponent !== 'guide') guideButton.addEventListener('click', () => openGuide());
 function openTour(){
   if (tourEl) return; tourI = 0; tourPick = null;
   tourEl = document.createElement('div'); tourEl.id = 'tour';

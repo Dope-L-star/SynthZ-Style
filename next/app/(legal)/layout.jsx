@@ -1,5 +1,6 @@
 import Script from 'next/script';
 import ClarityConsent from '../../componentes/ClarityConsent';
+import AnalyticsConsent from '../../componentes/AnalyticsConsent';
 
 /* Marco común de las páginas hechas en Next.js: fuentes, colores oscuros y la capa de animaciones compartida (movimiento.css/js),
    la misma que usan la portada y SynthFlow. */
@@ -18,9 +19,11 @@ export default function Layout({ children }){
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Chakra+Petch:wght@500;600;700&family=Figtree:wght@300..800&family=IBM+Plex+Mono:wght@400;500&display=swap" />
         <link rel="stylesheet" href="/movimiento.css" />
         <link rel="stylesheet" href="/clarity-consent.css" />
+        <link rel="stylesheet" href="/analytics-consent.css" />
       </head>
       <body>
         {children}
+        <AnalyticsConsent />
         <ClarityConsent />
         <Script src="/movimiento.js" strategy="afterInteractive" />
       </body>

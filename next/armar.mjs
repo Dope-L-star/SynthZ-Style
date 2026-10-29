@@ -9,6 +9,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { CLARITY_PROJECT_ID_DEFAULT, isClarityAllowed } from './lib/clarity-client.mjs';
+import { isCloudflareAnalyticsAllowed } from './lib/cloudflare-analytics.mjs';
 
 const aqui = path.dirname(fileURLToPath(import.meta.url)), raiz = path.resolve(aqui, '..');
 const clarityRequested = process.env.NEXT_PUBLIC_CLARITY_ENABLED === 'true';
@@ -23,6 +24,16 @@ const clarityBuildAllowed = isClarityAllowed({
 if (clarityRequested && !clarityBuildAllowed) {
   throw new Error('Clarity está solicitado, pero faltan condiciones de release: audiencia 18+, versión adulta real, control de edad validado, privacidad revisada e ID de proyecto válido. No se ha publicado nada.');
 }
+const cfAnalyticsRequested = process.env.NEXT_PUBLIC_CF_WEB_ANALYTICS_ENABLED === 'true';
+const cfAnalyticsAllowed = isCloudflareAnalyticsAllowed({
+  enabled: cfAnalyticsRequested,
+  privacyReviewed: process.env.NEXT_PUBLIC_CF_WEB_ANALYTICS_PRIVACY_REVIEWED === 'true',
+  token: process.env.NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN || '',
+});
+if (cfAnalyticsRequested && !cfAnalyticsAllowed) {
+  throw new Error('Build bloqueado: Cloudflare Web Analytics está solicitado, pero falta la revisión de privacidad o un token de sitio válido.');
+}
+
 /* páginas que ya pasaron a Next.js (app/<nombre>/page.jsx → out/<nombre>.html). Al pasar otra, se agrega aquí. */
 const HECHAS = ['index.html', 'chat.html', 'alias.html', 'ayuda.html', 'offline.html', 'terminos.html', 'privacidad.html', 'pulsem.html'];
 const corre = (cmd, args, cwd) => execFileSync(cmd, args, { cwd, stdio: 'inherit' });

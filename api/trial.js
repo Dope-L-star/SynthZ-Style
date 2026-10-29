@@ -13,6 +13,7 @@ import { CID_RX } from './config.js';
 import { loadKeys, saveOwnerKeys, removeKey, status, checkKey, settings, saveSettings, chat, models, ownersRaw, mask, ORDER, PROV, KEY_PROVS, provName } from './_pool.js';
 
 export const TRIAL_MAX = 5;
+const TRIAL_PER_TURN = 6;   /* respuesta + «Continúa» + arreglo automático del código, en un mismo mensaje */
 const RANK = { owner:'Prime', admin:'ZFlow', staff:'Symmetrix' };
 const GLOBAL_DAY = +process.env.TRIAL_DAY_CAP || 300;
 const SYSTEM = 'Eres el asistente de la prueba guiada de SynthFlow (SymphorIA). Responde en español, claro y amable, en menos de 120 palabras. Si te preguntan por SymphorIA: es un espacio para hablar gratis con muchas IA, compararlas y ver cuánto consumen.';
@@ -116,10 +117,21 @@ export default route({
     if (a === 'chat'){
       const token = typeof b.token === 'string' && /^[\w-]{20,40}$/.test(b.token) ? b.token : '';
       if (!token || !(await redis('EXISTS', 'tr:' + token))) throw err(403, 'Tu prueba no es válida. Vuelve a abrir la guía para empezar una.', 'trial_bad');
-      await limit('trial-ip:' + ip, 12, 86400);
+      await limit('trial-ip:' + ip, 40, 86400);   /* 5 mensajes × hasta 6 llamadas cada uno (Continúa, arreglo del código) */
       const d = today();
-      const [n, g] = await pipe([['INCR', 'tr:' + token], ['INCR', 'trial:day:' + d], ['EXPIRE', 'trial:day:' + d, '172800']]);
-      const giveBack = () => pipe([['DECR', 'tr:' + token], ['DECR', 'trial:day:' + d]]).catch(() => {});
+      /* v3.6 · un mensaje de prueba = lo que escribes una vez. Si la IA sigue una respuesta larga («Continúa») o arregla sola
+         el código que hizo, es el mismo mensaje (mismo `turn`): no se gasta otro a escondidas. Hasta TRIAL_PER_TURN llamadas por mensaje. */
+      const turn = /^[\w|-]{4,60}$/.test(String(b.turn || '')) ? String(b.turn) : '';
+      const tk = 'trt:' + token;
+      const again = turn ? +(await redis('SISMEMBER', tk, turn)) : 0;
+      if (again){
+        const c = +(await redis('INCR', 'trc:' + token + ':' + turn)); await redis('EXPIRE', 'trc:' + token + ':' + turn, String(7 * 86400));
+        if (c > TRIAL_PER_TURN) throw err(429, 'Este mensaje ya usó todas sus respuestas automáticas. Escribe otro para seguir.', 'trial_turn');
+      }
+      const [n, g] = again ? [+(await redis('GET', 'tr:' + token)) || 0, 0]
+        : await pipe([['INCR', 'tr:' + token], ['INCR', 'trial:day:' + d], ['EXPIRE', 'trial:day:' + d, '172800']]);
+      if (!again && turn) await pipe([['SADD', tk, turn], ['EXPIRE', tk, String(7 * 86400)], ['SET', 'trc:' + token + ':' + turn, '1', 'EX', String(7 * 86400)]]);
+      const giveBack = () => again ? Promise.resolve() : pipe([['DECR', 'tr:' + token], ['DECR', 'trial:day:' + d], ...(turn ? [['SREM', tk, turn]] : [])]).catch(() => {});
       if (+n > TRIAL_MAX){ await giveBack(); throw err(429, 'Se acabaron tus ' + TRIAL_MAX + ' mensajes de prueba. Ya puedes seguir chateando gratis.', 'trial_done'); }
       if (+g > GLOBAL_DAY){ await giveBack(); throw err(503, 'La prueba ya se usó mucho hoy. Puedes seguir chateando normal.', 'trial_busy'); }
       const msgs = (Array.isArray(b.messages) ? b.messages : []).filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string').slice(-10).map(m => ({ role:m.role, content:m.content.slice(0, 3000) }));
@@ -127,7 +139,7 @@ export default route({
       let r;
       try{ r = await chat({ who:'t:' + sha(token).slice(0, 16), ipKey:'ip:' + sha('ip:' + ip).slice(0, 16), messages:msgs, model:'sz:auto', maxTokens:450, system:SYSTEM, stream:true }); }
       catch(e){ await giveBack(); throw e.code === 'sz_off' ? err(503, 'La prueba todavía no está activada. Mientras tanto, conecta Puter: es gratis y con un clic.', 'trial_off') : e.code === 'sz_down' ? err(503, 'Las IA de la prueba no responden ahora mismo. Intenta en un rato o conecta Puter, que es gratis.', 'trial_down') : e; }
-      return new Response(r.stream, { status:200, headers:{ 'content-type':'text/event-stream; charset=utf-8', 'cache-control':'no-store', 'x-trial-left':String(Math.max(0, TRIAL_MAX - n)), 'x-trial-provider':r.meta.provName, 'access-control-expose-headers':'x-trial-left,x-trial-provider' } });
+      return new Response(r.stream, { status:200, headers:{ 'content-type':'text/event-stream; charset=utf-8', 'cache-control':'no-store', 'x-trial-left':String(Math.max(0, TRIAL_MAX - n)), 'x-trial-spent':again ? '0' : '1', 'x-trial-provider':r.meta.provName, 'access-control-expose-headers':'x-trial-left,x-trial-provider,x-trial-spent' } });
     }
     return fail(400, 'Acción desconocida.');
   }

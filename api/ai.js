@@ -118,7 +118,7 @@ const GUEST_MAX = Math.max(1, Math.min(50, +process.env.SYNTHZ_GUEST_MSGS || 5))
 const gKey = w => 'gm:' + w + ':' + today();
 /* un «mensaje» = lo que la persona escribe una vez. Si compara 3 IA o el agente piensa antes, sigue siendo 1 mensaje
    (cada mensaje deja hasta 4 llamadas; así nadie se salta el límite repitiendo el mismo número) */
-const PER_TURN = 4;
+const PER_TURN = 6;   /* v3.6: también caben «Continúa» y el arreglo automático del código */
 async function guestUsed(who, ipKey){ const [a, b] = (await pipe([['SCARD', gKey(who)], ['SCARD', gKey(ipKey)]])).map(x => +x || 0); return { used:a, usedIp:b }; }
 const guestErr = () => Object.assign(new Error('Para seguir FlowIAndo, entra o crea tu cuenta. Es gratis y tienes mucho más límite cada día.'), { status:429, code:'sz_guest' });
 async function whoOf(req){

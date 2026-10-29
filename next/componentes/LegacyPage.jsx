@@ -1,5 +1,6 @@
 import ReactTree from './ReactTree';
 import LegacyRuntime from './LegacyRuntime';
+import SynthonIAHost from './SynthonIAHost';
 
 /**
  * Estructura visual renderizada mediante elementos React reales.
@@ -19,6 +20,7 @@ export default function LegacyPage({
       {stylesheets.map((href) => <link rel="stylesheet" href={`/${href}`} precedence="default" key={href} />)}
       {inlineStyle ? <style data-page-style={page} dangerouslySetInnerHTML={{ __html: inlineStyle }} /> : null}
       {tree ? <ReactTree nodes={tree} /> : null}
+      {page === 'chat' ? <SynthonIAHost /> : null}
       <LegacyRuntime page={page} scripts={scripts} puter={puter} />
     </>
   );
