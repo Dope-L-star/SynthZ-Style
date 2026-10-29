@@ -1613,7 +1613,9 @@ addEventListener('pointerdown', e => {
     if (kind === 'done' && !o.text && Math.random() > .25) return;
     said[kind] = now; lastTalk = now;
     const M = {
-      slow:['pensando', 'Esta IA se está tomando su tiempo… ⏳ Si se demora mucho, prueba la «Automática».'],
+      /* v3.6 · si ya estás en la Automática no te dice que la pruebes (Sammuel, 29 oct) */
+      slow:['pensando', o.auto ? B.LANG === 'en' ? 'This is taking a bit… ⏳ Automatic is already looking for the best free AI for you.' : 'Esto está tardando un poco… ⏳ La «Automática» ya está buscando la mejor IA libre para ti.'
+        : B.LANG === 'en' ? 'This AI is taking its time… ⏳ If it takes too long, try «Automatic».' : 'Esta IA se está tomando su tiempo… ⏳ Si se demora mucho, prueba la «Automática».'],
       done:['feliz', ['¡Listo! ¿Te sirvió?', '¡Eso tiene mucho Flow! ✨', 'Si quieres otra versión, toca «Otra vez».'][Math.floor(Math.random() * 3)]],
       limit:['preocupada', 'Te queda poco de tu límite de hoy. Si se acaba, puedes seguir con Puter, que te da la versión pro de las IAs más usadas.'],
       lost:['confundida', '¿Te ayudo a encontrar algo? Tócame y pregúntame. 🙂']

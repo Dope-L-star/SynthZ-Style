@@ -38,6 +38,8 @@ function revPacket(chat, msg){
   const ctx = chat.slice(Math.max(0, ui - 4), ui).filter(m => typeof m.content === 'string' && !m.imgId).map(m => ({ role:m.role, content:m.content.slice(0, 900) }));
   return { q:q.trim() || 'Mira la imagen.', imgs:(u._imgs || []).slice(0, 4), ctx };
 }
+/* v3.6 · estos avisos van dentro de la respuesta, donde el traductor no entra: se escriben ya en el idioma elegido */
+const RL = (es, en) => SZ.lang() === 'en' ? en : es;
 function revChip(el, cls, html){
   let c = $('.qrev', el);
   if (!c){ c = document.createElement('div'); const meta = $('.meta', el); if (meta) meta.before(c); else el.appendChild(c); }
@@ -48,15 +50,15 @@ const REV_ICO = { ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 /* lo que se ve debajo de una respuesta ya revisada (también al volver a abrir el chat) */
 function revBadge(el, m){
   if (!m || !m.rev) return;
-  if (m.rev === 'ok') revChip(el, 'ok', REV_ICO.ok + '<span>Revisada: la lógica está bien</span>');
-  else revChip(el, 'fix', REV_ICO.fix + '<span>Mejorada en la revisión' + (m.revNote ? ': ' + esc(m.revNote) : '') + '</span>' + (m.orig ? '<button type="button" class="lnk qrev-o" aria-pressed="false">Ver original</button>' : ''));
+  if (m.rev === 'ok') revChip(el, 'ok', REV_ICO.ok + '<span>' + RL('Revisada: la lógica está bien', 'Reviewed: the logic is sound') + '</span>');
+  else revChip(el, 'fix', REV_ICO.fix + '<span>' + RL('Mejorada en la revisión', 'Improved in review') + (m.revNote ? ': ' + esc(m.revNote) : '') + '</span>' + (m.orig ? '<button type="button" class="lnk qrev-o" aria-pressed="false">' + RL('Ver original', 'See original') + '</button>' : ''));
 }
 async function qualityAfter(el, chat, msg, mid, r){
   if (!revWanted(mid, msg, r)) return;
   const pk = revPacket(chat, msg); if (!pk) return;
   if (SZ.isGuestQ() && !SZ.turnNow()) return;   /* sin el mensaje que la pidió, la revisión costaría otro mensaje de prueba: no se hace */
   const g0 = gen, draft = msg.content;
-  revChip(el, 'run', '<i class="qspin" aria-hidden="true"></i><span>Revisando la lógica de la respuesta…</span>');
+  revChip(el, 'run', '<i class="qspin" aria-hidden="true"></i><span>' + RL('Revisando la lógica de la respuesta…', 'Checking the logic of the answer…') + '</span>');
   const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), REV_MS); ctls.add(ctl);
   let d = null;
   try{
@@ -86,5 +88,5 @@ document.addEventListener('click', e => {
   const el = b.closest('.m'), m = el && chatArr()[+el.dataset.ci]; if (!m || !m.orig) return;
   const showO = b.getAttribute('aria-pressed') !== 'true', body = $('.body', el);
   body.innerHTML = md(showO ? m.orig : m.content); codeButtons(body);
-  b.setAttribute('aria-pressed', String(showO)); b.textContent = showO ? 'Ver mejorada' : 'Ver original';
+  b.setAttribute('aria-pressed', String(showO)); b.textContent = showO ? RL('Ver mejorada', 'See improved') : RL('Ver original', 'See original');
 });

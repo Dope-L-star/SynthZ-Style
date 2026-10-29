@@ -67,7 +67,7 @@ async function runExpert(tema, o = {}){
     if (!next) return { ok:false, err:lastErr, cur };
     tried.push(next);
     toast(info(cur).name + ' falló. Sigo con ' + info(next).name + (tl ? ', que sabe de ' + tl : '') + ': tu trabajo continúa.');
-    try{ SZ.BOT.react && SZ.BOT.react('slow'); }catch(e){}
+    try{ SZ.BOT.react && SZ.BOT.react('slow', { auto:next === 'sz:auto' }); }catch(e){}
     if (o.onSwap) try{ o.onSwap(next); }catch(e){}
     cur = next; st().model.openrouter = next; save(); paintSel(); renderTop(false); paintAccent();
   }
@@ -248,7 +248,7 @@ function frustration(text, regen){
 }
 async function runSolo(onFail, o = {}){
   const mid = selId(), chat = chatArr(), g = gen, vis = info(mid).vision, saver = st().sx.saver;
-  const slowT = setTimeout(() => { if (busy[mid] === 'think' && SZ.BOT.react) SZ.BOT.react('slow'); }, 14000);
+  const slowT = setTimeout(() => { if (busy[mid] === 'think' && SZ.BOT.react) SZ.BOT.react('slow', { auto:mid === 'sz:auto' }); }, 14000);
   const sent = apiMsgs(chat, vis), naive = apiMsgs(chat, vis, { naive:true }), ck = hashStr(mid + '|' + saver + '|' + effKey() + '|' + JSON.stringify(sent));
   const canCache = !sent.some(m => Array.isArray(m.content));
   if (works[mid]) works[mid].stop();
