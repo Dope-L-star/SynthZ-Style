@@ -164,7 +164,7 @@ function cfgModal(tab){
   memPanel($('#szMem', o));
   $$('.cfgsw[data-k]', o).forEach(b => b.addEventListener('click', () => { draft[b.dataset.k] = !draft[b.dataset.k]; paintRows(); }));
   $$('[data-in]', o).forEach(b => b.addEventListener('click', () => { draft.intro = b.dataset.in; $$('[data-in]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
-  const thNote = () => { const n = $('#cfgThN', o); if (n) n.textContent = draft.ui === 'simple' ? 'El estilo Simple usa sus propios colores: el color se ve en el estilo SynthFlow.' : (szTeam ? 'Cambia el dorado y el rosado de SynthFlow. Aurora y Oro negro ya son tuyos por ser del equipo (plan Orquesta).' : 'Cambia el dorado y el rosado de SynthFlow. Aurora y Oro negro llegan con Syntonia.'); };
+  const thNote = () => { const n = $('#cfgThN', o); if (n) n.textContent = draft.ui === 'simple' ? 'El estilo Simple usa sus propios colores: el color se ve en el estilo SynthFlow.' : (szTeam ? 'Cambia el dorado y el rosado de SynthFlow. Aurora y Oro negro ya son tuyos por ser del equipo (plan Orquesta).' : themeOn('aurora') || themeOn('oro') ? 'Cambia el dorado y el rosado de SynthFlow. El equipo de SymphorIA te activó colores especiales.' : 'Cambia el dorado y el rosado de SynthFlow. Aurora y Oro negro llegan con Syntonia.'); };
   thNote();
   $$('[data-ui]', o).forEach(b => b.addEventListener('click', () => { draft.ui = b.dataset.ui; $$('[data-ui]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); thNote(); }));
   $$('[data-lang]', o).forEach(b => b.addEventListener('click', () => { setLang(b.dataset.lang); $$('[data-lang]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));   /* el idioma cambia al instante, sin «Guardar» */

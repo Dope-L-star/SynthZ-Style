@@ -8,6 +8,7 @@
    Textos visibles: todos salen de alias-textos.json (raíz, para que viaje con la función) con t(). Los prompts del modelo no se ven y viven aquí. */
 import TX from './_alias-textos.js';
 import { route, body, json, auth, redis, pipe, limit, today, str, rid, sha, ipOf, roleOf } from './_lib.js';
+import { perksOf, enerOf } from './_ux.js';
 import { chat, pickKeys, searchWith, searchWiki, markPay, PAY_RX, classify, models, PROV, ORDER } from './_pool.js';
 
 const MAX_GOAL = 500, MAX_STEPS = 7, MIN_STEPS = 3;
@@ -32,7 +33,7 @@ const t = (lang, k, v) => {
 };
 const A = (key, status = 400, extra) => Object.assign(new Error(key), { aKey:key, status }, extra || {});
 const clip = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, ' ').trim().slice(0, n);   /* como str(), pero conserva saltos de línea */
-const mult = me => roleOf(me) !== 'user' ? 100 : 1;   /* v3.0: el equipo prueba todo sin quedarse corto */
+const mult = me => me.ux && me.ux.aliasX ? me.ux.aliasX : roleOf(me) !== 'user' ? 100 : 1;   /* v3.0: el equipo prueba todo sin quedarse corto · v3.5: o lo que le pusieron en Pulsem */
 
 /* ---------- instrucciones al modelo (el texto de la web es DATO, nunca órdenes) ---------- */
 const SAFE = 'Eres A.L.I.A.S., un agente que ayuda a cumplir un objetivo paso a paso. Reglas: '
@@ -43,7 +44,7 @@ const sys = lang => SAFE.replace('{L}', t(lang, 'srv.idiomaNombre'));
 const datos = s => '<datos>\n' + String(s).replace(/<\/?datos>/gi, '') + '\n</datos>';
 
 async function ask(req, me, lang, user, maxTokens){
-  const r = await chat({ who:'al:' + me.sub, ipKey:'ip:' + sha('ip:' + ipOf(req)).slice(0, 16), messages:[{ role:'user', content:user }], model:'sz:auto', maxTokens, system:sys(lang), stream:false, free:roleOf(me) !== 'user' });
+  const r = await chat({ who:'al:' + me.sub, ipKey:'ip:' + sha('ip:' + ipOf(req)).slice(0, 16), messages:[{ role:'user', content:user }], model:'sz:auto', maxTokens, system:sys(lang), stream:false, ...enerOf(me.ux) });
   return r.text;
 }
 
@@ -192,6 +193,7 @@ const ctx = (plan, step, prev) => 'Objetivo: ' + plan.goal + '\nPlan: ' + plan.s
 async function runSearch(req, me, lang, plan, step, prev){
   const q = str(step.input || step.title, 200), d = today(), uk = 'alias:q:' + me.sub + ':' + d, gk = 'srch:all:' + d;
   const [n, g] = (await pipe([['GET', uk], ['GET', gk]])).map(x => +x || 0);
+  if (me.ux && !me.ux.f.search) throw A('srv.busquedaOff', 403);
   if (n >= SEARCH_DAY * mult(me)) throw A('srv.busquedaLimite', 429);
   let res = [];
   if (g < SEARCH_GLOBAL){
@@ -294,6 +296,7 @@ export default route({
       const b = await body(req, 120000); lang = lg(b.lang);
       const me = await auth(req);                                    /* mismo token que api/chat.js */
       await limit('alias:' + me.sub, 30, 60);
+      me.ux = await perksOf(me); if (!me.ux.f.alias) throw A('srv.aliasOff', 403);   /* v3.5 · se apaga por cuenta en Pulsem › Usuarios */
       if (b.action === 'plan') return await doPlan(req, me, b, lang);
       if (b.action === 'step') return await doStep(req, me, b, lang);
       throw A('srv.accion');

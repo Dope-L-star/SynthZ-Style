@@ -231,8 +231,9 @@ const OUT_MAX = { groq:6000, mistral:6000, openrouter:6000, google:8000, ollama:
 const outTok = (prov, asked) => Math.max(64, Math.min(OUT_MAX[prov] || 3500, Math.round(+asked) || 4096));
 /* v3.0 · free: el equipo (Prime, ZFlow y Symmetrix) usa todo sin límite de EnerX para probar (pedido de Sammuel, 27 oct).
    Lo suyo no cuenta para el límite de su conexión (así no le quita a nadie que esté en la misma red) y su batería se ve llena */
-export async function chat({ who, ipKey, messages, model, maxTokens, system, stream = true, onDone, free = false, temperature = .6 }){
-  const { dayLimit } = await settings();
+/* v3.5 · dayLimit: el límite propio de esa persona (Pulsem › Usuarios); 0 = el de todos */
+export async function chat({ who, ipKey, messages, model, maxTokens, system, stream = true, onDone, free = false, temperature = .6, dayLimit:own = 0 }){
+  const dayLimit = own > 0 ? Math.round(own) : (await settings()).dayLimit;
   const [used, usedIp] = free ? [0, 0] : (await pipe([['GET', quotaKey(who)], ['GET', quotaKey(ipKey)]])).map(x => +x || 0);
   if (used >= dayLimit) throw err(429, 'Llegaste al límite de hoy. Se renueva a medianoche. Si quieres seguir ya, conecta Puter (gratis, opcional).', 'sz_limit');
   if (usedIp >= dayLimit * 3) throw err(429, 'Desde esta conexión ya se usó mucho hoy. Se renueva a medianoche, o conecta Puter (gratis, opcional).', 'sz_limit_ip');
