@@ -11,10 +11,17 @@ export const metadata = {
 
 export const viewport = { width: 'device-width', initialScale: 1, colorScheme: 'dark' };
 
+/* <html data-brand> de cada página (chat.html = flow, alias.html = alias). Lo usan core.js (isFlow: SynthonIA en la
+   cabecera del celular, el BETA junto a ella) y el CSS. Va en línea para que esté puesto antes de pintar y antes de core.js.
+   verificar-migracion.mjs revisa que coincida con el <html> de cada .html. */
+export const BRAND = { chat: 'flow', alias: 'alias' };
+const brandJs = `(function(){var m=${JSON.stringify(BRAND)},p=location.pathname.replace(/^\\/+|(\\.html)?\\/?$/g,'');if(m[p])document.documentElement.dataset.brand=m[p];})();`;
+
 export default function SiteLayout({ children }) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: brandJs }} />
         <link rel="icon" id="favi" href="/media/v30/fav-s.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

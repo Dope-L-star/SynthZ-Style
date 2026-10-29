@@ -77,6 +77,14 @@ for (const r of routes) {
   }
   assert.ok(all.every(n => n.tag !== 'script'), `${r.html}: los scripts deben cargarse solo con LegacyRuntime`);
   assert.ok(!/\son[a-z]+\s*=/i.test(JSON.stringify(tree.nodes)), `${r.html}: no deben quedar atributos de evento inline ejecutables`);
+  /* <html data-brand> no viaja en el árbol (solo el body): el layout del sitio lo pone por ruta. Sin él, core.js no sabe que es SynthFlow. */
+  if (r.route.startsWith('app/(site)/')) {
+    const brand = (fs.readFileSync(path.join(root, r.html), 'utf8').match(/<html[^>]*\sdata-brand=["']([^"']+)["']/i) || [])[1] || null;
+    const lay = fs.readFileSync(path.join(nextDir, 'app/(site)/layout.jsx'), 'utf8').match(/export const BRAND = (\{[^}]*\})/);
+    assert.ok(lay, 'app/(site)/layout.jsx: falta BRAND');
+    const map = JSON.parse(lay[1].replace(/(\w+):/g, '"$1":').replace(/'/g, '"'));
+    assert.equal(map[r.html.replace(/\.html$/, '')] || null, brand, `${r.html}: data-brand="${brand}" del <html> no coincide con BRAND del layout`);
+  }
   console.log(`OK React ${r.html}: ${all.length} elementos, ${ids.length} IDs conservados, árbol actualizado`);
 }
 const armar = fs.readFileSync(path.join(nextDir, 'armar.mjs'), 'utf8');
