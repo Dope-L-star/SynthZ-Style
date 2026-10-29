@@ -4,7 +4,6 @@
    Sin cuenta también funciona: se cuenta por dispositivo y por conexión. */
 import { route, body, json, fail, auth, sha, redis, pipe, today, ipOf, limit, str, roleOf } from './_lib.js';
 import { models, chat, reviewerModel, settings, usedToday, PROV, IMG, pickKeys, markPay, clearPay, outage, classify, searchWith, searchWiki, PAY_RX } from './_pool.js';
-import { perksOf, publicPerks, enerOf, offErr } from './_ux.js';
 
 /* v2.0 · imágenes con Pollinations: solo con cuenta, con su propio límite diario (no gasta Puter ni tu límite de chat).
    Solo gasta el saldo que ya esté cargado en Pollinations: nunca cobra a una tarjeta. */
@@ -13,9 +12,7 @@ const IMG_GLOBAL = +process.env.SYNTHZ_IMG_GLOBAL || 150;
 const SEARCH_GLOBAL = +process.env.SYNTHZ_SEARCH_GLOBAL || 300;
 async function webSearch(req, me, who, b){
   const q = str(b.q, 300); if (q.length < 2) throw Object.assign(new Error('Escribe qué quieres buscar.'), { status:400, code:'s_empty' });
-  const team = me && roleOf(me) !== 'user', d = today();
-  if (me && me.ux && !me.ux.f.search) throw offErr('Buscar en internet no está activado para tu cuenta. Escríbele al equipo de SymphorIA si lo necesitas.', 's_off');
-  const max = me && me.ux && me.ux.search != null ? me.ux.search : team ? 5000 : me ? 30 : 3;   /* v3.0: el equipo, sin límite propio (solo el tope de todos) · v3.5: o el que le pusieron en Pulsem */
+  const team = me && roleOf(me) !== 'user', max = team ? 5000 : me ? 30 : 3, d = today();   /* v3.0: el equipo, sin límite propio (solo el tope de todos) */
   await limit('srch:' + who, 10, 60);
   const uk = 'srch:' + who + ':' + d, gk = 'srch:all:' + d;
   const [n, g] = (await pipe([['GET', uk], ['GET', gk]])).map(x => +x || 0);
@@ -39,13 +36,10 @@ async function webSearch(req, me, who, b){
   await pipe([['INCR', uk], ['EXPIRE', uk, '172800'], ['INCR', gk], ['EXPIRE', gk, '172800']]);
   return json({ results:res, via, left:Math.max(0, max - n - 1) });
 }
-/* v3.5 · imágenes al día: la de Pulsem › Usuarios, si no la del equipo (5000) o la de todos */
-const imgMax = (me, set) => me.ux && !me.ux.f.image ? 0 : me.ux && me.ux.img != null ? me.ux.img : roleOf(me) !== 'user' ? 5000 : set.imgDay;
 async function makeImage(req, me, b){
   if (!me) throw Object.assign(new Error('Para crear imágenes entra a tu cuenta (es gratis).'), { status:401, code:'img_login' });
   const set = await settings(), d = today(), team = roleOf(me) !== 'user';
-  if (me.ux && !me.ux.f.image) throw offErr('Crear imágenes no está activado para tu cuenta. Escríbele al equipo de SymphorIA si lo necesitas.', 'img_off');
-  const max = imgMax(me, set);   /* v3.0: el equipo, sin límite propio (solo el tope de todos, IMG_GLOBAL) */
+  const max = team ? 5000 : set.imgDay;   /* v3.0: el equipo, sin límite propio (solo el tope de todos, IMG_GLOBAL) */
   if (!max) throw Object.assign(new Error('Crear imágenes está pausado por ahora.'), { status:403, code:'img_off' });
   await limit('img:' + me.sub, 6, 60);
   const prompt = str(b.prompt, 600); if (prompt.length < 3) throw Object.assign(new Error('Describe la imagen que quieres.'), { status:400, code:'img_empty' });
@@ -98,8 +92,7 @@ const REVIEW_SYS = [
   'Nunca menciones el borrador, la revisión, a otra IA ni a ti mismo. Si dudas de si algo está mal, no lo cambies: responde OK.'
 ].join('\n');
 const cut = (s, n) => { s = String(s || ''); return s.length > n ? s.slice(0, n) + '\n…(recortado)' : s; };
-async function review(who, ipKey, b, free, me){
-  if (me && me.ux && !me.ux.f.review) return { verdict:'', off:true };   /* revisión apagada para esta cuenta: se entrega el borrador tal cual */
+async function review(who, ipKey, b, free){
   const draft = cut(b.draft, 16000), q = cut(b.q, 8000);
   if (draft.length < 20 || q.length < 1) throw Object.assign(new Error('Nada que revisar.'), { status:400, code:'rv_empty' });
   const imgs = (Array.isArray(b.imgs) ? b.imgs : []).filter(u => typeof u === 'string' && /^data:image\/(jpeg|png|webp);base64,/.test(u.slice(0, 40))).slice(0, 4);
@@ -108,7 +101,7 @@ async function review(who, ipKey, b, free, me){
     + '\n\n## BORRADOR de la respuesta\n<<<\n' + draft + '\n>>>\n\nRevisa el borrador y responde con el FORMATO DE SALIDA OBLIGATORIO.';
   const content = imgs.length ? [{ type:'text', text:packet }, ...imgs.map(url => ({ type:'image_url', image_url:{ url } }))] : packet;
   const model = await reviewerModel(imgs.length > 0);
-  const r = await chat({ who, ipKey, messages:[{ role:'user', content }], system:REVIEW_SYS, model, maxTokens:Math.min(7000, Math.ceil(draft.length / 3) + 900), stream:false, free, temperature:.2, dayLimit:enerOf(me && me.ux).dayLimit });
+  const r = await chat({ who, ipKey, messages:[{ role:'user', content }], system:REVIEW_SYS, model, maxTokens:Math.min(7000, Math.ceil(draft.length / 3) + 900), stream:false, free, temperature:.2 });
   const out = String(r.text || '').replace(/<think>[\s\S]*?<\/think>/g, '').trim();
   const base = { by:r.meta.name, used:r.used, limit:r.limit };
   if (!/^\W{0,3}MEJORAR\b/i.test(out)) return Object.assign(base, { verdict:'ok' });
@@ -131,7 +124,7 @@ const guestErr = () => Object.assign(new Error('Para seguir FlowIAndo, entra o c
 async function whoOf(req){
   const me = await auth(req, true).catch(() => null);
   const dev = String(req.headers.get('x-sz-device') || ''), ipKey = 'ip:' + sha('ip:' + ipOf(req)).slice(0, 16);
-  if (me){ me.ux = await perksOf(me); return { who:'u:' + me.sub, ipKey, me }; }
+  if (me) return { who:'u:' + me.sub, ipKey, me };
   return { who:/^[\w-]{12,48}$/.test(dev) ? 'd:' + sha('dev:' + dev).slice(0, 16) : ipKey, ipKey, me:null };
 }
 export default route({
@@ -139,8 +132,7 @@ export default route({
     const [{ who, ipKey, me }, cat, set] = await Promise.all([whoOf(req), models(false), settings()]);
     const g = me ? null : await guestUsed(who, ipKey);
     const alert = await outage().catch(() => false), alertN = me && roleOf(me) !== 'user' ? +(await redis('SCARD', 'alerts').catch(() => 0)) || 0 : 0;
-    const en = enerOf(me && me.ux);
-    return json({ provs:cat.provs.map(p => ({ id:p, name:PROV[p].name })), models:cat.list.map(m => ({ id:m.id, name:m.name, prov:m.prov, ctx:m.ctx })), limit:en.dayLimit || set.dayLimit, used:en.free ? 0 : await usedToday(who), team:!!(me && roleOf(me) !== 'user'), guest:g ? { used:Math.max(g.used, Math.min(g.usedIp, GUEST_MAX)), max:GUEST_MAX } : null, alert, alertN, img:me ? { max:imgMax(me, set), used:+(await redis('GET', 'img:' + me.sub + ':' + today())) || 0 } : null, perks:publicPerks(me && me.ux) });
+    return json({ provs:cat.provs.map(p => ({ id:p, name:PROV[p].name })), models:cat.list.map(m => ({ id:m.id, name:m.name, prov:m.prov, ctx:m.ctx })), limit:set.dayLimit, used:me && roleOf(me) !== 'user' ? 0 : await usedToday(who), team:!!(me && roleOf(me) !== 'user'), guest:g ? { used:Math.max(g.used, Math.min(g.usedIp, GUEST_MAX)), max:GUEST_MAX } : null, alert, alertN, img:me ? { max:roleOf(me) !== 'user' ? 5000 : set.imgDay, used:+(await redis('GET', 'img:' + me.sub + ':' + today())) || 0 } : null });
   },
   async POST(req){
     const b = await body(req, 6_000_000), { who, ipKey, me } = await whoOf(req); let guest = null;
@@ -154,8 +146,8 @@ export default route({
       if (!isNew && (+n || 0) >= PER_TURN) throw guestErr();
       guest = { turn, isNew, ipNew:!(+inIp) };
     }
-    const { free, dayLimit } = enerOf(me && me.ux);
-    const r = b.action === 'review' ? await review(who, ipKey, b, free, me) : await chat({ who, ipKey, messages:b.messages, model:typeof b.model === 'string' ? b.model : 'sz:auto', maxTokens:b.maxTokens, stream:true, free, dayLimit });
+    const free = !!(me && roleOf(me) !== 'user');
+    const r = b.action === 'review' ? await review(who, ipKey, b, free) : await chat({ who, ipKey, messages:b.messages, model:typeof b.model === 'string' ? b.model : 'sz:auto', maxTokens:b.maxTokens, stream:true, free });
     let gu = '';
     if (guest){
       const tk = 'gt:' + who + ':' + guest.turn;

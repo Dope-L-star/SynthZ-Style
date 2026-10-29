@@ -3050,7 +3050,7 @@ function cfgModal(tab){
   memPanel($('#szMem', o));
   $$('.cfgsw[data-k]', o).forEach(b => b.addEventListener('click', () => { draft[b.dataset.k] = !draft[b.dataset.k]; paintRows(); }));
   $$('[data-in]', o).forEach(b => b.addEventListener('click', () => { draft.intro = b.dataset.in; $$('[data-in]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
-  const thNote = () => { const n = $('#cfgThN', o); if (n) n.textContent = draft.ui === 'simple' ? 'El estilo Simple usa sus propios colores: el color se ve en el estilo SynthFlow.' : (szTeam ? 'Cambia el dorado y el rosado de SynthFlow. Aurora y Oro negro ya son tuyos por ser del equipo (plan Orquesta).' : themeOn('aurora') || themeOn('oro') ? 'Cambia el dorado y el rosado de SynthFlow. El equipo de SymphorIA te activó colores especiales.' : 'Cambia el dorado y el rosado de SynthFlow. Aurora y Oro negro llegan con Syntonia.'); };
+  const thNote = () => { const n = $('#cfgThN', o); if (n) n.textContent = draft.ui === 'simple' ? 'El estilo Simple usa sus propios colores: el color se ve en el estilo SynthFlow.' : (szTeam ? 'Cambia el dorado y el rosado de SynthFlow. Aurora y Oro negro ya son tuyos por ser del equipo (plan Orquesta).' : 'Cambia el dorado y el rosado de SynthFlow. Aurora y Oro negro llegan con Syntonia.'); };
   thNote();
   $$('[data-ui]', o).forEach(b => b.addEventListener('click', () => { draft.ui = b.dataset.ui; $$('[data-ui]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); thNote(); }));
   $$('[data-lang]', o).forEach(b => b.addEventListener('click', () => { setLang(b.dataset.lang); $$('[data-lang]', o).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));   /* el idioma cambia al instante, sin «Guardar» */
@@ -4295,22 +4295,17 @@ const PLANS = [
   { id:'orquesta', n:'Orquesta', p:'US$8,99 por persona', c:'#ffd27a', L:['Para equipos (desde 3 personas)', 'Lo de Syntonia para cada persona', 'Chats y panel de equipo', 'A.L.I.A.S. con 100 veces más pasos y búsquedas', 'Hoy lo usan Prime, ZFlow y Symmetrix, sin límites, para probar todo'] }
 ];
 let szTeam = false; try{ szTeam = localStorage.getItem('synthz:team') === '1'; }catch(e){}
-/* v3.5 · Prime y ZFlow pueden regalarle (o quitarle) Aurora y Oro negro a una cuenta en Pulsem › Usuarios: llega en /api/ai › perks */
-let szPerk = {}; try{ szPerk = JSON.parse(localStorage.getItem('synthz:perks') || '{}') || {}; }catch(e){}
-const themeOn = id => id in szPerk ? !!szPerk[id] : szTeam;
 const planOf = () => szTeam ? 'orquesta' : 'chispa';
 /* el equipo estrena los colores de pago (Aurora y Oro negro): se quita el «Pronto» y se vuelve a pintar el tema */
 function planPerks(){
-  THEMES.forEach(t => { if (t[0] === 'aurora' || t[0] === 'oro') t[3] = themeOn(t[0]) ? 0 : 1; });
+  THEMES.forEach(t => { if (t[0] === 'aurora' || t[0] === 'oro') t[3] = szTeam ? 0 : 1; });
   try{ cfgClasses(); }catch(e){}
 }
 planPerks();
 addEventListener('synthz-szq', e => {
   const d = e.detail || {}; if (d.team == null) return;
-  const t = !!d.team, f = d.perks && d.perks.f, p = f ? { aurora:!!f.aurora, oro:!!f.oro } : {};
-  if (t === szTeam && JSON.stringify(p) === JSON.stringify(szPerk)) return;
-  szTeam = t; szPerk = p;
-  try{ t ? localStorage.setItem('synthz:team', '1') : localStorage.removeItem('synthz:team'); f ? localStorage.setItem('synthz:perks', JSON.stringify(p)) : localStorage.removeItem('synthz:perks'); }catch(er){}
+  const t = !!d.team; if (t === szTeam) return;
+  szTeam = t; try{ t ? localStorage.setItem('synthz:team', '1') : localStorage.removeItem('synthz:team'); }catch(er){}
   planPerks();
 });
 function plansModal(){

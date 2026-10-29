@@ -236,9 +236,7 @@
     "alias_mem_list": "Esto es lo que tu cuenta ya tiene guardado:",
     "alias_mem_empty": "Todavía no hay nada guardado para usar aquí.",
     "alias_img_listo": "Imagen lista: «{prompt}». Descárgala abajo.",
-    "alias_img_nombre": "imagen",
-    "srv.aliasOff": "A.L.I.A.S. no está activado para tu cuenta. Escríbele al equipo de SymphorIA si lo necesitas.",
-    "srv.busquedaOff": "Buscar en internet no está activado para tu cuenta."
+    "alias_img_nombre": "imagen"
   },
   "en": {
     "saltar": "Skip to content",
@@ -472,8 +470,6 @@
     "alias_mem_list": "This is what your account already saved:",
     "alias_mem_empty": "There's nothing saved to use here yet.",
     "alias_img_listo": "Image ready: “{prompt}”. Download it below.",
-    "alias_img_nombre": "image",
-    "srv.aliasOff": "A.L.I.A.S. is not turned on for your account. Write to the SymphorIA team if you need it.",
-    "srv.busquedaOff": "Web search is not turned on for your account."
+    "alias_img_nombre": "image"
   }
 }
