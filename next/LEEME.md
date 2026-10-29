@@ -25,6 +25,7 @@ Las páginas principales tienen su estructura renderizada como elementos de Reac
 ```bash
 node build.mjs --check
 node next/verificar-migracion.mjs
+node --test next/tests/clarity-consent.test.mjs
 ```
 
 Si modificas alguno de los documentos fuente (`index.html`, `chat.html`, etc.), regenera los árboles JSON antes de compilar:
@@ -63,8 +64,12 @@ No usar `out` como directorio de salida para este pipeline personalizado: `cloud
 En una vista previa con los servicios configurados: envío y streaming, detener/reintentar, cambio de IA y modo, login/cierre/Google, historial/favoritos, adjuntos, comparación, búsqueda web, Sintéticos, A.L.I.A.S., idioma inglés, modo compacto, Pulsem y accesibilidad móvil. No publicar sobre la versión estable hasta completarlas.
 
 
-## Microsoft Clarity
+## Microsoft Clarity: variante futura 18+
 
-El adaptador React está incluido, pero permanece apagado. Microsoft declara que Clarity no debe usarse en webs/apps dirigidas a menores de 18 años; los términos actuales de SymphorIA permiten usuarios de 13–17 años con permiso adulto. No cambies esta configuración para el despliegue actual. Para una variante exclusivamente para adultos, revisa antes términos y privacidad y configura consentimiento; luego establece ambas variables `NEXT_PUBLIC_CLARITY_ENABLED=true` y `NEXT_PUBLIC_CLARITY_AUDIENCE_18_PLUS=true`. El proyecto Clarity es `z5es3kuqoz`; el panel Pulsem no instala el tracker.
+La integración de React está preparada, pero permanece apagada. Microsoft indica que Clarity no debe usarse en sitios o aplicaciones dirigidos a menores de 18 años: https://learn.microsoft.com/en-us/clarity/faq . Los términos actuales de SymphorIA permiten usuarios menores de 18 con permiso adulto; por tanto **no se debe activar Clarity en la versión actual**.
+
+Para la futura variante adulta, consulta `next/CLARITY-ADULT-RELEASE.md`. El build exige cinco condiciones: `NEXT_PUBLIC_CLARITY_ENABLED=true`, `NEXT_PUBLIC_CLARITY_AUDIENCE_18_PLUS=true`, `NEXT_PUBLIC_SYMPHORIA_ADULT_ONLY_RELEASE=true`, `NEXT_PUBLIC_SYMPHORIA_AGE_CONTROL_VERIFIED=true` y `NEXT_PUBLIC_CLARITY_PRIVACY_REVIEWED=true`. Si se solicita Clarity sin todas ellas, el script de build falla de forma explícita. Estas variables son controles de release, no verifican la edad de una persona ni reemplazan controles efectivos de acceso y términos legales.
+
+El proyecto configurado es `z5es3kuqoz`; antes de producción confirma en Clarity que pertenece exclusivamente al dominio adulto. Si se compartió con otro sitio/audiencia, crea un proyecto separado. El panel privado Pulsem no monta el tracker. Consent V2 se encola antes de insertar el script; Clarity no se carga hasta que la persona acepta la analítica y puede retirar el consentimiento desde «Privacidad».
 
 El árbol React en `contenido/arboles-react/` conserva el marcado y los IDs originales, mientras `LegacyRuntime` carga los módulos interactivos antiguos. Esto protege funcionalidad durante la migración, pero no significa que todo el comportamiento ya esté reescrito con hooks de React.

@@ -8,8 +8,21 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { CLARITY_PROJECT_ID_DEFAULT, isClarityAllowed } from './lib/clarity-client.mjs';
 
 const aqui = path.dirname(fileURLToPath(import.meta.url)), raiz = path.resolve(aqui, '..');
+const clarityRequested = process.env.NEXT_PUBLIC_CLARITY_ENABLED === 'true';
+const clarityBuildAllowed = isClarityAllowed({
+  enabled: clarityRequested,
+  audience18Plus: process.env.NEXT_PUBLIC_CLARITY_AUDIENCE_18_PLUS === 'true',
+  adultOnlyRelease: process.env.NEXT_PUBLIC_SYMPHORIA_ADULT_ONLY_RELEASE === 'true',
+  ageControlVerified: process.env.NEXT_PUBLIC_SYMPHORIA_AGE_CONTROL_VERIFIED === 'true',
+  privacyReviewed: process.env.NEXT_PUBLIC_CLARITY_PRIVACY_REVIEWED === 'true',
+  projectId: process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID || CLARITY_PROJECT_ID_DEFAULT,
+});
+if (clarityRequested && !clarityBuildAllowed) {
+  throw new Error('Clarity está solicitado, pero faltan condiciones de release: audiencia 18+, versión adulta real, control de edad validado, privacidad revisada e ID de proyecto válido. No se ha publicado nada.');
+}
 /* páginas que ya pasaron a Next.js (app/<nombre>/page.jsx → out/<nombre>.html). Al pasar otra, se agrega aquí. */
 const HECHAS = ['index.html', 'chat.html', 'alias.html', 'ayuda.html', 'offline.html', 'terminos.html', 'privacidad.html', 'pulsem.html'];
 const corre = (cmd, args, cwd) => execFileSync(cmd, args, { cwd, stdio: 'inherit' });

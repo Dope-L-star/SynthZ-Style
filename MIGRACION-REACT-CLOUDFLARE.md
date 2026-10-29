@@ -55,11 +55,11 @@ Se comprueba que cada página fuente coincide con el módulo de referencia, que 
 
 ## Analítica y privacidad (Microsoft Clarity)
 
-Se añadió una integración React opcional para el proyecto `z5es3kuqoz`, con consentimiento previo, API Consent V2 y configuración para rechazar/revocar. **Se publica apagada por defecto.** La documentación oficial de Microsoft dice que Clarity no debe usarse en sitios o aplicaciones dirigidas a personas menores de 18 años. Los términos actuales de SymphorIA permiten el uso por personas de 13–17 con permiso de un adulto; por eso no se debe activar en este producto con la audiencia actual. La integración solo se podría habilitar en una edición exclusivamente para mayores de 18 años, tras revisar los términos, la política de privacidad y el consentimiento.
+La integración futura usa Consent V2, no inserta el script hasta que la persona acepta, conserva el rechazo, permite revocar y limita el consentimiento aceptado a 180 días. `ad_Storage` permanece denegado. La integración está **apagada por defecto** y el build falla si se intenta activarla sin cinco flags válidos. Microsoft indica que Clarity no debe usarse en sitios/aplicaciones dirigidos a menores de 18 años: https://learn.microsoft.com/en-us/clarity/faq . Como los términos actuales de SymphorIA permiten menores con permiso adulto, no actives Clarity en la versión actual.
 
-Para una edición elegible de adultos, establece durante el build de Cloudflare Pages las dos variables `NEXT_PUBLIC_CLARITY_ENABLED=true` y `NEXT_PUBLIC_CLARITY_AUDIENCE_18_PLUS=true`. `NEXT_PUBLIC_CLARITY_PROJECT_ID` tiene por defecto `z5es3kuqoz`. El consentimiento no se concede automáticamente; los datos de publicidad quedan denegados. No actives esas variables en este despliegue tal como está configurado hoy. El panel interno Pulsem no carga el tracker.
+La guía de publicación para la futura edición adulta está en `next/CLARITY-ADULT-RELEASE.md`. Incluye configuración de Cloudflare, Consent Mode, masking, política, pruebas y verificación de CSP. Las flags son controles de release y no sustituyen la implementación real de una audiencia exclusiva para adultos.
 
-Se marcan `#msgs`, `#thList`, `#sideFoot`, `#accBtn`, `#launch`, `#usagePanel`, `#vPlan` y `#vResult` con `data-clarity-mask="true"`, porque contienen mensajes, títulos de chats o resultados personales. Las cajas de texto también se enmascaran de forma predeterminada por Clarity. La prueba `node next/verificar-migracion.mjs` verifica que no se pierdan estas marcas.
+Se marcan `#msgs`, `#thList`, `#sideFoot`, `#accBtn`, `#launch`, `#usagePanel`, `#vPlan` y `#vResult` con `data-clarity-mask` porque contienen mensajes, títulos de chats o resultados personales. Las cajas de texto también se enmascaran por defecto en Clarity. La prueba `node next/verificar-migracion.mjs` verifica que no se pierdan estas marcas.
 
 ## Qué está realmente migrado a React
 

@@ -45,3 +45,8 @@ El build integrado y las pruebas con navegador tienen que ejecutarse en un entor
 ## Migración React y Cloudflare Pages
 
 La versión en `next/` usa Next.js App Router con export estático para Cloudflare Pages. Antes de desplegar, ejecutar `node build.mjs --check`, `node next/verificar-migracion.mjs` y `node cloudflare/preparar.mjs` con acceso a npm. Configuración de Pages: build `npm ci && node cloudflare/preparar.mjs`, directorio `cloudflare/public`, Node.js 22. La lógica interactiva del chat y autenticación continúa en módulos JavaScript heredados bajo el adaptador React; revisar `MIGRACION-REACT-CLOUDFLARE.md`.
+
+
+### Microsoft Clarity (variante futura solo adultos)
+
+Clarity permanece apagado en el build actual. La integración requiere consentimiento explícito y los cinco flags de release para una futura edición realmente dirigida a mayores de 18 años. Lee `next/CLARITY-ADULT-RELEASE.md` antes de configurarla. Las flags no son verificación de edad; no se activa Clarity mientras los términos, la política y la elegibilidad de la audiencia no se hayan cambiado y probado.

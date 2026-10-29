@@ -11,6 +11,7 @@
   },
   "scripts": {
     "test:react-migration": "node next/verificar-migracion.mjs",
-    "check": "node build.mjs --check && node next/verificar-migracion.mjs"
+    "check": "node build.mjs --check && node next/verificar-migracion.mjs",
+    "test:clarity": "node --test next/tests/clarity-consent.test.mjs"
   }
 }

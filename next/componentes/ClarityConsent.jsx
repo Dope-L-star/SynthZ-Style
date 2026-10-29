@@ -1,63 +1,38 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import {
+  CLARITY_PROJECT_ID_DEFAULT,
+  clearFirstPartyClarityCookies,
+  isClarityAllowed,
+  loadClarity,
+  readClarityChoice,
+  revokeClarity,
+  writeClarityChoice,
+} from '../lib/clarity-client.mjs';
 
 /*
- * Microsoft Clarity se incluye como integración opcional, pero NO se activa en
- * esta versión: los términos públicos permiten el uso por personas de 13–17 años
- * con permiso de un adulto, mientras que Microsoft indica que Clarity no debe
- * usarse en sitios dirigidos a menores de 18 años. Para evitar una activación
- * accidental hacen falta dos flags explícitos en tiempo de build y una decisión
- * de producto que cambie ese público objetivo. También se requiere consentimiento.
+ * Clarity remains inactive unless every release gate is true and a visitor opts in.
+ * These flags are deployment assertions, not an age verification mechanism. The
+ * adult-only product, access policy and legal copy must be reviewed independently.
  */
-const CLARITY_ENABLED = process.env.NEXT_PUBLIC_CLARITY_ENABLED === 'true';
-const ADULT_ONLY_AUDIENCE = process.env.NEXT_PUBLIC_CLARITY_AUDIENCE_18_PLUS === 'true';
-const ALLOWED = CLARITY_ENABLED && ADULT_ONLY_AUDIENCE;
-const PROJECT_ID = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID || 'z5es3kuqoz';
-const CONSENT_KEY = 'symphoria:clarity-consent:v1';
+const PROJECT_ID = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID || CLARITY_PROJECT_ID_DEFAULT;
+const ALLOWED = isClarityAllowed({
+  enabled: process.env.NEXT_PUBLIC_CLARITY_ENABLED === 'true',
+  audience18Plus: process.env.NEXT_PUBLIC_CLARITY_AUDIENCE_18_PLUS === 'true',
+  privacyReviewed: process.env.NEXT_PUBLIC_CLARITY_PRIVACY_REVIEWED === 'true',
+  adultOnlyRelease: process.env.NEXT_PUBLIC_SYMPHORIA_ADULT_ONLY_RELEASE === 'true',
+  ageControlVerified: process.env.NEXT_PUBLIC_SYMPHORIA_AGE_CONTROL_VERIFIED === 'true',
+  projectId: PROJECT_ID,
+});
 
-function queueClarity() {
-  if (typeof window === 'undefined') return null;
-  if (typeof window.clarity === 'function') return window.clarity;
-  const clarity = function (...args) {
-    clarity.q = clarity.q || [];
-    clarity.q.push(args);
-  };
-  window.clarity = clarity;
-  return clarity;
+function getStorageSafely() {
+  try { return window.localStorage; } catch { return null; }
 }
 
 function startClarity() {
-  if (!ALLOWED || typeof document === 'undefined') return;
-  const clarity = queueClarity();
-  // Queue the consent state before loading Microsoft's script.
-  clarity?.('consentv2', { ad_Storage: 'denied', analytics_Storage: 'granted' });
-  const existing = document.querySelector('script[data-symphoria-clarity="true"]');
-  if (existing) return;
-  const script = document.createElement('script');
-  script.src = `https://www.clarity.ms/tag/${encodeURIComponent(PROJECT_ID)}`;
-  script.async = true;
-  script.dataset.symphoriaClarity = 'true';
-  script.onerror = () => {
-    // An analytics provider failing must not affect the app or its chat runtime.
-    script.remove();
-    delete window.clarity;
-  };
-  document.head.appendChild(script);
-}
-
-function stopClarity() {
-  try {
-    if (typeof window.clarity === 'function') {
-      window.clarity('consentv2', { ad_Storage: 'denied', analytics_Storage: 'denied' });
-      // Clear previously granted Clarity cookies as well; retained for compatibility
-      // with Microsoft's documented cookie-erasure API.
-      window.clarity('consent', false);
-    }
-    localStorage.setItem(CONSENT_KEY, 'denied');
-  } catch {
-    // Storage can be unavailable in strict/private browser modes.
-  }
+  if (!ALLOWED || typeof window === 'undefined' || typeof document === 'undefined') return false;
+  return loadClarity({ windowObject: window, documentObject: document, projectId: PROJECT_ID });
 }
 
 export default function ClarityConsent() {
@@ -66,14 +41,16 @@ export default function ClarityConsent() {
 
   useEffect(() => {
     if (!ALLOWED) return undefined;
-    let choice = null;
-    try { choice = localStorage.getItem(CONSENT_KEY); } catch {}
+    const choice = readClarityChoice(getStorageSafely());
     if (choice === 'granted') {
       setHasChoice(true);
       startClarity();
     } else if (choice === 'denied') {
+      clearFirstPartyClarityCookies(document);
       setHasChoice(true);
     } else {
+      // Also remove first-party Clarity cookies if a previous grant expired.
+      clearFirstPartyClarityCookies(document);
       setOpen(true);
     }
     const showSettings = () => setOpen(true);
@@ -82,19 +59,16 @@ export default function ClarityConsent() {
   }, []);
 
   const accept = useCallback(() => {
-    try { localStorage.setItem(CONSENT_KEY, 'granted'); } catch {}
+    writeClarityChoice(getStorageSafely(), 'granted');
     setHasChoice(true);
     setOpen(false);
     startClarity();
   }, []);
 
   const reject = useCallback(() => {
-    stopClarity();
+    revokeClarity({ windowObject: window, documentObject: document, storage: getStorageSafely() });
     setHasChoice(true);
     setOpen(false);
-    // If this is a revocation after an accepted visit, reload once so the tracker
-    // is not re-initialized during the current page lifetime.
-    if (typeof window !== 'undefined' && window.clarity) window.location.reload();
   }, []);
 
   if (!ALLOWED) return null;
@@ -102,16 +76,29 @@ export default function ClarityConsent() {
   return (
     <>
       {hasChoice && !open ? (
-        <button className="clarity-preferences" type="button" onClick={() => setOpen(true)} aria-label="Cambiar preferencias de analítica">
+        <button
+          className="clarity-preferences"
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Cambiar preferencias de analítica"
+        >
           Privacidad
         </button>
       ) : null}
       {open ? (
-        <section className="clarity-consent" role="dialog" aria-modal="false" aria-labelledby="clarity-consent-title">
-          <div className="clarity-consent__eyebrow"><span aria-hidden="true" className="clarity-consent__dot" /> PRIVACIDAD Y MEJORA
+        <section className="clarity-consent" role="dialog" aria-modal="false" aria-labelledby="clarity-consent-title" aria-describedby="clarity-consent-description">
+          <div className="clarity-consent__eyebrow">
+            <span aria-hidden="true" className="clarity-consent__dot" /> PRIVACIDAD Y MEJORA
           </div>
           <h2 id="clarity-consent-title">¿Nos ayudas a mejorar SymphorIA?</h2>
-          <p>Microsoft Clarity mide clics y desplazamientos y puede crear reproducciones de la interfaz. No usa esto para responder tus mensajes; el chat, los títulos de conversaciones y los resultados personales están marcados para ocultarse. Los campos de texto también se enmascaran.</p>
+          <p id="clarity-consent-description">
+            Si aceptas, Microsoft Clarity medirá interacciones como clics y desplazamientos y podrá generar
+            reproducciones visuales de la interfaz para detectar problemas de usabilidad. La analítica no es
+            necesaria para usar SymphorIA. La publicidad permanece desactivada. Los mensajes, títulos de chats,
+            datos de cuenta, resultados de A.L.I.A.S. y paneles con información personal están marcados para
+            ocultarse; aun así, el enmascaramiento no es una garantía absoluta: no escribas datos sensibles en una
+            interfaz que pueda grabarse. Puedes retirar tu consentimiento desde el botón «Privacidad».
+          </p>
           <div className="clarity-consent__actions">
             <button type="button" className="clarity-consent__accept" onClick={accept}>Permitir analítica</button>
             <button type="button" className="clarity-consent__reject" onClick={reject}>No permitir</button>
